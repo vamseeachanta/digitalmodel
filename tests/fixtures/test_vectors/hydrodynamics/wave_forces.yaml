@@ -1,0 +1,198 @@
+source_type: python
+source_description: "Hydrodynamic force calculations — finite depth corrections, OCIMF loading, and force scaling validation"
+extracted_date: "2026-03-16"
+legal_scan_passed: true
+category: "hydrodynamics"
+subcategory: "wave_and_environmental_forces"
+equations:
+  - name: "Finite depth correction factor"
+    latex: "C_{depth} = 1 + \\sum_{n=1}^{N} c_n \\frac{\\cosh(k_n(h-T))}{\\cosh(k_n h)} e^{-k_n y}"
+    description: "Correction factor applied to infinite-depth forces to account for finite water depth"
+  - name: "OCIMF wind load"
+    latex: "F = \\frac{1}{2} \\rho_{air} V_w^2 C_x A_T"
+    description: "OCIMF-based wind load calculation on vessel"
+  - name: "Velocity squared scaling"
+    latex: "F \\propto U^2"
+    description: "Hydrodynamic interaction forces scale with square of passing velocity"
+  - name: "Combined environmental loads"
+    latex: "F_{combined} = F_{wind} + F_{current}"
+    description: "Vector superposition of wind and current loads"
+
+inputs:
+  - name: "Water depth (deep water)"
+    symbol: "h"
+    unit: "m"
+    test_value: 100.0
+  - name: "Vessel draft"
+    symbol: "T"
+    unit: "m"
+    test_value: 12.0
+  - name: "Vessel length"
+    symbol: "L"
+    unit: "m"
+    test_value: 200.0
+  - name: "Lateral separation"
+    symbol: "y"
+    unit: "m"
+    test_value: 50.0
+
+outputs:
+  - name: "Deep water depth correction (h/T > 5)"
+    symbol: "C_depth"
+    unit: "-"
+    test_expected: 1.0
+    tolerance: 0.01
+  - name: "Sway force ratio (half velocity)"
+    symbol: "F_ratio"
+    unit: "-"
+    test_expected: 4.0
+    tolerance: 0.1
+
+worked_examples:
+  - description: "Deep water correction — h/T > 5 returns correction factor ~1.0"
+    inputs:
+      h_m: 100.0
+      T_m: 12.0
+      L_m: 200.0
+      y_m: 50.0
+      mode: "surge"
+    outputs:
+      correction_factor: 1.0
+    use_as_test: true
+
+  - description: "Shallow water amplification — h=15m, T=12m gives correction > 1.0"
+    inputs:
+      h_m: 15.0
+      T_m: 12.0
+      L_m: 200.0
+      y_m: 50.0
+      mode: "surge"
+    outputs:
+      correction_gt_1: true
+    use_as_test: true
+
+  - description: "Standard vessel — sway force U^2 scaling: (10/5)^2 = 4.0"
+    inputs:
+      L_m: 200.0
+      B_m: 32.0
+      T_m: 12.0
+      Cb: 0.85
+      U_slow_m_s: 5.0
+      U_fast_m_s: 10.0
+      y_m: 50.0
+      x_m: 0.0
+    outputs:
+      sway_force_ratio: 4.0
+    use_as_test: true
+
+  - description: "Zero velocity — all forces are exactly zero"
+    inputs:
+      L_m: 200.0
+      B_m: 32.0
+      T_m: 12.0
+      Cb: 0.85
+      U_m_s: 0.0
+      y_m: 50.0
+      x_m: 0.0
+    outputs:
+      surge_force_N: 0.0
+    use_as_test: true
+
+  - description: "Separation effect — sway at y=30m > sway at y=100m"
+    inputs:
+      L_m: 200.0
+      B_m: 32.0
+      T_m: 12.0
+      Cb: 0.85
+      U_m_s: 10.0
+      y_close_m: 30.0
+      y_far_m: 100.0
+      x_m: 0.0
+    outputs:
+      close_greater_than_far: true
+    use_as_test: true
+
+  - description: "Block coefficient effect — fuller vessel (Cb=0.85) produces larger forces than slender (Cb=0.70)"
+    inputs:
+      L_m: 200.0
+      B_m: 32.0
+      T_m: 12.0
+      Cb_slender: 0.70
+      Cb_full: 0.85
+      U_m_s: 10.0
+      y_m: 50.0
+    outputs:
+      full_greater_than_slender: true
+    use_as_test: true
+
+  - description: "VLCC reference case 1 — calculator integration test at abeam"
+    inputs:
+      moored_length_m: 320.0
+      moored_beam_m: 58.0
+      moored_draft_m: 20.5
+      moored_Cb: 0.85
+      passing_length_m: 333.0
+      passing_beam_m: 60.0
+      passing_draft_m: 22.0
+      passing_Cb: 0.82
+      velocity_m_s: 3.0
+      separation_m: 100.0
+      stagger_m: 0.0
+      water_depth_m: 40.0
+    outputs:
+      surge_near_zero: true
+      sway_nonzero: true
+      sway_lt_1e8: true
+    use_as_test: true
+
+  - description: "Container ship / PSV reference case 2 — non-zero stagger"
+    inputs:
+      moored_length_m: 90.0
+      moored_beam_m: 18.0
+      moored_draft_m: 6.5
+      moored_Cb: 0.70
+      passing_length_m: 280.0
+      passing_beam_m: 42.0
+      passing_draft_m: 14.0
+      passing_Cb: 0.65
+      velocity_m_s: 5.0
+      separation_m: 50.0
+      stagger_m: 100.0
+      water_depth_m: null
+    outputs:
+      surge_nonzero: true
+      sway_nonzero: true
+      surge_lt_1e8: true
+      sway_lt_1e8: true
+    use_as_test: true
+
+  - description: "Force magnitude order — typical vessel (L=200, B=32, T=12, Cb=0.85, U=10, y=50, x=50)"
+    inputs:
+      L_m: 200.0
+      B_m: 32.0
+      T_m: 12.0
+      Cb: 0.85
+      U_m_s: 10.0
+      y_m: 50.0
+      x_m: 50.0
+    outputs:
+      surge_order_N: 1.0e6
+      sway_order_N: 1.0e6
+      surge_within_3_decades: true
+      sway_within_3_decades: true
+    use_as_test: true
+
+assumptions:
+  - "Harmonic series for finite depth correction truncated at 10 terms"
+  - "Shallow water amplification factor: 1 + 0.5*(1 - h_T/1.5) for h/T < 1.5"
+  - "Mode-specific coefficients: surge=1/n, sway=1/n^2, yaw=1/n^3"
+  - "Deep water limit at h/T > 5.0"
+  - "OCIMF wind/current loads follow OCIMF Mooring Equipment Guidelines"
+  - "Force magnitudes validated within 3 decades of expected order"
+
+references:
+  - "Wang, S. (1975). Hydrodynamic Forces on a Vessel Moving Along a Bank or in a Narrow Channel"
+  - "OCIMF Mooring Equipment Guidelines (MEG4)"
+  - "DNV-RP-C205 Environmental Conditions and Environmental Loads"
+  - "digitalmodel/tests/hydrodynamics/passing_ship/test_formulations.py"
+  - "digitalmodel/tests/hydrodynamics/passing_ship/test_calculator.py"

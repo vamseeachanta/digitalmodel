@@ -1,0 +1,218 @@
+"""
+digitalmodel.fatigue — Fatigue analysis module
+
+DNV-RP-C203 S-N curves with pyLife WoehlerCurve backend,
+Miner's rule damage accumulation, and thickness correction.
+
+Extended with 8 additional modules (v2.0):
+- sn_library: 221 S-N curves from 17 international standards
+- scf_library: Stress concentration factor equations
+- hotspot_stress: Hotspot stress extrapolation
+- spectral_fatigue: Frequency-domain fatigue (Dirlik, etc.)
+- weld_classification: Automated weld detail classification
+- fatigue_reporting: Assessment report generation
+- multiaxial_fatigue: Multiaxial fatigue criteria
+- environmental_correction: Environment correction factors
+"""
+
+from .sn_curves import get_sn_curve, DNV_CURVES
+from .damage import miner_damage, design_life_check, thickness_correction
+from .design_fatigue_factor import (
+    DFFCategory,
+    required_calculated_life,
+    select_design_fatigue_factor,
+)
+from .crack_growth import paris_law_life, stress_intensity_factor, inspection_interval
+from .woehler_fitting import fit_woehler_curve, design_curve
+from .rainflow import rainflow_count, stress_histogram, fatigue_life
+
+# New modules (v2.0)
+from .sn_library import (
+    get_catalog, get_library_curve, search_curves, list_standards,
+    curve_count, summary_table, SNCurveRecord, SNCatalog,
+)
+from .scf_library import (
+    efthymiou_ty_axial, efthymiou_ty_ipb, efthymiou_ty_opb,
+    efthymiou_k_axial, scf_butt_weld_misalignment,
+    scf_cruciform_joint, scf_fillet_weld_toe,
+    scf_shoulder_fillet, scf_circumferential_groove,
+    TubularJointGeometry, SCFResult, PlateGeometry,
+)
+from .hotspot_stress import (
+    extrapolate_hotspot_linear, extrapolate_hotspot_quadratic,
+    extrapolate_hotspot, through_thickness_linearisation,
+    recommended_readout_distances, HotspotInput, HotspotResult,
+)
+from .sn_library_api import (
+    list_curves, get_curve, calculate_endurance, compare_curves,
+    CurveInfo, SNCurve, ComparisonData,
+)
+from .spectral_fatigue import (
+    compute_spectral_moments, narrow_band_damage,
+    wirsching_light_damage, dirlik_damage, benasciutti_tovo_damage,
+    SpectralMoments, SpectralFatigueResult,
+)
+from .fatg import (
+    fatg_significant_stress_range, fatg_sea_state_damage, fatg_annual_damage,
+    FatgSeaState, FatgResult, FATG_SN_CURVES,
+)
+from .weld_classification import (
+    classify_weld_detail, list_dnv_detail_categories,
+    WeldDetail, ClassificationResult,
+)
+from .fatigue_reporting import (
+    generate_report, report_to_markdown, report_to_dict,
+    damage_barchart_data, inspection_recommendations,
+    FatigueCheckLocation, FatigueReport,
+)
+from .multiaxial_fatigue import (
+    von_mises_equivalent, principal_stress_range,
+    findley_critical_plane, shear_stress_correction,
+    multiaxial_damage_interaction, StressState, MultiaxialResult,
+)
+from .environmental_correction import (
+    environment_correction, zone_factor, temperature_derating_factor,
+    apply_environment_to_sn, EnvironmentInput, EnvironmentResult,
+)
+
+# Re-exports from digitalmodel.structural.fatigue for the migration-test
+# convenience API (see tests/structural/fatigue/test_fatigue_migration.py).
+# They resolve on first access (PEP 562), not at import: loading this package
+# no longer loads digitalmodel.structural.fatigue, so the static import graph
+# that selects tests stops routing every importer of digitalmodel.fatigue to
+# the structural fatigue tests (docs/ci/import-hubs-2026-11-22.md).
+_STRUCTURAL_FATIGUE_EXPORTS = {
+    "FatigueAnalysisEngine": "analysis",
+    "FatigueAnalysisConfig": "analysis",
+    "MultislopeSNCurve": "analysis",
+    "quick_time_domain_analysis": "analysis",
+    "quick_frequency_domain_analysis": "analysis",
+    "StandardSNCurves": "sn_curves",
+    "get_dnv_curve": "sn_curves",
+    "LinearDamageAccumulation": "damage_accumulation",
+}
+
+
+def __getattr__(name):
+    module = _STRUCTURAL_FATIGUE_EXPORTS.get(name)
+    if module is None:
+        raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+    from importlib import import_module
+
+    value = getattr(import_module(f"digitalmodel.structural.fatigue.{module}"), name)
+    globals()[name] = value  # later lookups bypass __getattr__
+    return value
+
+
+def __dir__():
+    return sorted(set(globals()) | set(_STRUCTURAL_FATIGUE_EXPORTS))
+
+__all__ = [
+    # Original modules
+    "get_sn_curve",
+    "DNV_CURVES",
+    "miner_damage",
+    "design_life_check",
+    "DFFCategory",
+    "required_calculated_life",
+    "select_design_fatigue_factor",
+    "thickness_correction",
+    "paris_law_life",
+    "stress_intensity_factor",
+    "inspection_interval",
+    "fit_woehler_curve",
+    "design_curve",
+    "rainflow_count",
+    "stress_histogram",
+    "fatigue_life",
+    # sn_library
+    "get_catalog",
+    "get_library_curve",
+    "search_curves",
+    "list_standards",
+    "curve_count",
+    "summary_table",
+    "SNCurveRecord",
+    "SNCatalog",
+    # scf_library
+    "efthymiou_ty_axial",
+    "efthymiou_ty_ipb",
+    "efthymiou_ty_opb",
+    "efthymiou_k_axial",
+    "scf_butt_weld_misalignment",
+    "scf_cruciform_joint",
+    "scf_fillet_weld_toe",
+    "scf_shoulder_fillet",
+    "scf_circumferential_groove",
+    "TubularJointGeometry",
+    "SCFResult",
+    "PlateGeometry",
+    # hotspot_stress
+    "extrapolate_hotspot_linear",
+    "extrapolate_hotspot_quadratic",
+    "extrapolate_hotspot",
+    "through_thickness_linearisation",
+    "recommended_readout_distances",
+    "HotspotInput",
+    "HotspotResult",
+    # spectral_fatigue
+    "compute_spectral_moments",
+    "narrow_band_damage",
+    "wirsching_light_damage",
+    "dirlik_damage",
+    "benasciutti_tovo_damage",
+    "SpectralMoments",
+    "SpectralFatigueResult",
+    # fatg (legacy closed-form spectral fatigue)
+    "fatg_significant_stress_range",
+    "fatg_sea_state_damage",
+    "fatg_annual_damage",
+    "FatgSeaState",
+    "FatgResult",
+    "FATG_SN_CURVES",
+    # weld_classification
+    "classify_weld_detail",
+    "list_dnv_detail_categories",
+    "WeldDetail",
+    "ClassificationResult",
+    # fatigue_reporting
+    "generate_report",
+    "report_to_markdown",
+    "report_to_dict",
+    "damage_barchart_data",
+    "inspection_recommendations",
+    "FatigueCheckLocation",
+    "FatigueReport",
+    # multiaxial_fatigue
+    "von_mises_equivalent",
+    "principal_stress_range",
+    "findley_critical_plane",
+    "shear_stress_correction",
+    "multiaxial_damage_interaction",
+    "StressState",
+    "MultiaxialResult",
+    # environmental_correction
+    "environment_correction",
+    "zone_factor",
+    "temperature_derating_factor",
+    "apply_environment_to_sn",
+    "EnvironmentInput",
+    "EnvironmentResult",
+    # sn_library_api
+    "list_curves",
+    "get_curve",
+    "calculate_endurance",
+    "compare_curves",
+    "CurveInfo",
+    "SNCurve",
+    "ComparisonData",
+    # Re-exports from digitalmodel.structural.fatigue (migration test API)
+    "FatigueAnalysisEngine",
+    "FatigueAnalysisConfig",
+    "MultislopeSNCurve",
+    "quick_time_domain_analysis",
+    "quick_frequency_domain_analysis",
+    "StandardSNCurves",
+    "get_dnv_curve",
+    "LinearDamageAccumulation",
+]

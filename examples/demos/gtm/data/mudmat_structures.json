@@ -1,0 +1,161 @@
+{
+  "_description": "Mudmat / foundation structure database for GTM demo 3 (installation analysis). Three representative sizes covering typical subsea infrastructure foundations.",
+  "_version": "1.0",
+  "_references": [
+    "DNV-RP-H103 (2011) - Modelling and Analysis of Marine Operations, Sec 4 (Lifting through wave zone)",
+    "DNV-ST-N001 (2021) - Marine Operations and Marine Warranty",
+    "DNV-RP-C205 (2010) - Environmental Conditions and Environmental Loads"
+  ],
+  "units": {
+    "length": "m",
+    "mass": "kg",
+    "force": "N",
+    "area": "m2",
+    "pressure": "Pa"
+  },
+  "constants": {
+    "seawater_density_kg_m3": 1025,
+    "gravity_m_s2": 9.80665,
+    "_note": "Submerged weight = (mass_air - displaced_water_mass) * g. Mudmats are open-framed steel structures with flat bottom plate."
+  },
+  "structures": [
+    {
+      "id": "MUD-S",
+      "name": "Mudmat-S-50te",
+      "description": "Small mudmat foundation for manifold protection structure or single well template",
+      "geometry": {
+        "length_m": 6.0,
+        "width_m": 6.0,
+        "height_m": 1.5,
+        "bottom_plate_thickness_mm": 20,
+        "skirt_depth_m": 0.3,
+        "skirt_thickness_mm": 12
+      },
+      "mass_properties": {
+        "mass_air_kg": 50000,
+        "mass_air_te": 50.0,
+        "displaced_volume_m3": 4.5,
+        "buoyancy_force_kn": 45.24,
+        "submerged_weight_kn": 445.09,
+        "_note": "Displaced volume estimated as 10% of bounding box (open frame structure)"
+      },
+      "centre_of_gravity": {
+        "x_m": 0.0,
+        "y_m": 0.0,
+        "z_m": 0.75,
+        "_note": "Relative to geometric centre of bottom plate"
+      },
+      "hydrodynamic_coefficients": {
+        "slamming_coefficient_Cs": 5.0,
+        "drag_coefficient_Cd": 2.0,
+        "added_mass_coefficient_Ca": 1.0,
+        "_note": "Cs=5.0 for flat bottom slamming per DNV-RP-H103 Table 4-1. Cd for sharp-edged flat plate. Ca=1.0 for flat plate (added mass = rho * volume * Ca)."
+      },
+      "projected_areas": {
+        "bottom_m2": 36.0,
+        "side_long_m2": 9.0,
+        "side_short_m2": 9.0,
+        "_note": "Bottom area = L x W = 6 x 6. Side areas are net projected areas accounting for open frame."
+      },
+      "rigging": {
+        "number_of_slings": 4,
+        "sling_angle_deg": 60,
+        "sling_length_m": 8.0,
+        "hook_height_above_cog_m": 7.7,
+        "_note": "4-point lift with spreader beam typical"
+      }
+    },
+    {
+      "id": "MUD-M",
+      "name": "Mudmat-M-100te",
+      "description": "Medium mudmat foundation for production manifold or PLET cluster",
+      "geometry": {
+        "length_m": 8.0,
+        "width_m": 10.0,
+        "height_m": 2.0,
+        "bottom_plate_thickness_mm": 25,
+        "skirt_depth_m": 0.4,
+        "skirt_thickness_mm": 14
+      },
+      "mass_properties": {
+        "mass_air_kg": 100000,
+        "mass_air_te": 100.0,
+        "displaced_volume_m3": 12.0,
+        "buoyancy_force_kn": 120.64,
+        "submerged_weight_kn": 859.99,
+        "_note": "Displaced volume ~7.5% of bounding box"
+      },
+      "centre_of_gravity": {
+        "x_m": 0.0,
+        "y_m": 0.0,
+        "z_m": 1.0,
+        "_note": "Relative to geometric centre of bottom plate"
+      },
+      "hydrodynamic_coefficients": {
+        "slamming_coefficient_Cs": 5.0,
+        "drag_coefficient_Cd": 2.0,
+        "added_mass_coefficient_Ca": 1.0,
+        "_note": "Same coefficients as small mudmat - similar flat-bottom geometry"
+      },
+      "projected_areas": {
+        "bottom_m2": 80.0,
+        "side_long_m2": 20.0,
+        "side_short_m2": 16.0,
+        "_note": "Bottom = 8 x 10 = 80 m2"
+      },
+      "rigging": {
+        "number_of_slings": 4,
+        "sling_angle_deg": 60,
+        "sling_length_m": 12.0,
+        "hook_height_above_cog_m": 11.4,
+        "_note": "4-point lift with spreader frame"
+      }
+    },
+    {
+      "id": "MUD-L",
+      "name": "Mudmat-L-200te",
+      "description": "Large mudmat foundation for major manifold or multi-well template",
+      "geometry": {
+        "length_m": 12.0,
+        "width_m": 14.0,
+        "height_m": 2.5,
+        "bottom_plate_thickness_mm": 30,
+        "skirt_depth_m": 0.5,
+        "skirt_thickness_mm": 16
+      },
+      "mass_properties": {
+        "mass_air_kg": 200000,
+        "mass_air_te": 200.0,
+        "displaced_volume_m3": 30.0,
+        "buoyancy_force_kn": 301.59,
+        "submerged_weight_kn": 1659.74,
+        "_note": "Displaced volume ~7.1% of bounding box"
+      },
+      "centre_of_gravity": {
+        "x_m": 0.0,
+        "y_m": 0.0,
+        "z_m": 1.25,
+        "_note": "Relative to geometric centre of bottom plate"
+      },
+      "hydrodynamic_coefficients": {
+        "slamming_coefficient_Cs": 5.0,
+        "drag_coefficient_Cd": 2.0,
+        "added_mass_coefficient_Ca": 1.0,
+        "_note": "Same coefficients - flat bottom geometry dominates"
+      },
+      "projected_areas": {
+        "bottom_m2": 168.0,
+        "side_long_m2": 35.0,
+        "side_short_m2": 30.0,
+        "_note": "Bottom = 12 x 14 = 168 m2"
+      },
+      "rigging": {
+        "number_of_slings": 4,
+        "sling_angle_deg": 60,
+        "sling_length_m": 16.0,
+        "hook_height_above_cog_m": 15.1,
+        "_note": "4-point lift with heavy spreader frame. May require custom rigging design."
+      }
+    }
+  ]
+}

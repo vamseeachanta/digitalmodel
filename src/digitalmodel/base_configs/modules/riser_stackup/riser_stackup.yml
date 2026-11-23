@@ -1,0 +1,28 @@
+basename: riser_stackup
+
+riser_stackup:
+  submerged_weight_kn: 8200.0
+  dynamic_factor: 1.25
+  od_mm: 533.4
+  design_pressure_mpa: 34.5
+  smys_mpa: 552.0
+  barlow_safety_factor: 1.5
+  buoyancy_uplift_kn: 2500.0
+  internal_area_m2: 0.18
+  mud_density_kn_m3: 13.0
+  mud_column_m: 1800.0
+  seawater_density_kn_m3: 10.05
+  seawater_column_m: 1800.0
+  depth_factors:
+    - 0.0
+    - 0.25
+    - 0.5
+    - 0.75
+    - 1.0
+  output_dir: results
+
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: true

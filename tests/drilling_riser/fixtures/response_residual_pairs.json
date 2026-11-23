@@ -1,0 +1,39 @@
+{
+  "provenance": {
+    "source": "synthetic (measured = scale*predicted + bias + noise from KNOWN constants); representative offline sample for CI",
+    "licence": "synthetic — no third-party or client data redistributed",
+    "note": "Fully synthetic residual-training pairs for twin B (#1374). The `predicted` values are representative STATIC flex-joint angle magnitudes (deg) of the analytical beam-column response (solve_static_response) on generic synthetic inputs; each `measured` value is generated as true_scale*predicted + true_bias + a small deterministic noise. NOT derived from any real measured trace. No client telemetry, no vessel identity, no credentials of any kind.",
+    "captured_offline": true
+  },
+  "true_model": {
+    "upper": {"scale": 1.15, "bias": 0.10},
+    "lower": {"scale": 1.20, "bias": 0.15},
+    "noise_sigma_deg": 0.02
+  },
+  "pairs": {
+    "upper": [
+      {"predicted_deg": 0.40, "measured_deg": 0.58},
+      {"predicted_deg": 0.60, "measured_deg": 0.77},
+      {"predicted_deg": 0.80, "measured_deg": 1.04},
+      {"predicted_deg": 1.00, "measured_deg": 1.23},
+      {"predicted_deg": 1.30, "measured_deg": 1.61},
+      {"predicted_deg": 1.60, "measured_deg": 1.92},
+      {"predicted_deg": 2.00, "measured_deg": 2.42},
+      {"predicted_deg": 2.40, "measured_deg": 2.84},
+      {"predicted_deg": 2.80, "measured_deg": 3.34},
+      {"predicted_deg": 3.00, "measured_deg": 3.53}
+    ],
+    "lower": [
+      {"predicted_deg": 0.50, "measured_deg": 0.77},
+      {"predicted_deg": 0.70, "measured_deg": 0.97},
+      {"predicted_deg": 0.90, "measured_deg": 1.25},
+      {"predicted_deg": 1.10, "measured_deg": 1.45},
+      {"predicted_deg": 1.40, "measured_deg": 1.85},
+      {"predicted_deg": 1.70, "measured_deg": 2.17},
+      {"predicted_deg": 2.10, "measured_deg": 2.69},
+      {"predicted_deg": 2.50, "measured_deg": 3.13},
+      {"predicted_deg": 2.90, "measured_deg": 3.65},
+      {"predicted_deg": 3.10, "measured_deg": 3.85}
+    ]
+  }
+}

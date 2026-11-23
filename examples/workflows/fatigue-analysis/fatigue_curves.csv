@@ -1,0 +1,2 @@
+Code,Year,Curve,Material,Curve Label,# of Slopes,Environment,a1,Log a1~,m1,Transfer Cycles 1,Transfer Stress 1 (Mpa),Log a2~,m2,Transfer Cycles 2,Transfer Stress 2 (Mpa),Log a3~,m3,Transfer Cycles 3,CAFL (Mpa),Log a4~,m4,Cycles at Fatigue Limit,S0 (Mpa),High Stress Range (Mpa),N - High Stress Range,Low Stress Range(Mpa),N - Low Stress Range,Reference
+DnV,2005,C2,Carbon Steel,DnV 2005 C2 Seawater CP,2,Seawater CP,7.96159E+11,11.901,3,1000000,92.68298234,6.83912E+15,100000,0,0,0,0,0,0,0,0,10000000,58.48,1000,796.1593504,1,6.83912E+15,Det Norske Veritas DNV-RP-C203 Aug 2005

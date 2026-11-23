@@ -1,0 +1,16 @@
+basename: code_check
+
+code_check:
+  code: API_RP_2SK
+  inputs:
+    line_name: ML-01
+    mbl_kN: 6978.0
+    condition: extreme
+    max_tension_kN: 3800.0
+  output_dir: results
+
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: true

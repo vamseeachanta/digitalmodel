@@ -1,0 +1,22 @@
+basename: parametric_run
+
+parametric_run:
+  # API 5L offshore pipeline grades, nominal SMYS in MPa:
+  # X52 = 359, X65 = 448, X80 = 552.
+  base_input: examples/workflows/stress-strain/input.yml
+  target_basename: stress_strain
+  variants:
+    source: factorial
+    parameters:
+      - name: yield_strength
+        values: [359.0, 448.0, 552.0]
+    mapping:
+      yield_strength: stress_strain.material.yield_strength
+  render:
+    output_dir: examples/workflows/stress-strain-parametric/results
+    output_pattern: case_{index}
+  run:
+    engine: python
+    mode: serial
+  collect:
+    manifest: examples/workflows/stress-strain-parametric/results/cases.csv

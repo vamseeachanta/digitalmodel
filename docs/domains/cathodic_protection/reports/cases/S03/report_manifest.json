@@ -1,0 +1,31 @@
+{
+  "artifacts": {
+    "citations": "report_citations.json",
+    "html": "report.html",
+    "manifest": "report_manifest.json",
+    "pdf": null
+  },
+  "citations_count": 5,
+  "document": {
+    "client": "Internal module review - no client issuance",
+    "number": "R2281-CP-003-00",
+    "project": "Digitalmodel CP regression portfolio",
+    "revision": "00",
+    "title": "CP module review: Subsea manifold"
+  },
+  "execution_tool": "digitalmodel.reporting.engine",
+  "pdf": {
+    "engine": null,
+    "message": "pdf rendering disabled (pdf: off)",
+    "rendered": false
+  },
+  "report_layer": null,
+  "standards": [
+    {
+      "code_id": "DNV-RP-B401",
+      "edition": "May 2021",
+      "provenance": "verified-2021-tables"
+    }
+  ],
+  "tool_version": "0.0.9"
+}

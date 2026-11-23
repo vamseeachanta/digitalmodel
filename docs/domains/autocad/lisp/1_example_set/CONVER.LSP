@@ -1,0 +1,17 @@
+(defun C:CONV ()
+(defun *error* (msg)
+	(princ "error: ")
+	(princ msg)
+	(terpri)
+)
+		(setq dxfnm1 "C:\\ACAD12\\dxf\\"
+			dxfnm2 (getvar "dwgname")
+			dxfnm2 (substr dxfnm2 16 8)
+			dxfnam (strcat dxfnm1 dxfnm2)
+		)
+		(prompt "\nConversion of Map ")
+		(prompt dxfnm2)
+		(prompt " to DXF Format")
+		(command "dxfout" dxfnam 16)
+)
+

@@ -1,0 +1,1 @@
+"""Fatigue analysis module tests."""

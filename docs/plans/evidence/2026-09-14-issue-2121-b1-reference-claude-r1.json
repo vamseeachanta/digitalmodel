@@ -1,0 +1,80 @@
+{
+  "verdict": "MINOR",
+  "reviewed_revision": "d0bf43d04221ee413bd6142532290775fc182b02",
+  "reviewed_files": [
+    {
+      "path": "src/digitalmodel/ansys/cylinder_reference.py",
+      "sha256": "c2159ec014a22f30cdfc7aa8c3b93578f0c11b55dcc41faad85ac5491f052cdf"
+    },
+    {
+      "path": "src/digitalmodel/ansys/cylinder_expression.py",
+      "sha256": "88c615bc68cd9aa8aafe3d5944c8b88fcf7b381b84391da81189415a4ed89f27"
+    },
+    {
+      "path": "src/digitalmodel/ansys/cylinder_agreement.py",
+      "sha256": "1c09132cda21b4751d94c29d7f2cb767688aad9505d99dc962009b5cf89d62b9"
+    },
+    {
+      "path": "tests/ansys/test_cylinder_reference.py",
+      "sha256": "19e1ae9bc7f27100066a5f1e76147662722ddd41ae7395ac0dc7500312007f72"
+    },
+    {
+      "path": "tests/ansys/test_cylinder_expression.py",
+      "sha256": "9ee3aa487142a17ae2ada1652c9913e0a17a4a39f5048cf246ce2f711cc04f72"
+    },
+    {
+      "path": "tests/ansys/test_cylinder_agreement.py",
+      "sha256": "bdb54864ea58fc33b0fa51483b97633ec9c922f983a74c1b2125b1100a4f3f21"
+    },
+    {
+      "path": "examples/ansys/cylinder-benchmark/checker_contract.json",
+      "sha256": "85818d3a9203bf08ce2f931b910f9f187e97a8d5c69c82a823f5c8fb2c91da6e"
+    },
+    {
+      "path": "examples/ansys/cylinder-benchmark/checker_brief.txt",
+      "sha256": "5d3ddca9eb577237b132a7265857c2b7b32afe8e907d0d6bbc3e3229cb9f96b4"
+    },
+    {
+      "path": "examples/ansys/cylinder-benchmark/producer_derivation.json",
+      "sha256": "405ba2af48734f66a1ad3d5738741d900587b444e6a589ed6e7b1a391ec91c9a"
+    }
+  ],
+  "findings": [
+    {
+      "id": "F1",
+      "severity": "MINOR",
+      "defect": "checker_brief.txt leaks no formulas or numbers, but it dictates the discriminating branch: 'Do not assume closed ends or plane strain' and the request to explain the 'open-end branch'. The physical inputs (no end caps, no axial load, free top) already determine this, so the directive is redundant and weakens the claim that the checker independently selected sigma_z=0 over closed-end or plane-strain alternatives.",
+      "correction": "Before freezing, delete the 'Do not assume closed ends or plane strain' sentence and replace 'open-end branch' with 'axial stress state implied by the end conditions'; otherwise record in the B2 adjudication notes that the axial branch was supplied, not independently derived."
+    },
+    {
+      "id": "F2",
+      "severity": "MINOR",
+      "defect": "checker_brief.txt contains token concatenations in the physical inputs: 'axial length240 mm', 'outside pressure0', 'p is either0 or10 MPa'. In a one-shot hashed brief with no retry, a misread of the pressure set or length is an avoidable rejection or wrong-branch risk.",
+      "correction": "Insert the missing spaces ('length 240 mm', 'pressure 0', 'either 0 or 10 MPa'), recompute the brief hash, and re-verify before the freeze commit."
+    },
+    {
+      "id": "F3",
+      "severity": "MINOR",
+      "defect": "Precision independence holds only against localcontext changes. Every Context(prec=50, ...) call in cylinder_reference._decimal, reference_exact, evaluate_expression, evaluate_checker and compare_reference inherits rounding and traps from decimal.DefaultContext, so a process-global DefaultContext mutation (e.g. Inexact trapped or ROUND_DOWN) would change or abort results. test_reference_is_independent_of_ambient_decimal_settings only mutates the local context and cannot catch this.",
+      "correction": "Build one module-level context with explicit rounding=ROUND_HALF_EVEN and traps=[InvalidOperation, DivisionByZero, Overflow] (plus Emax/Emin where used) and use it in all five sites; add a test that mutates decimal.DefaultContext under a fixture and asserts unchanged output."
+    },
+    {
+      "id": "F4",
+      "severity": "MINOR",
+      "defect": "Contract/grammar mismatch on leading zeros: _number refuses any literal exponent longer than 4 characters ('1e0256', '1e+0001') even though the magnitude is within 256, and exponent() refuses power digits longer than 3 ('r**0002') though within 64. The contract text describes only magnitude limits and 'one or more digits'.",
+      "correction": "Either parse the digit string with int() and check only the magnitude (still bounded because token length is capped at 128), or add explicit character-count limits for exponents to checker_contract.json so the frozen contract matches the code."
+    },
+    {
+      "id": "F5",
+      "severity": "MINOR",
+      "defect": "The three 'mutation' assertions in test_hooke_law_equilibrium_and_branch_mutations are tautologies: lam*(eps_r+eps_t) != 0, aa != 0 and -u_z != u_z hold for any nonzero pressure and never exercise the reference code's branch. A closed-end or plane-strain error in cylinder_reference.py would not be caught by them.",
+      "correction": "Replace with identities that fail on the wrong branch: assert q['sigma_z'] == 0, assert q['sigma_z'] != nu*(q['sigma_r']+q['sigma_theta']) (plane-strain value), assert q['sigma_z'] != aa (closed-end value), and assert q['u_z'] == -nu*(q['sigma_r']+q['sigma_theta'])*y/E."
+    },
+    {
+      "id": "F6",
+      "severity": "MINOR",
+      "defect": "Test gaps on the comparison path: no test shows compare_reference propagates an envelope or grammar rejection (fenced or prose output) without emitting a record, and the Fraction/Decimal branches of _symbols used by symbols_for are never exercised directly in test_cylinder_expression.py (all fixtures use string symbols).",
+      "correction": "Add a test that compare_reference(b'```json...```') raises ExpressionError, and a parametrized test that evaluate_expression accepts Fraction and Decimal symbol values and refuses Decimal('NaN') and Decimal('Infinity')."
+    }
+  ]
+}

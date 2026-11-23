@@ -1,0 +1,451 @@
+"""Test configuration for diffraction module tests."""
+from __future__ import annotations
+
+from datetime import datetime
+from pathlib import Path
+
+import numpy as np
+import pytest
+import yaml
+
+from digitalmodel.hydrodynamics.diffraction.benchmark_abscissa import (
+    MAX_RELATIVE_GAP,
+)
+
+from digitalmodel.hydrodynamics.diffraction.orcawave_runner import RunConfig
+from digitalmodel.hydrodynamics.diffraction.output_schemas import (
+    AddedMassSet,
+    DampingSet,
+    DiffractionResults,
+    DOF,
+    FrequencyData,
+    HeadingData,
+    HydrodynamicMatrix,
+    RAOComponent,
+    RAOSet,
+)
+
+FIXTURES_DIR = Path(__file__).parent / "fixtures"
+SOLVER_FIXTURES_DIR = Path(__file__).parent.parent.parent / "fixtures" / "solver"
+
+MIN_FREQUENCY = 0.05
+MAX_FREQUENCY = 2.0
+N_FREQ = int(
+    np.ceil(np.log(MAX_FREQUENCY / MIN_FREQUENCY) / np.log1p(MAX_RELATIVE_GAP))
+) + 1
+N_HEAD = 5
+FREQUENCIES = np.geomspace(MIN_FREQUENCY, MAX_FREQUENCY, N_FREQ)
+HEADINGS = np.array([0.0, 45.0, 90.0, 135.0, 180.0])
+
+
+def _make_freq_data() -> FrequencyData:
+    return FrequencyData(
+        values=FREQUENCIES.copy(),
+        periods=2.0 * np.pi / FREQUENCIES,
+        count=N_FREQ,
+        min_freq=float(FREQUENCIES[0]),
+        max_freq=float(FREQUENCIES[-1]),
+    )
+
+
+def _make_comparison_freq_data() -> FrequencyData:
+    """Frequency grid that satisfies the fail-closed comparison contract."""
+    return _make_freq_data()
+
+
+def _make_heading_data() -> HeadingData:
+    return HeadingData(
+        values=HEADINGS.copy(),
+        count=N_HEAD,
+        min_heading=float(HEADINGS[0]),
+        max_heading=float(HEADINGS[-1]),
+    )
+
+
+def _make_rao_component(dof: DOF) -> RAOComponent:
+    rng = np.random.default_rng(seed=dof.value)
+    if dof in (DOF.SURGE, DOF.SWAY, DOF.HEAVE):
+        magnitude = rng.uniform(0.0, 1.5, size=(N_FREQ, N_HEAD))
+    else:
+        magnitude = rng.uniform(0.0, 5.0, size=(N_FREQ, N_HEAD))
+    phase = rng.uniform(-180.0, 180.0, size=(N_FREQ, N_HEAD))
+    return RAOComponent(
+        dof=dof,
+        magnitude=magnitude,
+        phase=phase,
+        frequencies=_make_freq_data(),
+        headings=_make_heading_data(),
+        unit="",
+    )
+
+
+def _make_rao_set() -> RAOSet:
+    now = datetime.now().isoformat()
+    return RAOSet(
+        vessel_name="TestVessel",
+        analysis_tool="OrcaWave",
+        water_depth=100.0,
+        surge=_make_rao_component(DOF.SURGE),
+        sway=_make_rao_component(DOF.SWAY),
+        heave=_make_rao_component(DOF.HEAVE),
+        roll=_make_rao_component(DOF.ROLL),
+        pitch=_make_rao_component(DOF.PITCH),
+        yaw=_make_rao_component(DOF.YAW),
+        created_date=now,
+        source_file="test_model.sim",
+    )
+
+
+def _make_matrix_set(matrix_type: str) -> AddedMassSet | DampingSet:
+    rng = np.random.default_rng(seed=42 if matrix_type == "added_mass" else 99)
+    freq_data = _make_freq_data()
+    matrices = []
+    for i in range(N_FREQ):
+        m = rng.uniform(100, 1000, size=(6, 6))
+        m = (m + m.T) / 2  # symmetric
+        matrices.append(
+            HydrodynamicMatrix(
+                matrix=m,
+                frequency=float(FREQUENCIES[i]),
+                matrix_type=matrix_type,
+                units={"linear": "kg", "angular": "kg.m^2"},
+                source="solver",
+            )
+        )
+    cls = AddedMassSet if matrix_type == "added_mass" else DampingSet
+    return cls(
+        vessel_name="TestVessel",
+        analysis_tool="OrcaWave",
+        water_depth=100.0,
+        matrices=matrices,
+        frequencies=freq_data,
+        created_date=datetime.now().isoformat(),
+    )
+
+
+# ---------------------------------------------------------------------------
+# Fixtures
+# ---------------------------------------------------------------------------
+
+
+@pytest.fixture
+def fixtures_dir() -> Path:
+    """Return path to test fixtures directory."""
+    return FIXTURES_DIR
+
+
+@pytest.fixture
+def solver_fixtures_dir() -> Path:
+    """Return path to solver test fixtures directory."""
+    return SOLVER_FIXTURES_DIR
+
+
+@pytest.fixture
+def l00_owr_path() -> Path:
+    """Path to L00 reference .owr file (committed artifact from Phase 7 Plan 03)."""
+    path = SOLVER_FIXTURES_DIR / "L00_test01.owr"
+    if not path.exists():
+        pytest.skip("L00 .owr fixture not available (requires solver run on licensed-win-1)")
+    return path
+
+
+@pytest.fixture
+def l00_xlsx_path() -> Path:
+    """Path to L00 reference .xlsx file (committed artifact from Phase 7 Plan 03)."""
+    path = SOLVER_FIXTURES_DIR / "L00_test01.xlsx"
+    if not path.exists():
+        pytest.skip("L00 .xlsx fixture not available (requires solver run on licensed-win-1)")
+    return path
+
+
+@pytest.fixture
+def l01_owr_path() -> Path:
+    """Path to L01 reference .owr file (committed artifact from Phase 7 Plan 03)."""
+    path = SOLVER_FIXTURES_DIR / "L01_001_ship_raos.owr"
+    if not path.exists():
+        pytest.skip("L01 .owr fixture not available (requires solver run on licensed-win-1)")
+    return path
+
+
+@pytest.fixture
+def l01_xlsx_path() -> Path:
+    """Path to L01 reference .xlsx file (committed artifact from Phase 7 Plan 03)."""
+    path = SOLVER_FIXTURES_DIR / "L01_001_ship_raos.xlsx"
+    if not path.exists():
+        pytest.skip("L01 .xlsx fixture not available (requires solver run on licensed-win-1)")
+    return path
+
+
+@pytest.fixture
+def ship_raos_spec_path(fixtures_dir: Path) -> Path:
+    """Path to ship RAO spec fixture."""
+    return fixtures_dir / "spec_ship_raos.yml"
+
+
+@pytest.fixture
+def semisub_spec_path(fixtures_dir: Path) -> Path:
+    """Path to semi-sub spec fixture."""
+    return fixtures_dir / "spec_semisub.yml"
+
+
+@pytest.fixture
+def fpso_turret_spec_path(fixtures_dir: Path) -> Path:
+    """Path to FPSO turret spec fixture."""
+    return fixtures_dir / "spec_fpso_turret.yml"
+
+
+@pytest.fixture
+def dry_run_config(tmp_path: Path) -> RunConfig:
+    """RunConfig pre-configured for dry-run testing."""
+    return RunConfig(output_dir=tmp_path, dry_run=True)
+
+
+@pytest.fixture
+def mock_rao_set() -> RAOSet:
+    """Synthetic RAOSet with 10 frequencies, 5 headings, realistic shapes."""
+    return _make_rao_set()
+
+
+# ---------------------------------------------------------------------------
+# Dense PASS fixture (#611 / #625 Phase-1)
+# ---------------------------------------------------------------------------
+# The sparse fixture above (N_FREQ=10, N_HEAD=5, 0..180 headings) intentionally
+# yields a WARNING verdict. The dense fixture below satisfies every validator
+# coverage/physical check so it yields a clean PASS:
+#   - >=20 frequencies spanning <=0.1 .. >=1.5 rad/s (uniform spacing)
+#   - >=8 headings with full 360-degree coverage (range >= 350)
+#   - RAO magnitudes well within translation (<5) / rotation (<20) limits and
+#     resonance amp limits (3 m/m translation, 15 deg/m rotation)
+#   - symmetric 6x6 added-mass / damping matrices with non-negative diagonals
+N_FREQ_DENSE = 24
+N_HEAD_DENSE = 13
+FREQUENCIES_DENSE = np.linspace(0.05, 2.5, N_FREQ_DENSE)
+HEADINGS_DENSE = np.linspace(0.0, 360.0, N_HEAD_DENSE)
+
+
+def _make_dense_freq_data() -> FrequencyData:
+    return FrequencyData(
+        values=FREQUENCIES_DENSE.copy(),
+        periods=2.0 * np.pi / FREQUENCIES_DENSE,
+        count=N_FREQ_DENSE,
+        min_freq=float(FREQUENCIES_DENSE[0]),
+        max_freq=float(FREQUENCIES_DENSE[-1]),
+    )
+
+
+def _make_dense_heading_data() -> HeadingData:
+    return HeadingData(
+        values=HEADINGS_DENSE.copy(),
+        count=N_HEAD_DENSE,
+        min_heading=float(HEADINGS_DENSE[0]),
+        max_heading=float(HEADINGS_DENSE[-1]),
+    )
+
+
+def _make_dense_rao_component(dof: DOF) -> RAOComponent:
+    # Constant, modest magnitudes: 1.0 m/m translation, 2.0 deg/m rotation.
+    if dof in (DOF.SURGE, DOF.SWAY, DOF.HEAVE):
+        magnitude = np.full((N_FREQ_DENSE, N_HEAD_DENSE), 1.0)
+    else:
+        magnitude = np.full((N_FREQ_DENSE, N_HEAD_DENSE), 2.0)
+    return RAOComponent(
+        dof=dof,
+        magnitude=magnitude,
+        phase=np.zeros((N_FREQ_DENSE, N_HEAD_DENSE)),
+        frequencies=_make_dense_freq_data(),
+        headings=_make_dense_heading_data(),
+        unit="",
+    )
+
+
+def _make_dense_matrix_set(matrix_type: str) -> AddedMassSet | DampingSet:
+    matrices = []
+    for i in range(N_FREQ_DENSE):
+        # Symmetric (diagonal), positive-definite -> non-negative diagonals.
+        matrices.append(
+            HydrodynamicMatrix(
+                matrix=np.eye(6) * 500.0,
+                frequency=float(FREQUENCIES_DENSE[i]),
+                matrix_type=matrix_type,
+                units={"linear": "kg", "angular": "kg.m^2"},
+            )
+        )
+    cls = AddedMassSet if matrix_type == "added_mass" else DampingSet
+    return cls(
+        vessel_name="DenseVessel",
+        analysis_tool="OrcaWave",
+        water_depth=100.0,
+        matrices=matrices,
+        frequencies=_make_dense_freq_data(),
+        created_date=datetime.now().isoformat(),
+    )
+
+
+@pytest.fixture
+def dense_diffraction_results() -> DiffractionResults:
+    """Dense, physically-clean DiffractionResults that validates to PASS.
+
+    24 frequencies, 13 headings (full 360-degree coverage), modest RAO
+    magnitudes, and symmetric 6x6 matrices with non-negative diagonals.
+    """
+    now = datetime.now().isoformat()
+    rao_set = RAOSet(
+        vessel_name="DenseVessel",
+        analysis_tool="OrcaWave",
+        water_depth=100.0,
+        surge=_make_dense_rao_component(DOF.SURGE),
+        sway=_make_dense_rao_component(DOF.SWAY),
+        heave=_make_dense_rao_component(DOF.HEAVE),
+        roll=_make_dense_rao_component(DOF.ROLL),
+        pitch=_make_dense_rao_component(DOF.PITCH),
+        yaw=_make_dense_rao_component(DOF.YAW),
+        created_date=now,
+        source_file="dense_model.sim",
+    )
+    return DiffractionResults(
+        vessel_name="DenseVessel",
+        analysis_tool="OrcaWave",
+        water_depth=100.0,
+        raos=rao_set,
+        added_mass=_make_dense_matrix_set("added_mass"),
+        damping=_make_dense_matrix_set("damping"),
+        created_date=now,
+        source_files=["dense_model.sim"],
+    )
+
+
+@pytest.fixture
+def fail_diffraction_results(
+    dense_diffraction_results: DiffractionResults,
+) -> DiffractionResults:
+    """Dense results with a negative added-mass diagonal -> FAIL verdict.
+
+    NOTE: this depends on the current substring classifier in
+    ``OutputValidator._determine_overall_status`` (output_validator.py:364),
+    which escalates any issue containing the word ``"negative"`` to FAIL. If
+    that classifier is hardened in a later issue, this fixture may need updating.
+    """
+    results = dense_diffraction_results
+    bad = np.eye(6) * 500.0
+    bad[2, 2] = -10.0  # negative heave added-mass diagonal
+    first = results.added_mass.matrices[0]
+    results.added_mass.matrices[0] = HydrodynamicMatrix(
+        matrix=bad,
+        frequency=first.frequency,
+        matrix_type="added_mass",
+        units={"linear": "kg", "angular": "kg.m^2"},
+    )
+    return results
+
+
+@pytest.fixture
+def mock_diffraction_results() -> DiffractionResults:
+    """Synthetic DiffractionResults with 10 frequencies, 5 headings."""
+    now = datetime.now().isoformat()
+    return DiffractionResults(
+        vessel_name="TestVessel",
+        analysis_tool="OrcaWave",
+        water_depth=100.0,
+        raos=_make_rao_set(),
+        added_mass=_make_matrix_set("added_mass"),
+        damping=_make_matrix_set("damping"),
+        created_date=now,
+        source_files=["test_model.sim"],
+    )
+
+
+def _make_solver_results(
+    solver_name: str,
+    seed_offset: int = 0,
+    magnitude_scale: float = 1.0,
+    heave_bias: float = 0.0,
+) -> DiffractionResults:
+    """Synthetic DiffractionResults with controllable differences.
+
+    Args:
+        solver_name: Name of the analysis tool (e.g. "AQWA").
+        seed_offset: Offset added to RNG seeds for repeatable variation.
+        magnitude_scale: Multiplicative scale on RAO magnitudes.
+        heave_bias: Additive bias on heave magnitude (for outlier testing).
+    """
+    freq_data = _make_freq_data()
+    heading_data = _make_heading_data()
+
+    components = {}
+    for dof in DOF:
+        rng = np.random.default_rng(seed=dof.value + seed_offset)
+        if dof in (DOF.SURGE, DOF.SWAY, DOF.HEAVE):
+            mag = rng.uniform(0.0, 1.5, size=(N_FREQ, N_HEAD)) * magnitude_scale
+        else:
+            mag = rng.uniform(0.0, 5.0, size=(N_FREQ, N_HEAD)) * magnitude_scale
+        if dof == DOF.HEAVE:
+            mag = mag + heave_bias
+        phase = rng.uniform(-180.0, 180.0, size=(N_FREQ, N_HEAD))
+        components[dof.name.lower()] = RAOComponent(
+            dof=dof,
+            magnitude=mag,
+            phase=phase,
+            frequencies=_make_comparison_freq_data(),
+            headings=_make_heading_data(),
+            unit="",
+        )
+
+    now = datetime.now().isoformat()
+    rao_set = RAOSet(
+        vessel_name="TestVessel",
+        analysis_tool=solver_name,
+        water_depth=100.0,
+        created_date=now,
+        source_file=f"{solver_name.lower()}_model.sim",
+        **components,
+    )
+    return DiffractionResults(
+        vessel_name="TestVessel",
+        analysis_tool=solver_name,
+        water_depth=100.0,
+        raos=rao_set,
+        added_mass=_make_matrix_set("added_mass"),
+        damping=_make_matrix_set("damping"),
+        created_date=now,
+        source_files=[f"{solver_name.lower()}_model.sim"],
+    )
+
+
+@pytest.fixture
+def three_solver_results() -> dict[str, DiffractionResults]:
+    """AQWA (baseline), OrcaWave (close match), BEMRosetta (slight heave bias)."""
+    return {
+        "AQWA": _make_solver_results("AQWA", seed_offset=0),
+        "OrcaWave": _make_solver_results("OrcaWave", seed_offset=0, magnitude_scale=1.02),
+        "BEMRosetta": _make_solver_results(
+            "BEMRosetta", seed_offset=0, magnitude_scale=1.01, heave_bias=0.15,
+        ),
+    }
+
+
+@pytest.fixture
+def two_identical_results() -> dict[str, DiffractionResults]:
+    """Two identical solver results for testing FULL consensus."""
+    return {
+        "SolverA": _make_solver_results("SolverA", seed_offset=0),
+        "SolverB": _make_solver_results("SolverB", seed_offset=0),
+    }
+
+
+@pytest.fixture
+def batch_config_path(tmp_path: Path, ship_raos_spec_path: Path) -> Path:
+    """Temporary batch configuration YAML file."""
+    config = {
+        "jobs": [
+            {
+                "spec_path": str(ship_raos_spec_path),
+                "job_name": "ship_raos",
+                "dry_run": True,
+            },
+        ],
+        "execution_mode": "sequential",
+        "base_output_dir": str(tmp_path / "batch_output"),
+    }
+    config_file = tmp_path / "batch_config.yml"
+    config_file.write_text(yaml.dump(config))
+    return config_file

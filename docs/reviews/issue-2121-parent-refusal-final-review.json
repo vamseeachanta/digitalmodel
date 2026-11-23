@@ -1,0 +1,38 @@
+{
+  "issue": "https://github.com/vamseeachanta/digitalmodel/issues/2121",
+  "observed_utc": "2026-09-17T21:17:19.527028+00:00",
+  "review_bundle_sha256": "0987596d562813027e267cb007f1279eb1f6533b319125c93ea60329efaabbe7",
+  "review_stdout_sha256": "3f1b728fcbd540add1168035eb4cf5da8b6a81f71ffbb75f0f03dc2258063cb5",
+  "review_session_id": "811057e0-cbe5-4e78-89cb-0dce73d1778e",
+  "review": {
+    "bundle_sha256": "0987596d562813027e267cb007f1279eb1f6533b319125c93ea60329efaabbe7",
+    "verdict": "MINOR",
+    "findings": [
+      "MINOR \u2014 Most refusal-evidence tests bypass table validation. The `rejected()` helper in test_cylinder_parent_refusal_evidence.py monkeypatches `read_windows_parent_map` itself, so the parametrization `({}, 'disappeared', 0, None)` exercises an empty final table that production code can never produce (`read_windows_parent_map` enforces `1 <= len(result) <= 65536`). Evidence: cylinder_parent_map.read_windows_parent_map bounded-nonempty check vs. the `final={}` parameter. Impact is limited because `test_disappearance_uses_validated_nonempty_parent_tables` patches `backend.ppid_map` and drives the real validation path for the disappearance case. Remedy: patch `backend.ppid_map` in the shared helper (as the disappearance test already does) so all cases traverse the real validator, or annotate the empty-table parameter as deliberately synthetic.",
+      "MINOR \u2014 The new `events` record shape diverges from every other event in the evidence system. `_parent_change_evidence` emits `dict(change=..., disposition='REFUSED_PARENT_TABLE_CHANGED', trigger_pids=[...])` with no `pid`/`from_stage`/`to_stage`, whereas cylinder_absence_population._transition and cylinder_diagnostic_snapshot_v2._observed_stage always emit `pid` (and the former also emits `from_stage`/`to_stage`). Any generic consumer indexing `event['pid']` would KeyError. No such consumer exists on this failure path today (the recorder only json.dumps the dict, and the success-path population_check never contains this event), so this is not blocking. Remedy: either include `pid=None` plus stage keys for shape uniformity, or document the parent-table event as a distinct top-level schema in the plan's evidence contract.",
+      "MINOR (pre-existing, not introduced) \u2014 Copy isolation is asymmetric at the collector wrapper. ParentMapChangeError deepcopies its evidence in `__init__`, but `PopulationError.__init__` (cylinder_absence_population.py) stores the passed dict by reference, and `_observed_collection` sets `completed_inventories=inventories` / `completed_parent_maps=maps` to the collector's live lists. Nothing mutates them after the raise, so no defect is reachable today, but the module's stated copy-isolation contract is only enforced on the new sub-evidence. Remedy (optional, outside this bounded correction): deepcopy `inventories`/`maps` at the `evidence.update(...)` site, or state the reference semantics explicitly in the disposition."
+    ]
+  },
+  "source_pins": {
+    "src/digitalmodel/ansys/cylinder_parent_map.py": "d2bf4332f2f307d40f8dec4ce6f62e62e7625ff5c838618f33ecc58e317555a2",
+    "tests/ansys/test_cylinder_parent_refusal_evidence.py": "1b066e0c6731e19ae3534618b7bd22524d6b3e7d9fa835f883fc78f7f631a288",
+    "docs/plans/issue-2121-parent-map-refusal-evidence.html": "723b559d0550f4d5aceeb41a53ab259d099bd266bf7724f88d57d3ae4c87c2f1",
+    "docs/reviews/issue-2121-parent-refusal-disposition.json": "970d12858e28b07ad3e682f83791a435d771f2dc5b4365e71b0bbf7143db389f"
+  },
+  "regression": {
+    "passed": 900,
+    "skipped": 2,
+    "log_sha256": "1a912f9b64063abea2c818d18f60870032f6fe9766e038bdc18058e3172c3554"
+  },
+  "status": "DIAGNOSTIC_SOURCE_REVIEW_NONBLOCKING",
+  "minor_dispositions": [
+    "The empty-table unit parameter deliberately exercises a synthetic predicate state. Separate disappearance coverage traverses actual bounded nonempty parent-table validation; no production empty-table acceptance is claimed.",
+    "The parent-table summary is a distinct failure-only event: change=parent_table_changed, disposition=REFUSED_PARENT_TABLE_CHANGED, trigger_pids=list[int]. It is not a per-process stage-transition event. Consumers must branch on event kind; no existing recorder indexes a singular pid.",
+    "New exception evidence is deep-copied. Existing collector completed lists retain their existing reference semantics; no later mutation path was introduced. Wrapper-wide isolation changes remain outside scope."
+  ],
+  "limits": [
+    "Parent-table differences do not establish complete process identities or relevance.",
+    "The strict existing refusal condition is unchanged.",
+    "No solver run or engineering qualification."
+  ]
+}

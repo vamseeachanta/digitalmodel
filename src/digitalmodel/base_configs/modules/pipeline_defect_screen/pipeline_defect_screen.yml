@@ -1,0 +1,7 @@
+# Packaged engine defaults; the workflow input supplies the assessment block.
+basename: pipeline_defect_screen
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: true

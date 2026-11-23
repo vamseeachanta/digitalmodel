@@ -1,0 +1,36 @@
+# Project single-source-of-truth (project SSOT) for the OrcaFlex LLM
+# spec-authoring front-end -- RISER example.
+#
+# This is heterogeneous project data, NOT an analysis spec. The LLM reads it,
+# extracts only the riser facts that are actually stated here, and leaves
+# everything else for the deterministic inverse resolver to fill (and ledger).
+#
+# Run:
+#   uv run python -m digitalmodel.solvers.orcaflex.spec_author \
+#       examples/workflows/orcaflex-spec-authoring-llm/project_bundle_riser.yml \
+#       -r "Check the steel catenary riser wave dynamics" \
+#       -o authored_spec_riser
+
+project_name: West Horizon FPSO export riser screening
+
+vessel_particulars:
+  type: FPSO
+  loa_m: 285
+
+environment:
+  field: Deepwater GoM
+  water_depth_m: 1200
+
+notes: >
+  16 in steel catenary export riser hung off the FPSO. Pipe is 0.4 m OD with a
+  30 mm wall. Client wants a first-pass wave dynamic check (dynamic tension and
+  bending at the hang-off and touchdown) before the detailed metocean is final.
+  Hang-off and touchdown geometry not fixed yet, so leave the layout to the
+  resolver defaults.
+
+documents:
+  - >
+    Riser basis of design (excerpt): "Single steel catenary riser, lazy-wave
+    configuration. Outer diameter 0.40 m, wall thickness 30 mm. Water depth at
+    the hang-off is 1200 m. Arc length ~2000 m. Touchdown layback to be confirmed
+    in detailed design."

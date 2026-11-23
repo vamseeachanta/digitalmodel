@@ -1,0 +1,23 @@
+id: pe-2026-06-17
+date: "2026-06-17"
+slug: pe-problem-of-the-day-6-17-2026
+source_url: https://app.collide.io/posts/pe-problem-of-the-day-6-17-2026
+title: "PE Problem of the Day 6/17/2026 — depositional environment"
+posted_by: Yogashri Pradhan
+tags: [upstream, reservoir-engineering, geology]
+type: multiple-choice
+
+statement: >
+  Clastic reservoir: fine-medium sandstone with interbedded shale, cross-bedding, ripple laminations, mud drapes, upward-fining sequences, GR coarsening/fining cycles, moderate lateral heterogeneity and compartmentalization. Most likely depositional environment? A) fluvial channel-levee  B) deep-marine turbidite fan  C) aeolian dune field  D) carbonate reef platform
+
+find:
+  - "Choose A/B/C/D"
+
+solution:
+  method: "Petroleum-engineering concept recall (no calculation)."
+  answer: "A - fluvial channel-levee system. Upward-fining cycles, cross-bedding, ripples, mud drapes, and strong compartmentalization point to laterally-confined channel sands in floodplain shale."
+  confidence: high
+  solved_by: "petroleum-engineering domain knowledge (Deckhand wells-subsurface pack / Claude API solver)"
+
+# Knowledge dot: the concept lives in llm-wiki (Deckhand wells-subsurface pack source).
+wiki_concept: wikis/reservoir-engineering/wiki/concepts/depositional-environments.md

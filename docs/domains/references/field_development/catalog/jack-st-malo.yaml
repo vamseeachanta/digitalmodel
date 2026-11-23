@@ -1,0 +1,68 @@
+# =============================================================================
+# Field Development Case Study: Jack / St. Malo
+# Schema version: 1.0
+# =============================================================================
+
+id: jack-st-malo
+name: "Jack / St. Malo"
+operator: "Chevron U.S.A. Inc."
+
+partners:
+  - name: "Statoil Gulf of Mexico LLC (now Equinor)"
+    interest_pct: 25
+  - name: "Petrobras America Inc."
+    interest_pct: 25
+
+basin: GoM
+subregion: "Gulf of Mexico — Walker Ridge"
+country: "United States"
+water_depth_m: 2134
+field_type: deepwater
+
+development_type: SPAR
+
+sanction_year: 2010
+production_start_year: 2014
+
+reserves_mmboe: 500
+peak_production_mboe_d: 94
+
+capex_bn_usd: 7.5
+capex_confidence: disclosed
+
+npv_assumptions:
+  oil_price_usd_bbl: 70
+  discount_rate_pct: 10
+  npv_bn_usd: null
+  source: >
+    Chevron investor presentations 2010-2014; IHS / Wood Mackenzie public
+    estimates. Oil price basis 70 USD/bbl real flat; 10% nominal discount rate.
+
+data_sources:
+  - name: "Chevron — Jack/St. Malo project page"
+    url: "https://www.chevron.com/projects/jack-st-malo"
+    accessed: "2026-02-10"
+  - name: "BSEE — Walker Ridge production data"
+    url: "https://www.data.bsee.gov"
+    accessed: "2026-02-10"
+  - name: "OGJ — Jack/St. Malo first oil 2014"
+    url: "https://www.ogj.com/drilling-production/production-operations/article/17242456"
+    accessed: "2026-02-10"
+
+notes: >
+  Jack and St. Malo are adjacent deepwater discoveries in Walker Ridge developed
+  via a shared SPAR facility — the world's largest SPAR at FID. Water depth of
+  ~2,134 m. The SPAR hosts 25 production and injection wells across the two
+  fields. First oil December 2014. Subsalt Lower Tertiary Wilcox play — same
+  reservoir interval as Cascade/Chinook and Tiber. Benchmark for ultra-deepwater
+  SPAR economics in the GoM Lower Tertiary trend.
+
+tags:
+  - GoM
+  - SPAR
+  - deepwater
+  - ultra_deepwater
+  - Chevron
+  - Lower_Tertiary
+  - benchmark
+  - WRK-191

@@ -1,0 +1,74 @@
+{% extends 'StockAnalysis/index.html' %}
+
+{% block subitem_page %}
+	{% if context %}
+	{% if tobeupdated %}
+		<p>Based on data as of : {{context.cfg.updated_time | safe}}</p>
+		<h3 class="h3">Price and Trends</h3>
+		<div class="chart" id="pricechart">
+			<script>
+				var gprice = {{context.plot_data.price | safe}};
+				Plotly.newPlot('pricechart', gprice.data, gprice.layout);
+			</script>
+		</div>
+		<h3 class="h3">Strength (Momentum)</h3>
+		<div class="chart" id="strength">
+
+			<script>
+				var strength = {{context.plot_data.strength | safe}};
+				Plotly.newPlot('strength', strength.data, strength.layout);
+			</script>
+		</div>
+
+		<h3 class="h3">Volume</h3>
+		<div class="chart" id="ob_volume">
+			<script>
+				var ob_volume = {{context.plot_data.ob_volume | safe}};
+				Plotly.newPlot('ob_volume', ob_volume.data, ob_volume.layout);
+			</script>
+		</div>
+		<div class="chart" id="cfm">
+			<script>
+				var cfm = {{context.plot_data.cfm | safe}};
+				Plotly.newPlot('cfm', cfm.data, cfm.layout);
+			</script>
+		</div>
+		<div class="chart" id="eom">
+			<script>
+				var geom = {{context.plot_data.eom | safe}};
+				Plotly.newPlot('eom', geom.data, geom.layout);
+			</script>
+		</div>
+		<div class="chart" id="wt_price">
+			<script>
+				var gwt_price = {{context.plot_data.wt_price | safe}};
+				Plotly.newPlot('wt_price', gwt_price.data, gwt_price.layout);
+			</script>
+		</div>
+		<h3 class="h3">Volatility</h3>
+		<div class="chart" id="volatility_width">
+			<script>
+				var volatility_width = {{context.plot_data.volatility_width | safe}};
+				Plotly.newPlot('volatility_width', volatility_width.data, volatility_width.layout);
+			</script>
+		</div>
+		<div class="chart" id="volatility_hi_low">
+			<script>
+				var volatility_hi_low = {{context.plot_data.volatility_hi_low | safe}};
+				Plotly.newPlot('volatility_hi_low', volatility_hi_low.data, volatility_hi_low.layout);
+			</script>
+		</div>
+		<div class="chart" id="ulcer">
+			<script>
+				var ulcer = {{context.plot_data.ulcer | safe}};
+				Plotly.newPlot('ulcer', ulcer.data, ulcer.layout);
+			</script>
+		</div>
+
+	{% else %}
+		<br>
+		<p>Data not available. Under construction.</p>
+	{% endif %}
+	{% endif %}
+{% endblock %} {# subitem_page #}
+

@@ -1,0 +1,42 @@
+source_type: textbook
+source_description: "PNA Vol III — Motions in Waves; EN400 Chapter 8"
+extracted_date: "2026-03-20"
+legal_scan_passed: true
+category: "naval_architecture"
+subcategory: "seakeeping"
+equations:
+  - name: "Natural Roll Period"
+    latex: "T_{roll} = \\frac{2\\pi k_{xx}}{\\sqrt{g \\cdot GM}}"
+    description: "Roll period from transverse radius of gyration and GM"
+  - name: "Encounter Frequency"
+    latex: "\\omega_e = \\omega - \\frac{\\omega^2}{g} V \\cos\\mu"
+    description: "Frequency of encounter in waves"
+  - name: "Significant Motion"
+    latex: "s_{1/3} = 2\\sqrt{m_0}, \\quad m_0 = \\int |H(\\omega)|^2 S(\\omega) d\\omega"
+    description: "Significant amplitude from spectral analysis"
+worked_examples:
+  - description: "Roll period for cargo ship — B=30 m, GM=1.0 m"
+    inputs:
+      beam_m: 30.0
+      gm_m: 1.0
+    outputs:
+      roll_period_s_range: [10.0, 20.0]
+    use_as_test: true
+  - description: "Encounter frequency in head seas — omega=0.8 rad/s, V=8 m/s"
+    inputs:
+      wave_freq_rad: 0.8
+      speed_ms: 8.0
+      heading_deg: 180.0
+    outputs:
+      encounter_freq_greater_than: 0.8
+    use_as_test: true
+  - description: "MSI at low acceleration — a_rms=0.05g, 2 hours"
+    inputs:
+      vertical_accel_rms_g: 0.05
+      exposure_hours: 2.0
+    outputs:
+      msi_less_than: 20.0
+    use_as_test: true
+references:
+  - "PNA Vol III — Motions in Waves"
+  - "USNA EN400 Chapter 8 — Seakeeping"

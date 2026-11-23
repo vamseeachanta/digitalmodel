@@ -1,0 +1,17 @@
+﻿%YAML 1.1
+# Type: Model
+# Program: OrcaFlex 11.2d
+# File: docs/domains/orcaflex/installation/pipeline/route_a/monolithic/__01d_delete_objects.yml
+# Created: 12:44 PM on 9/21/2023
+# User: 
+# Machine: 
+---
+BaseFile: __01c_vessel_draft.yml
+Lines:
+  Deleted: A&RWire
+Winches:
+  Deleted:
+    - MainLine 330Te
+    - Whipline 20Te
+    - Whipline 40Te
+...

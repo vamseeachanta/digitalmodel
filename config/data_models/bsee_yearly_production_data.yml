@@ -1,0 +1,247 @@
+default:
+  log_level: DEBUG
+  config:
+    overwrite:
+      output: True
+  analysis:
+    db:
+      simple: False
+    run_example: False
+
+input_data:
+#    TODO ensure consistent design between Excel data, db data and text files and .csv files
+
+  source: csv
+  sets:
+    -
+      label: yearly_production_data
+      header: NULL
+      df_columns: [LEASE_NUMBER, COMPLETION_NAME , PRODUCTION_DATE, DAYS_ON_PROD, PRODUCT_CODE , MON_O_PROD_VOL, MON_G_PROD_VOL, MON_WTR_PROD_VOL, API_WELL_NUMBER, WELL_STAT_CD, AREA_CODE_BLOCK_NUM, OPERATOR_NUM, SORT_NAME , BOEM_FIELD, INJECTION_VOLUME , PROD_INTERVAL_CD, FIRST_PROD_DATE, UNIT_AGT_NUMBER, UNIT_ALOC_SUFFIX]
+      io: data_manager\data\bsee\ogoradelimit.zip
+      replace:
+      output:
+        target: db
+        if_exists: 'replace'
+    -
+      label: yearly_production_data
+      header: NULL
+      df_columns: [LEASE_NUMBER, COMPLETION_NAME , PRODUCTION_DATE, DAYS_ON_PROD, PRODUCT_CODE , MON_O_PROD_VOL, MON_G_PROD_VOL, MON_WTR_PROD_VOL, API_WELL_NUMBER, WELL_STAT_CD, AREA_CODE_BLOCK_NUM, OPERATOR_NUM, SORT_NAME , BOEM_FIELD, INJECTION_VOLUME , PROD_INTERVAL_CD, FIRST_PROD_DATE, UNIT_AGT_NUMBER, UNIT_ALOC_SUFFIX]
+      io: data_manager\data\bsee\ogora2020delimit.zip
+      replace:
+      output:
+        target: db
+        if_exists: 'append'
+    -
+      label: yearly_production_data
+      header: NULL
+      df_columns: [LEASE_NUMBER, COMPLETION_NAME , PRODUCTION_DATE, DAYS_ON_PROD, PRODUCT_CODE , MON_O_PROD_VOL, MON_G_PROD_VOL, MON_WTR_PROD_VOL, API_WELL_NUMBER, WELL_STAT_CD, AREA_CODE_BLOCK_NUM, OPERATOR_NUM, SORT_NAME , BOEM_FIELD, INJECTION_VOLUME , PROD_INTERVAL_CD, FIRST_PROD_DATE, UNIT_AGT_NUMBER, UNIT_ALOC_SUFFIX]
+      io: data_manager\data\bsee\ogora2019delimit.zip
+      replace:
+      output:
+        target: db
+        if_exists: 'append'
+    -
+      label: yearly_production_data
+      header: NULL
+      df_columns: [LEASE_NUMBER, COMPLETION_NAME , PRODUCTION_DATE, DAYS_ON_PROD, PRODUCT_CODE , MON_O_PROD_VOL, MON_G_PROD_VOL, MON_WTR_PROD_VOL, API_WELL_NUMBER, WELL_STAT_CD, AREA_CODE_BLOCK_NUM, OPERATOR_NUM, SORT_NAME , BOEM_FIELD, INJECTION_VOLUME , PROD_INTERVAL_CD, FIRST_PROD_DATE, UNIT_AGT_NUMBER, UNIT_ALOC_SUFFIX]
+      io: data_manager\data\bsee\ogora2018delimit.zip
+      replace:
+      output:
+        target: db
+        if_exists: 'append'
+    -
+      label: yearly_production_data
+      header: NULL
+      df_columns: [LEASE_NUMBER, COMPLETION_NAME , PRODUCTION_DATE, DAYS_ON_PROD, PRODUCT_CODE , MON_O_PROD_VOL, MON_G_PROD_VOL, MON_WTR_PROD_VOL, API_WELL_NUMBER, WELL_STAT_CD, AREA_CODE_BLOCK_NUM, OPERATOR_NUM, SORT_NAME , BOEM_FIELD, INJECTION_VOLUME , PROD_INTERVAL_CD, FIRST_PROD_DATE, UNIT_AGT_NUMBER, UNIT_ALOC_SUFFIX]
+      io: data_manager\data\bsee\ogora2017delimit.zip
+      replace:
+      output:
+        target: db
+        if_exists: 'append'
+    -
+      label: yearly_production_data
+      header: NULL
+      df_columns: [LEASE_NUMBER, COMPLETION_NAME , PRODUCTION_DATE, DAYS_ON_PROD, PRODUCT_CODE , MON_O_PROD_VOL, MON_G_PROD_VOL, MON_WTR_PROD_VOL, API_WELL_NUMBER, WELL_STAT_CD, AREA_CODE_BLOCK_NUM, OPERATOR_NUM, SORT_NAME , BOEM_FIELD, INJECTION_VOLUME , PROD_INTERVAL_CD, FIRST_PROD_DATE, UNIT_AGT_NUMBER, UNIT_ALOC_SUFFIX]
+      io: data_manager\data\bsee\ogora2016delimit.zip
+      replace:
+      output:
+        target: db
+        if_exists: 'append'
+    -
+      label: yearly_production_data
+      header: NULL
+      df_columns: [LEASE_NUMBER, COMPLETION_NAME , PRODUCTION_DATE, DAYS_ON_PROD, PRODUCT_CODE , MON_O_PROD_VOL, MON_G_PROD_VOL, MON_WTR_PROD_VOL, API_WELL_NUMBER, WELL_STAT_CD, AREA_CODE_BLOCK_NUM, OPERATOR_NUM, SORT_NAME , BOEM_FIELD, INJECTION_VOLUME , PROD_INTERVAL_CD, FIRST_PROD_DATE, UNIT_AGT_NUMBER, UNIT_ALOC_SUFFIX]
+      io: data_manager\data\bsee\ogora2015delimit.zip
+      replace:
+      output:
+        target: db
+        if_exists: 'append'
+    -
+      label: yearly_production_data
+      header: NULL
+      df_columns: [LEASE_NUMBER, COMPLETION_NAME , PRODUCTION_DATE, DAYS_ON_PROD, PRODUCT_CODE , MON_O_PROD_VOL, MON_G_PROD_VOL, MON_WTR_PROD_VOL, API_WELL_NUMBER, WELL_STAT_CD, AREA_CODE_BLOCK_NUM, OPERATOR_NUM, SORT_NAME , BOEM_FIELD, INJECTION_VOLUME , PROD_INTERVAL_CD, FIRST_PROD_DATE, UNIT_AGT_NUMBER, UNIT_ALOC_SUFFIX]
+      io: data_manager\data\bsee\ogora2014delimit.zip
+      replace:
+      output:
+        target: db
+        if_exists: 'append'
+    -
+      label: yearly_production_data
+      header: NULL
+      df_columns: [LEASE_NUMBER, COMPLETION_NAME , PRODUCTION_DATE, DAYS_ON_PROD, PRODUCT_CODE , MON_O_PROD_VOL, MON_G_PROD_VOL, MON_WTR_PROD_VOL, API_WELL_NUMBER, WELL_STAT_CD, AREA_CODE_BLOCK_NUM, OPERATOR_NUM, SORT_NAME , BOEM_FIELD, INJECTION_VOLUME , PROD_INTERVAL_CD, FIRST_PROD_DATE, UNIT_AGT_NUMBER, UNIT_ALOC_SUFFIX]
+      io: data_manager\data\bsee\ogora2013delimit.zip
+      replace:
+      output:
+        target: db
+        if_exists: 'append'
+    -
+      label: yearly_production_data
+      header: NULL
+      df_columns: [LEASE_NUMBER, COMPLETION_NAME , PRODUCTION_DATE, DAYS_ON_PROD, PRODUCT_CODE , MON_O_PROD_VOL, MON_G_PROD_VOL, MON_WTR_PROD_VOL, API_WELL_NUMBER, WELL_STAT_CD, AREA_CODE_BLOCK_NUM, OPERATOR_NUM, SORT_NAME , BOEM_FIELD, INJECTION_VOLUME , PROD_INTERVAL_CD, FIRST_PROD_DATE, UNIT_AGT_NUMBER, UNIT_ALOC_SUFFIX]
+      io: data_manager\data\bsee\ogora2012delimit.zip
+      replace:
+      output:
+        target: db
+        if_exists: 'append'
+    -
+      label: yearly_production_data
+      header: NULL
+      df_columns: [LEASE_NUMBER, COMPLETION_NAME , PRODUCTION_DATE, DAYS_ON_PROD, PRODUCT_CODE , MON_O_PROD_VOL, MON_G_PROD_VOL, MON_WTR_PROD_VOL, API_WELL_NUMBER, WELL_STAT_CD, AREA_CODE_BLOCK_NUM, OPERATOR_NUM, SORT_NAME , BOEM_FIELD, INJECTION_VOLUME , PROD_INTERVAL_CD, FIRST_PROD_DATE, UNIT_AGT_NUMBER, UNIT_ALOC_SUFFIX]
+      io: data_manager\data\bsee\ogora2011delimit.zip
+      replace:
+      output:
+        target: db
+        if_exists: 'append'
+    -
+      label: yearly_production_data
+      header: NULL
+      df_columns: [LEASE_NUMBER, COMPLETION_NAME , PRODUCTION_DATE, DAYS_ON_PROD, PRODUCT_CODE , MON_O_PROD_VOL, MON_G_PROD_VOL, MON_WTR_PROD_VOL, API_WELL_NUMBER, WELL_STAT_CD, AREA_CODE_BLOCK_NUM, OPERATOR_NUM, SORT_NAME , BOEM_FIELD, INJECTION_VOLUME , PROD_INTERVAL_CD, FIRST_PROD_DATE, UNIT_AGT_NUMBER, UNIT_ALOC_SUFFIX]
+      io: data_manager\data\bsee\ogora2010delimit.zip
+      replace:
+      output:
+        target: db
+        if_exists: 'append'
+    -
+      label: yearly_production_data
+      header: NULL
+      df_columns: [LEASE_NUMBER, COMPLETION_NAME , PRODUCTION_DATE, DAYS_ON_PROD, PRODUCT_CODE , MON_O_PROD_VOL, MON_G_PROD_VOL, MON_WTR_PROD_VOL, API_WELL_NUMBER, WELL_STAT_CD, AREA_CODE_BLOCK_NUM, OPERATOR_NUM, SORT_NAME , BOEM_FIELD, INJECTION_VOLUME , PROD_INTERVAL_CD, FIRST_PROD_DATE, UNIT_AGT_NUMBER, UNIT_ALOC_SUFFIX]
+      io: data_manager\data\bsee\ogora2009delimit.zip
+      replace:
+      output:
+        target: db
+        if_exists: 'append'
+    -
+      label: yearly_production_data
+      header: NULL
+      df_columns: [LEASE_NUMBER, COMPLETION_NAME , PRODUCTION_DATE, DAYS_ON_PROD, PRODUCT_CODE , MON_O_PROD_VOL, MON_G_PROD_VOL, MON_WTR_PROD_VOL, API_WELL_NUMBER, WELL_STAT_CD, AREA_CODE_BLOCK_NUM, OPERATOR_NUM, SORT_NAME , BOEM_FIELD, INJECTION_VOLUME , PROD_INTERVAL_CD, FIRST_PROD_DATE, UNIT_AGT_NUMBER, UNIT_ALOC_SUFFIX]
+      io: data_manager\data\bsee\ogora2008delimit.zip
+      replace:
+      output:
+        target: db
+        if_exists: 'append'
+    -
+      label: yearly_production_data
+      header: NULL
+      df_columns: [LEASE_NUMBER, COMPLETION_NAME , PRODUCTION_DATE, DAYS_ON_PROD, PRODUCT_CODE , MON_O_PROD_VOL, MON_G_PROD_VOL, MON_WTR_PROD_VOL, API_WELL_NUMBER, WELL_STAT_CD, AREA_CODE_BLOCK_NUM, OPERATOR_NUM, SORT_NAME , BOEM_FIELD, INJECTION_VOLUME , PROD_INTERVAL_CD, FIRST_PROD_DATE, UNIT_AGT_NUMBER, UNIT_ALOC_SUFFIX]
+      io: data_manager\data\bsee\ogora2007delimit.zip
+      replace:
+      output:
+        target: db
+        if_exists: 'append'
+    -
+      label: yearly_production_data
+      header: NULL
+      df_columns: [LEASE_NUMBER, COMPLETION_NAME , PRODUCTION_DATE, DAYS_ON_PROD, PRODUCT_CODE , MON_O_PROD_VOL, MON_G_PROD_VOL, MON_WTR_PROD_VOL, API_WELL_NUMBER, WELL_STAT_CD, AREA_CODE_BLOCK_NUM, OPERATOR_NUM, SORT_NAME , BOEM_FIELD, INJECTION_VOLUME , PROD_INTERVAL_CD, FIRST_PROD_DATE, UNIT_AGT_NUMBER, UNIT_ALOC_SUFFIX]
+      io: data_manager\data\bsee\ogora2006delimit.zip
+      replace:
+      output:
+        target: db
+        if_exists: 'append'
+    -
+      label: yearly_production_data
+      header: NULL
+      df_columns: [LEASE_NUMBER, COMPLETION_NAME , PRODUCTION_DATE, DAYS_ON_PROD, PRODUCT_CODE , MON_O_PROD_VOL, MON_G_PROD_VOL, MON_WTR_PROD_VOL, API_WELL_NUMBER, WELL_STAT_CD, AREA_CODE_BLOCK_NUM, OPERATOR_NUM, SORT_NAME , BOEM_FIELD, INJECTION_VOLUME , PROD_INTERVAL_CD, FIRST_PROD_DATE, UNIT_AGT_NUMBER, UNIT_ALOC_SUFFIX]
+      io: data_manager\data\bsee\ogora2005delimit.zip
+      replace:
+      output:
+        target: db
+        if_exists: 'append'
+    -
+      label: yearly_production_data
+      header: NULL
+      df_columns: [LEASE_NUMBER, COMPLETION_NAME , PRODUCTION_DATE, DAYS_ON_PROD, PRODUCT_CODE , MON_O_PROD_VOL, MON_G_PROD_VOL, MON_WTR_PROD_VOL, API_WELL_NUMBER, WELL_STAT_CD, AREA_CODE_BLOCK_NUM, OPERATOR_NUM, SORT_NAME , BOEM_FIELD, INJECTION_VOLUME , PROD_INTERVAL_CD, FIRST_PROD_DATE, UNIT_AGT_NUMBER, UNIT_ALOC_SUFFIX]
+      io: data_manager\data\bsee\ogora2004delimit.zip
+      replace:
+      output:
+        target: db
+        if_exists: 'append'
+    -
+      label: yearly_production_data
+      header: NULL
+      df_columns: [LEASE_NUMBER, COMPLETION_NAME , PRODUCTION_DATE, DAYS_ON_PROD, PRODUCT_CODE , MON_O_PROD_VOL, MON_G_PROD_VOL, MON_WTR_PROD_VOL, API_WELL_NUMBER, WELL_STAT_CD, AREA_CODE_BLOCK_NUM, OPERATOR_NUM, SORT_NAME , BOEM_FIELD, INJECTION_VOLUME , PROD_INTERVAL_CD, FIRST_PROD_DATE, UNIT_AGT_NUMBER, UNIT_ALOC_SUFFIX]
+      io: data_manager\data\bsee\ogora2003delimit.zip
+      replace:
+      output:
+        target: db
+        if_exists: 'append'
+    -
+      label: yearly_production_data
+      header: NULL
+      df_columns: [LEASE_NUMBER, COMPLETION_NAME , PRODUCTION_DATE, DAYS_ON_PROD, PRODUCT_CODE , MON_O_PROD_VOL, MON_G_PROD_VOL, MON_WTR_PROD_VOL, API_WELL_NUMBER, WELL_STAT_CD, AREA_CODE_BLOCK_NUM, OPERATOR_NUM, SORT_NAME , BOEM_FIELD, INJECTION_VOLUME , PROD_INTERVAL_CD, FIRST_PROD_DATE, UNIT_AGT_NUMBER, UNIT_ALOC_SUFFIX]
+      io: data_manager\data\bsee\ogora2002delimit.zip
+      replace:
+      output:
+        target: db
+        if_exists: 'append'
+    -
+      label: yearly_production_data
+      header: NULL
+      df_columns: [LEASE_NUMBER, COMPLETION_NAME , PRODUCTION_DATE, DAYS_ON_PROD, PRODUCT_CODE , MON_O_PROD_VOL, MON_G_PROD_VOL, MON_WTR_PROD_VOL, API_WELL_NUMBER, WELL_STAT_CD, AREA_CODE_BLOCK_NUM, OPERATOR_NUM, SORT_NAME , BOEM_FIELD, INJECTION_VOLUME , PROD_INTERVAL_CD, FIRST_PROD_DATE, UNIT_AGT_NUMBER, UNIT_ALOC_SUFFIX]
+      io: data_manager\data\bsee\ogora2001delimit.zip
+      replace:
+      output:
+        target: db
+        if_exists: 'append'
+    -
+      label: yearly_production_data
+      header: NULL
+      df_columns: [LEASE_NUMBER, COMPLETION_NAME , PRODUCTION_DATE, DAYS_ON_PROD, PRODUCT_CODE , MON_O_PROD_VOL, MON_G_PROD_VOL, MON_WTR_PROD_VOL, API_WELL_NUMBER, WELL_STAT_CD, AREA_CODE_BLOCK_NUM, OPERATOR_NUM, SORT_NAME , BOEM_FIELD, INJECTION_VOLUME , PROD_INTERVAL_CD, FIRST_PROD_DATE, UNIT_AGT_NUMBER, UNIT_ALOC_SUFFIX]
+      io: data_manager\data\bsee\ogora2000delimit.zip
+      replace:
+      output:
+        target: db
+        if_exists: 'append'
+    -
+      label: yearly_production_data
+      header: NULL
+      df_columns: [LEASE_NUMBER, COMPLETION_NAME , PRODUCTION_DATE, DAYS_ON_PROD, PRODUCT_CODE , MON_O_PROD_VOL, MON_G_PROD_VOL, MON_WTR_PROD_VOL, API_WELL_NUMBER, WELL_STAT_CD, AREA_CODE_BLOCK_NUM, OPERATOR_NUM, SORT_NAME , BOEM_FIELD, INJECTION_VOLUME , PROD_INTERVAL_CD, FIRST_PROD_DATE, UNIT_AGT_NUMBER, UNIT_ALOC_SUFFIX]
+      io: data_manager\data\bsee\ogora1999delimit.zip
+      replace:
+      output:
+        target: db
+        if_exists: 'append'
+    -
+      label: yearly_production_data
+      header: NULL
+      df_columns: [LEASE_NUMBER, COMPLETION_NAME , PRODUCTION_DATE, DAYS_ON_PROD, PRODUCT_CODE , MON_O_PROD_VOL, MON_G_PROD_VOL, MON_WTR_PROD_VOL, API_WELL_NUMBER, WELL_STAT_CD, AREA_CODE_BLOCK_NUM, OPERATOR_NUM, SORT_NAME , BOEM_FIELD, INJECTION_VOLUME , PROD_INTERVAL_CD, FIRST_PROD_DATE, UNIT_AGT_NUMBER, UNIT_ALOC_SUFFIX]
+      io: data_manager\data\bsee\ogora1998delimit.zip
+      replace:
+      output:
+        target: db
+        if_exists: 'append'
+    -
+      label: yearly_production_data
+      header: NULL
+      df_columns: [LEASE_NUMBER, COMPLETION_NAME , PRODUCTION_DATE, DAYS_ON_PROD, PRODUCT_CODE , MON_O_PROD_VOL, MON_G_PROD_VOL, MON_WTR_PROD_VOL, API_WELL_NUMBER, WELL_STAT_CD, AREA_CODE_BLOCK_NUM, OPERATOR_NUM, SORT_NAME , BOEM_FIELD, INJECTION_VOLUME , PROD_INTERVAL_CD, FIRST_PROD_DATE, UNIT_AGT_NUMBER, UNIT_ALOC_SUFFIX]
+      io: data_manager\data\bsee\ogora1997delimit.zip
+      replace:
+      output:
+        target: db
+        if_exists: 'append'
+
+db:
+  server_type: mssql
+  server: localhost\SQLEXPRESS
+  user: NULL
+  password: NULL
+  database: bsee

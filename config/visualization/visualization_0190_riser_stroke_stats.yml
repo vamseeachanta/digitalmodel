@@ -1,0 +1,449 @@
+default:
+  log_level: DEBUG
+  config:
+    overwrite:
+      output: True
+  analysis:
+    db:
+      simple: False
+      table_statistics:
+        flag: False
+        statistics: [min, max, count, avg]
+        statistics_df_columns: [RiserId, SchemaName, TableName, ColumnName, ColumnDataType, StatisticsClassId, StartTime, EndTime, TableRows, Minimum, Maximum, Average, RMS, StandardDeviation]
+        schema: XOM
+#        tables: All
+        tables: [BD_TENSIONERS, BD_CALCULATEDDATAROOT, BD_RMSAS_VIVMONITOR, BD_RMSOUTPUT]
+      timeline_statistics:
+        flag: False
+        schema: XOM
+        time_interval_in_hours: 1
+        sets:
+          - table: YT_BOPYELLOWMRU_ACCMRU
+            time: TIMESTAMP
+            columns: [ACCMRU_FWD, ACCMRU_STBD]
+
+    run_example: False
+    statistics: True
+    fft: False
+    filter:
+      low_pass:
+        flag: False
+        frequency_maximum:
+      high_pass:
+        flag: False
+        frequency_minimum:
+      band_pass:
+        flag: False
+        frequency_minimum:
+        frequency_maximum:
+    ifft: True
+
+  units:
+    theta: degrees
+    time: s
+
+  input_data:
+    source: db
+    sets:
+      -
+        label: table_statistics
+        schema: XOM
+        table_name: TableStatistics
+        column_name: NULL
+
+  db:
+    dev:
+        server_type: mssql
+        server: guyanariser.database.windows.net
+        user: GuyanaRiserUser
+        password: M@ry12345
+        database: GuyanaRiser
+
+plot_settings: []
+
+plot_multiple:
+  -
+    file_name_extension: NULL
+    nrows: 7
+    ncols: 1
+    suptitle: Riser Stroke
+    sets:
+
+    -
+      title: Tensioner 0
+      xlabel: Date
+      ylabel: Stroke (ft)
+      xticklabels: NULL
+      autofmt:
+        xdate: True
+      grid: True
+#      ylim: [0, 60]
+      legend: True
+      legend_location: best
+      data:
+       -
+          df: input_data_table_statistics
+          table_name: BD_TENSIONERS
+          statistic: Maximum
+          label: [Event Maximum-After Upgrade]
+          x: [StartTime]
+          y: [TENSIONERS0]
+          scale:
+            columns: [TENSIONERS0]
+            factors: [3.281]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD_TENSIONERS
+          statistic: Minimum
+          label: [Event Minimum-After Upgrade]
+          x: [StartTime]
+          y: [TENSIONERS0]
+          scale:
+            columns: [TENSIONERS0]
+            factors: [3.281]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD_TENSIONERS
+          statistic: Average
+          label: [Event Mean-After Upgrade]
+          x: [StartTime]
+          y: [TENSIONERS0]
+          scale:
+            columns: [TENSIONERS0]
+            factors: [3.281]
+          plt_kind: line
+          marker: NULL
+
+    -
+      title: Tensioner 1
+      xlabel: Date
+      ylabel: Stroke (ft)
+      xticklabels: NULL
+      autofmt:
+        xdate: True
+      grid: True
+#      ylim: [0, 60]
+      legend: True
+      legend_location: best
+      data:
+       -
+          df: input_data_table_statistics
+          table_name: BD_TENSIONERS
+          statistic: Maximum
+          label: [Event Maximum-After Upgrade]
+          x: [StartTime]
+          y: [TENSIONERS1]
+          scale:
+            columns: [TENSIONERS1]
+            factors: [3.281]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD_TENSIONERS
+          statistic: Minimum
+          label: [Event Minimum-After Upgrade]
+          x: [StartTime]
+          y: [TENSIONERS1]
+          scale:
+            columns: [TENSIONERS1]
+            factors: [3.281]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD_TENSIONERS
+          statistic: Average
+          label: [Event Mean-After Upgrade]
+          x: [StartTime]
+          y: [TENSIONERS1]
+          scale:
+            columns: [TENSIONERS1]
+            factors: [3.281]
+          plt_kind: line
+          marker: NULL
+
+    -
+      title: Tensioner 2
+      xlabel: Date
+      ylabel: Stroke (ft)
+      xticklabels: NULL
+      autofmt:
+        xdate: True
+      grid: True
+#      ylim: [0, 60]
+      legend: True
+      legend_location: best
+      data:
+       -
+          df: input_data_table_statistics
+          table_name: BD_TENSIONERS
+          statistic: Maximum
+          label: [Event Maximum-After Upgrade]
+          x: [StartTime]
+          y: [TENSIONERS2]
+          scale:
+            columns: [TENSIONERS2]
+            factors: [3.281]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD_TENSIONERS
+          statistic: Minimum
+          label: [Event Minimum-After Upgrade]
+          x: [StartTime]
+          y: [TENSIONERS2]
+          scale:
+            columns: [TENSIONERS2]
+            factors: [3.281]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD_TENSIONERS
+          statistic: Average
+          label: [Event Mean-After Upgrade]
+          x: [StartTime]
+          y: [TENSIONERS2]
+          scale:
+            columns: [TENSIONERS2]
+            factors: [3.281]
+          plt_kind: line
+          marker: NULL
+
+    -
+      title: Tensioner 3
+      xlabel: Date
+      ylabel: Stroke (ft)
+      xticklabels: NULL
+      autofmt:
+        xdate: True
+      grid: True
+#      ylim: [0, 60]
+      legend: True
+      legend_location: best
+      data:
+       -
+          df: input_data_table_statistics
+          table_name: BD_TENSIONERS
+          statistic: Maximum
+          label: [Event Maximum-After Upgrade]
+          x: [StartTime]
+          y: [TENSIONERS3]
+          scale:
+            columns: [TENSIONERS3]
+            factors: [3.281]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD_TENSIONERS
+          statistic: Minimum
+          label: [Event Minimum-After Upgrade]
+          x: [StartTime]
+          y: [TENSIONERS3]
+          scale:
+            columns: [TENSIONERS3]
+            factors: [3.281]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD_TENSIONERS
+          statistic: Average
+          label: [Event Mean-After Upgrade]
+          x: [StartTime]
+          y: [TENSIONERS3]
+          scale:
+            columns: [TENSIONERS3]
+            factors: [3.281]
+          plt_kind: line
+          marker: NULL
+
+    -
+      title: Tensioner 4
+      xlabel: Date
+      ylabel: Stroke (ft)
+      xticklabels: NULL
+      autofmt:
+        xdate: True
+      grid: True
+#      ylim: [0, 60]
+      legend: True
+      legend_location: best
+      data:
+       -
+          df: input_data_table_statistics
+          table_name: BD_TENSIONERS
+          statistic: Maximum
+          label: [Event Maximum-After Upgrade]
+          x: [StartTime]
+          y: [TENSIONERS4]
+          scale:
+            columns: [TENSIONERS4]
+            factors: [3.281]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD_TENSIONERS
+          statistic: Minimum
+          label: [Event Minimum-After Upgrade]
+          x: [StartTime]
+          y: [TENSIONERS4]
+          scale:
+            columns: [TENSIONERS4]
+            factors: [3.281]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD_TENSIONERS
+          statistic: Average
+          label: [Event Mean-After Upgrade]
+          x: [StartTime]
+          y: [TENSIONERS4]
+          scale:
+            columns: [TENSIONERS4]
+            factors: [3.281]
+          plt_kind: line
+          marker: NULL
+
+    -
+      title: Tensioner 5
+      xlabel: Date
+      ylabel: Stroke (ft)
+      xticklabels: NULL
+      autofmt:
+        xdate: True
+      grid: True
+#      ylim: [0, 60]
+      legend: True
+      legend_location: best
+      data:
+       -
+          df: input_data_table_statistics
+          table_name: BD_TENSIONERS
+          statistic: Maximum
+          label: [Event Maximum-After Upgrade]
+          x: [StartTime]
+          y: [TENSIONERS5]
+          scale:
+            columns: [TENSIONERS5]
+            factors: [3.281]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD_TENSIONERS
+          statistic: Minimum
+          label: [Event Minimum-After Upgrade]
+          x: [StartTime]
+          y: [TENSIONERS5]
+          scale:
+            columns: [TENSIONERS5]
+            factors: [3.281]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD_TENSIONERS
+          statistic: Average
+          label: [Event Mean-After Upgrade]
+          x: [StartTime]
+          y: [TENSIONERS5]
+          scale:
+            columns: [TENSIONERS5]
+            factors: [3.281]
+          plt_kind: line
+          marker: NULL
+
+    -
+      title: Telescopic Joint
+      xlabel: Date
+      ylabel: Stroke (ft)
+      xticklabels: NULL
+      autofmt:
+        xdate: True
+      grid: True
+      ylim: [0, 60]
+      legend: True
+      legend_location: best
+      data:
+       -
+          df: input_data_table_statistics
+          table_name: BD18_TELESCOPICJOINTSTROKE
+          statistic: Maximum
+          label: [Event Maximum-Before Upgrade]
+          x: [StartTime]
+          y: [JOINTSTROKE]
+          scale:
+            columns: [JOINTSTROKE]
+            factors: [3.281]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD_TELESCOPICJOINTSTROKE
+          statistic: Maximum
+          label: [Event Maximum-After Upgrade]
+          x: [StartTime]
+          y: [TELESCOPICJOINTSTROKE]
+          scale:
+            columns: [TELESCOPICJOINTSTROKE]
+            factors: [3.281]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD18_TELESCOPICJOINTSTROKE
+          statistic: Minimum
+          label: [Event Minimum-Before Upgrade]
+          x: [StartTime]
+          y: [JOINTSTROKE]
+          scale:
+            columns: [JOINTSTROKE]
+            factors: [3.281]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD_TELESCOPICJOINTSTROKE
+          statistic: Minimum
+          label: [Event Minimum-After Upgrade]
+          x: [StartTime]
+          y: [TELESCOPICJOINTSTROKE]
+          scale:
+            columns: [TELESCOPICJOINTSTROKE]
+            factors: [3.281]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD18_TELESCOPICJOINTSTROKE
+          statistic: Average
+          label: [Event Mean-Before Upgrade]
+          x: [StartTime]
+          y: [JOINTSTROKE]
+          scale:
+            columns: [JOINTSTROKE]
+            factors: [3.281]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD_TELESCOPICJOINTSTROKE
+          statistic: Average
+          label: [Event Mean-After Upgrade]
+          x: [StartTime]
+          y: [TELESCOPICJOINTSTROKE]
+          scale:
+            columns: [TELESCOPICJOINTSTROKE]
+            factors: [3.281]
+          plt_kind: line
+          marker: NULL

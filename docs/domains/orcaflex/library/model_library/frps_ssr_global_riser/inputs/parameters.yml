@@ -1,0 +1,198 @@
+# FrPS / SSR Free-Standing Riser - GLOBAL DYNAMIC MODEL
+# Parametric matrix (variants, load cases, analysis toggles, restraint placeholders)
+#
+# Status: INPUT SCAFFOLD - values marked PLACEHOLDER / TBD are NOT engineering
+#         results. They exist so the parametric structure is reviewable and the
+#         two pivotal open inputs are explicit. Resolve before any solver run.
+#
+# Units: SI (m, te, kN, te/m^3) unless a field-unit original is noted.
+
+# ===========================================================================
+# OPEN INPUT 1 - SECTION BASIS  (#3)
+#   The screening left the as-built concentric section area unresolved. Build
+#   ONE variant; do not average. The choice sets the buckling demand the
+#   screens flagged, so it must be a deliberate engineering decision.
+# ===========================================================================
+section_basis:
+  selected: ~                                    # MUST SET: two_casing | three_string
+  variants:
+    two_casing:
+      description: "16 + 11.75 in only; 7-in tubing not counted structurally"
+      effective_area_in2: 82.51                  # in^2 (screening figure)
+      effective_area_m2: 0.053232                 # 82.51 in^2 -> m^2
+      tubing_structural: false
+    three_string:
+      description: "16 + 11.75 + 7 in tubing, tubing WT 0.50->0.75 in"
+      effective_area_in2: 97.0                    # in^2 (~, upper basis)
+      effective_area_m2: 0.062581                 # ~97 in^2 -> m^2
+      tubing_structural: true
+      tubing_wt_in: [0.50, 0.75]                  # WT swing driving the area range
+  # Effective EA/EI for the chosen variant MUST be derived from the concentric
+  # stack (per-string A, I, E) and written into spec.yml line types before build.
+  derived_properties_status: "TBD - derive EA/EI from chosen variant"
+
+# ===========================================================================
+# OPEN INPUT 2 - DEMAND / SET-DOWN DEFINITION  (#4 / #7)
+#   Roy's "5-10 ft pushdown" - does it net the slip-joint stroke? The model
+#   resolves demand from coupled vessel/riser RAO response, but the imposed
+#   set-down case definition must state the convention.
+# ===========================================================================
+demand:
+  setdown_definition: ~                          # MUST SET: gross_pushdown | net_of_stroke
+  variants:
+    gross_pushdown:
+      description: "5-10 ft is total platform pushdown; stroke NOT subtracted"
+      pushdown_ft: [5, 10]
+      pushdown_m: [1.524, 3.048]
+      nets_stroke: false
+    net_of_stroke:
+      description: "5-10 ft is set-down remaining AFTER slip-joint stroke taken up"
+      setdown_ft: [5, 10]
+      setdown_m: [1.524, 3.048]
+      nets_stroke: true
+  slip_joint_stroke_m: ~                          # TBD - needed to relate the two variants
+  # Preferred resolution per #2: derive imposed set-down + heave from coupled
+  # vessel/riser RAO response rather than a quoted figure. These variants bound
+  # it until the coupled run exists.
+
+# ===========================================================================
+# WATER-DEPTH CASES  (geometry sweep)
+# ===========================================================================
+water_depth_cases:
+  selected: [wd_6000]                            # build set; extend to 8k/10k as needed
+  cases:
+    wd_6000: { depth_ft: 6000, depth_m: 1828.8 }
+    wd_8000: { depth_ft: 8000, depth_m: 2438.4 }
+    wd_10000: { depth_ft: 10000, depth_m: 3048.0 }
+
+# ===========================================================================
+# GEOMETRY (fixed across cases)
+# ===========================================================================
+geometry:
+  slick_length_ft: 810
+  slick_length_m: 246.888
+  centralizer_spacing_ft: 30
+  centralizer_spacing_m: 9.144
+  strings:                                       # OD only fixed; WT per section_basis
+    outer_casing_in: 16.0
+    intermediate_casing_in: 11.75
+    tubing_in: 7.0
+  dry_tree: true                                 # slick section carries the dry tree
+  surface_wellhead_landing: true
+
+# ===========================================================================
+# RESTRAINT STIFFNESS PLACEHOLDERS  (CALIBRATE - #2/#3)
+#   "The hinge." Actual modal restraint vs the K-factor bounds is the open
+#   question. All values PLACEHOLDER pending calibration against modal results.
+# ===========================================================================
+restraint:
+  top_boundary:
+    type: "axial-slide, rotation-fixed"          # UHMW pads mu<0.1, no articulation (#2)
+    axial_friction_mu: 0.1                        # < 0.1 per #2
+    rotational: fixed
+  bottom_boundary:
+    type: "wellhead landing - pinned/tensioned"
+    lateral_stiffness_kN_per_m: ~                 # PLACEHOLDER - calibrate
+    rotational_stiffness_kNm_per_deg: ~           # PLACEHOLDER - calibrate
+  centralizer_stiffness:
+    lateral_stiffness_kN_per_m: ~                 # PLACEHOLDER per centralizer - calibrate
+    spacing_m: 9.144
+    efficiency_note: "modal restraint efficiency = open #2/#3 deliverable"
+  setdown_stop:
+    contact_stiffness_kN_per_m: ~                 # PLACEHOLDER
+    gap_m: ~                                       # PLACEHOLDER - coupled to demand.setdown_definition
+    reaction_capacity_kN: ~                        # PLACEHOLDER - stop reaction limit
+
+# ===========================================================================
+# METOCEAN / LOAD-CASE MATRIX
+#   Loop Current + storm combos; platform offsets drive set-down. Values are
+#   PLACEHOLDER return-period magnitudes - replace with project metocean.
+# ===========================================================================
+metocean:
+  load_cases:
+    - id: LC1_loop_current
+      description: "Loop Current dominant"
+      current_ref_speed_m_s: ~                    # PLACEHOLDER (e.g. 1-yr Loop Current)
+      wave_hs_m: ~
+      wave_tp_s: ~
+      platform_offset_pct_wd: ~
+    - id: LC2_1yr_hurricane
+      description: "1-yr hurricane wave (H) + associated wind/current"
+      current_ref_speed_m_s: ~
+      wave_hs_m: ~
+      wave_tp_s: ~
+      platform_offset_pct_wd: ~
+    - id: LC3_10yr_winter_storm
+      description: "10-yr winter storm (WS)"
+      current_ref_speed_m_s: ~
+      wave_hs_m: ~
+      wave_tp_s: ~
+      platform_offset_pct_wd: ~
+    - id: LC4_combo_max_setdown
+      description: "Combo driving the set-down envelope (max platform offset)"
+      current_ref_speed_m_s: ~
+      wave_hs_m: ~
+      wave_tp_s: ~
+      platform_offset_pct_wd: ~                    # max offset -> max set-down (#4/#5/#7 driver)
+  platform_offsets:
+    note: "platform offset = set-down driver; enumerate near/far/cross per LC"
+    cases_pct_wd: ~                               # PLACEHOLDER (e.g. [0, 5, 8] % of WD)
+  raos_source:
+    tool: "OrcaWave (digitalmodel diffraction capability)"
+    status: "TBD - vessel RAOs + QTFs to be generated and linked"
+
+# ===========================================================================
+# ANALYSIS TYPES (toggles + per-type settings)
+#   Mirrors the analysis-driver convention (cf. config/fatigue_analysis,
+#   config/viv_analysis). Each closes a specific open screening item.
+# ===========================================================================
+analyses:
+  static:
+    enabled: true
+    closes: "#4/#7 - equilibrium, set-down, stop engagement, tendon tension"
+    outputs: [setdown, stop_reaction, tendon_tension, effective_tension_profile]
+  modal:
+    enabled: true
+    closes: "#3/#5 - restraint efficiency + VIV lock-in screen"
+    n_modes: 30                                   # PLACEHOLDER
+    outputs: [mode_shapes, natural_frequencies, restraint_efficiency]
+  dynamic_time_domain:
+    enabled: true
+    closes: "storm combos, stop snap loads, max tension/stress"
+    solution: "Implicit time domain"
+    storm_window_s: 10800                         # 3 h (PLACEHOLDER)
+    outputs: [max_tension, max_stress, snap_loads, stop_reaction_dynamic]
+  fatigue:
+    enabled: true
+    closes: "#4/#5 - VIV + wave stress-range -> S-N life"
+    viv:
+      solver: "shear7 | wave"                     # cf. config/viv_analysis pattern
+      enabled: true
+    wave:
+      sn_curve: ~                                  # PLACEHOLDER (e.g. DNV-RP-C203 class)
+      enabled: true
+    outputs: [stress_range_spectra, sn_damage, fatigue_life]
+
+# ===========================================================================
+# SENSITIVITY / ABNORMAL CASES
+# ===========================================================================
+sensitivity:
+  no_tubing:
+    description: >-
+      Chuck's original concern: tree supported with NO tubing structural
+      contribution (arguably outer riser only). Robustness/abnormal case, NOT
+      baseline (baseline = tubing always pre-tensioned, per FDAS #2).
+    tubing_structural: false
+    classification: abnormal
+
+# ===========================================================================
+# SOLVER / TOOLING
+# ===========================================================================
+tooling:
+  primary: "OrcaFlex (line + 6D buoy + stop/contact elements)"
+  alternatives: ["Flexcom", "Abaqus-Aqua"]
+  hydro_raos: "OrcaWave (digitalmodel)"
+  license_status: >-
+    Solver license availability is the gating question (workspace-hub #2849).
+    OrcaFlex is almost certainly NOT installed/licensed in the scaffolding
+    environment - this matrix is model INPUT only, not a run.

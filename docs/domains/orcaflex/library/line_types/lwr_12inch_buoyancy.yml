@@ -1,0 +1,33 @@
+# LWR_12inch_Buoyancy - Library Component
+# Category: line_types
+# Description: 12-inch lazy wave riser with buoyancy modules
+# NOTE: No section header - properties only for IncludeFile
+#
+# This line type represents the buoyancy section of a lazy wave riser
+# Larger OD due to buoyancy modules, same ID as base riser
+# Net buoyancy achieved through lower mass per unit length relative to displaced water
+OD: 0.85
+ID: 0.2909
+MassPerUnitLength: 45.0
+CompressionIsLimited: Yes
+EA: 1210000000
+EI:
+- 3520000.0
+- ~
+GJ: 10
+PoissonRatio: 0.3
+Cd:
+- 1.5
+- ~
+- 0.4
+Ca:
+- 1.0
+- ~
+- 0.5
+NormalDragLiftDiameter: 0.3239
+AxialDragLiftDiameter: 0.3239
+SeabedLateralFrictionCoefficient: 0.5
+OuterContactDiameter: 1.0
+StressOD: 0.3239
+StressID: 0.2909
+

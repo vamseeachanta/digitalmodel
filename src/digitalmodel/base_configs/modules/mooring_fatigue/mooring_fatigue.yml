@@ -1,0 +1,16 @@
+basename: mooring_fatigue
+
+mooring_fatigue:
+  design_life_years: 25.0
+  dff: 3.0
+  sn_curve:
+    curve: D
+    environment: seawater_cp
+  output_dir: results
+  lines: []
+
+default:
+  log_level: DEBUG
+  config:
+    overwrite:
+      output: True

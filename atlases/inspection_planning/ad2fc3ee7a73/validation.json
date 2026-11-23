@@ -1,0 +1,141 @@
+{
+  "metric": "max_rel_error",
+  "max_rel_error": 0.06666666666666667,
+  "threshold": 0.1,
+  "passes": true,
+  "n_holdout": 10,
+  "worst_samples": [
+    {
+      "point": {
+        "corrosion_rate_mm_yr": 0.4,
+        "current_wall_thickness_mm": 12.0
+      },
+      "predicted": 16.0,
+      "actual": 15.0,
+      "rel_error": 0.06666666666666667,
+      "in_range": true
+    },
+    {
+      "point": {
+        "corrosion_rate_mm_yr": 0.125,
+        "current_wall_thickness_mm": 12.0
+      },
+      "predicted": 50.0,
+      "actual": 48.0,
+      "rel_error": 0.041666666666666664,
+      "in_range": true
+    },
+    {
+      "point": {
+        "corrosion_rate_mm_yr": 0.25,
+        "current_wall_thickness_mm": 12.0
+      },
+      "predicted": 25.0,
+      "actual": 24.0,
+      "rel_error": 0.041666666666666664,
+      "in_range": true
+    },
+    {
+      "point": {
+        "corrosion_rate_mm_yr": 0.6,
+        "current_wall_thickness_mm": 12.0
+      },
+      "predicted": 10.285714285714285,
+      "actual": 10.0,
+      "rel_error": 0.02857142857142847,
+      "in_range": true
+    },
+    {
+      "point": {
+        "corrosion_rate_mm_yr": 0.17500000000000002,
+        "current_wall_thickness_mm": 12.0
+      },
+      "predicted": 35.0,
+      "actual": 34.285714285714285,
+      "rel_error": 0.020833333333333363,
+      "in_range": true
+    },
+    {
+      "point": {
+        "corrosion_rate_mm_yr": 0.8,
+        "current_wall_thickness_mm": 12.0
+      },
+      "predicted": 7.619047619047619,
+      "actual": 7.5,
+      "rel_error": 0.015873015873015817,
+      "in_range": true
+    },
+    {
+      "point": {
+        "corrosion_rate_mm_yr": 0.3,
+        "current_wall_thickness_mm": 9.0
+      },
+      "predicted": 10.0,
+      "actual": 10.0,
+      "rel_error": 0.0,
+      "in_range": true
+    },
+    {
+      "point": {
+        "corrosion_rate_mm_yr": 0.3,
+        "current_wall_thickness_mm": 11.0
+      },
+      "predicted": 16.666666666666668,
+      "actual": 16.666666666666668,
+      "rel_error": 0.0,
+      "in_range": true
+    },
+    {
+      "point": {
+        "corrosion_rate_mm_yr": 0.3,
+        "current_wall_thickness_mm": 13.0
+      },
+      "predicted": 23.333333333333336,
+      "actual": 23.333333333333336,
+      "rel_error": 0.0,
+      "in_range": true
+    },
+    {
+      "point": {
+        "corrosion_rate_mm_yr": 0.3,
+        "current_wall_thickness_mm": 15.0
+      },
+      "predicted": 30.0,
+      "actual": 30.0,
+      "rel_error": 0.0,
+      "in_range": true
+    }
+  ],
+  "local_error_map": {
+    "": {
+      "corrosion_rate_mm_yr": [
+        0.041666666666666664,
+        0.020833333333333363,
+        0.041666666666666664,
+        0.06666666666666667,
+        0.02857142857142847,
+        0.015873015873015817
+      ],
+      "current_wall_thickness_mm": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    }
+  },
+  "densification_log": [
+    {
+      "round": 1,
+      "axis": "corrosion_rate_mm_yr",
+      "added_knot": 0.2,
+      "max_rel_error_before": 0.3333333333333331
+    },
+    {
+      "round": 2,
+      "axis": "corrosion_rate_mm_yr",
+      "added_knot": 0.15000000000000002,
+      "max_rel_error_before": 0.1250000000000002
+    }
+  ]
+}

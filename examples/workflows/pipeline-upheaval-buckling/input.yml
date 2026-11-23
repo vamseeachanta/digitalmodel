@@ -1,0 +1,85 @@
+basename: upheaval_buckling
+
+calculation:
+  name: upheaval_buckling
+
+inputs:
+  seawater_density: 1025
+
+pipeline:
+  length: 2737
+  required_download_N_m: 30.0
+  water_depth:
+    length_factor: [0, 0.2, 0.4, 0.6, 0.8, 1.0]
+    depth: [410, 407, 404, 400, 397, 397]
+  soil:
+    friction_coefficient: 0.21
+    displacement_at_full_friction_mobilization: 0.02
+    trench:
+      burial_depth_to_pipe_center_line: 18.0
+      trench_depth_below_seabed: 24.0
+      trench_angle: 30.0
+      friction_angle_of_burial_material: 35.0
+      density_of_burial_material: 0.08
+  tension:
+    unit: kip
+    start: 0
+    end: 0
+    lay_tension: 0
+  crossection:
+    - Nominal_ID: null
+      Nominal_OD: 12.75
+      Design_WT: 0.5
+      Corrosion_Allowance: 0.126
+      average_internal_metal_loss_percentage: 10
+      external_fluid:
+        unit: lb/inch^3
+        density: 0.03721
+        pressure:
+          unit: psi
+          pressure: null
+          reference_depth: 410
+      internal_fluid:
+        unit: lb/inch^3
+        density: 0.02218
+        pressure:
+          unit: psi
+          pressure: 1095.2
+          top_side_elevation: 65.62
+          reference_water_depth: 410
+      temperature:
+        type: differential
+        unit: celsius
+        length_factor: [0, 0.2, 0.4, 0.6, 0.8, 1.0]
+        temperature: [30.4, 24.8, 21.5, 19.5, 18.4, 17.1]
+      Material:
+        name: steel
+        grade: API 5L X52
+        ThermalExpansionCoefficient: 0.0000117
+      WeldFactor:
+        Seamless: 1.0
+      coatings:
+        - material: null
+          purpose: insulation
+          thickness: 0
+          density: 0
+        - material: null
+          purpose: anti-corrosion
+          thickness: 0.122
+          density: 0.03396
+        - material: concrete
+          purpose: weight coating
+          thickness: 0
+          density: 0
+          concrete_water_absorption_rate_percent: 0
+      code:
+        - 30 CFR Part 250
+      Manufacturing:
+        Coupling Mass Ratio: 0.0
+
+default:
+  log_level: INFO
+  config:
+    generate_plots: false
+    overwrite:
+      output: true

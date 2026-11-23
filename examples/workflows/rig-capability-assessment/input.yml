@@ -1,0 +1,56 @@
+basename: rig_capability_assessment
+
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: true
+
+rig_capability_assessment:
+  meta:
+    project: "Cape-style EGS field development"
+    client_context: geothermal
+    prepared_for: "Category Manager - Drilling Rigs"
+
+  # --- well / field program the rig must satisfy (stage 1 driver) ---
+  program:
+    wells_per_pad: 12
+    total_wells: 40
+    schedule_wells_per_year: 24
+    well_design:
+      target_tvd_ft: 8600          # cf. Utah FORGE 16A ~8,559 ft TVD
+      measured_depth_ft: 11000
+      lateral_length_ft: 5000
+      max_casing_od_in: 13.375
+      heaviest_string_lbf: 600000  # drives derived hookload gate (x1.25)
+      bottomhole_temp_F: 400
+      formation: crystalline_basement
+      mud_max_circulating_psi: 7500
+
+  # required_capability omitted -> auto-derived from well_design + super-spec floor.
+
+  scoring_weights:
+    capability_margin: 0.25
+    pad_mobility: 0.20
+    automation_digital: 0.20
+    power_emissions: 0.15
+    ht_readiness: 0.20
+
+  candidate_rigs:
+    - id: HP_FlexRig_Flex3
+      source: hp_flexrig
+    - id: PD_SuperTriple_ST1500
+      source: precision_st1500
+    - id: PTEN_APEX_XC
+      source: pten_apex
+    - id: NBR_PACE_X800            # X-Y skid -> fails the default 'walking' gate (demonstrative)
+      source: nabors_pace_x800
+    # example of a per-rig override on top of bundled class defaults:
+    - id: HP_FlexRig_Fervo_HTpack
+      source: hp_flexrig
+      overrides:
+        ht_track_record: 0.75      # demonstrated EGS high-temp run history
+
+  outputs:
+    directory: results
+    summary_json: rig_capability_summary.json

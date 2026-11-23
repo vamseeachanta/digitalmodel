@@ -1,0 +1,27 @@
+# Floating-wind collaboration / JIP de-risking program (Wood/Whooley slide 13).
+#
+# Each Joint Industry Project advances the maturity of the qualification criteria
+# it targets (feeds the technology-qualification gate, #1225). Uplifts targeting
+# the same criterion sum, capped at 1.0. The uplift is a calibration input, not a
+# deck number: ~0.10 ≈ one DNV-RP-A203 TRL step (of the 0..7 scale). Override per
+# assessment. Public references only.
+basename: collaboration
+
+collaboration:
+  jips:
+    - name: Cability
+      targets: [technology_readiness]
+      maturity_uplift: 0.10
+      description: Cable-stability JIP — de-risks dynamic-cable configuration
+    - name: CALM
+      targets: [technology_readiness]
+      maturity_uplift: 0.10
+      description: Cable failure RQA JIP — dynamic-cable reliability
+    - name: SURF-IM
+      targets: [track_record]
+      maturity_uplift: 0.10
+      description: Subsea integrity-management JIP — operational track record
+    - name: SUREFLEX
+      targets: [technology_readiness]
+      maturity_uplift: 0.10
+      description: Flexible-riser integrity JIP — riser/dynamic-system maturity

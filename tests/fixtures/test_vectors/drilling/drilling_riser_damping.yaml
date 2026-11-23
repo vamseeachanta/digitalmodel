@@ -1,0 +1,62 @@
+source_type: standard
+source_description: "Extracted from digitalmodel/tests/drilling_riser/test_damping_doc_verified.py — DeepStar structural damping test data"
+extracted_date: "2026-03-16"
+legal_scan_passed: true
+category: "drilling"
+subcategory: "drilling_riser_damping"
+equations:
+  - name: "Rayleigh mass-proportional coefficient"
+    latex: "\\alpha = \\frac{2 \\zeta \\omega_1 \\omega_2}{\\omega_1 + \\omega_2}"
+    description: "Mass-proportional Rayleigh damping coefficient from two target frequencies"
+  - name: "Rayleigh stiffness-proportional coefficient"
+    latex: "\\beta = \\frac{2 \\zeta}{\\omega_1 + \\omega_2}"
+    description: "Stiffness-proportional Rayleigh damping coefficient from two target frequencies"
+inputs:
+  - name: "First angular frequency"
+    symbol: "omega_1"
+    unit: "rad/s"
+    test_value: 0.5
+  - name: "Second angular frequency"
+    symbol: "omega_2"
+    unit: "rad/s"
+    test_value: 2.0
+  - name: "Target damping ratio"
+    symbol: "zeta"
+    unit: "dimensionless"
+    test_value: 0.03
+outputs:
+  - name: "Mass-proportional coefficient"
+    symbol: "alpha"
+    unit: "1/s"
+    test_expected: 0.024
+    tolerance: 0.02
+  - name: "Stiffness-proportional coefficient"
+    symbol: "beta"
+    unit: "s"
+    test_expected: 0.024
+    tolerance: 0.02
+worked_examples:
+  - description: "Bare steel pipe structural damping ratio per DeepStar section 3"
+    inputs:
+      material: "steel"
+      joint_type: "bare"
+    outputs:
+      damping_ratio: 0.003
+    use_as_test: true
+  - description: "Rayleigh damping coefficients for symmetric frequencies"
+    inputs:
+      omega_1: 0.5
+      omega_2: 2.0
+      zeta: 0.03
+    outputs:
+      alpha: 0.024
+      beta: 0.024
+    use_as_test: true
+assumptions:
+  - "Rayleigh damping model: C = alpha*M + beta*K"
+  - "Damping ratio is constant between omega_1 and omega_2 (classical Rayleigh assumption)"
+  - "DeepStar test data applies to steel drilling riser joints"
+references:
+  - "50043-PRS-0001-1 — DeepStar Structural Damping Test"
+  - "2H-TNE-0050-03 section 4.9 — Damping"
+  - "Rayleigh damping theory for structural dynamics"

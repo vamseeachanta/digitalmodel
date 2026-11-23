@@ -1,0 +1,65 @@
+{
+  "recorded_at_utc": "2026-10-10T04:35:59.695686+00:00",
+  "scope": "Focused mesh, legacy pickle loading/generation, friction and citation compatibility; no full-suite result is implied.",
+  "runs": [
+    {
+      "command": "PYTHONPATH=src UV_CACHE_DIR=<cache> uv run --no-project --with pytest --with pytest-cov --with pytest-socket --with numpy==2.4.4 --with scipy --with pyyaml python -m pytest tests/naval_architecture/test_mesh_hydrostatics.py tests/naval_architecture/test_mesh_r02.py tests/naval_architecture/test_mesh_pickle_generator.py tests/naval_architecture/test_friction_scaling.py tests/naval_architecture/test_transfer_citation_regressions.py tests/naval_architecture/test_resistance_citations.py tests/citations/ -q",
+      "resolved_versions": {
+        "python": "3.11.14",
+        "scipy": "1.17.1",
+        "pytest": "9.1.1",
+        "pytest-cov": "7.1.0",
+        "pytest-socket": "0.8.1",
+        "PyYAML": "6.0.3",
+        "numpy": "2.4.4"
+      },
+      "collected": 177,
+      "passed": 177,
+      "skipped": 0,
+      "duration_s": 7.81
+    },
+    {
+      "command": "PYTHONPATH=src UV_CACHE_DIR=<cache> uv run --no-project --with pytest --with pytest-cov --with pytest-socket --with 'numpy<2.4' --with scipy --with pyyaml python -m pytest tests/naval_architecture/test_mesh_hydrostatics.py tests/naval_architecture/test_mesh_r02.py tests/naval_architecture/test_mesh_pickle_generator.py tests/naval_architecture/test_friction_scaling.py tests/naval_architecture/test_transfer_citation_regressions.py tests/naval_architecture/test_resistance_citations.py tests/citations/ -q",
+      "resolved_versions": {
+        "python": "3.11.14",
+        "scipy": "1.17.1",
+        "pytest": "9.1.1",
+        "pytest-cov": "7.1.0",
+        "pytest-socket": "0.8.1",
+        "PyYAML": "6.0.3",
+        "numpy": "2.3.5"
+      },
+      "collected": 177,
+      "passed": 176,
+      "skipped": 1,
+      "duration_s": 6.99,
+      "skip_reason": "Fixture regeneration requires NumPy2.4.4 and Python3.11.14; loading the existing pinned pickles was exercised in both environments."
+    }
+  ],
+  "tests_by_file": {
+    "test_mesh_hydrostatics.py": 48,
+    "test_mesh_r02.py": 14,
+    "test_mesh_pickle_generator.py": 1,
+    "test_friction_scaling.py": 36,
+    "test_transfer_citation_regressions.py": 15,
+    "test_resistance_citations.py": 4,
+    "tests/citations": 59
+  },
+  "source_sha256": {
+    "tests/naval_architecture/test_mesh_hydrostatics.py": "977cffdf5d4275437ebb2736a7b34783af81fb48bab286ced3f66a10ee425068",
+    "tests/naval_architecture/test_mesh_r02.py": "ee810eb38a2d63a04be7e41ca220d5d79ae1113355fce0c8dada9cfc8204600e",
+    "tests/naval_architecture/test_mesh_pickle_generator.py": "91042621cc054bb7160df9bafb1c918bd7b811ff13f741bd5ac81216b681dc00",
+    "tests/naval_architecture/test_friction_scaling.py": "2e8ecb6f21da54d81faeaddc544879d9459b5978d12732b506dd3988d836d7a1",
+    "tests/naval_architecture/test_transfer_citation_regressions.py": "119ba392c4ab12b8ff7e60a31a9f63529e614b7cb67e98443454b37180006f2f",
+    "tests/naval_architecture/test_resistance_citations.py": "4869775a1b9ddd77bb3e6d305556ce6e9eb129d170cc034685db59ebd5098747",
+    "tests/citations/test_registry.py": "87e01b0ac05460d3af5d5c7c73259932d2f724f415c1202e3633f9e37ff5945e",
+    "tests/citations/test_resolver.py": "8451f767ed0ad265d31a3f3cdad1f9b00d5e3904cfdcca80031311d9498907c3",
+    "tests/citations/test_schema.py": "04032571dc5bac3167854764b3829458acafc2894a5b3454cde489923c434a0d"
+  },
+  "unrelated_dependency_follow_on": {
+    "issue": "https://github.com/vamseeachanta/digitalmodel/issues/2343",
+    "consumer": "tests/naval_architecture/test_hull_girder_screening.py:126,127,147",
+    "reason": "np.trapz was removed in NumPy2.4; existing test-oracle calls require migration; production hull_girder_screening uses its own _cumtrapz."
+  },
+  "generator_evidence": "generator-isolation.json"
+}

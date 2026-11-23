@@ -1,0 +1,17 @@
+basename: compare_tool
+
+compare_tool:
+  key: x
+  value: y
+  sources:
+    - label: run_a
+      file: data/run_a.csv
+    - label: run_b
+      file: data/run_b.csv
+  output_dir: results
+
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: true

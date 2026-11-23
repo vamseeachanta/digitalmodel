@@ -1,0 +1,301 @@
+metadata:
+  title: "3D FEM Beam Analysis — GT1R Parachute Mounting Frame — Single Chute"
+  doc_id: "CALC-WRK-1364-SC"
+  revision: 1
+  date: "2026-03-29"
+  author: "Vamsee Achanta"
+  status: draft
+  project: "GT1R R35 Parachute Frame — WRK-5082"
+  change_log:
+    - rev: 1
+      date: "2026-03-29"
+      description: "Single chute configuration — 200 MPH and 250 MPH deployment cases"
+
+scope:
+  objective: |
+    Structural assessment of the GT1R R35 parachute mounting frame under single
+    parachute deployment at 200 MPH and 250 MPH. Determines stress distribution,
+    deformation, and reaction forces to evaluate frame adequacy for single-chute
+    drag racing applications.
+  inclusions:
+    - "3D beam FEM with 15 nodes, 16 elements, and PIPE cross-section"
+    - "Two load cases: 200 MPH single chute, 250 MPH single chute (governing)"
+    - "Von Mises stress distribution and utilisation ratios"
+    - "Reaction forces at all boundary condition nodes (C3 fixed, B1 bolted)"
+  exclusions:
+    - "Dual chute configuration (see CALC-WRK-1364-DC)"
+    - "Nonlinear material behavior (elastic analysis only)"
+    - "Connection detail stress (bolt holes, weld toes)"
+    - "Dynamic/impact loading (static equivalent applied)"
+    - "Buckling analysis"
+  limitations:
+    - "Linear elastic analysis — utilisation > 1.0 indicates yield exceedance, not actual failure"
+    - "PIPE section assumes uniform wall thickness; local thinning at bends not modeled"
+  validity_range: "Elastic regime only; results valid for utilisation < 1.0"
+
+design_basis:
+  codes:
+    - "CalculiX v2.21 — Timoshenko beam theory (B32R element)"
+    - "ASTM A519 — 4130 chromoly steel mechanical properties"
+  design_life: "N/A — single-event deployment loading"
+  safety_class: "High — driver safety system"
+  environment: "Sea-level atmosphere; ambient temperature (no thermal effects)"
+
+inputs:
+  - name: "Frame Geometry"
+    symbol: "-"
+    value: "15 nodes, 16 members"
+    unit: "-"
+    source: "WRK-1360 (frame_geometry_3d.py)"
+  - name: "Tube Outer Diameter"
+    symbol: "D_o"
+    value: 1.75
+    unit: "in"
+    source: "GT1R specification"
+  - name: "Tube Wall Thickness"
+    symbol: "t"
+    value: 0.120
+    unit: "in"
+    source: "GT1R specification (AISI 4130, normalized)"
+  - name: "Elastic Modulus"
+    symbol: "E"
+    value: 29700000
+    unit: "psi"
+    source: "ASTM A519, 4130 chromoly (normalized)"
+  - name: "Poisson's Ratio"
+    symbol: "\\nu"
+    value: 0.29
+    unit: "-"
+    source: "ASTM A519"
+  - name: "Yield Strength"
+    symbol: "F_y"
+    value: 63000
+    unit: "psi"
+    source: "ASTM A519, 4130 chromoly (normalized)"
+  - name: "Drag Force — 200 MPH Single Chute"
+    symbol: "F_1"
+    value: 24298
+    unit: "lbs"
+    source: "WRK-1362 (chute_assessment.py)"
+  - name: "Drag Force — 250 MPH Single Chute (Governing)"
+    symbol: "F_2"
+    value: 37966
+    unit: "lbs"
+    source: "WRK-1362"
+
+assumptions:
+  - "All connections are rigid (welded joints modeled as continuous beam)"
+  - "B1 bolted connections are fully fixed (6-DOF constrained) — conservative"
+  - "Load applied as concentrated force at coupler pin node (N2) in -Y direction"
+  - "Material is homogeneous, isotropic, and linear elastic"
+  - "Cross-section is constant along each member (uniform PIPE)"
+  - "Self-weight neglected (small relative to drag forces)"
+
+methodology:
+  description: |
+    3D beam finite element analysis using two methods:
+
+    1. CalculiX v2.21 with B32R (3-node quadratic, reduced integration) beam
+       elements and PIPE cross-section — used for stress/displacement results.
+    2. Independent 3D direct stiffness solver with 6-DOF Euler-Bernoulli beam
+       elements — used for reaction forces and load distribution (verified to
+       machine-precision equilibrium and exact symmetry).
+
+    Frame geometry: 15 nodes, 16 members from WRK-1360. Boundary conditions:
+    C3 nodes (N7, N10) fixed in all 6 DOFs; B1 nodes (N12, N14) fixed in all
+    6 DOFs. Drag force applied at coupler pin (N2) in -Y direction.
+  standard: "3D Direct Stiffness Method (Euler-Bernoulli beam), verified against CalculiX v2.21"
+  equations:
+    - id: eq1
+      name: "Von Mises Equivalent Stress"
+      latex: "\\sigma_{vm} = \\sqrt{\\frac{1}{2}\\left[(\\sigma_{xx}-\\sigma_{yy})^2 + (\\sigma_{yy}-\\sigma_{zz})^2 + (\\sigma_{zz}-\\sigma_{xx})^2 + 6(\\tau_{xy}^2 + \\tau_{yz}^2 + \\tau_{zx}^2)\\right]}"
+      description: "Combined stress criterion for ductile materials"
+    - id: eq2
+      name: "Utilisation Ratio"
+      latex: "UR = \\frac{\\sigma_{vm,max}}{F_y}"
+      description: "Ratio of maximum von Mises stress to yield strength; UR > 1.0 indicates yield exceedance"
+    - id: eq3
+      name: "Equilibrium Check"
+      latex: "\\sum R_y = F_{applied}"
+      description: "Sum of vertical reaction forces equals applied load"
+
+calculations:
+  - step: 1
+    description: "Generate FEM model — 15 frame nodes + 16 mid-nodes = 31 total nodes, 16 B32R elements"
+    result: "INP file written with PIPE section (R=0.875 in, t=0.120 in)"
+  - step: 2
+    description: "Apply boundary conditions — 4 BC nodes (N7, N10, N12, N14) × 6 DOFs = 24 constraints"
+    result: "24 single-point constraints applied"
+  - step: 3
+    description: "Solve 2 load cases (200 MPH and 250 MPH single chute)"
+    result: "Both cases converged in 1 increment (linear static)"
+  - step: 4
+    description: "Extract results — von Mises stress, displacement, reactions"
+    result: "280 integration point results per load case"
+
+outputs:
+  - name: "Max Von Mises — 200 MPH Single Chute"
+    symbol: "\\sigma_{vm,1}"
+    value: 193399
+    unit: "psi"
+    pass_fail: "FAIL"
+    limit: 63000
+    notes: "Utilisation 3.07 — exceeds yield by 3.1×"
+  - name: "Max Von Mises — 250 MPH Single Chute (GOVERNING)"
+    symbol: "\\sigma_{vm,2}"
+    value: 302186
+    unit: "psi"
+    pass_fail: "FAIL"
+    limit: 63000
+    notes: "Utilisation 4.80 — exceeds yield by 4.8×"
+  - name: "Max Displacement — 200 MPH"
+    symbol: "\\delta_1"
+    value: 0.164
+    unit: "in"
+  - name: "Max Displacement — 250 MPH (GOVERNING)"
+    symbol: "\\delta_2"
+    value: 0.257
+    unit: "in"
+  - name: "Equilibrium Check"
+    symbol: "\\sum R_y"
+    value: 37966
+    unit: "lbs"
+    pass_fail: "PASS"
+    limit: 37966
+    notes: "Sum of Fy reactions = applied load (machine precision, independent solver)"
+
+charts:
+  - id: "utilisation-ratio"
+    title: "Utilisation Ratio — Single Chute"
+    type: bar
+    x_label: "Load Case"
+    y_label: "Utilisation Ratio"
+    x_unit: "-"
+    y_unit: "-"
+    datasets:
+      - label: "Utilisation (σ_vm / F_y)"
+        data: [[1, 3.07], [2, 4.80]]
+        color: "#b91c1c"
+      - label: "Yield Limit"
+        data: [[1, 1.0], [2, 1.0]]
+        color: "#16a34a"
+
+  - id: "reaction-forces"
+    title: "Reaction Force Distribution — 250 MPH Single Chute (Governing)"
+    type: bar
+    x_label: "BC Node"
+    y_label: "Reaction Magnitude"
+    x_unit: "-"
+    y_unit: "lbs"
+    datasets:
+      - label: "Reaction |F|"
+        data: [[1, 17289], [2, 17289], [3, 7039], [4, 7039]]
+        color: "#b91c1c"
+
+  - id: "reaction-force-pct"
+    title: "Reaction Force Distribution — % of Total Load"
+    type: bar
+    x_label: "BC Node"
+    y_label: "% of Applied Load"
+    x_unit: "-"
+    y_unit: "%"
+    datasets:
+      - label: "All cases (linear)"
+        data: [[1, 45.5], [2, 45.5], [3, 18.5], [4, 18.5]]
+        color: "#3b82f6"
+
+data_tables:
+  - title: "Load Case Summary"
+    columns:
+      - name: "Case"
+        unit: "-"
+      - name: "Speed"
+        unit: "MPH"
+      - name: "Applied Force"
+        unit: "lbs"
+      - name: "Max σ_vm"
+        unit: "psi"
+      - name: "UR"
+        unit: "-"
+      - name: "Max δ"
+        unit: "in"
+      - name: "Status"
+        unit: "-"
+    rows:
+      - ["1", "200", "24,298", "193,399", "3.07", "0.164", "FAIL"]
+      - ["2 (Gov.)", "250", "37,966", "302,186", "4.80", "0.257", "FAIL"]
+
+  - title: "Reaction Forces — 250 MPH Single Chute (Governing)"
+    columns:
+      - name: "Node"
+        unit: "-"
+      - name: "Label"
+        unit: "-"
+      - name: "BC Type"
+        unit: "-"
+      - name: "Fx"
+        unit: "lbs"
+      - name: "Fy"
+        unit: "lbs"
+      - name: "Fz"
+        unit: "lbs"
+      - name: "|F|"
+        unit: "lbs"
+    rows:
+      - ["N7", "right_c3_mount", "Fixed", "+4,790", "+16,544", "+1,513", "17,289"]
+      - ["N10", "left_c3_mount", "Fixed", "-4,790", "+16,544", "+1,513", "17,289"]
+      - ["N12", "right_b1_bolted", "Bolted", "+6,427", "+2,439", "-1,513", "7,039"]
+      - ["N14", "left_b1_bolted", "Bolted", "-6,427", "+2,439", "-1,513", "7,039"]
+
+  - title: "Reaction Force Distribution — % of Applied Load"
+    columns:
+      - name: "Node"
+        unit: "-"
+      - name: "Label"
+        unit: "-"
+      - name: "BC Type"
+        unit: "-"
+      - name: "|F|"
+        unit: "lbs"
+      - name: "% of Load"
+        unit: "%"
+    rows:
+      - ["N7", "right_c3_mount", "Fixed", "17,289", "45.5"]
+      - ["N10", "left_c3_mount", "Fixed", "17,289", "45.5"]
+      - ["N12", "right_b1_bolted", "Bolted", "7,039", "18.5"]
+      - ["N14", "left_b1_bolted", "Bolted", "7,039", "18.5"]
+      - ["", "", "**C3 Total**", "", "**91.1%**"]
+      - ["", "", "**B1 Total**", "", "**37.1%**"]
+
+validation:
+  method: |
+    Multi-method validation: (1) Independent 3D direct stiffness solver confirms
+    exact equilibrium and perfect symmetry. (2) CalculiX cantilever benchmark —
+    B32R deflection vs PL³/3EI, 0.35% error.
+  test_file: "tests/structural/parachute/test_fem_3d.py"
+  result: "All tests pass"
+  status: "PASS"
+
+conclusions:
+  adequacy: |
+    INADEQUATE — The current tube section (1.75" OD × 0.120" wall, 4130 chromoly
+    normalized) is significantly overstressed under both single-chute deployment cases.
+    Utilisation ratios are 3.07 at 200 MPH and 4.80 at 250 MPH.
+    The frame exceeds yield capacity by 3–5× under single parachute deployment.
+  governing_check: |
+    250 MPH single chute (governing) — UR = 4.80 (max σ_vm = 302,186 psi vs F_y = 63,000 psi).
+    C3 frame rail mounts carry 87.1% of Fy load (16,544 lbs each, |F| = 17,289 lbs each).
+    B1 bolted connections carry 12.9% of Fy load (2,439 lbs each, |F| = 7,039 lbs each).
+    Load distribution is perfectly symmetric (verified by independent solver to machine precision).
+  recommendations:
+    - "Investigate larger tube section (e.g., 2.0\" OD × 0.188\" wall) or heat-treated 4130 (Fy = 100 ksi)"
+    - "Check C3 weld capacity for 17,289 lbs reaction force per side"
+    - "Check B1 bolt group for 7,039 lbs reaction per side — 6× M8 bolts"
+    - "Consider stiffening at V-strut junction (high stress concentration area)"
+
+references:
+  - "CalculiX User's Manual, Version 2.21, Guido Dhondt, 2023"
+  - "ASTM A519 — Standard Specification for Seamless Carbon and Alloy Steel Mechanical Tubing"
+  - "WRK-1360 — 3D CAD Geometry (FreeCAD)"
+  - "WRK-1362 — Chute Drag Force Assessment"
+  - "WRK-5082 — GT1R R35 Parachute Frame (parent epic)"

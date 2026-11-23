@@ -1,0 +1,56 @@
+{
+  "basename": "mooring_fatigue",
+  "atlas_id": "3ef6e08f35be",
+  "physics": "log_log",
+  "response": "damage",
+  "axes": [
+    {
+      "name": "stress_MPa",
+      "scale": "log",
+      "grid": [
+        11.0,
+        14.0,
+        18.0,
+        22.0,
+        27.0,
+        33.0,
+        40.0,
+        50.0,
+        62.0,
+        78.0,
+        98.0,
+        122.0,
+        150.0
+      ],
+      "derived": {
+        "fn": "stress_from_tension_area",
+        "inputs": [
+          "tension_range_kN",
+          "area_mm2"
+        ]
+      }
+    },
+    {
+      "name": "n_cycles",
+      "scale": "log",
+      "grid": [
+        10000.0,
+        100000.0,
+        1000000.0
+      ]
+    },
+    {
+      "name": "sn_curve",
+      "values": [
+        "B1",
+        "B2",
+        "C",
+        "C1",
+        "C2",
+        "D",
+        "E",
+        "F"
+      ]
+    }
+  ]
+}

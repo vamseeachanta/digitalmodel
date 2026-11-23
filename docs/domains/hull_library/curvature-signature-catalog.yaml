@@ -1,0 +1,607 @@
+version: '1.0'
+entries:
+- hull_id: inventory_l01_control_surface_mesh_fac3cf24cd
+  hull_type: custom
+  name: L01 Control surface mesh
+  source: repo_inventory
+  panel_format: gdf
+  file_path: docs/domains/orcawave/examples/L01_default_vessel/L01 Control surface
+    mesh.gdf
+  panel_count: 587
+  vertex_count: 565
+  curvature_signature:
+    I_D: 13.069525738653313
+    I_D_plus: 13.069525738653311
+    I_D_minus: 2.2936572044443567e-15
+    a_flat: 0.4837415195726711
+    a_single: 0.47310371061707845
+    a_elliptic: 0.043154769810250425
+    a_saddle: 0.0
+    lref: 114.0
+    lref_mode: auto_principal_span
+    reliability: poor
+    status: mesh_representation_sensitive
+    valid_area_fraction: 1.0
+    panel_count: 3984
+    vertex_count: 1705
+    hullprod_version: 1.0.1
+    representation: mesh
+    quad_split: shortest
+    source: null
+    hull_type: custom
+    crease_dominated: false
+    notes:
+    - automatic reference length used; pass lref=length_bp for comparability
+    - HullProd mesh reliability is poor; curvature values are not trustworthy
+- hull_id: inventory_l01_vessel_mesh_40ca9362fd
+  hull_type: ship
+  name: L01 Vessel mesh
+  source: repo_inventory
+  panel_format: gdf
+  file_path: docs/domains/orcawave/examples/L01_default_vessel/L01 Vessel mesh.gdf
+  panel_count: 385
+  vertex_count: 507
+  curvature_signature:
+    I_D: 16.158934163955642
+    I_D_plus: 15.970980045663064
+    I_D_minus: 0.18795411829257808
+    a_flat: 0.40167595974469306
+    a_single: 0.21063752703041239
+    a_elliptic: 0.2755797997300813
+    a_saddle: 0.11210671349481316
+    lref: 103.21000000000001
+    lref_mode: auto_principal_span
+    reliability: poor
+    status: mesh_representation_sensitive
+    valid_area_fraction: 0.8747801777172873
+    panel_count: 3028
+    vertex_count: 1680
+    hullprod_version: 1.0.1
+    representation: mesh
+    quad_split: shortest
+    source: null
+    hull_type: ship
+    crease_dominated: false
+    notes:
+    - automatic reference length used; pass lref=length_bp for comparability
+    - HullProd mesh reliability is poor; curvature values are not trustworthy
+- hull_id: inventory_l02_oc4_semi_sub_mesh_db621a84f1
+  hull_type: semi_pontoon
+  name: L02 OC4 Semi-sub mesh
+  source: repo_inventory
+  panel_format: gdf
+  file_path: docs/domains/orcawave/examples/L02 OC4 Semi-sub/L02 OC4 Semi-sub mesh.gdf
+  panel_count: 1069
+  vertex_count: 938
+  curvature_signature:
+    I_D: 47.48610971884591
+    I_D_plus: 38.41201325990052
+    I_D_minus: 9.074096458945393
+    a_flat: 0.12383101157935174
+    a_single: 0.31560879727924285
+    a_elliptic: 0.44433667602472476
+    a_saddle: 0.11622351511668061
+    lref: 73.93219999999998
+    lref_mode: auto_principal_span
+    reliability: caution
+    status: mesh_representation_sensitive
+    valid_area_fraction: 0.9999999999999999
+    panel_count: 7080
+    vertex_count: 3556
+    hullprod_version: 1.0.1
+    representation: mesh
+    quad_split: shortest
+    source: null
+    hull_type: semi_pontoon
+    crease_dominated: true
+    notes:
+    - 'crease-dominated hull type: signature reflects column/pontoon junctions and
+      facet edges, use as a paneling metric only (decision D6)'
+    - automatic reference length used; pass lref=length_bp for comparability
+- hull_id: inventory_l03_centre_column_cs_8d3ba6272f
+  hull_type: semi_pontoon
+  name: L03 Centre column CS
+  source: repo_inventory
+  panel_format: gdf
+  file_path: docs/domains/orcawave/examples/L03 Semi-sub multibody analysis/L03 Centre
+    column CS.gdf
+  panel_count: 1579
+  vertex_count: 1562
+  curvature_signature:
+    I_D: 2.2665964873890863
+    I_D_plus: 2.2665964873890854
+    I_D_minus: 1.0177716015627659e-15
+    a_flat: 0.7224932756510838
+    a_single: 0.2523219114349694
+    a_elliptic: 0.02518481291394676
+    a_saddle: 0.0
+    lref: 23.0
+    lref_mode: auto_principal_span
+    reliability: caution
+    status: mesh_representation_sensitive
+    valid_area_fraction: 0.9605388582876779
+    panel_count: 3008
+    vertex_count: 1562
+    hullprod_version: 1.0.1
+    representation: mesh
+    quad_split: shortest
+    source: null
+    hull_type: semi_pontoon
+    crease_dominated: true
+    notes:
+    - 'crease-dominated hull type: signature reflects column/pontoon junctions and
+      facet edges, use as a paneling metric only (decision D6)'
+    - automatic reference length used; pass lref=length_bp for comparability
+- hull_id: inventory_l03_centre_column_99082a59e2
+  hull_type: semi_pontoon
+  name: L03 Centre column
+  source: repo_inventory
+  panel_format: gdf
+  file_path: docs/domains/orcawave/examples/L03 Semi-sub multibody analysis/L03 Centre
+    column.gdf
+  panel_count: 336
+  vertex_count: 337
+  curvature_signature:
+    I_D: 4.878323987423419
+    I_D_plus: 4.8783239874234186
+    I_D_minus: 7.754857709159548e-16
+    a_flat: 0.019053993401263406
+    a_single: 0.8226976711209794
+    a_elliptic: 0.15824833547775718
+    a_saddle: 0.0
+    lref: 20.0
+    lref_mode: auto_principal_span
+    reliability: caution
+    status: mesh_representation_sensitive
+    valid_area_fraction: 0.998704517422603
+    panel_count: 658
+    vertex_count: 337
+    hullprod_version: 1.0.1
+    representation: mesh
+    quad_split: shortest
+    source: null
+    hull_type: semi_pontoon
+    crease_dominated: true
+    notes:
+    - 'crease-dominated hull type: signature reflects column/pontoon junctions and
+      facet edges, use as a paneling metric only (decision D6)'
+    - automatic reference length used; pass lref=length_bp for comparability
+- hull_id: inventory_l03_outer_column_cs_cd85ee7101
+  hull_type: semi_pontoon
+  name: L03 Outer column CS
+  source: repo_inventory
+  panel_format: gdf
+  file_path: docs/domains/orcawave/examples/L03 Semi-sub multibody analysis/L03 Outer
+    column CS.gdf
+  panel_count: 4758
+  vertex_count: 4674
+  curvature_signature:
+    I_D: 1.538544263895488
+    I_D_plus: 1.5372227627403783
+    I_D_minus: 0.0013215011551097333
+    a_flat: 0.8253833744121896
+    a_single: 0.1336885755090718
+    a_elliptic: 0.018534029178906748
+    a_saddle: 0.022394020899831914
+    lref: 29.918000000000003
+    lref_mode: auto_principal_span
+    reliability: caution
+    status: mesh_representation_sensitive
+    valid_area_fraction: 0.9840120575243443
+    panel_count: 9186
+    vertex_count: 4674
+    hullprod_version: 1.0.1
+    representation: mesh
+    quad_split: shortest
+    source: null
+    hull_type: semi_pontoon
+    crease_dominated: true
+    notes:
+    - 'crease-dominated hull type: signature reflects column/pontoon junctions and
+      facet edges, use as a paneling metric only (decision D6)'
+    - automatic reference length used; pass lref=length_bp for comparability
+- hull_id: inventory_l03_outer_column_bc77718b51
+  hull_type: semi_pontoon
+  name: L03 Outer column
+  source: repo_inventory
+  panel_format: gdf
+  file_path: docs/domains/orcawave/examples/L03 Semi-sub multibody analysis/L03 Outer
+    column.gdf
+  panel_count: 1178
+  vertex_count: 1179
+  curvature_signature:
+    I_D: 3.5610059270663292
+    I_D_plus: 2.4359410948449365
+    I_D_minus: 1.125064832221393
+    a_flat: 0.21652207704974535
+    a_single: 0.3150905309701131
+    a_elliptic: 0.3646251950673875
+    a_saddle: 0.10376219691275418
+    lref: 20.0
+    lref_mode: auto_principal_span
+    reliability: caution
+    status: mesh_representation_sensitive
+    valid_area_fraction: 0.9991828651162806
+    panel_count: 2318
+    vertex_count: 1179
+    hullprod_version: 1.0.1
+    representation: mesh
+    quad_split: shortest
+    source: null
+    hull_type: semi_pontoon
+    crease_dominated: true
+    notes:
+    - 'crease-dominated hull type: signature reflects column/pontoon junctions and
+      facet edges, use as a paneling metric only (decision D6)'
+    - automatic reference length used; pass lref=length_bp for comparability
+- hull_id: inventory_l04_column_bb7a3d1773
+  hull_type: semi_pontoon
+  name: L04 Column
+  source: repo_inventory
+  panel_format: gdf
+  file_path: docs/domains/orcawave/examples/L04 Sectional bodies/L04 Column.gdf
+  panel_count: 524
+  vertex_count: 550
+  curvature_signature:
+    I_D: 9.663506078998225
+    I_D_plus: 7.6727574812154975
+    I_D_minus: 1.990748597782727
+    a_flat: 0.0990286942876087
+    a_single: 0.4436893993487881
+    a_elliptic: 0.26716731370371744
+    a_saddle: 0.1901145926598858
+    lref: 40.00000000000001
+    lref_mode: auto_principal_span
+    reliability: poor
+    status: mesh_representation_sensitive
+    valid_area_fraction: 0.9696425476291196
+    panel_count: 4008
+    vertex_count: 1982
+    hullprod_version: 1.0.1
+    representation: mesh
+    quad_split: shortest
+    source: null
+    hull_type: semi_pontoon
+    crease_dominated: true
+    notes:
+    - 'crease-dominated hull type: signature reflects column/pontoon junctions and
+      facet edges, use as a paneling metric only (decision D6)'
+    - automatic reference length used; pass lref=length_bp for comparability
+    - HullProd mesh reliability is poor; curvature values are not trustworthy
+- hull_id: inventory_l04_keystone_3ec94751f3
+  hull_type: semi_pontoon
+  name: L04 Keystone
+  source: repo_inventory
+  panel_format: gdf
+  file_path: docs/domains/orcawave/examples/L04 Sectional bodies/L04 Keystone.gdf
+  panel_count: 799
+  vertex_count: 868
+  curvature_signature:
+    I_D: 16.065696891116538
+    I_D_plus: 6.58173113408842
+    I_D_minus: 9.48396575702812
+    a_flat: 0.27653028622515763
+    a_single: 0.32308466475899605
+    a_elliptic: 0.1882013821806498
+    a_saddle: 0.2121836668351966
+    lref: 40.0
+    lref_mode: auto_principal_span
+    reliability: poor
+    status: mesh_representation_sensitive
+    valid_area_fraction: 0.877079583983407
+    panel_count: 6072
+    vertex_count: 2730
+    hullprod_version: 1.0.1
+    representation: mesh
+    quad_split: shortest
+    source: null
+    hull_type: semi_pontoon
+    crease_dominated: true
+    notes:
+    - 'crease-dominated hull type: signature reflects column/pontoon junctions and
+      facet edges, use as a paneling metric only (decision D6)'
+    - automatic reference length used; pass lref=length_bp for comparability
+    - HullProd mesh reliability is poor; curvature values are not trustworthy
+- hull_id: inventory_l04_pontoon_1427b19ab4
+  hull_type: semi_pontoon
+  name: L04 Pontoon
+  source: repo_inventory
+  panel_format: gdf
+  file_path: docs/domains/orcawave/examples/L04 Sectional bodies/L04 Pontoon.gdf
+  panel_count: 378
+  vertex_count: 418
+  curvature_signature:
+    I_D: 2.3965832861133993e-15
+    I_D_plus: 1.6277753461069074e-15
+    I_D_minus: 7.688079400064917e-16
+    a_flat: 0.6602564102564102
+    a_single: 0.33974358974358976
+    a_elliptic: 0.0
+    a_saddle: 0.0
+    lref: 40.0
+    lref_mode: auto_principal_span
+    reliability: caution
+    status: mesh_representation_sensitive
+    valid_area_fraction: 0.9523809523809522
+    panel_count: 3024
+    vertex_count: 1584
+    hullprod_version: 1.0.1
+    representation: mesh
+    quad_split: shortest
+    source: null
+    hull_type: semi_pontoon
+    crease_dominated: true
+    notes:
+    - 'crease-dominated hull type: signature reflects column/pontoon junctions and
+      facet edges, use as a paneling metric only (decision D6)'
+    - automatic reference length used; pass lref=length_bp for comparability
+- hull_id: inventory_l05_column_d480465b3f
+  hull_type: semi_pontoon
+  name: L05 Column
+  source: repo_inventory
+  panel_format: gdf
+  file_path: docs/domains/orcawave/examples/L05 Panel pressures/L05 Column.gdf
+  panel_count: 524
+  vertex_count: 550
+  curvature_signature:
+    I_D: 9.663506078998225
+    I_D_plus: 7.6727574812154975
+    I_D_minus: 1.990748597782727
+    a_flat: 0.0990286942876087
+    a_single: 0.4436893993487881
+    a_elliptic: 0.26716731370371744
+    a_saddle: 0.1901145926598858
+    lref: 40.00000000000001
+    lref_mode: auto_principal_span
+    reliability: poor
+    status: mesh_representation_sensitive
+    valid_area_fraction: 0.9696425476291196
+    panel_count: 4008
+    vertex_count: 1982
+    hullprod_version: 1.0.1
+    representation: mesh
+    quad_split: shortest
+    source: null
+    hull_type: semi_pontoon
+    crease_dominated: true
+    notes:
+    - 'crease-dominated hull type: signature reflects column/pontoon junctions and
+      facet edges, use as a paneling metric only (decision D6)'
+    - automatic reference length used; pass lref=length_bp for comparability
+    - HullProd mesh reliability is poor; curvature values are not trustworthy
+- hull_id: inventory_l05_keystone_20e0d43985
+  hull_type: semi_pontoon
+  name: L05 Keystone
+  source: repo_inventory
+  panel_format: gdf
+  file_path: docs/domains/orcawave/examples/L05 Panel pressures/L05 Keystone.gdf
+  panel_count: 799
+  vertex_count: 868
+  curvature_signature:
+    I_D: 16.065696891116538
+    I_D_plus: 6.58173113408842
+    I_D_minus: 9.48396575702812
+    a_flat: 0.27653028622515763
+    a_single: 0.32308466475899605
+    a_elliptic: 0.1882013821806498
+    a_saddle: 0.2121836668351966
+    lref: 40.0
+    lref_mode: auto_principal_span
+    reliability: poor
+    status: mesh_representation_sensitive
+    valid_area_fraction: 0.877079583983407
+    panel_count: 6072
+    vertex_count: 2730
+    hullprod_version: 1.0.1
+    representation: mesh
+    quad_split: shortest
+    source: null
+    hull_type: semi_pontoon
+    crease_dominated: true
+    notes:
+    - 'crease-dominated hull type: signature reflects column/pontoon junctions and
+      facet edges, use as a paneling metric only (decision D6)'
+    - automatic reference length used; pass lref=length_bp for comparability
+    - HullProd mesh reliability is poor; curvature values are not trustworthy
+- hull_id: inventory_l05_pontoon_6425f5eaa3
+  hull_type: semi_pontoon
+  name: L05 Pontoon
+  source: repo_inventory
+  panel_format: gdf
+  file_path: docs/domains/orcawave/examples/L05 Panel pressures/L05 Pontoon.gdf
+  panel_count: 378
+  vertex_count: 418
+  curvature_signature:
+    I_D: 2.3965832861133993e-15
+    I_D_plus: 1.6277753461069074e-15
+    I_D_minus: 7.688079400064917e-16
+    a_flat: 0.6602564102564102
+    a_single: 0.33974358974358976
+    a_elliptic: 0.0
+    a_saddle: 0.0
+    lref: 40.0
+    lref_mode: auto_principal_span
+    reliability: caution
+    status: mesh_representation_sensitive
+    valid_area_fraction: 0.9523809523809522
+    panel_count: 3024
+    vertex_count: 1584
+    hullprod_version: 1.0.1
+    representation: mesh
+    quad_split: shortest
+    source: null
+    hull_type: semi_pontoon
+    crease_dominated: true
+    notes:
+    - 'crease-dominated hull type: signature reflects column/pontoon junctions and
+      facet edges, use as a paneling metric only (decision D6)'
+    - automatic reference length used; pass lref=length_bp for comparability
+- hull_id: inventory_pyramidzc08_376d04a1e1
+  hull_type: custom
+  name: PyramidZC08
+  source: repo_inventory
+  panel_format: gdf
+  file_path: docs/domains/orcawave/L00_validation_wamit/2.7/OrcaWave v11.0 files/PyramidZC08.gdf
+  panel_count: 408
+  vertex_count: 781
+  curvature_signature:
+    I_D: 408.4901792065093
+    I_D_plus: 408.4901792065093
+    I_D_minus: 0.0
+    a_flat: 0.0
+    a_single: 0.0
+    a_elliptic: 1.0
+    a_saddle: 0.0
+    lref: 14.11453064390179
+    lref_mode: auto_principal_span
+    reliability: caution
+    status: mesh_representation_sensitive
+    valid_area_fraction: 0.00048286046373929387
+    panel_count: 813
+    vertex_count: 781
+    hullprod_version: 1.0.1
+    representation: mesh
+    quad_split: shortest
+    source: null
+    hull_type: custom
+    crease_dominated: false
+    notes:
+    - automatic reference length used; pass lref=length_bp for comparability
+- hull_id: inventory_ellipsoid0096_eff4803e29
+  hull_type: ellipsoid
+  name: Ellipsoid0096
+  source: repo_inventory
+  panel_format: gdf
+  file_path: docs/domains/orcawave/L00_validation_wamit/2.8/OrcaWave v11.0 files/Ellipsoid0096.gdf
+  panel_count: 96
+  vertex_count: 109
+  curvature_signature:
+    I_D: 7.5689864468421435
+    I_D_plus: 7.5689864468421435
+    I_D_minus: 0.0
+    a_flat: 0.0
+    a_single: 0.0
+    a_elliptic: 1.0
+    a_saddle: 0.0
+    lref: 3.91918358
+    lref_mode: auto_principal_span
+    reliability: caution
+    status: mesh_representation_sensitive
+    valid_area_fraction: 0.9923341081790163
+    panel_count: 736
+    vertex_count: 385
+    hullprod_version: 1.0.1
+    representation: mesh
+    quad_split: shortest
+    source: null
+    hull_type: ellipsoid
+    crease_dominated: false
+    notes:
+    - automatic reference length used; pass lref=length_bp for comparability
+- hull_id: inventory_spherewithlid_c279d5d307
+  hull_type: sphere
+  name: SphereWithLid
+  source: repo_inventory
+  panel_format: gdf
+  file_path: docs/domains/orcawave/L00_validation_wamit/3.2/OrcaWave v11.0 files/SphereWithLid.gdf
+  panel_count: 240
+  vertex_count: 249
+  curvature_signature:
+    I_D: 4.390146189894321
+    I_D_plus: 4.390146189894321
+    I_D_minus: 0.0
+    a_flat: 0.22069349652464884
+    a_single: 0.0
+    a_elliptic: 0.7793065034753514
+    a_saddle: 0.0
+    lref: 2.07281609362674
+    lref_mode: auto_principal_span
+    reliability: caution
+    status: mesh_representation_sensitive
+    valid_area_fraction: 1.0
+    panel_count: 1824
+    vertex_count: 914
+    hullprod_version: 1.0.1
+    representation: mesh
+    quad_split: shortest
+    source: null
+    hull_type: sphere
+    crease_dominated: false
+    notes:
+    - automatic reference length used; pass lref=length_bp for comparability
+- hull_id: inventory_cylinder_180ceb078d
+  hull_type: cylinder
+  name: Cylinder
+  source: repo_inventory
+  panel_format: gdf
+  file_path: docs/domains/orcawave/L00_validation_wamit/3.3/OrcaWave v11.0 files/Cylinder.gdf
+  panel_count: 420
+  vertex_count: 453
+  curvature_signature:
+    I_D: 1.7707299089935866
+    I_D_plus: 1.7707299089935866
+    I_D_minus: 3.993312549328945e-17
+    a_flat: 0.2793717523137883
+    a_single: 0.6127252794675287
+    a_elliptic: 0.1079029682186829
+    a_saddle: 0.0
+    lref: 2.0
+    lref_mode: auto_principal_span
+    reliability: caution
+    status: mesh_representation_sensitive
+    valid_area_fraction: 1.0
+    panel_count: 3280
+    vertex_count: 1642
+    hullprod_version: 1.0.1
+    representation: mesh
+    quad_split: shortest
+    source: null
+    hull_type: cylinder
+    crease_dominated: true
+    notes:
+    - 'crease-dominated hull type: signature reflects column/pontoon junctions and
+      facet edges, use as a paneling metric only (decision D6)'
+    - automatic reference length used; pass lref=length_bp for comparability
+- hull_id: inventory_unit_box_clean_6a410d1077
+  hull_type: barge
+  name: unit_box_clean
+  source: repo_inventory
+  panel_format: gdf
+  file_path: docs/domains/orcawave/L01_aqwa_benchmark/benchmark_results/orcawave/unit_box_clean.gdf
+  panel_count: 5
+  vertex_count: 8
+  curvature_signature:
+    I_D: 2.83784323711613
+    I_D_plus: 2.83784323711613
+    I_D_minus: 0.0
+    a_flat: 0.0
+    a_single: 0.0
+    a_elliptic: 1.0
+    a_saddle: 0.0
+    lref: 1.7320508075688772
+    lref_mode: auto_principal_span
+    reliability: caution
+    status: mesh_representation_sensitive
+    valid_area_fraction: 0.6
+    panel_count: 10
+    vertex_count: 8
+    hullprod_version: 1.0.1
+    representation: mesh
+    quad_split: shortest
+    source: null
+    hull_type: barge
+    crease_dominated: false
+    notes:
+    - automatic reference length used; pass lref=length_bp for comparability
+- hull_id: inventory_barge_de92864375
+  hull_type: barge
+  name: barge
+  source: repo_inventory
+  panel_format: gdf
+  file_path: specs/modules/orcawave/test-configs/geometry/barge.gdf
+- hull_id: inventory_spar_f408d325be
+  hull_type: spar
+  name: spar
+  source: repo_inventory
+  panel_format: gdf
+  file_path: specs/modules/orcawave/test-configs/geometry/spar.gdf

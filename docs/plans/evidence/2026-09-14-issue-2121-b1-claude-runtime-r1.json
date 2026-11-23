@@ -1,0 +1,120 @@
+{
+  "revision": "dbb098f4837d1a688baacb71997599c9d19f4a25",
+  "section": "runtime",
+  "seconds": "462.3279999999795",
+  "exit_code": 0,
+  "bundle_sha256": "40312ee825ecdf8422cdbafc76c01a6bfcae3a2776e10bb42ed62a3a95659850",
+  "stdout_sha256": "7fbf3ab00b0afa2003e0effd10ce42eb329ebe3a4413aa7e2aa5cff950d54b3b",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "status": "REVIEW_RECEIVED",
+  "review": {
+    "verdict": "MAJOR",
+    "reviewed_revision": "dbb098f4837d1a688baacb71997599c9d19f4a25",
+    "reviewed_files": [
+      {
+        "path": "src/digitalmodel/ansys/analysis_records.py",
+        "sha256": "06dce5eb10d244c48df0fa1075bf48010170a668b81cd45694eb43fe3d349511"
+      },
+      {
+        "path": "src/digitalmodel/ansys/cylinder_adapter.py",
+        "sha256": "1aaa9ddee68f3c1b10c9001cf30c9edaa5aaf19dd1032196e80f0578035b34d4"
+      },
+      {
+        "path": "src/digitalmodel/ansys/cylinder_canary.py",
+        "sha256": "0aebeb2f238b697f6d65c3f4c1c7b50e07171e76565a9a1fbf5cebdafee0f877"
+      },
+      {
+        "path": "src/digitalmodel/ansys/cylinder_process.py",
+        "sha256": "6a91eddc2a9dfffff6d9ca55bd89b53d224106b42cd9f3c15d69773339b0fb59"
+      },
+      {
+        "path": "src/digitalmodel/ansys/cylinder_process_windows.py",
+        "sha256": "b746ae57e916a31d2025fee9ede11fc73a423575cabcbca49b6997cc1f5d0338"
+      },
+      {
+        "path": "src/digitalmodel/ansys/cylinder_reference_provenance.py",
+        "sha256": "93c35eca16451f61864c91d605ec38df5cb88bb61d8345e843c323ea811e4c1c"
+      },
+      {
+        "path": "src/digitalmodel/ansys/cylinder_runner.py",
+        "sha256": "3ea772545d863cbbc6ddd1e072f33aac5ebf5c96beca5322e0081bb68e813d2e"
+      },
+      {
+        "path": "src/digitalmodel/ansys/runner.py",
+        "sha256": "05a0816a516938dfd953ec85a10a47296b9c78889a852a97a4baf847fb2fa6d8"
+      },
+      {
+        "path": "tests/ansys/test_cylinder_adapter.py",
+        "sha256": "e06eaf28f60b5a4735a48d2602737a378f192914c7d1ce66c85dcc811d0122de"
+      },
+      {
+        "path": "tests/ansys/test_cylinder_canary.py",
+        "sha256": "e9db680b87cf4420c2b3fa0921ed3711a450950aea879ec922606038e3f88d98"
+      },
+      {
+        "path": "tests/ansys/test_cylinder_process.py",
+        "sha256": "4a28b179ed5e7b7de0884a3f717ee3e4fa99f70ea7a715be038eb414b08679f7"
+      },
+      {
+        "path": "tests/ansys/test_cylinder_reference_provenance.py",
+        "sha256": "90779a7fe743a7501878890b1503bf6d54676e142456671cbef2babdc4ebabd5"
+      },
+      {
+        "path": "tests/ansys/test_cylinder_runner.py",
+        "sha256": "6df886571b76e24b1835058b3109fdcfc17e7cc6e7c66ea4a04422cf7931f7e3"
+      },
+      {
+        "path": "tests/ansys/test_cylinder_workflow.py",
+        "sha256": "dc9b6312054ce7bcd1aa820e0b449b02457f5fe6119f5602640f160d1b37e5b8"
+      },
+      {
+        "path": "src/digitalmodel/ansys/cylinder_criteria.py",
+        "sha256": "f546a4068ec40a7055074d521b3ab4ae8fc94453fa2ed374067ddc480371ee73"
+      },
+      {
+        "path": "src/digitalmodel/ansys/cylinder_results_validation.py",
+        "sha256": "da149366a2d3f08a943d9c5bac23aa71b4eeaa723d87ff99f3c821f18bcdd8a3"
+      },
+      {
+        "path": "src/digitalmodel/ansys/cylinder_benchmark.py",
+        "sha256": "1a4ab9ceb167a31278aa39c6fb946af8ee6b47dceedcff28d466865159b4e30b"
+      },
+      {
+        "path": "src/digitalmodel/ansys/cylinder_results.py",
+        "sha256": "a099fc97882a9ce2cc552a634b1bc73e63229b0d25cf2e774db9a074446f5c41"
+      }
+    ],
+    "findings": [
+      {
+        "id": "F1",
+        "severity": "major",
+        "defect": "No pre-launch binding of the deck to the frozen case. cylinder_canary._attempt copies the manifest deck after checking only the manifest digest; cylinder_adapter.make_execution_adapters.launch verifies executable digest and reference provenance, then calls cylinder_runner.launch_case, whose _paths checks only existence/basename. build_case/validate_deck equality is enforced solely in extract_record, i.e. after the licensed solve has consumed an attempt. An approved manifest naming a non-frozen .inp executes arbitrary APDL under the B2 seat and the frozen four-case guarantee is post hoc only.",
+        "correction": "In the launch closure (and/or _attempt) read the copied deck bytes and require validate_deck(case['case_id'], raw) before _launch_case; add an adapter test that a manifest deck differing from build_case refuses launch with no _launch_case call."
+      },
+      {
+        "id": "F2",
+        "severity": "minor",
+        "defect": "cylinder_criteria.evaluate_canary returns dict(result, ...) when the fourth attempt is FAIL/INCOMPLETE, discarding the accumulated checks from attempts 1-3 (local 'checks' list) and never running _refinement. Via assessment_for_records (len==4 path) the receipt['checks'] for a final FAIL therefore omits the zero-control and coarse diagnostic checks the design says must be retained as diagnostics.",
+        "correction": "Return dict(result, checks=checks, ...) with the accumulated list (mirroring assessment_for_records' prefix branch); add a test asserting a final-attempt FAIL retains attempt 1-3 checks."
+      },
+      {
+        "id": "F3",
+        "severity": "minor",
+        "defect": "run_canary writes outcome.json outside the try/except. Any non-canonical value in the receipt (floats or non-JSON types in the adjudicator proof, a records entry, or an assess result from an external adapter) makes canonical_bytes raise in _save, so no durable receipt is written and the exception escapes with status already 'PASS' in memory. _adjudicate stores 'proof' without canonical validation.",
+        "correction": "In _adjudicate use proof = parse_json(canonical_bytes(proof)) before binding; in run_canary wrap the final _save so a canonicalisation failure writes a minimal INCOMPLETE receipt with the reason instead of losing the outcome."
+      },
+      {
+        "id": "F4",
+        "severity": "minor",
+        "defect": "cylinder_reference_provenance._git_blob spawns an unpinned 'git' resolved from PATH (14 invocations per verify, verify runs in prepare, launch and extract), which contradicts the adapter docstring 'Creating these callbacks never launches a process' and puts an unattested helper binary in the reference-agreement gate. It also requires working-tree bytes to equal raw blobs; on a Windows execution host with core.autocrlf=true the .py/.json/.txt FROZEN_FILES will differ (CRLF) and every B2 run will refuse before attempt 1.",
+        "correction": "Pin the git executable path (and optionally its digest) in the approval and pass it explicitly; document the helper-process fact; add/verify .gitattributes eol=lf for the frozen and evidence files or compare normalised bytes explicitly and record that choice."
+      },
+      {
+        "id": "F5",
+        "severity": "minor",
+        "defect": "_prepare_next reserves exactly 300 s (remaining() < 300) but a full attempt can take 300 s solve + up to 5 s settle + 5 s close + stream readback + extract-time provenance replay (dozens of git calls). A fourth attempt started at ~300 s remaining can legitimately overrun, and the later remaining() < 0 check then converts a fully consumed licensed solve into INCOMPLETE.",
+        "correction": "Reserve 300 s plus an explicit settlement/extract margin (e.g. 300 + 30 s) as a named constant, and assert the same margin in the time-budget test."
+      }
+    ]
+  }
+}

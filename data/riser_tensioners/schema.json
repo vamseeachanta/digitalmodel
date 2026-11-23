@@ -1,0 +1,106 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Riser tensioner catalogue",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "database", "units", "records"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "database": {"const": "riser_tensioners"},
+    "units": {"const": {"capacity_n": "N", "stroke_m": "m", "count_typical": "1"}},
+    "records": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "status", "citation_id", "kind", "capacity_n", "stroke_m", "count_typical"],
+        "properties": {
+          "id": {"type": "string", "pattern": "^[a-z][a-z0-9_-]*$"},
+          "status": {"enum": ["cited", "synthetic"]},
+          "citation_id": {"type": "string", "pattern": "^[a-z][a-z0-9_-]*$"},
+          "kind": {"enum": ["wireline", "direct_acting", "telescopic_joint"]},
+          "capacity_n": {"$ref": "#/$defs/positive"},
+          "stroke_m": {"$ref": "#/$defs/positive"},
+          "count_typical": {"type": ["integer", "null"], "minimum": 1}
+        }
+      }
+    }
+  },
+  "$defs": {
+    "positive": {"type": "number", "exclusiveMinimum": 0},
+    "citation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "title",
+        "publisher",
+        "url",
+        "catalogue_number",
+        "revision",
+        "date",
+        "page",
+        "table",
+        "source_class",
+        "reuse_terms"
+      ],
+      "properties": {
+        "title": {"type": "string", "minLength": 1, "pattern": "\\S"},
+        "publisher": {"type": "string", "minLength": 1, "pattern": "\\S"},
+        "url": {
+          "anyOf": [
+            {"type": "string", "format": "uri", "pattern": "^https?://[^/\\s?#]+(?:[/?#]|$)"},
+            {"type": "null"}
+          ]
+        },
+        "catalogue_number": {"anyOf": [{"type": "string", "minLength": 1, "pattern": "\\S"}, {"type": "null"}]},
+        "revision": {"type": "string", "minLength": 1, "pattern": "\\S"},
+        "date": {"type": "string", "format": "date"},
+        "page": {"anyOf": [{"type": "string", "minLength": 1, "pattern": "\\S"}, {"type": "null"}]},
+        "table": {"anyOf": [{"type": "string", "minLength": 1, "pattern": "\\S"}, {"type": "null"}]},
+        "source_class": {
+          "enum": [
+            "mill_catalogue",
+            "manufacturer_catalogue",
+            "public_paper",
+            "public_thesis",
+            "public_agency_report",
+            "own_design_basis",
+            "synthetic_fixture"
+          ]
+        },
+        "reuse_terms": {"type": "string", "minLength": 1, "pattern": "\\S"}
+      },
+      "allOf": [
+        {
+          "anyOf": [
+            {"properties": {"url": {"type": "string", "minLength": 1, "pattern": "\\S"}}},
+            {
+              "properties": {"catalogue_number": {"type": "string", "minLength": 1, "pattern": "\\S"}}
+            }
+          ]
+        },
+        {
+          "anyOf": [
+            {"properties": {"page": {"type": "string", "minLength": 1, "pattern": "\\S"}}},
+            {"properties": {"table": {"type": "string", "minLength": 1, "pattern": "\\S"}}}
+          ]
+        }
+      ],
+      "description": "A locator for the values in each referencing row; class declarations require independent source review."
+    },
+    "sources": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_version", "citation_schema", "citations"],
+      "properties": {
+        "schema_version": {"const": 1},
+        "citation_schema": {"const": "schema.json#/$defs/citation"},
+        "citations": {
+          "type": "object",
+          "propertyNames": {"type": "string", "pattern": "^[a-z][a-z0-9_-]*$"},
+          "additionalProperties": {"$ref": "#/$defs/citation"}
+        }
+      }
+    }
+  }
+}

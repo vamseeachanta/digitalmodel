@@ -1,0 +1,96 @@
+﻿%YAML 1.1
+# Type: Model
+# Program: OrcaFlex 11.2d
+# File: docs/domains/orcaflex/installation/manifold/region_a/monolithic/__03f_add_shielding.yml
+# Created: 6:27 PM on 9/1/2023
+# User: 
+# Machine: 
+---
+BaseFile: __03e_struc_lower_elev_for_convergence.yml
+6DBuoys:
+  mudmat:
+    DisturbanceVessel: iv03
+  1:
+    DisturbanceVessel: iv03
+  2:
+    DisturbanceVessel: iv03
+  3:
+    DisturbanceVessel: iv03
+  4:
+    DisturbanceVessel: iv03
+  5:
+    DisturbanceVessel: iv03
+  6:
+    DisturbanceVessel: iv03
+  7:
+    DisturbanceVessel: iv03
+  8:
+    DisturbanceVessel: iv03
+  9:
+    DisturbanceVessel: iv03
+  10:
+    DisturbanceVessel: iv03
+  11:
+    DisturbanceVessel: iv03
+  12:
+    DisturbanceVessel: iv03
+  13:
+    DisturbanceVessel: iv03
+  14:
+    DisturbanceVessel: iv03
+  15:
+    DisturbanceVessel: iv03
+  16:
+    DisturbanceVessel: iv03
+  17:
+    DisturbanceVessel: iv03
+  18:
+    DisturbanceVessel: iv03
+  19:
+    DisturbanceVessel: iv03
+  20:
+    DisturbanceVessel: iv03
+  21:
+    DisturbanceVessel: iv03
+  22:
+    DisturbanceVessel: iv03
+  23:
+    DisturbanceVessel: iv03
+  24:
+    DisturbanceVessel: iv03
+  25:
+    DisturbanceVessel: iv03
+  26:
+    DisturbanceVessel: iv03
+  27:
+    DisturbanceVessel: iv03
+  28:
+    DisturbanceVessel: iv03
+  29:
+    DisturbanceVessel: iv03
+  30:
+    DisturbanceVessel: iv03
+  31:
+    DisturbanceVessel: iv03
+  32:
+    DisturbanceVessel: iv03
+  33:
+    DisturbanceVessel: iv03
+  34:
+    DisturbanceVessel: iv03
+  35:
+    DisturbanceVessel: iv03
+  36:
+    DisturbanceVessel: iv03
+Lines:
+  _02_main_crane_wire_bot:
+    DisturbanceVessel[1]: iv03
+  Sling1:
+    DisturbanceVessel[1]: iv03
+  Sling2:
+    DisturbanceVessel[1]: iv03
+  Sling3:
+    DisturbanceVessel[1]: iv03
+  Sling4:
+    DisturbanceVessel[1]: iv03
+...

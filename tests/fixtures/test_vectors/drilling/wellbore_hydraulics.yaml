@@ -1,0 +1,94 @@
+source_type: textbook
+source_description: "Extracted from digitalmodel/tests/well/drilling/test_hydraulics.py — Bourgoyne et al. SPE Textbook Vol 2 Ch 4"
+extracted_date: "2026-03-16"
+legal_scan_passed: true
+category: "drilling"
+subcategory: "wellbore_hydraulics"
+equations:
+  - name: "Annular velocity"
+    latex: "AV = \\frac{24.51 \\times q}{D_h^2 - D_{od}^2}"
+    description: "Annular velocity in ft/min from flow rate and annular geometry"
+  - name: "Equivalent circulating density"
+    latex: "ECD = \\rho_m + \\frac{\\Delta P}{0.052 \\times TVD}"
+    description: "ECD equals mud weight plus friction pressure contribution"
+inputs:
+  - name: "Pipe outer diameter"
+    symbol: "D_od"
+    unit: "in"
+    test_value: 4.5
+  - name: "Pipe inner diameter"
+    symbol: "D_id"
+    unit: "in"
+    test_value: 3.826
+  - name: "Hole diameter"
+    symbol: "D_h"
+    unit: "in"
+    test_value: 8.5
+  - name: "Mud weight"
+    symbol: "rho_m"
+    unit: "ppg"
+    test_value: 10.5
+  - name: "Flow rate"
+    symbol: "q"
+    unit: "gal/min"
+    test_value: 400.0
+  - name: "True vertical depth"
+    symbol: "TVD"
+    unit: "ft"
+    test_value: 8000.0
+  - name: "Plastic viscosity"
+    symbol: "PV"
+    unit: "cp"
+    test_value: 18.0
+  - name: "Yield point"
+    symbol: "YP"
+    unit: "lbf/100ft2"
+    test_value: 12.0
+outputs:
+  - name: "Annular velocity"
+    symbol: "AV"
+    unit: "ft/min"
+    test_expected: 188.54
+    tolerance: 0.000001
+worked_examples:
+  - description: "Annular velocity formula verification: 24.51 * 400 / (8.5^2 - 4.5^2)"
+    inputs:
+      flow_rate_gpm: 400.0
+      hole_diameter_in: 8.5
+      pipe_od_in: 4.5
+    outputs:
+      annular_velocity_ft_min: 188.54
+    use_as_test: true
+  - description: "ECD equals mud weight plus friction component: dp=200 psi"
+    inputs:
+      mud_weight_ppg: 10.5
+      pressure_drop_psi: 200.0
+      tvd_ft: 8000.0
+    outputs:
+      ecd_ppg: 10.981
+    use_as_test: true
+  - description: "ECD equals mud weight at zero pressure drop"
+    inputs:
+      mud_weight_ppg: 10.5
+      pressure_drop_psi: 0.0
+      tvd_ft: 8000.0
+    outputs:
+      ecd_ppg: 10.5
+    use_as_test: true
+  - description: "Zero flow gives zero annular velocity"
+    inputs:
+      flow_rate_gpm: 0.0
+      hole_diameter_in: 8.5
+      pipe_od_in: 4.5
+    outputs:
+      annular_velocity_ft_min: 0.0
+    use_as_test: true
+assumptions:
+  - "Bingham Plastic rheology model (PV and YP)"
+  - "Incompressible fluid"
+  - "Annular velocity constant 24.51 from unit conversion (Bourgoyne et al.)"
+  - "Field-realistic ECD for standard conditions in range 10.5-11.5 ppg"
+  - "Annular pressure drop for 8000 ft well at 400 gpm is 10-1000 psi"
+references:
+  - "Bourgoyne et al., Applied Drilling Engineering, SPE Textbook Vol 2, Ch 4"
+  - "Bingham Plastic model for drilling fluid rheology"

@@ -1,0 +1,27 @@
+{
+  "basename": "orcaflex_library",
+  "atlas_id": "c198e029c428",
+  "physics": "linear",
+  "response": "max_effective_tension_N",
+  "axes": [
+    {
+      "name": "case",
+      "values": [
+        "operating-hs2",
+        "storm-hs5",
+        "extreme-hs8"
+      ]
+    },
+    {
+      "name": "heading_deg",
+      "scale": "linear",
+      "grid": [
+        0.0,
+        45.0,
+        90.0,
+        135.0,
+        180.0
+      ]
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+basename: hydro_coefficients
+
+default:
+  log_level: INFO
+  config:
+    generate_plots: false
+    overwrite:
+      output: true
+
+hydro_coefficients:
+  data_dir: data
+  query_points:
+    - frequency_rad_s: 1.0
+      dof_i: Heave
+      dof_j: Heave
+    - frequency_rad_s: 1.0
+      dof_i: Sway
+      dof_j: Sway
+  causality_check:
+    dof_i: Surge
+    dof_j: Surge
+    tolerance: 0.1
+  output_dir: results

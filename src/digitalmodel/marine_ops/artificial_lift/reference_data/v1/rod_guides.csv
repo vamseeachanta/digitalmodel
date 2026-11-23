@@ -1,0 +1,117 @@
+# provenance: previous project reference
+# extraction_date: 2026-07-29
+# schema: source_row,manufacturer,model_type,material
+# units: explicit in unit-suffixed fields; surface values unverified_source_unit
+source_row,manufacturer,model_type,material
+2,Norris,Standard,PPA
+3,Norris,Standard,PPS
+4,Norris,Standard,NFF
+5,Norris,Standard,PPAU
+6,Norris,Sidewinder,PPA
+7,Norris,Sidewinder,PPS
+8,Norris,Sidewinder,NFF
+9,Norris,NHT,PPA
+10,Norris,NHT,PPS
+11,Norris,NHT,NHT
+12,R&M (NOV),Crossover,Nylon
+13,R&M (NOV),Crossover,PPA
+14,R&M (NOV),Crossover,PPS
+15,R&M (NOV),NETB,Nylon
+16,R&M (NOV),NETB,PPA
+17,R&M (NOV),NETB,PPS
+18,R&M (NOV),NEXTB,Nylon
+19,R&M (NOV),NEXTB,PPA
+20,R&M (NOV),NEXTB,PPS
+21,R&M (NOV),NEXXTB,Nylon
+22,R&M (NOV),NEXXTB,PPA
+23,R&M (NOV),NEXXTB,PPS
+24,R&M (NOV),TNT 360,Nylon
+25,R&M (NOV),TNT 360,PPA
+26,R&M (NOV),TNT 360,PPS
+27,R&M (NOV),Nitro 360,Nylon
+28,R&M (NOV),Nitro 360,PPA
+29,R&M (NOV),Nitro 360,PPS
+30,R&M (NOV),Stealth,Nylon
+31,R&M (NOV),Stealth,PPA
+32,R&M (NOV),Stealth,PPS
+33,R&M (NOV),Stealth XL,Nylon
+34,R&M (NOV),Stealth XL,PPA
+35,R&M (NOV),Stealth XL,PPS
+36,R&M (NOV),Dual System,Nylon/NF
+37,R&M (NOV),Dual System,Nylon/AU
+38,R&M (NOV),Dual System,PPA/NF
+39,R&M (NOV),Dual System,PPA/AU
+40,R&M (NOV),Dual System,PPS/NF
+41,R&M (NOV),Dual System,PPS/AU
+42,R&M (NOV),Straight Vane,Nylon
+43,R&M (NOV),Straight Vane,PPA
+44,R&M (NOV),Straight Vane,PPS
+45,R&M (NOV),Positive Action Slant Vane,Nylon
+46,R&M (NOV),Positive Action Slant Vane,PPA
+47,R&M (NOV),Positive Action Slant Vane,PPS
+48,R&M (NOV),Turbulence Breaker,Nylon
+49,R&M (NOV),Turbulence Breaker,PPA
+50,R&M (NOV),Turbulence Breaker,PPS
+51,R&M (NOV),Smooth Flow,Nylon
+52,R&M (NOV),Smooth Flow,PPA
+53,R&M (NOV),Smooth Flow,PPS
+54,R&M (NOV),Slant Vane XL,Nylon
+55,R&M (NOV),Slant Vane XL,PPA
+56,R&M (NOV),Slant Vane XL,PPS
+57,R&M (NOV),Mort,Nylon
+58,R&M (NOV),Mort,PPA
+59,R&M (NOV),Mort,PPS
+60,R&M (NOV),Lotus Twist On,NF
+61,R&M (NOV),Lotus Twist On,AU
+62,R&M (NOV),NEPG,UHMW PE
+63,Weatherford,Straight Vane,AU
+64,Weatherford,Straight Vane,AF
+65,Weatherford,Straight Vane,PPS
+66,Weatherford,Straight Vane,PPS-X
+67,Weatherford,Straight Vane,LG15
+68,Weatherford,Straight Vane,UHMW PE
+69,Weatherford,Straight Vane,NFF
+70,Weatherford,Slant Vane,AU
+71,Weatherford,Slant Vane,AF
+72,Weatherford,Slant Vane,PPS
+73,Weatherford,Slant Vane,PPS-X
+74,Weatherford,Slant Vane,LG15
+75,Weatherford,Slant Vane,UHMW PE
+76,Weatherford,Slant Vane,NFF
+77,Weatherford,Double Action,AU
+78,Weatherford,Double Action,AF
+79,Weatherford,Double Action,PPS
+80,Weatherford,Double Action,PPS-X
+81,Weatherford,Double Action,LG15
+82,Weatherford,Double Action,UHMW PE
+83,Weatherford,Double Action,NFF
+84,Weatherford,Cobra,AU
+85,Weatherford,Cobra,AF
+86,Weatherford,Cobra,PPS
+87,Weatherford,Cobra,PPS-X
+88,Weatherford,Cobra,LG15
+89,Weatherford,Cobra,UHMW PE
+90,Weatherford,Cobra,NFF
+91,Weatherford,King Cobra,AU
+92,Weatherford,King Cobra,AF
+93,Weatherford,King Cobra,PPS
+94,Weatherford,King Cobra,PPS-X
+95,Weatherford,King Cobra,LG15
+96,Weatherford,King Cobra,UHMW PE
+97,Weatherford,King Cobra,NFF
+98,Weatherford,King Cobra LT,AU
+99,Weatherford,King Cobra LT,AF
+100,Weatherford,King Cobra LT,PPS
+101,Weatherford,King Cobra LT,PPS-X
+102,Weatherford,King Cobra LT,LG15
+103,Weatherford,King Cobra LT,UHMW PE
+104,Weatherford,King Cobra LT,NFF
+105,Weatherford,PCT360,AU
+106,Weatherford,PCT360,AF
+107,Weatherford,PCT360,PPS
+108,Weatherford,PCT360,PPS-X
+109,Weatherford,PCT360,LG15
+110,Weatherford,PCT360,UHMW PE
+111,Weatherford,PCT360,NFF
+112,Plainsman,PL5,Nylon
+113,Plainsman,Toughgrip,Nylon

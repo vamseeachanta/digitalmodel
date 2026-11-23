@@ -1,0 +1,8 @@
+{
+  "changes": [
+    "Published phase demands and anode requirements are presented with their calculation basis.",
+    "Measured potentials retain failures against a stated assumed criterion.",
+    "Resistivity units and unavailable sensitivity results are stated explicitly."
+  ],
+  "revision": "00"
+}

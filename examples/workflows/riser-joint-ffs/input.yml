@@ -1,0 +1,41 @@
+basename: riser_joint_ffs
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: true
+riser_joint_ffs:
+  mode: report
+  report:
+    provenance:
+      inspection_epoch: inspection date withheld
+      anonymized: true
+      anonymization_statement: >-
+        Existing anonymized inspection excerpts are referenced in place.
+        Identifiers and serials were replaced with synthetic joint IDs; measurements
+        were rounded to 0.001 mm and grids downsampled as described in the hashed README.
+        Private originals remain private and are not copied here.
+    od_in: 21.25
+    wt_in: 0.875
+    grade: X80
+    design_pressure_psi: 500.0
+    campaign_water_depth_ft: 5000.0
+    campaign_years: 3.0
+    differential_head_fraction: 1.0
+    n_campaigns: 4
+    min_high_fatigue_joints: 12
+    register_csv: ../../../tests/asset_integrity/test_data/real_inspection/gml_results_register.csv
+    provenance_readme: ../../../tests/asset_integrity/test_data/real_inspection/README.md
+    scans:
+      - joint_id: J01
+        scan_location: End 1
+        grid_csv: ../../../tests/asset_integrity/test_data/real_inspection/ut_grid_scan-a_ds8.csv
+      - joint_id: J01
+        scan_location: End 1
+        grid_csv: ../../../tests/asset_integrity/test_data/real_inspection/ut_grid_scan-a_window_fullres.csv
+      - joint_id: J02
+        scan_location: End 1
+        grid_csv: ../../../tests/asset_integrity/test_data/real_inspection/ut_grid_scan-b_ds8.csv
+      - joint_id: J03
+        scan_location: End 2
+        grid_csv: ../../../tests/asset_integrity/test_data/real_inspection/ut_grid_scan-c_ds8.csv

@@ -1,0 +1,13 @@
+# Input Parameters for Parametric Analysis
+# Source: L03 Semi-sub multibody analysis.yml
+# Generated: 2026-01-18 22:18:55
+
+water_depth: 200
+current_speed: 0
+wind_speed: 0
+water_density: 1.025
+stage_durations:
+- 40
+- 200
+wave_direction: 135
+

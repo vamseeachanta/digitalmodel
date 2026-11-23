@@ -1,0 +1,2 @@
+"""Offline tabular comparison workflow."""
+

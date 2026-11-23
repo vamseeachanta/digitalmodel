@@ -1,0 +1,25 @@
+* @vamseeachanta
+
+# CI and quality gate ownership
+/.github/workflows/ @vamseeachanta
+/.claude/quality-gates.yaml @vamseeachanta
+/scripts/ci/ @vamseeachanta
+
+# Test domain ownership
+/tests/DOMAINS.md @vamseeachanta
+/tests/asset_integrity/ @vamseeachanta
+/tests/cathodic_protection/ @vamseeachanta
+/tests/citations/ @vamseeachanta
+/tests/contracts/ @vamseeachanta
+/tests/field_development/ @vamseeachanta
+/tests/hydrodynamics/ @vamseeachanta
+/tests/infrastructure/ @vamseeachanta
+/tests/marine_ops/ @vamseeachanta
+/tests/naval_architecture/ @vamseeachanta
+/tests/orcaflex/ @vamseeachanta
+/tests/solver/ @vamseeachanta
+/tests/solvers/ @vamseeachanta
+/tests/specialized/ @vamseeachanta
+/tests/structural/ @vamseeachanta
+/tests/subsea/ @vamseeachanta
+/tests/workflows/ @vamseeachanta

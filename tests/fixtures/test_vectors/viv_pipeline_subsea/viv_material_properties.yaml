@@ -1,0 +1,80 @@
+source_type: python
+source_description: "VIV analysis material library — carbon steel, stainless steel, titanium properties for tubular member calculations"
+extracted_date: "2026-03-16"
+legal_scan_passed: true
+category: "viv_pipeline_subsea"
+subcategory: "material_properties"
+equations:
+  - name: "Inner diameter"
+    latex: "D_i = D_o - 2t"
+    description: "Inner diameter from outer diameter and wall thickness"
+  - name: "Cross-sectional area"
+    latex: "A = \\frac{\\pi}{4}(D_o^2 - D_i^2)"
+    description: "Annular cross-sectional area of tubular member"
+  - name: "Second moment of area"
+    latex: "I = \\frac{\\pi}{64}(D_o^4 - D_i^4)"
+    description: "Second moment of area (moment of inertia) for bending"
+inputs:
+  - name: "Carbon steel Young's modulus"
+    symbol: "E_cs"
+    unit: "MPa"
+    test_value: 207000
+  - name: "Carbon steel density"
+    symbol: "rho_cs"
+    unit: "kg/m3"
+    test_value: 7850
+  - name: "Carbon steel Poisson's ratio"
+    symbol: "nu_cs"
+    unit: "-"
+    test_value: 0.3
+  - name: "Stainless steel Young's modulus"
+    symbol: "E_ss"
+    unit: "MPa"
+    test_value: 193000
+  - name: "Stainless steel density"
+    symbol: "rho_ss"
+    unit: "kg/m3"
+    test_value: 8000
+  - name: "Titanium Young's modulus"
+    symbol: "E_ti"
+    unit: "MPa"
+    test_value: 110000
+  - name: "Titanium density"
+    symbol: "rho_ti"
+    unit: "kg/m3"
+    test_value: 4500
+outputs:
+  - name: "Inner diameter (D_o=0.5, t=0.025)"
+    symbol: "D_i"
+    unit: "m"
+    test_expected: 0.45
+    tolerance: 1.0e-9
+worked_examples:
+  - description: "Carbon steel properties verification"
+    inputs:
+      material: "Carbon Steel"
+    outputs:
+      youngs_modulus_MPa: 207000
+      density_kgm3: 7850
+      poissons_ratio: 0.3
+    use_as_test: true
+  - description: "Stainless steel properties verification"
+    inputs:
+      material: "Stainless Steel"
+    outputs:
+      youngs_modulus_MPa: 193000
+      density_kgm3: 8000
+    use_as_test: true
+  - description: "Titanium properties verification"
+    inputs:
+      material: "Titanium"
+    outputs:
+      youngs_modulus_MPa: 110000
+      density_kgm3: 4500
+    use_as_test: true
+assumptions:
+  - "Room temperature properties (no derating for elevated temperature)"
+  - "Isotropic material behavior"
+references:
+  - "DNV-RP-C205 Environmental Conditions and Environmental Loads"
+  - "DNV-OS-F101 Submarine Pipeline Systems"

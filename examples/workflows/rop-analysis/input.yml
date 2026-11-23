@@ -1,0 +1,42 @@
+basename: rop_analysis
+
+default:
+  log_level: INFO
+  config:
+    generate_plots: false
+    overwrite:
+      output: true
+
+rop_analysis:
+  case:
+    id: registry_rop_analysis
+    description: Bourgoyne-Young and Warren ROP comparison
+  bourgoyne_young:
+    parameters:
+      a1: 0.5
+      a2: 0.0
+      a3: 0.0
+      a4: 0.3
+      a5: 0.5
+      a6: 0.6
+      a7: 0.5
+      a8: 0.3
+    inputs:
+      depth_ft: 5000.0
+      wob_klb: 20.0
+      rpm: 100.0
+      bit_dia_in: 8.5
+      overbalance_kpsi: 0.5
+      bit_wear: 0.0
+  warren:
+    parameters:
+      K: 10.0
+      a: 0.6
+      b: 0.5
+    inputs:
+      wob_klb: 20.0
+      rpm: 100.0
+      bit_dia_in: 8.5
+  outputs:
+    directory: results/rop_analysis
+    summary_json: rop_analysis_summary.json

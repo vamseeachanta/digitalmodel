@@ -1,0 +1,44 @@
+{
+  "observed_utc": "2026-09-15T00:03:02.877099+00:00",
+  "source_revision": "44b2cfaff7d3ec67ba3707e3c4a1c69e4d73c336",
+  "receipt_sha256": "ad1f0ce6fb0d29aa503282128713c067e6fcc0034c299e5d252e327ab97167d0",
+  "bundle_sha256": "472385ae24a5f8b49ce4a809d920026f88572421d5e23a4dfcd79dc4216942b9",
+  "status": "UNAVAILABLE",
+  "actual_provider_result": "You've hit your session limit \u00b7 resets 9:20pm (America/Chicago)",
+  "retries": 0,
+  "native_attempts": 1,
+  "provisional_checks_passed": 64,
+  "qualified_responses": 0,
+  "matrix_revision": "r2",
+  "matrix_promotion": "BLOCKED_MISSING_EXACT_CURRENT_INDEPENDENT_REVIEW",
+  "next_action": "Verify provider availability after reported reset; review unchanged exact source bundle before production candidate assembly. No synthetic or self-review substitute.",
+  "scope": "Provisional diagnostic checkpoint; no review verdict or numerical publication authority",
+  "raw_originals_modified": false,
+  "native_retries": 0,
+  "native_executed_source_revision": "16894a32dfc92c217c7398720897ce3e54cdb1ee",
+  "offline_tests": {
+    "passed": 1624,
+    "optional_skipped": 1,
+    "native_deselected": 2
+  },
+  "frozen_reference_sha256": "385ff3d42e4219faefd8cc1a72c20525f4b2731cf2fcb31aa51ba5b1de63c3b4",
+  "canonical_matrix": "examples/ansys/analysis-evidence/manifest.json",
+  "evidence": [
+    {
+      "id": "SOLVERS-PM-native-44b2cfaf-closure-replay",
+      "sha256": "e0ab5133a8b9f8b75d26d6e8c92ef62a4d62c867f3668ec7b179efd308036844"
+    },
+    {
+      "id": "SOLVERS-PM-native-44b2cfaf-final-assessment",
+      "sha256": "56fd2c5f8bbf577024035866fd256b65398b28ba6b0156dbd2d5f2a9b13d7e7d"
+    },
+    {
+      "id": "SOLVERS-PM-native-44b2cfaf-source-inventory",
+      "sha256": "60e479b96997248b21787d368804eb5ee24e83aa57bf0cd41fc55ce84d2e3194"
+    },
+    {
+      "id": "SOLVERS-PM-native-44b2cfaf-numeric-source-inventory",
+      "sha256": "a4448564f48baf75b178f7d9661b0d4264cf62f0f3116753f26eafc03bfb6903"
+    }
+  ]
+}

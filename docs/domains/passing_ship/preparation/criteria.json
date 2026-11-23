@@ -1,0 +1,51 @@
+{
+  "revision": "3",
+  "relative_tolerance": 0.05,
+  "absolute_tolerance": [
+    4.779745189807623e-07,
+    4.779745189807623e-07,
+    4.779745189807623e-09
+  ],
+  "quantities": [
+    "Cx",
+    "Cy",
+    "Cm"
+  ],
+  "comparison_units": "dimensionless coefficient peaks",
+  "definition": {
+    "source": "Processes 2021, 9, 558, Equation (9); Sections 2.3, 2.4 and 3.1-3.2",
+    "source_id": "park-2021",
+    "Cx": "Fx / (0.5 * rho * D * L * V^2)",
+    "Cy": "Fy / (0.5 * rho * D * L * V^2)",
+    "Cm": "M / (0.5 * rho * D * L^2 * V^2)",
+    "peak_sign": {
+      "Cx": "positive maximum",
+      "Cy": "positive maximum toward passing ship",
+      "Cm": "positive maximum"
+    },
+    "peak_basis": "Section 2.3 compares positive peaks for all three components; Section 3.1 describes the positive surge, sway and yaw peaks. Fixed samples at -L/2, 0 and L/2 are not a peak search.",
+    "reference_series": "model tests",
+    "reference_series_basis": "Sections 3.1 and 3.2 compare both double-body and free-surface numerical models with model tests; the experimental series is selected as the reference, not either numerical model.",
+    "stagger_window": {
+      "x_over_L_min": "not established",
+      "x_over_L_max": "not established",
+      "basis": "A full peak-search interval is not established in the opened paper text; no interval or number is read from a figure."
+    },
+    "L": "mean ship length, 100 m for the equal-length candidate hulls in model.json",
+    "D": "draft, 6.17 m for both candidate hulls in model.json",
+    "rho": "water density; 1025 kg/m^3 is an assumed study input in model.json, not an experimental density established from the paper",
+    "V": "F_L * sqrt(g * L), from the length Froude definition in Section 2.4",
+    "SI_conversion": "Fx = Cx * 0.5 * rho * D * L * V^2; Fy = Cy * 0.5 * rho * D * L * V^2; M = Cm * 0.5 * rho * D * L^2 * V^2. Comparison is performed in coefficients, not SI."
+  },
+  "absolute_floor_basis": {
+    "force_floor_n": 1,
+    "moment_floor_nm": 1,
+    "rho_kg_m3": 1025,
+    "draft_m": 6.17,
+    "length_m": 100,
+    "speed_ms": 2.57222,
+    "basis": "Original SI floors divided by Equation (9) scales at the assumed model base speed of 5 knots; speed_ms uses input_schemas.py conversion. These fixed dimensionless floors apply to every candidate, not candidate-level tolerances."
+  },
+  "status": "not ready: numerical references and peak-search stagger window not established",
+  "basis": "Proposed 5% study tolerance from the existing analytical test convention, not experimental uncertainty. No plot digitisation and no published benchmark comparison."
+}

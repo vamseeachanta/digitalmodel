@@ -1,0 +1,188 @@
+# Collide "PE Problem of the Day" — solve backlog
+# Source: https://app.collide.io  (Energy Infrastructure Community)
+# Hotness = 2*comments + likes  (comments weighted: discussion > passive like)
+# Captured 2026-06-19. Series total at capture: 161 posts, 1050 comments, 1530 likes.
+# "march progressively": work top-of-list first; append new problems as they post.
+
+meta:
+  community: Energy Infrastructure Community (collide.io)
+  series: PE Problem of the Day
+  author_of_problems: Yogashri Pradhan
+  captured: "2026-06-19"
+  series_size_at_capture: 161
+  hotness_formula: "2*comments + likes"
+
+# First wave — the 10 hottest engineering challenges + today's (user-flagged) problem.
+wave_1:
+  - id: pe-2026-06-19
+    date: "2026-06-19"
+    slug: pe-problem-of-the-day-6-19-2026
+    topic: "Productivity index — current & post-modification oil rate"
+    tags: [production, upstream, reservoir-engineering]
+    type: quantitative
+    comments: 0
+    likes: 1
+    hotness: 1
+    note: "User-flagged worked example; the template problem for this program."
+
+  - id: pe-2026-04-20
+    date: "2026-04-20"
+    slug: pe-problem-of-the-day-4-20-2026
+    topic: "Tertiary thermal EOR — steam to mobilize heavy crude"
+    tags: [production, upstream, eor]
+    type: conceptual
+    comments: 20
+    likes: 13
+    hotness: 53
+
+  - id: pe-2026-01-15
+    date: "2026-01-15"
+    slug: pe-problem-of-the-day-1-15-2026
+    topic: "Purpose of a standing valve in a gas-lift configuration"
+    tags: [production, upstream, artificial-lift]
+    type: conceptual
+    comments: 19
+    likes: 11
+    hotness: 49
+
+  - id: pe-2026-03-05
+    date: "2026-03-05"
+    slug: pe-problem-of-the-day-3-5-2026
+    topic: "Depletion drive with limited aquifer support"
+    tags: [production, upstream, reservoir-engineering]
+    type: conceptual
+    comments: 15
+    likes: 18
+    hotness: 48
+
+  - id: pe-2026-05-21
+    date: "2026-05-21"
+    slug: pe-problem-of-the-day-5-21-2026
+    topic: "OOIP volumetrics + primary/secondary recoverable volumes"
+    tags: [production, upstream, reservoir-engineering, volumetrics]
+    type: quantitative
+    comments: 15
+    likes: 14
+    hotness: 44
+
+  - id: pe-2026-05-19
+    date: "2026-05-19"
+    slug: pe-problem-of-the-day-5-19-2026
+    topic: "Fluid's internal resistance to flow"
+    tags: [upstream, chemicals, fluids]
+    type: conceptual
+    comments: 13
+    likes: 16
+    hotness: 42
+
+  - id: pe-2026-05-08
+    date: "2026-05-08"
+    slug: pe-problem-of-the-day-5-8-2026
+    topic: "Curved component at the front of the walking beam (rod pump)"
+    tags: [production, upstream, equipment, field-service]
+    type: conceptual
+    comments: 13
+    likes: 16
+    hotness: 42
+
+  - id: pe-2026-06-03
+    date: "2026-06-03"
+    slug: pe-problem-of-the-day-6-3-2026
+    topic: "Main purpose of drilling fluid (multiple choice)"
+    tags: [drilling, upstream, equipment, field-service]
+    type: multiple-choice
+    comments: 13
+    likes: 13
+    hotness: 39
+
+  - id: pe-2026-04-13
+    date: "2026-04-13"
+    slug: pe-problem-of-the-day-4-13-2026
+    topic: "Real-time formation measurement from the drill string"
+    tags: [drilling, upstream]
+    type: conceptual
+    comments: 14
+    likes: 10
+    hotness: 38
+
+  - id: pe-2026-01-04
+    date: "2026-01-04"
+    slug: pe-problem-of-the-day-1-4-2026
+    topic: "Well control during underbalanced drilling (give 3)"
+    tags: [drilling, upstream, well-control]
+    type: free-response
+    comments: 13
+    likes: 11
+    hotness: 37
+
+  - id: pe-2026-04-23
+    date: "2026-04-23"
+    slug: pe-problem-of-the-day-4-23-2026
+    topic: "Electrochemical/chemical degradation of metal infrastructure"
+    tags: [production, upstream, integrity]
+    type: conceptual
+    comments: 13
+    likes: 11
+    hotness: 37
+
+# Second wave — next tier by hotness (all conceptual; concepts -> llm-wiki).
+wave_2:
+  - id: pe-2026-01-12
+    date: "2026-01-12"
+    slug: pe-problem-of-the-day-1-12-2026
+    topic: "Acid job above fracture pressure (acid fracturing)"
+    issue: 859
+    type: conceptual
+    hotness: 36
+    wiki_concept: wikis/production-engineering/wiki/concepts/acid-fracturing.md  # NEW
+  - id: pe-2026-03-06
+    date: "2026-03-06"
+    slug: pe-problem-of-the-day-3-6-2026
+    topic: "Drive mechanism in unconventional wells (depletion)"
+    issue: 860
+    type: conceptual
+    hotness: 36
+    wiki_concept: wikis/reservoir-engineering/wiki/concepts/reservoir-drive-mechanisms.md  # unconventional section
+  - id: pe-2026-04-24
+    date: "2026-04-24"
+    slug: pe-problem-of-the-day-4-24-2026
+    topic: "What an SP log actually measures (a voltage)"
+    issue: 861
+    type: conceptual
+    hotness: 36
+    wiki_concept: wikis/reservoir-engineering/wiki/concepts/spontaneous-potential-log.md  # NEW
+  - id: pe-2026-06-17
+    date: "2026-06-17"
+    slug: pe-problem-of-the-day-6-17-2026
+    topic: "Depositional environment (fluvial channel-levee)"
+    issue: 862
+    type: multiple-choice
+    hotness: 36
+    wiki_concept: wikis/reservoir-engineering/wiki/concepts/depositional-environments.md  # NEW
+  - id: pe-2026-02-12
+    date: "2026-02-12"
+    slug: pe-problem-of-the-day-2-12-2026
+    topic: "Components of a conventional petroleum system"
+    issue: 863
+    type: free-response
+    hotness: 35
+    wiki_concept: wikis/reservoir-engineering/wiki/concepts/petroleum-system-elements.md  # NEW
+
+# Third wave — ranks 16-20 by hotness (all conceptual).
+wave_3:
+  - {id: pe-2026-04-15, date: "2026-04-15", slug: pe-problem-of-the-day-4-15-2026, issue: 864, hotness: 35, topic: "High-K spectral gamma -> K-feldspar/mica", wiki_concept: wikis/reservoir-engineering/wiki/concepts/gamma-ray-log-interpretation.md}
+  - {id: pe-2026-04-22, date: "2026-04-22", slug: pe-problem-of-the-day-4-22-2026, issue: 865, hotness: 35, topic: "Three main artificial-lift types", wiki_concept: wikis/production-engineering/wiki/concepts/artificial-lift-overview.md}
+  - {id: pe-2026-03-01, date: "2026-03-01", slug: pe-problem-of-the-day-3-1-2026, issue: 866, hotness: 34, topic: "Waxman-Smits (modified Archie, shaly sands)", wiki_concept: wikis/reservoir-engineering/wiki/concepts/water-saturation-models.md}
+  - {id: pe-2026-03-26, date: "2026-03-26", slug: pe-problem-of-the-day-3-26-2026, issue: 867, hotness: 34, topic: "Sidetracking", wiki_concept: wikis/drilling-engineering/wiki/concepts/sidetracking.md}
+  - {id: pe-2026-04-03, date: "2026-04-03", slug: pe-problem-of-the-day-4-3-2026, issue: 868, hotness: 34, topic: "Naphtha (downstream)", wiki_concept: "n/a (downstream/refining, outside wiki scope)"}
+
+# Fourth wave — ranks 21-25 by hotness (all conceptual).
+wave_4:
+  - {id: pe-2026-04-16, date: "2026-04-16", slug: pe-problem-of-the-day-4-16-2026, issue: 872, hotness: 34, topic: "Horner plot / pressure-transient analysis", wiki_concept: wikis/reservoir-engineering/wiki/concepts/pressure-transient-analysis.md}
+  - {id: pe-2026-04-17, date: "2026-04-17", slug: pe-problem-of-the-day-4-17-2026, issue: 873, hotness: 34, topic: "Streamline simulation", wiki_concept: wikis/reservoir-engineering/wiki/concepts/streamline-simulation.md}
+  - {id: pe-2026-03-25, date: "2026-03-25", slug: pe-problem-of-the-day-3-25-2026, issue: 874, hotness: 33, topic: "Managed Pressure Drilling (MPD)", wiki_concept: wikis/drilling-engineering/wiki/concepts/managed-pressure-drilling.md}
+  - {id: pe-2026-04-04, date: "2026-04-04", slug: pe-problem-of-the-day-4-4-2026, issue: 875, hotness: 33, topic: "Workover rig (well intervention)", wiki_concept: wikis/drilling-engineering/wiki/concepts/well-intervention-methods.md}
+  - {id: pe-2026-06-15, date: "2026-06-15", slug: pe-problem-of-the-day-6-15-2026, issue: 876, hotness: 33, topic: "Reactive-shale wellbore instability", wiki_concept: wikis/drilling-engineering/wiki/concepts/wellbore-stability.md}
+
+# wave_5+: remaining ~135. Next by hotness: 4/16/4/17 done; next 2/10 (32); 2/26, 2/4 (31);
+# then tail below ~31. Re-scrape engagement when resuming (browser, auth-gated).

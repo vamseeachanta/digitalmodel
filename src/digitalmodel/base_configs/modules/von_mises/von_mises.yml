@@ -1,0 +1,45 @@
+basename: von_mises
+
+von_mises:
+  nodes:
+    - id: 0
+      x: 0.0
+      y: 0.0
+    - id: 1
+      x: 1.0
+      y: 0.0
+    - id: 2
+      x: 2.0
+      y: 0.0
+  elements:
+    - id: 0
+      node1: 0
+      node2: 1
+      E: 2.07e11
+      I: 1.0e-5
+      A: 1.0e-2
+    - id: 1
+      node1: 1
+      node2: 2
+      E: 2.07e11
+      I: 1.0e-5
+      A: 1.0e-2
+  boundary_conditions:
+    fixed_nodes:
+      - 0
+  loads:
+    - node: 2
+      direction: x
+      magnitude: -1000.0
+  material:
+    E: 2.07e11
+    nu: 0.3
+    rho: 7850.0
+    sigma_y: 4.48e8
+  output_dir: results
+
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: true

@@ -1,0 +1,21 @@
+basename: stress_strain
+
+stress_strain:
+  model: ramberg_osgood
+  material:
+    elastic_modulus: 207000.0
+    yield_strength: 448.0
+    poisson_ratio: 0.3
+    ramberg_osgood_k: 0.002
+    ramberg_osgood_n: 18.85
+  strain_grid:
+    start: 0.0
+    stop: 0.02
+    num: 21
+  output_dir: results
+
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: true

@@ -1,0 +1,4 @@
+title = "Repository secret scanning"
+
+[extend]
+useDefault = true

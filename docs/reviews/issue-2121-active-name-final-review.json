@@ -1,0 +1,113 @@
+{
+  "issue": "https://github.com/vamseeachanta/digitalmodel/issues/2121",
+  "observed_utc": "2026-09-17T22:13:06.216465+00:00",
+  "status": "DIAGNOSTIC_SOURCE_REVIEW_NONBLOCKING",
+  "reviews": [
+    {
+      "scope": "production source and original test revision",
+      "bundle_sha256": "b9a2111506e0b6cda2d1d1833332e9f703eb8bc26ca083d7c53baf08d1df44ac",
+      "stdout_sha256": "c9b04c12dc8cacfae46c1bf80170f2dfb72471ac0abd7a450fd3893ecfd60039",
+      "review": {
+        "bundle_sha256": "b9a2111506e0b6cda2d1d1833332e9f703eb8bc26ca083d7c53baf08d1df44ac",
+        "verdict": "MINOR",
+        "findings": [
+          "EVIDENCE CONDITION (top finding): no full-suite regression exists for the reviewed revision, and a consumer of the round-3 shared-module change is outside inspection. Round 3 altered cylinder_absence_collection._collection_failure so identity_read_failure.parent_map changed shape from dict to list[{pid,parent_pid}] and prior_maps became stage/rows projections. SOLVERS-active-names-final-regression.json:30 lists tests/ansys/test_cylinder_pressure_absence_integration.py in the suite, but that file is neither in the review inventory (so it may not be inspected) nor in the 98-test SOLVERS-active-names-r3-focused-verified.log, and the only full regressions available (936 pass/2 skip) predate this correction. Remedy: run the full suite against the exact reviewed digests and publish a paired digest manifest before the live observation, as the plan already sequences ('after code review and regression pass').",
+          "MINOR: empty executable identity is reported with the misleading reason code identity_changed. _normalize maps executable_path == '' to None in the observed inventory, but _state still returns process.exe() as '', so _detail's any(state[k] != initial[k] ...) trips and _error (cylinder_diagnostic_snapshot_v2.py) labels it identity_changed even though nothing changed and the image was never readable. Gate outcome is unaffected (selected_details_complete=False -> UNKNOWN -> preflight refuses at cylinder_pressure_resources.py:63) and no previously-succeeding case now fails, but the text misdirects operator triage on a refusal that carries no retry. Remedy: distinguish 'no image path' from 'identity changed' in _error, or normalize _state consistently with _normalize.",
+          "MINOR: the round-3 neutral fields are applied to only one of two refusal constructors. refusal_reason and event_scope are added in the except branch of _observed_stage, but the second PopulationError (post-normalization blank-name invariant) carries neither. That branch is unreachable because _reconcile rejects whitespace Name so _normalize cannot yield a blank, consistent with the round-1 disposition treating it as a defensive invariant. Remedy: add the same two fields for shape consistency, or mark it explicitly unreachable-defensive so consumers do not key on refusal_reason always being present.",
+          "MINOR: the active-name-resolution-1 record occupies three different locations depending on outcome - success at population_check.name_resolution, failure at evidence.name_resolution, and v1 absence at top-level name_resolution. The round-2 disposition documents this deliberately, and the nesting is what keeps classify_process_inventory unaffected by the new key (confirmed via test_collect_to_conditional_classifier reaching CLEAR on a real collect_v2 result), so the choice is not contested. Three locations for one schema remains a consumer hazard. Remedy: document the three locations in the record itself (e.g. a location field) or in the plan evidence table.",
+          "MINOR (recorded, not blocked per stated scope): the single query is a deterministically-ordered self-perturbation of the A-to-B window. _observed_stage enumerates stage A before names.observe spawns PowerShell, so every query-induced process is structurally guaranteed to appear as an A-to-B 'added' event, and an added helper with an unreadable image hits _complete() and refuses REFUSED_INCOMPLETE (cylinder_absence_population.py:89-91). Per instruction no unmeasured churn probability is demanded, and test_added_incomplete_query_helper_receives_no_exemption confirms no exemption, warm-up or retry is granted. Remedy: none required; the refusal path is correct and retains full query and population evidence.",
+          "MINOR: evidence.update(completed_inventories=inventories, ...) in the cylinder_diagnostic_snapshot_v2 exception handler aliases the live list instead of copying, unlike every neighbouring field (completed_parent_maps, name_resolution) which deepcopies. Harmless today because collection aborts immediately after, but it is the only unguarded aliasing on an evidence path. Remedy: use deepcopy(inventories) for symmetry."
+        ]
+      }
+    },
+    {
+      "scope": "single corrected test expectation supplement; production unchanged",
+      "bundle_sha256": "f0b687d54b65a1a41c0b6378f96113763141c4890a51f5e64f9c834cb76fa7f1",
+      "stdout_sha256": "335ca7c4e009817b98cdd74bea94bf8c2f83e773341317fe2bfec4b3bba58c21",
+      "review": {
+        "bundle_sha256": "f0b687d54b65a1a41c0b6378f96113763141c4890a51f5e64f9c834cb76fa7f1",
+        "verdict": "MINOR",
+        "findings": [
+          "MINOR - Post-fix full-regression evidence absent: SOLVERS-absence-expectation-fix-tests.log covers only 8 tests in 2 files; the only 942-item suite log is the PRE-fix run showing the single failure. No post-fix 941-pass log is in the bundle. Risk low (single test function, no importers) but 'unchanged elsewhere' rests on inspection. Remedy: attach post-fix full-suite log.",
+          "MINOR - Non-mutation check narrower than claimed: expected = dict(failure, parent_map=[...]) is a shallow copy of the LIVE failure dict taken after the call, so stage/failed_pid/rows are aliased on both sides of the equality; only parent_map non-mutation is truly guarded. Remedy: before = deepcopy(failure) prior to the call, build expected from before, assert failure == before.",
+          "MINOR - assert canonical_bytes(caught.value.evidence) asserts only truthiness of always-non-empty bytes; the guard is solely the exception path (it does correctly catch integer dict keys). It pins neither serialized form nor digest, so 'canonicalizes the full refusal' holds only in the shape-legality sense. Remedy: assert serialized content or a pinned digest.",
+          "INFO - No coverage regression and no omitted identity fact: the test fabricates PopulationReadError and patches _collect_final_population, so real stage='C' tagging and _read_population evidence shape are untested here, but test_cylinder_absence_failure_serialization[2] covers stage 'C', row-projected parent_map, empty prior_maps and canonical_bytes.",
+          "INFO - Expectation matches current production exactly: _collection_failure deep-copies error.evidence then sets failure['parent_map'] = _parent_map_evidence([...])[0]['rows'], producing pid-sorted [{pid,parent_pid}] rows; no production behavior was altered to fit the test. Bundle files[] match inline copies byte-for-byte; diff confined to one test function.",
+          "INFO - Style: canonical_bytes imported mid-function, while the sibling serialization test imports it at module top."
+        ]
+      }
+    }
+  ],
+  "source_pins": {
+    "docs/plans/issue-2121-active-process-name-resolution.html": "cf7e1554ed76ea8c712d02517817359f1459073f554f8e2d394a65f8ff740956",
+    "src/digitalmodel/ansys/cylinder_active_names.py": "3ac32c3f93eed13477d96572d850a39c379c959461af2f7bb7261780dcba1eeb",
+    "src/digitalmodel/ansys/cylinder_diagnostic_snapshot_v2.py": "6f21f84a23d80631cc722126e8f21955f98aa512f84bbdc6162f964fa893d934",
+    "tests/ansys/test_cylinder_active_names.py": "c2826f853fcb6cd582463cb39d0999e2c7db34c2d24ac6435d70e90f8d1760d9",
+    "tests/ansys/test_cylinder_active_name_integration.py": "831ec3dbc3d66f4c44b37816f3b7497513a9333013fff75cced3f1e4807c2647",
+    "tests/ansys/test_cylinder_active_population.py": "15930b284e8924e3ff52b223a36ae3f5cb016226778685fdc81fe5035e391e40",
+    "docs/reviews/issue-2121-active-name-inline-disposition.json": "d897a3cd350b20f337bc8cc7e3473429e3ab5fd247d0f5732f86ae811fc6ed0f",
+    "src/digitalmodel/ansys/cylinder_absence_collection.py": "ef042051b92f193a00cb343e54d06cf55fe6fc017949f59fdac97b2b36698322",
+    "tests/ansys/test_cylinder_absence_failure_serialization.py": "cfccc329b5d1685b854548186b3cba4b3d89e4d32efc2673233f0f905c4206e9",
+    "tests/ansys/test_cylinder_absence_population_integration.py": "5f45fc23c7668d544c4917e7b37ead6e240347034e7bab57b12f511c0412ff2a"
+  },
+  "regression": {
+    "passed": 940,
+    "skipped": 2,
+    "seconds": "85.75",
+    "log_sha256": "9fccc833fae4268550e4cb444a13be981b2cb15791d589856138616704bde33b",
+    "tested_file_pins": {
+      "tests/ansys/test_cylinder_absence_collection.py": "689615f1e3e8771c4d16f9f9e372943dea33935a35339fbf865b2f0d62efba3e",
+      "tests/ansys/test_cylinder_absence_population.py": "9ece51c9651a0ffa2b93a4a13375efe60282fecd10c1d25c75de349bf31844e7",
+      "tests/ansys/test_cylinder_absence_population_integration.py": "5f45fc23c7668d544c4917e7b37ead6e240347034e7bab57b12f511c0412ff2a",
+      "tests/ansys/test_cylinder_active_name_integration.py": "831ec3dbc3d66f4c44b37816f3b7497513a9333013fff75cced3f1e4807c2647",
+      "tests/ansys/test_cylinder_active_names.py": "c2826f853fcb6cd582463cb39d0999e2c7db34c2d24ac6435d70e90f8d1760d9",
+      "tests/ansys/test_cylinder_active_population.py": "15930b284e8924e3ff52b223a36ae3f5cb016226778685fdc81fe5035e391e40",
+      "tests/ansys/test_cylinder_cfd_owner_evidence.py": "f1ab6021b5aa3c2372b1827055937fc881a998efc307e8971dba440597cc33d5",
+      "tests/ansys/test_cylinder_console_branches.py": "aa2e92a29dbe7ba4cca6067cbc11e4a0c44de42fbe52853d2f1b6cfdae5ebb90",
+      "tests/ansys/test_cylinder_console_preflight.py": "27ef6fd8dec320c826ba06b16fe9389691f1d135fe35ee4d97c13a235f7005f6",
+      "tests/ansys/test_cylinder_controller_arguments.py": "505bef3a00ce01280c6a0023b37daa0e56a6f4c00f5fd8b6d6643e2a76e2fdea",
+      "tests/ansys/test_cylinder_diagnostic_preflight.py": "6f0250c9a319ef1801617ab5c5b6a5875182c798cf7cfe91b94fb0edd9dbdda9",
+      "tests/ansys/test_cylinder_diagnostic_snapshot_v2.py": "a5276ad3585f6003a473bf9868f082dde43163d47ec05c1192d44a85b5277a2e",
+      "tests/ansys/test_cylinder_intermediate_admission.py": "ccca5775c73a43bdd8949bf5810daf4909496c22ca37abdc9253ddab773ddf92",
+      "tests/ansys/test_cylinder_intermediate_capture.py": "b71c2e32d4adfe10e779cec10ec423945bbded491b18db970c913968a195bd7c",
+      "tests/ansys/test_cylinder_intermediate_driver.py": "63c0ff358c6f664751153ff75325513a60e29be5441ce5661d833d8701f3ecbf",
+      "tests/ansys/test_cylinder_intermediate_journal_storage.py": "c29148ba6100f33594bcd16d7cb91558c51473187e00b1bbd0bc20a042e6e944",
+      "tests/ansys/test_cylinder_intermediate_lineage.py": "8e6a53bc171a0c1f06141ef1af34bce95a3b70857efd273baf9f7146243e4f45",
+      "tests/ansys/test_cylinder_intermediate_resume.py": "d7aa889cc873c171761c8b2c68ebc0396ab1770389ff9c37d7fb6c81c5704597",
+      "tests/ansys/test_cylinder_n4_recovery.py": "5dce60e53db61bbd79bd04c482a3c406ad1d76eaf3ea9782a8119eca3e8586e9",
+      "tests/ansys/test_cylinder_parent_map.py": "6576ad171e4ed82cf427c577725549e1f5192dceb263968f244b7a359243d79d",
+      "tests/ansys/test_cylinder_parent_refusal_evidence.py": "1b066e0c6731e19ae3534618b7bd22524d6b3e7d9fa835f883fc78f7f631a288",
+      "tests/ansys/test_cylinder_preclaim_probe.py": "305b3ca1b89d8c9cc3e762cdf6682c4367d4f7f7034e1da743deb3106f57816c",
+      "tests/ansys/test_cylinder_preparation_driver.py": "2971010fac6911a62b9f61a641e877f865bf8ee907240c9c6baba9fc563a6329",
+      "tests/ansys/test_cylinder_preparation_history.py": "c8e70aa41afcc43cbaa16ddf9f88a3276cec6ff28271e6153210252775be7da6",
+      "tests/ansys/test_cylinder_preparation_streams.py": "d03918d12e25e9029073dd6ef242392c651219dab1e14f0083869bae445ca6ba",
+      "tests/ansys/test_cylinder_pressure_absence_integration.py": "1e1bca86c80ff3d5ca425ef4af7b3a9f6471f64d37460f7436b86aa864dcfa3c",
+      "tests/ansys/test_cylinder_pressure_admission.py": "1f29a7fb21e107f719caf87c1a3947943f9b0117ebe4578bafd5214c7ee2e9fc",
+      "tests/ansys/test_cylinder_pressure_capture.py": "90fce4a622c3f2e199d39b5bcca8dabdc4938c77cf8f1672521203333a76a492",
+      "tests/ansys/test_cylinder_pressure_journal.py": "bdfa7a80a8ae965982fa053b5dfc622c8e77986771068d46a3e43ff490c31733",
+      "tests/ansys/test_cylinder_pressure_resources.py": "f4aec15613c149493558c817f93b1a47f3cec5ca5def4c8f92696f985d626ab3",
+      "tests/ansys/test_cylinder_pressure_resume.py": "41a86a25facc406bee5ccf7f94a57bb7fe81c143fc25e13e060ee19c371a3af5",
+      "tests/ansys/test_cylinder_process_inventory.py": "36d34315854ccb6443dbd31fd53a4da577c940352e1196852ca95f663b39335a",
+      "tests/ansys/test_cylinder_process_inventory_v2.py": "82c135f8d08aa5e7eedb3df2c01e2429b94a3a93173aa52fb78b3d48897a6183",
+      "tests/ansys/test_cylinder_refinement_replay.py": "4e8a1a16e0b818882953f96e53f5772397a5cf22c0f5e44630f997bd08d97257",
+      "tests/ansys/test_cylinder_resource_absence.py": "fcdce73d7aca484421415fb43dc08a56ddef54f0a8ba7d1576fa24fcb8341ab8",
+      "tests/ansys/test_cylinder_wrapper_consoles.py": "15a918b14896015a73528bbe3c9734b621c527520121238961ec4fa528d8965c",
+      "tests/ansys/test_run_pressure_diagnostic.py": "5a2296e7f073606634428eba3dff385f19d8d83260b93be8f674b5cb3f5afd09",
+      "tests/ansys/test_cylinder_absence_failure_serialization.py": "cfccc329b5d1685b854548186b3cba4b3d89e4d32efc2673233f0f905c4206e9"
+    }
+  },
+  "minor_dispositions": [
+    "Full revised suite now passes against these exact source/test digests, including pressure absence integration; the historical one-failure run is retained separately.",
+    "Selected missing image remains a refusal; identity_changed is conservative diagnostic wording, not proof of observed change or permission to execute.",
+    "Neutral refusal_reason is present for observation/name validation failures. The separately labelled normalized-name invariant is defensive; consumers shall not require identical fields for every exception kind.",
+    "Active success: population_check.name_resolution; active failure: evidence.name_resolution; absence success/failure: existing top-level name_resolution. Outcome-aware consumers are required.",
+    "Helper churn probability is unmeasured. Any incomplete added process refuses; no exemption, warmup or retry.",
+    "Completed inventories retain existing reference semantics; no post-raise mutation occurs.",
+    "Supplemental test proves parent-map preservation and shape legality, not a frozen digest or full-object nonmutation. Separate stage tests cover real failure transport."
+  ],
+  "limits": [
+    "Single bounded read-only observation only after reviewed-byte and test checks.",
+    "No solver execution, engineering qualification or matrix promotion is conferred.",
+    "No resource exemption or change to CFD controls."
+  ]
+}

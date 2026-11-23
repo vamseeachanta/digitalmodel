@@ -1,0 +1,9 @@
+FoamFile { version 2.0; format ascii; class volVectorField; object U; }
+dimensions      [0 1 -1 0 0 0 0];
+internalField   uniform (0.996195 0.087156 0);
+boundaryField
+{
+    cylinder     { type noSlip; }
+    farfield     { type freestream; freestreamValue uniform (0.996195 0.087156 0); }
+    frontAndBack { type empty; }
+}

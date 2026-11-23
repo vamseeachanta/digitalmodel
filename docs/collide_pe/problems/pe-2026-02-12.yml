@@ -1,0 +1,23 @@
+id: pe-2026-02-12
+date: "2026-02-12"
+slug: pe-problem-of-the-day-2-12-2026
+source_url: https://app.collide.io/posts/pe-problem-of-the-day-2-12-2026
+title: "PE Problem of the Day 2/12/2026 — components of a conventional petroleum system"
+posted_by: Yogashri Pradhan
+tags: [upstream, reservoir-engineering, geology, exploration]
+type: free-response
+
+statement: >
+  Name ALL components of a CONVENTIONAL petroleum system (free response).
+
+find:
+  - "Name all components"
+
+solution:
+  method: "Petroleum-engineering concept recall (no calculation)."
+  answer: "Source rock, migration pathway, reservoir rock, seal (cap rock), and trap - plus the right timing/preservation (the critical moment when generation-migration-accumulation occurs after trap and seal are in place)."
+  confidence: high
+  solved_by: "petroleum-engineering domain knowledge (Deckhand wells-subsurface pack / Claude API solver)"
+
+# Knowledge dot: the concept lives in llm-wiki (Deckhand wells-subsurface pack source).
+wiki_concept: wikis/reservoir-engineering/wiki/concepts/petroleum-system-elements.md

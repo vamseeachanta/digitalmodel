@@ -1,0 +1,39 @@
+basename: cathodic_protection
+inputs:
+  calculation_type: ABS_gn_offshore_2018
+  design_data:
+    design_life: 25.0
+    seawater_max_temperature: 25.0
+  structure:
+    surface_area_m2: 8000.0
+    water_depth_m: 20.0
+    climatic_region: tropical
+    zone: submerged
+  anode:
+    material: aluminium
+    utilisation_factor: 0.8
+    physical_properties:
+      net_weight: 180.0
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: true
+    cfg_sensitivities: false
+report:
+  document:
+    approved_by: Pending
+    checked_by: Pending
+    client: Internal module review - no client issuance
+    date: '2026-10-03'
+    number: R2281-CP-005-00
+    prepared_by: Automated regression report
+    project: Digitalmodel CP regression portfolio
+    revision: '00'
+    revision_history:
+    - approved: Pending
+      checked: Pending
+      date: '2026-10-03'
+      description: Internal review draft
+      rev: '00'
+    title: 'CP module review: Floating offshore structure'

@@ -1,0 +1,129 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "slice", "source_of_entries", "checked", "limits", "sources", "static_array_cable_33kv", "dynamic_cable_66kv", "layer_buildups", "stiffness_derivation_summary"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "slice": {"const": "first slice: power cables and what was read"},
+    "source_of_entries": {"const": "research note on the issue"},
+    "checked": {"const": "2026-10-11"},
+    "limits": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/text"}},
+    "sources": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/source"}},
+    "static_array_cable_33kv": {
+      "type": "object", "additionalProperties": false,
+      "required": ["descriptor", "rows"],
+      "properties": {
+        "descriptor": {"$ref": "#/$defs/statement"},
+        "rows": {"type": "array", "minItems": 11, "maxItems": 11, "items": {"$ref": "#/$defs/static_row"}}
+      }
+    },
+    "dynamic_cable_66kv": {
+      "type": "object", "additionalProperties": false,
+      "required": ["descriptor", "property_sets", "armour_caveat"],
+      "properties": {
+        "descriptor": {"$ref": "#/$defs/statement"},
+        "property_sets": {"type": "array", "minItems": 2, "maxItems": 2, "items": {"$ref": "#/$defs/dynamic_set"}},
+        "armour_caveat": {"$ref": "#/$defs/statement"}
+      }
+    },
+    "layer_buildups": {
+      "type": "object", "additionalProperties": false,
+      "required": ["three_core_array_cable", "bonded_hose", "static_versus_dynamic", "working_load_limit_ratios"],
+      "properties": {
+        "three_core_array_cable": {"$ref": "#/$defs/array_layers"},
+        "bonded_hose": {"$ref": "#/$defs/hose_layers"},
+        "static_versus_dynamic": {"$ref": "#/$defs/statement"},
+        "working_load_limit_ratios": {"$ref": "#/$defs/statement"}
+      }
+    },
+    "stiffness_derivation_summary": {"type": "array", "minItems": 6, "maxItems": 6, "items": {"$ref": "#/$defs/statement"}}
+  },
+  "$defs": {
+    "text": {"type": "string", "minLength": 1, "pattern": "\\S"},
+    "source_id": {"type": "integer", "minimum": 1, "maximum": 16},
+    "source_ids": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/$defs/source_id"}},
+    "positive": {"type": "number", "exclusiveMinimum": 0},
+    "source": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "source", "type", "family", "usable_fields", "access", "url"],
+      "properties": {
+        "id": {"$ref": "#/$defs/source_id"}, "source": {"$ref": "#/$defs/text"},
+        "type": {"$ref": "#/$defs/text"}, "family": {"$ref": "#/$defs/text"},
+        "usable_fields": {"$ref": "#/$defs/text"}, "access": {"$ref": "#/$defs/text"},
+        "doi": {"type": "string", "pattern": "^10\\.[0-9]{4,9}/\\S+$"},
+        "url": {"anyOf": [{"type": "null"}, {"type": "string", "pattern": "^https?://[^/\\s]+(?:/[^\\s]*)?$"}]}
+      }
+    },
+    "statement": {
+      "type": "object", "additionalProperties": false,
+      "required": ["statement", "source_id", "locator"],
+      "properties": {
+        "statement": {"$ref": "#/$defs/text"}, "source_id": {"$ref": "#/$defs/source_id"},
+        "source_ids": {"$ref": "#/$defs/source_ids"}, "locator": {"$ref": "#/$defs/text"}
+      }
+    },
+    "value": {
+      "type": "object", "additionalProperties": false,
+      "required": ["value", "unit", "source_id", "locator"],
+      "properties": {
+        "value": {"$ref": "#/$defs/positive"}, "unit": {"enum": ["mm", "kg/m", "MN", "kN"]},
+        "source_id": {"$ref": "#/$defs/source_id"}, "locator": {"$ref": "#/$defs/text"}
+      }
+    },
+    "static_row": {
+      "type": "object", "additionalProperties": false,
+      "required": ["conductor_mm2", "outer_diameter_mm", "weight_kg_per_m", "source_id", "locator"],
+      "properties": {
+        "conductor_mm2": {"$ref": "#/$defs/positive"}, "outer_diameter_mm": {"$ref": "#/$defs/positive"},
+        "weight_kg_per_m": {"$ref": "#/$defs/positive"},
+        "source_id": {"$ref": "#/$defs/source_id"}, "locator": {"$ref": "#/$defs/text"}
+      }
+    },
+    "dynamic_set": {
+      "type": "object", "additionalProperties": false,
+      "required": ["conductor_mm2", "source_id", "locator", "properties"],
+      "properties": {
+        "conductor_mm2": {"$ref": "#/$defs/positive"}, "source_id": {"$ref": "#/$defs/source_id"},
+        "locator": {"$ref": "#/$defs/text"},
+        "properties": {
+          "type": "object", "additionalProperties": false,
+          "required": ["outer_diameter", "weight_in_air", "weight_in_seawater", "axial_stiffness", "terminated_axial_working_load_limit"],
+          "properties": {
+            "outer_diameter": {"$ref": "#/$defs/value"}, "weight_in_air": {"$ref": "#/$defs/value"},
+            "weight_in_seawater": {"$ref": "#/$defs/value"}, "axial_stiffness": {"$ref": "#/$defs/value"},
+            "terminated_axial_working_load_limit": {"$ref": "#/$defs/value"}
+          }
+        }
+      }
+    },
+    "layer": {
+      "type": "object", "additionalProperties": false,
+      "required": ["order", "layer", "function", "source_id", "locator"],
+      "properties": {
+        "order": {"type": "integer", "minimum": 1}, "layer": {"$ref": "#/$defs/text"},
+        "function": {"$ref": "#/$defs/text"}, "typical_materials": {"$ref": "#/$defs/text"},
+        "source_id": {"$ref": "#/$defs/source_id"}, "source_ids": {"$ref": "#/$defs/source_ids"},
+        "locator": {"$ref": "#/$defs/text"}
+      }
+    },
+    "array_layers": {
+      "type": "object", "additionalProperties": false,
+      "required": ["source_id", "source_ids", "locator", "layers"],
+      "properties": {
+        "source_id": {"$ref": "#/$defs/source_id"}, "source_ids": {"$ref": "#/$defs/source_ids"},
+        "locator": {"$ref": "#/$defs/text"},
+        "layers": {"type": "array", "minItems": 9, "maxItems": 9, "items": {"allOf": [{"$ref": "#/$defs/layer"}, {"required": ["typical_materials"]}]}}
+      }
+    },
+    "hose_layers": {
+      "type": "object", "additionalProperties": false,
+      "required": ["source_id", "locator", "layers", "manufacturer_statement"],
+      "properties": {
+        "source_id": {"$ref": "#/$defs/source_id"}, "locator": {"$ref": "#/$defs/text"},
+        "layers": {"type": "array", "minItems": 10, "maxItems": 10, "items": {"$ref": "#/$defs/layer"}},
+        "manufacturer_statement": {"$ref": "#/$defs/statement"}
+      }
+    }
+  }
+}

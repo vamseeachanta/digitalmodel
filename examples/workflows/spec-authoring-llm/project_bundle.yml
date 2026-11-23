@@ -1,0 +1,24 @@
+# Project single-source-of-truth (input to the LLM spec author).
+# Heterogeneous on purpose: structured slots + free-text documents/notes.
+# The LLM extracts only what is stated here; the deterministic resolver fills
+# the rest and records every assumption (digitalmodel#1095 / #622).
+project_name: West Demo FPSO transit
+
+vessel_particulars:
+  loa: 245.0          # m
+  beam: 42.0          # m
+  draft: 12.5         # m
+  displacement_t: 98000
+
+environment:
+  water_depth: 1500   # m
+  description: deepwater Gulf of Mexico
+
+notes: |
+  Client needs first-pass motion RAOs for a transit screening study.
+  Mesh has not been supplied yet; a parametric hull is acceptable for screening.
+
+documents:
+  - |
+    Excerpt from data sheet rev B: "Principal particulars — LOA 245 m,
+    moulded beam 42 m, design draft 12.5 m, displacement ~98,000 t."

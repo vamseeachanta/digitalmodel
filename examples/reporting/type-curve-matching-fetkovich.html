@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Fetkovich/Blasingame Type Curve Matching — CALC-014</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.6/dist/chart.umd.min.js"></script>
+<style>
+:root {
+  --bg:         #f3efe6;
+  --panel:      #fffdf8;
+  --ink:        #172126;
+  --muted:      #55636b;
+  --accent:     #0f766e;
+  --accent-2:   #8a5a2b;
+  --line:       #d9d0c0;
+  --shadow:     0 16px 40px rgba(20,33,38,0.08);
+  --good:       #166534;
+  --warn:       #b45309;
+  --bad:        #b91c1c;
+}
+*{box-sizing:border-box;}
+body{font-family:Georgia,"Times New Roman",serif;
+  background:radial-gradient(circle at top,#fffaf0 0,var(--bg) 48%,#ebe5d7 100%);
+  color:var(--ink);line-height:1.55;margin:0;padding:0;}
+a{color:var(--accent);text-decoration:none;}
+a:hover{text-decoration:underline;}
+code{font-family:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;
+  background:rgba(27,31,35,0.06);padding:.2em .4em;border-radius:3px;font-size:.88em;}
+
+.hero{padding:28px 24px 20px;border-bottom:1px solid rgba(23,33,38,0.08);
+  background:linear-gradient(135deg,rgba(15,118,110,0.07),rgba(138,90,43,0.09));}
+.hero-inner{max-width:1100px;margin:0 auto;}
+.eyebrow{text-transform:uppercase;letter-spacing:.12em;font-size:.68rem;
+  color:var(--accent);font-weight:700;margin:0 0 6px;}
+h1.report-title{margin:0 0 8px;font-size:clamp(1.6rem,3vw,2.4rem);line-height:1.1;}
+.lede{color:var(--muted);font-size:.92rem;margin:0 0 14px;max-width:72ch;}
+
+.meta-chips{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 2px;}
+.meta-chip{background:var(--panel);border:1px solid var(--line);border-radius:8px;
+  padding:5px 10px;font-size:.8rem;}
+.meta-chip strong{font-size:.65rem;text-transform:uppercase;letter-spacing:.07em;
+  color:var(--accent-2);display:block;margin-bottom:1px;}
+
+.content{max-width:1100px;margin:0 auto;padding:24px 24px 56px;}
+.card{background:var(--panel);padding:26px;border-radius:18px;
+  box-shadow:var(--shadow);border:1px solid var(--line);margin-bottom:20px;}
+.card h2{border-bottom:1px solid var(--line);padding-bottom:.3em;margin-top:0;
+  color:var(--accent-2);letter-spacing:.02em;font-size:1.2rem;}
+.card p,.card li,.card td,.card th{color:var(--muted);}
+.card strong,.card code{color:var(--ink);}
+
+table{border-collapse:collapse;width:100%;margin:14px 0;font-size:.9rem;}
+thead th{background:var(--panel);border-bottom:2px solid var(--accent);
+  font-weight:700;text-transform:uppercase;letter-spacing:.06em;
+  font-size:.78rem;padding:8px 10px;text-align:left;color:var(--ink);}
+tbody td{border-bottom:1px solid var(--line);padding:7px 10px;
+  color:var(--muted);vertical-align:top;}
+tbody tr:last-child td{border-bottom:none;}
+tbody td strong,tbody td code{color:var(--ink);}
+tbody tr:hover>td{background:rgba(15,118,110,.03);}
+
+.badge{display:inline-block;padding:2px 8px;border-radius:999px;
+  font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;
+  white-space:nowrap;}
+.badge-pass{background:#dcfce7;color:var(--good);}
+.badge-fail{background:#fee2e2;color:var(--bad);}
+.badge-draft{background:#fef3c7;color:var(--warn);}
+.badge-reviewed{background:#dbeafe;color:#1d4ed8;}
+.badge-approved{background:#dcfce7;color:var(--good);}
+
+.equation-block{background:#f8f9fa;border:1px solid var(--line);border-radius:10px;
+  padding:16px 20px;margin:12px 0;position:relative;}
+.equation-block .eq-number{position:absolute;right:16px;top:50%;transform:translateY(-50%);
+  font-size:.82rem;color:var(--muted);font-weight:700;}
+.equation-name{font-size:.85rem;font-weight:700;color:var(--accent);margin-bottom:6px;}
+.equation-desc{font-size:.85rem;color:var(--muted);margin-top:8px;}
+.variable-list{margin:8px 0 0;padding:0 0 0 18px;font-size:.82rem;}
+.variable-list li{margin:2px 0;color:var(--muted);}
+.variable-list li .var-sym{color:var(--ink);font-weight:600;}
+
+.chart-container{margin:16px 0;position:relative;}
+.chart-container canvas{max-height:400px;width:100%;}
+.chart-title{font-size:.9rem;font-weight:700;color:var(--accent-2);margin-bottom:8px;}
+
+details{margin:8px 0;}
+details summary{cursor:pointer;font-weight:700;color:var(--accent);
+  font-size:.9rem;padding:4px 0;}
+details summary:hover{text-decoration:underline;}
+details[open] summary{margin-bottom:8px;}
+
+.report-footer{text-align:center;padding:20px;font-size:.75rem;color:var(--muted);
+  border-top:1px solid var(--line);margin-top:40px;}
+
+@media print{
+  body{background:#fff;}
+  .card{box-shadow:none;border:1px solid #ccc;break-inside:avoid;}
+  .hero{background:#f8f8f8;border-bottom:2px solid #333;}
+  .chart-container canvas{max-height:300px;}
+}
+
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">CALC-014</div>
+    <h1 class="report-title">Fetkovich/Blasingame Type Curve Matching</h1>
+    <div class="meta-chips">
+      <div class="meta-chip"><strong>Status</strong><span class="badge badge-draft">DRAFT</span></div>
+      <div class="meta-chip"><strong>Revision</strong>1</div>
+      <div class="meta-chip"><strong>Date</strong>2026-03-14</div>
+      <div class="meta-chip"><strong>Author</strong>Vamsee Achanta</div>
+        <div class="meta-chip"><strong>Reviewer</strong>Independent Reviewer</div>
+        <div class="meta-chip"><strong>Project</strong>Unconventional Well Analysis</div>
+      <div class="meta-chip"><strong>Standard</strong>SPE 4629 (Fetkovich, 1980) / SPE 21513 (Blasingame, 1991)</div>
+    </div>
+  </div>
+</div>
+
+<div class="content">
+<div class="card">
+  <h2>Inputs</h2>
+  <table>
+    <thead><tr><th>Name</th><th>Symbol</th><th>Value</th><th>Unit</th><th>Source</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>Initial Production Rate</strong></td>
+        <td class="katex-inline">$q_i$</td>
+        <td>1000</td>
+        <td>bbl/day</td>
+        <td>Production history</td>
+      </tr>
+      <tr>
+        <td><strong>Initial Decline Rate</strong></td>
+        <td class="katex-inline">$D_i$</td>
+        <td>1.0</td>
+        <td>1/year</td>
+        <td>Type curve match</td>
+      </tr>
+      <tr>
+        <td><strong>Arps Hyperbolic Exponent</strong></td>
+        <td class="katex-inline">$b$</td>
+        <td>0.5</td>
+        <td>-</td>
+        <td>Fetkovich type curve match</td>
+      </tr>
+      <tr>
+        <td><strong>Production History Length</strong></td>
+        <td class="katex-inline">$T$</td>
+        <td>24</td>
+        <td>months</td>
+        <td>Field data</td>
+      </tr>
+      <tr>
+        <td><strong>Number of Data Points</strong></td>
+        <td class="katex-inline">$N$</td>
+        <td>24</td>
+        <td>-</td>
+        <td>Monthly production records</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="card">
+  <h2>Methodology</h2>
+  <p>Fetkovich type curve matching converts production rate-time data to
+dimensionless coordinates (qDd, tDd) for comparison against analytical
+decline stems. The dimensionless rate qDd = q/qi and dimensionless
+time tDd = Di*t allow production data to be overlaid on pre-computed
+type curves to identify the reservoir depletion character.
+
+Blasingame extends this by using material balance time tca = Np/q
+(cumulative divided by rate) which linearizes boundary-dominated flow
+and improves late-time matching for unconventional reservoirs.
+
+The b-factor is identified by nonlinear least-squares fitting of the
+Arps hyperbolic model q(t) = qi / (1 + b*Di*t)^(1/b) using
+scipy.optimize.curve_fit.</p>
+  <p><strong>Standard:</strong> SPE 4629 (Fetkovich, 1980) / SPE 21513 (Blasingame, 1991)</p>
+  <div class="equation-block">
+    <div class="equation-name">Equation 1: Dimensionless Rate</div>
+    <div class="katex-display">$$q_{Dd} = \frac{q}{q_i}$$</div>
+    <div class="equation-desc">Fetkovich dimensionless decline rate.</div>
+    <span class="eq-number">(1)</span>
+    <ul class="variable-list">
+<li><span class="var-sym">$q_{Dd}$</span> — Dimensionless decline rate [-]</li>
+<li><span class="var-sym">$q$</span> — Current production rate [bbl/day]</li>
+<li><span class="var-sym">$q_i$</span> — Initial production rate [bbl/day]</li>
+</ul>
+  </div>
+  <div class="equation-block">
+    <div class="equation-name">Equation 2: Dimensionless Time</div>
+    <div class="katex-display">$$t_{Dd} = D_i \cdot t$$</div>
+    <div class="equation-desc">Fetkovich dimensionless decline time.</div>
+    <span class="eq-number">(2)</span>
+    <ul class="variable-list">
+<li><span class="var-sym">$t_{Dd}$</span> — Dimensionless decline time [-]</li>
+<li><span class="var-sym">$D_i$</span> — Initial nominal decline rate [1/year]</li>
+<li><span class="var-sym">$t$</span> — Time [years]</li>
+</ul>
+  </div>
+  <div class="equation-block">
+    <div class="equation-name">Equation 3: Arps Hyperbolic Decline</div>
+    <div class="katex-display">$$q(t) = \frac{q_i}{(1 + b \cdot D_i \cdot t)^{1/b}}$$</div>
+    <div class="equation-desc">General Arps decline equation for hyperbolic model.</div>
+    <span class="eq-number">(3)</span>
+    <ul class="variable-list">
+<li><span class="var-sym">$b$</span> — Hyperbolic exponent [-]</li>
+</ul>
+  </div>
+  <div class="equation-block">
+    <div class="equation-name">Equation 4: Material Balance Time</div>
+    <div class="katex-display">$$t_{ca} = \frac{N_p}{q}$$</div>
+    <div class="equation-desc">Blasingame material balance time for boundary-dominated flow.</div>
+    <span class="eq-number">(4)</span>
+    <ul class="variable-list">
+<li><span class="var-sym">$t_{ca}$</span> — Material balance time [days]</li>
+<li><span class="var-sym">$N_p$</span> — Cumulative production [bbl]</li>
+</ul>
+  </div>
+</div>
+
+<div class="card">
+  <h2>Outputs</h2>
+  <table>
+    <thead><tr><th>Name</th><th>Symbol</th><th>Value</th><th>Unit</th><th>Pass/Fail</th><th>Limit</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>Identified b-factor</strong></td>
+        <td class="katex-inline">$b$</td>
+        <td>0.5</td>
+        <td>-</td>
+        <td>—</td>
+        <td>—</td>
+      </tr>
+      <tr>
+        <td><strong>Identified Decline Rate</strong></td>
+        <td class="katex-inline">$D_i$</td>
+        <td>1.0</td>
+        <td>1/year</td>
+        <td>—</td>
+        <td>—</td>
+      </tr>
+      <tr>
+        <td><strong>Coefficient of Determination</strong></td>
+        <td class="katex-inline">$R^2$</td>
+        <td>1.0</td>
+        <td>-</td>
+        <td><span class="badge badge-pass">PASS</span></td>
+        <td>≤ 0.95</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="card">
+  <h2>Charts</h2>
+  <div class="chart-container">
+    <div class="chart-title">Fetkovich Type Curve Match</div>
+    <canvas id="chart-fetkovich_type_curves" height="300"></canvas>
+  </div>
+</div>
+
+<div class="card">
+  <h2>Data Tables</h2>
+  <h3>Type Curve Match Results</h3>
+  <table>
+    <thead><tr><th>Parameter (-)</th><th>True Value (-)</th><th>Identified Value (-)</th><th>Error (%)</th></tr></thead>
+    <tbody>
+      <tr><td>b (Arps exponent)</td><td>0.5</td><td>0.5</td><td>0.0</td></tr>
+      <tr><td>Di (decline rate, 1/yr)</td><td>1.0</td><td>1.0</td><td>0.0</td></tr>
+      <tr><td>qi (initial rate, bbl/d)</td><td>1000</td><td>1000</td><td>0.0</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="card">
+  <details open>
+    <summary>Assumptions</summary>
+    <ol>
+    <li>Production data represents boundary-dominated flow</li>
+    <li>Single-layer homogeneous reservoir (no commingled zones)</li>
+    <li>Constant wellbore flowing pressure during decline period</li>
+    <li>No operational shutdowns or rate changes during analysis period</li>
+    <li>Arps hyperbolic model is appropriate (0 &lt; b &lt; 1)</li>
+    </ol>
+  </details>
+</div>
+<div class="card">
+  <details open>
+    <summary>References</summary>
+    <ol>
+    <li>Fetkovich, M.J. (1980) SPE 4629 — Decline Curve Analysis Using Type Curves</li>
+    <li>Blasingame, T.A. et al. (1991) SPE 21513 — Production Analysis Using Type Curves</li>
+    <li>Arps, J.J. (1945) — Analysis of Decline Curves, AIME Trans. 160</li>
+    </ol>
+  </details>
+</div>
+
+<div class="card">
+  <h2>Change Log</h2>
+  <table>
+    <thead><tr><th>Rev</th><th>Date</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>2026-03-14</td><td>Initial calculation</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="report-footer">
+  Generated by calculation-report skill &middot; CALC-014 Rev 1
+</div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  renderMathInElement(document.body, {
+    delimiters: [
+      {left: "$$", right: "$$", display: true},
+      {left: "$", right: "$", display: false}
+    ],
+    throwOnError: false
+  });
+});
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+new Chart(document.getElementById("chart-fetkovich_type_curves"), {"type":"scatter","data":{"datasets":[{"label":"b = 0 (Exponential)","data":[{"x": 0.01, "y": 0.99}, {"x": 0.1, "y": 0.905}, {"x": 0.5, "y": 0.607}, {"x": 1.0, "y": 0.368}, {"x": 2.0, "y": 0.135}, {"x": 5.0, "y": 0.007}],"borderColor":"#94a3b8","backgroundColor":"#94a3b880","showLine":true,"pointRadius":4},{"label":"b = 0.5 (Matched)","data":[{"x": 0.01, "y": 0.995}, {"x": 0.1, "y": 0.953}, {"x": 0.5, "y": 0.816}, {"x": 1.0, "y": 0.667}, {"x": 2.0, "y": 0.444}, {"x": 5.0, "y": 0.198}],"borderColor":"#0f766e","backgroundColor":"#0f766e80","showLine":true,"pointRadius":4},{"label":"b = 1.0 (Harmonic)","data":[{"x": 0.01, "y": 0.99}, {"x": 0.1, "y": 0.909}, {"x": 0.5, "y": 0.667}, {"x": 1.0, "y": 0.5}, {"x": 2.0, "y": 0.333}, {"x": 5.0, "y": 0.167}],"borderColor":"#94a3b8","backgroundColor":"#94a3b880","showLine":true,"pointRadius":4},{"label":"Production Data","data":[{"x": 0.082, "y": 0.955}, {"x": 0.164, "y": 0.912}, {"x": 0.247, "y": 0.872}, {"x": 0.329, "y": 0.833}, {"x": 0.411, "y": 0.797}, {"x": 0.493, "y": 0.763}, {"x": 0.575, "y": 0.73}, {"x": 0.658, "y": 0.699}, {"x": 0.822, "y": 0.642}, {"x": 0.986, "y": 0.59}, {"x": 1.151, "y": 0.543}, {"x": 1.315, "y": 0.5}],"borderColor":"#b91c1c","backgroundColor":"#b91c1c80","showLine":true,"pointRadius":4}]},"options":{"responsive":true,"scales":{"x":{"type":"logarithmic","title":{"display":true,"text":"Dimensionless Time (tDd)"}},"y":{"type":"logarithmic","title":{"display":true,"text":"Dimensionless Rate (qDd)"}}}}});
+});
+</script>
+</body>
+</html>

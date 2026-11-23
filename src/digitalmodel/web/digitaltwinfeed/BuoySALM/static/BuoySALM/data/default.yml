@@ -1,0 +1,241 @@
+---
+version: 0.1
+HistoricalData: NULL
+Methodology: NULL
+
+ProjectName: NULL
+
+FEAProgram:
+  name: OrcaFlex
+  version: 10.0e
+
+parameters:
+  plot_title: "SALM Structural Force profiles"
+
+default:
+  log_level: DEBUG
+  config:
+    overwrite:
+      output: True
+    CustomInputFile: NULL
+  data_source: db
+
+Assets:
+  - purpose: Host
+    fea_type: buoy
+    cfg:
+      Mass: 108.046
+      cylinders:
+        - CylinderOuterDiameter: 4.6
+          CylinderInnerDiameter": 0
+          CylinderLength: 16.5
+      raos:
+        Extreme: data_manager\data\vessels\host_id_1_extreme_disp_raos.yml
+        Fatigue: data_manager\data\vessels\host_id_1_extreme_disp_raos.yml
+  - purpose: AssetProperties
+    fea_type: lineType
+    cfg: NULL
+  - purpose: Mooring
+    fea_type: line
+    cfg: NULL
+  - purpose: Foundation
+    fea_type: shape
+    cfg: NULL
+  - purpose: Interface
+    fea_type: group
+    cfg: NULL
+
+
+db:
+  server_type: mssql
+  server: localhost\SQLEXPRESS
+  user: NULL
+  password: NULL
+  database: dtf
+
+Analysis:
+  fe_folder: NULL
+
+OrcaFlex:
+  General:
+    UnitsSystem: SI
+    StaticsMethod: Whole System statics
+    BuoysIncludedInStatics: Individually Specified
+    StaticsMaxIterations: 800
+    DynamicsSolutionMethod: Implicit time domain
+    ImplicitUseVariableTimeStep: 'No'
+    ImplicitConstantTimeStep: 0.25
+    LogPrecision: Single
+    TargetLogSampleInterval: 0.1
+    StageDuration: [10, 100]
+  Environment:
+    WaterSurfaceZ: 0
+    KinematicViscosity: 1.35e-06
+    SeaTemperature: 10
+    ReynoldsNumberCalculation: Flow Direction
+    HorizontalWaterDensityFactor: '~'
+    VerticalDensityVariation: Constant
+    Density: 1.025
+    SeabedType: Flat
+    SeabedOrigin: [0, 0]
+    WaterDepth: 30
+    SeabedSlopeDirection: 0
+    SeabedSlope: 0
+    SeabedModel: Linear
+    SeabedNormalStiffness: 100
+    SeabedShearStiffness: '~'
+    SimulationTimeOrigin: 0
+    WaveTrains:
+      - Name: Wave1
+        WaveType: Dean Stream
+        WaveDirection: 180
+        WaveHeight: 2
+        WavePeriod: 8
+        WaveOrigin: [0, 0]
+        WaveTimeOrigin: 0
+        WaveStreamFunctionOrder: 5
+    IncludeVesselWindLoads: 'Yes'
+    IncludeLineWindLoads: 'Yes'
+    IncludeBuoyWingWindLoads: 'Yes'
+    VerticalWindVariationFactor: '~'
+    AirDensity: 0.00128
+    WindType: Constant
+    WindSpeed: 0
+    WindDirection: 0
+  6DBuoys:
+    - Name: SALM
+      BuoyType: Spar Buoy
+      Connection: Free
+      DegreesOfFreedomInStatics: All
+      DampingRelativeTo: Earth
+      DisturbanceVessel: (none)
+      WaveCalculationMethod: Specified by Environment
+      InitialPosition: [0, 0, 0.7]
+      InitialAttitude: [0, 0, 0]
+      Mass: 108.046
+      MomentsOfInertia: [3346.5, 3346.5, 5112]
+      CentreOfMass: [0, 0, -1.68]
+      StackBaseCentre: [0, 0, -14.115]
+      BulkModulus: Infinity
+      MunkMomentCoefficient: 0
+      NormalDragAreaCalculatedFromGeometry: 'Yes'
+      StackedBuoyAddedMassAndDampingMethod: Values for each cylinder
+      Cylinders:
+        - CylinderOuterDiameter: 4.6
+          CylinderInnerDiameter: 0
+          CylinderLength: 16.5
+          CylinderAxialDragArea: 0
+          DragForceCoefficient: [1.14, 0.85]
+          DragAreaMoment: [15, 0]
+          DragMomentCoefficient: [0.7, 0]
+          CylinderSlamForceDataEntry: 0
+          CylinderSlamForceDataExit: 0
+          AddedMassForceCoefficient: [1.06, 0.9]
+          InertiaForceCoefficient: ['~', '~']
+          AddedMomentOfInertia: [220.8091774, 0]
+          UnitDampingForce: [160, 0]
+          UnitDampingMoment: [2500, 0]
+      GlobalAppliedLoads:
+        - Origin: [0, 0, 0]
+        - Force: [0, 0, 0]
+        - Moment: [0, 0, 0]
+      LocalAppliedLoads:
+        - Origin: [0, 0, 0]
+        - Force: [0, 0, 0]
+        - Moment: [0, 0, 0]
+      SeabedFrictionCoefficient: 0
+      TotalContactArea: '~'
+      Pen: [1, Solid, $FF80C0]
+      ShadedDrawingCullingMode: Anticlockwise
+  LineTypes:
+    - Name: Chain
+      Category: General
+      OD: 0.171
+      ID: 0
+      CG: [0, 0]
+      BulkModulus: Infinity
+      MassPerUnitLength: 0.1795975
+      CompressionIsLimited: 'Yes'
+      AllowableTension: '~'
+      MinRadius: ['~', '~']
+      EI: [0, '~']
+      EA: 770735.0
+      PoissonRatio: 0
+      GJ: 10
+      ContactDiameter: 0.31825
+      ClashStiffness: 0
+      Ca: [1, '~', 0.5]
+      Cm: ['~', '~', '~']
+      Cs: 0
+      Ce: 0
+      Cd: [2.4, '~', 1.15]
+      Cl: 0
+      NormalDragLiftDiameter: 0.095
+      AxialDragLiftDiameter: 0.0302394391874601
+      StressOD: '~'
+      StressID: '~'
+      AllowableStress: '~'
+      TensileStressLoadingFactor: 1
+      BendingStressLoadingFactor: 1
+      ShearStressLoadingFactor: 1
+      TorsionalStressLoadingFactor: 1
+      SeabedNormalFrictionCoefficient: 0.5
+      SeabedAxialFrictionCoefficient: '~'
+      RayleighDampingCoefficients: (no damping)
+      Pen: [1, Solid, Lime]
+  Lines:
+    - Name: Chain2
+      IncludeTorsion: 'No'
+      TopEnd: End A
+      PyModel: (none)
+      DragFormulation: Standard
+      StaticsVIV: None
+      DynamicsVIV: None
+      WaveCalculationMethod: Specified by Environment
+      Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzm, ConnectionDec,ConnectionGamma, ReleaseStage, ConnectionzRelativeTo:
+        - [SALM, 0.0, 0, -14.2, 0, 180, 0, '~']
+        - [Anchored, 0, 0, 4.0, 0, 0, 0, '~']
+      ConnectionStiffnessX, ConnectionStiffnessY:
+        - [0, '~']
+        - [0, '~']
+      LineType, Length, TargetSegmentLength:
+        - [Chain, 11.8, 1]
+      ContentsMethod: Uniform
+      IncludeAxialContentsInertia: 'Yes'
+      ContentsDensity: 1
+      ContentsPressureRefZ: '~'
+      ContentsPressure: 0
+      ContentsFlowRate: 0
+      IncludedInStatics: 'Yes'
+      StaticsStep1: Catenary
+      StaticsStep2: None
+      IncludeSeabedFrictionInStatics: 'Yes'
+      LayAzimuth: 330
+      AsLaidTension: 0
+      SegmentPenMode: Use Segment Pen
+      DrawShadedNodesAsSpheres: 'Yes'
+      SegmentPen: [1, Solid, Lime]
+      ContactPen: [5, Solid, White]
+  Shapes:
+    - Name: Base1
+      ShapeType: Drawing
+      Shape: Block
+      Connection: Anchored
+      Origin: [-3, -3, 0]
+      Size: [6, 6, 3.622]
+      Orientation: [0, 0, 0]
+      InsidePen: [1, Solid, Blue]
+      NumberOfLines: 2
+      ShadedDrawingFileName: '%ApplicationFolder%\Shaded Drawing Samples\Subsea Template\SubseaTemplate.x'
+      ShadedDrawingDrawSize: 11
+      ShadedDrawingCullingMode: Anticlockwise
+      ShadedDrawingOrigin: [3, 3, 0]
+  Groups:
+    Structure: {                                                                                      With Torsion: Model, Without Torsion: Model, CALM Buoy1: Without Torsion,
+      Chain4: Without Torsion, Chain6: Without Torsion, Chain5: Without Torsion, Chain2: Without
+                                                                                   Torsion, Chain3: Without Torsion, Base1: Without Torsion, Inner String: Model,
+      Outer String: Model, FloatingBuoy: Model}
+    State:
+      Collapsed: [Variable Data]
+
+

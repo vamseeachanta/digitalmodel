@@ -1,0 +1,13 @@
+{
+  "provenance": {
+    "source": "synthetic (generic drift-off screening scenarios); representative offline sample for CI",
+    "licence": "synthetic — no third-party, client or vessel data redistributed",
+    "note": "Fully synthetic DP drift-off screening scenarios for twin C (#1375). Generic banded condition + DP-state values driving the quasi-static screen; NOT derived from any real vessel telemetry. No client, no vessel identity, no credentials of any kind.",
+    "captured_offline": true
+  },
+  "scenarios": [
+    {"name": "moderate_metocean_total_blackout", "current_speed_mps": 1.0, "wave_hs_m": 3.0, "wave_tp_s": 10.0, "wind_speed_mps": 15.0, "thrusters_online": 0, "total_available_thrust_n": 0.0, "x0_m": 20.0, "v0_mps": 0.0},
+    {"name": "severe_metocean_partial_loss", "current_speed_mps": 1.5, "wave_hs_m": 5.0, "wave_tp_s": 12.0, "wind_speed_mps": 20.0, "thrusters_online": 3, "total_available_thrust_n": 4000000.0, "x0_m": 30.0, "v0_mps": 0.1},
+    {"name": "benign_metocean_full_thrust", "current_speed_mps": 0.3, "wave_hs_m": 1.0, "wave_tp_s": 8.0, "wind_speed_mps": 8.0, "thrusters_online": 6, "total_available_thrust_n": 9000000.0, "x0_m": 10.0, "v0_mps": 0.0}
+  ]
+}

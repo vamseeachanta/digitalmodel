@@ -1,0 +1,38 @@
+{
+  "calculation_result": "PASS",
+  "children": [
+    {
+      "anchor": "child-component-0",
+      "input_pointer": "/riser_base_assessment/components/0",
+      "label": "base",
+      "result_pointer": "/riser_base_assessment/components/base"
+    },
+    {
+      "anchor": "child-family-0",
+      "input_pointer": "/anode_families/0",
+      "label": "sea family",
+      "result_pointer": "/anode_families/sea"
+    },
+    {
+      "anchor": "child-phase-0-family-0",
+      "input_pointer": "/riser_base_assessment/phases/0/families/0",
+      "label": "installation / sea",
+      "result_pointer": "/riser_base_assessment/phases/0/families/sea"
+    }
+  ],
+  "engineering_review": "pending",
+  "fixture": "temporary_service.yml",
+  "id": "S10",
+  "pack_state": "verified",
+  "report": "cases/S10/report.html",
+  "route": "DNV_RP_B401_offshore",
+  "source_class": "synthetic_repository_regression",
+  "source_revision": "bf638ed1",
+  "title": "Temporary service",
+  "use_status": "client-use-with-eor-check",
+  "verification": {
+    "passed": true,
+    "scope": "citation resolution, comment binding, child links and file checksums"
+  },
+  "visual_review": "deferred_by_owner"
+}

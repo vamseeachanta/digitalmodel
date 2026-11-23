@@ -1,0 +1,56 @@
+# LineTypes Configuration
+# Generated from: HeaveCompensatedWinch.yml
+# Date: 2026-01-18 22:18:18
+LineTypes:
+- Name: 60 mm wire
+  Category: General
+  OD: 0.06
+  ID: 0
+  CentreOfMass:
+  - 0
+  - 0
+  BulkModulus: Infinity
+  MassPerUnitLength: 0.004423352500000001
+  CompressionIsLimited: Yes
+  AllowableTension: ~
+  MinRadius:
+  - ~
+  - ~
+  EI:
+  - 0
+  - ~
+  EA: 44.95750000000001e3
+  PoissonRatio: 0
+  ExpansionTable: None
+  GJ: 10
+  TensionTorqueCoupling: 0
+  OuterContactDiameter: ~
+  InnerContactDiameter: ~
+  ClashStiffness: 0
+  Ca:
+  - 1
+  - ~
+  - 0
+  Cm:
+  - ~
+  - ~
+  - ~
+  Cs: 0
+  Ce: 0
+  Cd:
+  - 1.2
+  - ~
+  - 0
+  Cl: 0
+  NormalDragLiftDiameter: ~
+  AxialDragLiftDiameter: ~
+  StressOD: ~
+  StressID: ~
+  AllowableStress: ~
+  TensileStressLoadingFactor: 1
+  BendingStressLoadingFactor: 1
+  ShearStressLoadingFactor: 1
+  TorsionalStressLoadingFactor: 1
+  SeabedLateralFrictionCoefficient: 0.5
+  SeabedAxialFrictionCoefficient: ~
+  RayleighDampingCoefficients: (no damping)

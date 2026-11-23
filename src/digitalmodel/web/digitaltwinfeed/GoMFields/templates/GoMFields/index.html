@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+    {% include 'staticFiles.html' %}
+
+    <script>
+    $( function() {
+        var choiceOptions = {{ context['choices'] | safe }};
+        $( "#textboxInput" ).autocomplete({
+          source: choiceOptions
+        });
+      } );
+    </script>
+</head>
+
+
+
+  <body>
+	{% include 'header.html' %}
+    {% if context['title'] %}
+        <title>{{ context['title'] }}</title>
+    {% endif %}
+
+      <main role="main" class="container">
+          <h4 class="h4">{{context['AppNameAlias']}}</h4>
+          <p style="color:#008000">We are adding more Blocks. See updates tab below for more information.</p>
+            <div id="appMenu">
+            {% if form %}
+              <form method="POST" action="">
+                <div class="form-field">{{ form.textboxInput.label }} {{ form.textboxInput }} <input type="submit" value="Submit"> </div>
+              </form>
+            {% endif %}
+            </div>
+            <br>
+
+            {% if context.error %}
+                <br>
+                <strong style="color: red;">No data available,
+                    <span style="text-transform:uppercase">"{{ context['title'] }}"</span>
+                    in application service
+                </strong>
+            {% else %}
+                {% if context.menu_items %}
+                    {% include 'appMenuItemsHorizontal.html' %}
+                {% endif %}
+
+                <div id="AppMenuContent">
+                    {% block subitem_page %}
+                    {% endblock %} {# subitem_page #}
+                </div>
+            {% endif %}
+
+      </main>
+	{% include 'footer.html' %}
+  </body>
+</html>

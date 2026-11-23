@@ -1,0 +1,106 @@
+{
+  "metric": "max_rel_error",
+  "max_rel_error": 0.01941849321374889,
+  "threshold": 0.1,
+  "passes": true,
+  "n_holdout": 8,
+  "worst_samples": [
+    {
+      "point": {
+        "vertical_load_kN": 2500.0,
+        "undrained_shear_strength_kpa": 14.0
+      },
+      "predicted": 1.1993524956943427,
+      "actual": 1.1765065119756128,
+      "rel_error": 0.01941849321374889,
+      "in_range": true
+    },
+    {
+      "point": {
+        "vertical_load_kN": 2500.0,
+        "undrained_shear_strength_kpa": 18.0
+      },
+      "predicted": 0.9329169224974494,
+      "actual": 0.9220029724326955,
+      "rel_error": 0.011837217873558025,
+      "in_range": true
+    },
+    {
+      "point": {
+        "vertical_load_kN": 2500.0,
+        "undrained_shear_strength_kpa": 22.0
+      },
+      "predicted": 0.7640676816796308,
+      "actual": 0.7580257734576028,
+      "rel_error": 0.007970584158990898,
+      "in_range": true
+    },
+    {
+      "point": {
+        "vertical_load_kN": 2500.0,
+        "undrained_shear_strength_kpa": 26.0
+      },
+      "predicted": 0.6472572015120959,
+      "actual": 0.6435679349490289,
+      "rel_error": 0.005732520784086609,
+      "in_range": true
+    },
+    {
+      "point": {
+        "vertical_load_kN": 1750.0,
+        "undrained_shear_strength_kpa": 20.0
+      },
+      "predicted": 0.5824083815383686,
+      "actual": 0.5824083815383687,
+      "rel_error": 1.9062621003025791e-16,
+      "in_range": true
+    },
+    {
+      "point": {
+        "vertical_load_kN": 2250.0,
+        "undrained_shear_strength_kpa": 20.0
+      },
+      "predicted": 0.7488107762636168,
+      "actual": 0.7488107762636168,
+      "rel_error": 0.0,
+      "in_range": true
+    },
+    {
+      "point": {
+        "vertical_load_kN": 2750.0,
+        "undrained_shear_strength_kpa": 20.0
+      },
+      "predicted": 0.915213170988865,
+      "actual": 0.915213170988865,
+      "rel_error": 0.0,
+      "in_range": true
+    },
+    {
+      "point": {
+        "vertical_load_kN": 3250.0,
+        "undrained_shear_strength_kpa": 20.0
+      },
+      "predicted": 1.0816155657141133,
+      "actual": 1.0816155657141133,
+      "rel_error": 0.0,
+      "in_range": true
+    }
+  ],
+  "local_error_map": {
+    "": {
+      "vertical_load_kN": [
+        1.9062621003025791e-16,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "undrained_shear_strength_kpa": [
+        0.01941849321374889,
+        0.011837217873558025,
+        0.007970584158990898,
+        0.005732520784086609
+      ]
+    }
+  },
+  "densification_log": []
+}

@@ -1,0 +1,96 @@
+{
+  "verdict": "MINOR",
+  "reviewed_revision": "11768e3108cc693852d26848fe9a83578517eaa9",
+  "reviewed_files": [
+    {
+      "path": "docs/plans/2026-09-13-issue-2121-ansys-cylinder-campaign.html",
+      "sha256": "bc08cee28154cf3c211313f3fc08d4bc65f534ad8df36617192956e0ec5b542f"
+    },
+    {
+      "path": "docs/plans/README.md",
+      "sha256": "72fd817132c456ee8977da76e6b9228286bc3cd0c37766297e2ac7311a20efd7"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-13-issue-2121-canary-proposal.json",
+      "sha256": "c765ad316307b36090595ec265e71b4b0459aaa8f82adf9ce8b94f27c9e69423"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-13-issue-2121-canary-scope.json",
+      "sha256": "4e45f59e2c79dce31f166dc3cb4e873d7a71343bd6c5a7efc530973e3ade635e"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-13-issue-2121-canary-verification.json",
+      "sha256": "e7a86f3c9543da62da6e104fbc725d03b9f0f7e1e53d2d26907fd6e62355ff14"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-13-issue-2121-vendor-source-metadata.json",
+      "sha256": "b799302c0fcb77b833c08075614d91b318175da9528c10bd2a9cd2511268ce04"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-14-issue-2121-checkpoint-claude-r1.json",
+      "sha256": "067a261029c77cf79622872f10c44a49ed51233a1b588147d5e96a40030c66fa"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-14-issue-2121-checkpoint-claude-r2.json",
+      "sha256": "9f9e1d765719dc03517756ed03510b0b9f406ac70c12d35961f6869b21e5e934"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-14-issue-2121-checkpoint-codex-r1.json",
+      "sha256": "3696285441c87f3c65978c27c46a9f7eb7abff3f29c6e27e1019014240a8e64f"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-14-issue-2121-checkpoint-codex-r2.json",
+      "sha256": "6d6a75230be8bdd6f6ace6113cc79708331c6681f092ed98f7a16a50e9421d6f"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-14-issue-2121-diagnostic-characterization.json",
+      "sha256": "9893804445f2d79321e41d4750dd83cbc132d006b0b94b221e80f3715800009a"
+    },
+    {
+      "path": "docs/plans/evidence/register_json_prose.py",
+      "sha256": "8511cd91f5eb489867510ece719409fbf47f83a7392d1c0dbad96f2cdbf5da69"
+    },
+    {
+      "path": "tests/docs/test_register_json_prose.py",
+      "sha256": "c3d0c1a0bc2aad4a196cc5894c65e6b138afea66f415fe2e5d6f28f7fdb8d241"
+    }
+  ],
+  "findings": [
+    {
+      "id": "R-00",
+      "severity": "INFO",
+      "defect": "Supplied-content review only; all digests transcribed, none recomputed. Re-derived and confirmed: Lame values, 96/384/1536 elements, 345/1265/4833 nodes, corner-node stations with 2/4/2 adjacency, 21/42/54+9 counts, 96-column record, 152 listing columns, 217=210+7 headings, register input hashes matching staged blobs. Not supplied: frozen R1/R2 receipts whose F1-F4 this round closes; closure assessed against scope dispositions and the user summary only.",
+      "correction": "Codex raw-blob lane remains authority for hashes. Include the frozen R2 receipts in any future exact-current bundle so closure can be checked verbatim."
+    },
+    {
+      "id": "V1",
+      "severity": "MINOR",
+      "defect": "Verification receipt scope claims 'exact staged files except this receipt', yet its legal/mirror inventory omits the diagnostic characterization (9893...), the extractor script, README.md and the four checkpoint receipts present in this tree, while listing three frozen receipts absent from the bundle. Legal-scan coverage of the characterization's quoted native heading lines and the extractor at their current hashes is therefore unrecorded.",
+      "correction": "Restate scope as 'changed files' or extend the mirror to every bundled artifact; record legal scan results for the characterization and extractor at current digests."
+    },
+    {
+      "id": "V2",
+      "severity": "MINOR",
+      "defect": "register_json_prose.py parses with plain json.loads, so duplicate keys silently keep only the last value and a UTF-8 BOM is silently accepted. Earlier duplicate-key prose would be dropped from the register check while the recorded rule says all string values are collected, contradicting the strict duplicate-key/BOM refusal adopted elsewhere in the plan.",
+      "correction": "Use object_pairs_hook that raises on duplicate keys, reject bytes starting with a BOM, and add a refusal test for each."
+    },
+    {
+      "id": "G1",
+      "severity": "MINOR",
+      "defect": "Power exponent is 'a signed integer literal, optionally parenthesized', but the literal grammar admits 2.0, 2e0 and .5 and the contract does not say whether integer-valued non-integer-syntax exponents, double parentheses, or a plus sign are accepted. With one invocation and no retry, an undefined edge triggers an avoidable unestablished gate.",
+      "correction": "Define exponent syntax as optional single sign, one or more digits, at most one enclosing parenthesis pair; add B1 refusal tests for 2.0, 2e0, ((2)) and acceptance for +2."
+    },
+    {
+      "id": "S1",
+      "severity": "MINOR",
+      "defect": "F3 claims vendor roles now identify purpose, but VM25, PRRSOL, FSUM and PLANE183 still carry the disjunctive 'canary governing method or supporting reference', and CONFIG/SFELIST/FLIST/DLIST carry a round label ('current checkpoint correction') that is now two rounds stale. README row status likewise still reads 'checkpoint corrections under review'.",
+      "correction": "Give each register entry a single purpose (corroboration, formulation, retrieval gate, load audit, status sequencing); update the README status to the frozen-round wording."
+    },
+    {
+      "id": "A1",
+      "severity": "MINOR",
+      "defect": "Scope frozen_R2 status says 'F1-F4 independently adjudicated' and the verification receipt cites 'Independent Codex adjudication'. Codex is a reviewer lane; the plan itself states an AI verdict confers no engineering authority and reserves adjudication for the owner-appointed adjudicator. The wording overstates who closed the prior MAJOR findings.",
+      "correction": "Reword to 'Codex review concurred'; state that closure is governed by exact-current review receipts and user approval, not reviewer adjudication."
+    }
+  ]
+}

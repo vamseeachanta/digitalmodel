@@ -1,0 +1,125 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  v2312                                 |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      controlDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+application     interFoam;
+
+startFrom       startTime;
+
+startTime       0;
+
+stopAt          endTime;
+
+endTime         @ENDTIME@;
+
+deltaT          1;
+
+writeControl    timeStep;
+
+writeInterval   @WRITEINTERVAL@;
+
+purgeWrite      0;
+
+writeFormat     binary;
+
+writePrecision  6;
+
+writeCompression off;
+
+timeFormat      general;
+
+timePrecision   6;
+
+runTimeModifiable yes;
+
+functions
+{
+    // TWO function objects, and the difference between them is the defect this
+    // case type was rewritten to prevent.
+    //
+    // `rho rho` names interFoam's variable-density VOF FIELD. `rho rhoInf`
+    // names a constant, and with a constant the ABOVE-WATER hull surface is
+    // integrated at water density. Measured on a benchmark container hull:
+    // 48.4% of the hull patch sits above the waterline and supplied 62.3% of
+    // the reported viscous force, putting the total resistance coefficient
+    // +113.79% out. Pressure barely moved, because topside pressure is near
+    // atmospheric and largely cancels fore-and-aft -- that asymmetry is the
+    // signature, a defect that hits only the friction integral.
+    //
+    // forceCoeffs needs BOTH: the FIELD for the force integral, and a constant
+    // rhoInf for the coefficient denominator. They are not interchangeable and
+    // neither is redundant.
+
+    // PATCHES: the union of the hull and every appendage. Forces are
+    // integrated over all of them together, because the reported total
+    // resistance is the vessel's, not the bare hull's. The per-patch
+    // BREAKDOWN is the forces_<patch> block below, in newtons -- newtons sum,
+    // per-patch coefficients would not, because each would carry its own
+    // reference area and the three could not be added.
+    forces
+    {
+        type            forces;
+        libs            (forces);
+        patches         (@FORCEPATCHES@);
+        rho             rho;
+        log             on;
+        writeControl    timeStep;
+        writeInterval   1;
+        CofR            (@COFR@);
+    }
+
+    forceCoeffs
+    {
+        type            forceCoeffs;
+        libs            (forces);
+        patches         (@FORCEPATCHES@);
+
+        // Force integral: the VOF density field.
+        rho             rho;
+        // Coefficient denominator only: 0.5 * rhoInf * magUInf^2 * Aref.
+        rhoInf          @RHOINF@;
+
+        magUInf         @MAGUINF@;
+        lRef            @LREF@;
+        // Aref is HALF the wetted surface: the domain is cut at the
+        // centreplane, the patch integral reports half of every force, and
+        // forceCoeffs has no way to double the numerator.
+        //
+        // With appendages it is half the EXTERNAL wetted area of the union,
+        // not half the sum of the per-region areas. The sum double-counts:
+        // the appendage surface inside the hull is not wetted and neither is
+        // the hull surface inside the appendage. Summing inflates Aref, and
+        // an inflated Aref deflates every coefficient by exactly its error in
+        // a case that converges perfectly.
+        Aref            @AREF@;
+
+        CofR            (@COFR@);
+        dragDir         (@DRAGDIR@);
+        liftDir         (@LIFTDIR@);
+        pitchAxis       (@PITCHAXIS@);
+
+        log             on;
+        writeControl    timeStep;
+        writeInterval   1;
+    }
+
+    // Per-patch breakdown, in NEWTONS. Empty for a single-surface case: the
+    // union block above already IS the hull's, and a duplicate function
+    // object would write the same force under a second name.
+    @PERPATCHFORCES@
+}
+
+
+// ************************************************************************* //

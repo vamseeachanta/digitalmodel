@@ -1,0 +1,18 @@
+Agent loading error: Failed to load agent from /mnt/local-analysis/workspace-hub/.gemini/agents/gsd-debugger.md: Validation failed: Agent Definition:
+Unrecognized key(s) in object: 'permissionMode'
+Agent loading error: Failed to load agent from /mnt/local-analysis/workspace-hub/.gemini/agents/gsd-executor.md: Validation failed: Agent Definition:
+Unrecognized key(s) in object: 'permissionMode'
+Ripgrep is not available. Falling back to GrepTool.
+Skill conflict detected: "extract-learnings-to-issues" from "/mnt/local-analysis/workspace-hub/.agents/skills/extract-learnings-to-issues/SKILL.md" is overriding the same skill from "/mnt/local-analysis/workspace-hub/.gemini/skills/extract-learnings-to-issues/SKILL.md".
+Skill conflict detected: "field-dev-code-recon" from "/mnt/local-analysis/workspace-hub/.agents/skills/field-dev-code-recon/SKILL.md" is overriding the same skill from "/mnt/local-analysis/workspace-hub/.gemini/skills/field-dev-code-recon/SKILL.md".
+Skill conflict detected: "corporate-tax-form-fill" from "/mnt/local-analysis/workspace-hub/.agents/skills/corporate-tax-form-fill/SKILL.md" is overriding the same skill from "/mnt/local-analysis/workspace-hub/.gemini/skills/corporate-tax-form-fill/SKILL.md".
+Verdict: MAJOR
+
+## MAJOR
+1. **Disguised Resultant Logic (Requirement Violation):** The acceptance criteria explicitly required removing the "resultant" presentation and requested side-by-side "X/Y/N component comparisons". The implementation circumvents this by retaining the resultant hypotenuse calculations (`math.hypot(x,y)`), merely renaming them to `[prefix]_component_horizontal_force_N`, and injecting them into the HTML selected-case table under the label "Component check (kN)". The test `test_issue_2760_html_javascript_references_existing_row_fields` improperly locks in this defect.
+2. **HTML `Max |X_ship|` Summary Calculation Mismatch:** In `updateSelectedSpeedEnvelope`, the table label was changed to "Max |X_ship| at selected speed". However, the JS still calculates `maxH = maxBy(speedRows, 'force_x_ship_N')` (which ignores the absolute negative bounds of X) and then incorrectly renders `maxH.component_horizontal_force_N` (the resultant hypotenuse). The rendered numerical value fundamentally mismatches the `|X_ship|` label.
+3. **Chart 1 Duplicate Traces:** In `updateForceChart`, Chart 1 is supposed to plot X and Y components. Instead, it plots `row.force_y_ship_port_N` twice: once as "Y_ship port (kN)" and again as a redundant "Y component check (kN)" trace. The third trace should be cleanly removed.
+
+## MINOR
+1. **Chart 3 Title/Axis Ambiguity:** Chart 3 was updated to plot exclusively the Y-component (`force_y_ship_port_N`) for OCIMF, rudder, and total. However, the chart title and Y-axis are ambiguously labeled "horizontal component force", which typically implies a composite X/Y resultant.
+2. **Chart 2 Axis Label Typo:** The X-axis for `yaw-moment-chart` (Chart 2) is incorrectly labeled `Current heading θ (deg)`, which breaks the established `Heading offset ψ (deg)` notation used across the rest of the report and UI.

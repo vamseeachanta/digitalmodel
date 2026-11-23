@@ -1,0 +1,49 @@
+{
+  "issue": "https://github.com/vamseeachanta/digitalmodel/issues/2121",
+  "observed_utc": "2026-09-17T20:41:16.191393+00:00",
+  "authorization": "User option 1: one focused final independent Claude review; bounded review-routing exception.",
+  "review_bundle_sha256": "8486d9a1a24479a630981d3985616c16a219f9570fcb68c71e971b3711ed68cf",
+  "review_stdout_sha256": "014573579a02f0eea927e41f9222c3cdf79f9f216618379360e94840ac4794e0",
+  "review_session_id": "ccb3261b-da06-4bf5-8ced-1d794466ebcd",
+  "review": {
+    "bundle_sha256": "8486d9a1a24479a630981d3985616c16a219f9570fcb68c71e971b3711ed68cf",
+    "verdict": "MINOR",
+    "findings": [
+      "MINOR - cylinder_diagnostic_snapshot_v2.py:248 returns enumeration_complete=True unconditionally while the same record carries enumeration_limitation ('Pre-yield disappearance may omit identities', lines 225-226) and a possibly non-empty errors list / selected_details_complete=False. The completeness claim is stronger than the evidence. Non-blocking because the pressure admission path gates on classification.status == 'CLEAR' (cylinder_pressure_resources.py:63) and never reads enumeration_complete. Remedy: remove the field or derive it from an actual predicate such as 'not errors'.",
+      "MINOR - cylinder_preparation_history.py:60 (_refusal) admits arbitrary extra top-level keys: after canonical-comparing only the eight fields in 'expected', the sole additional guard is any(k.endswith('_error') for k in result). A top-level 'error' is intentionally permitted, but so is any differently-named failure field, and nested failure evidence under preclaim_probe / capture is never inspected. Remedy: validate the refusal against an exact allowed top-level key set rather than a suffix heuristic, and recurse the *_error scan one level into preclaim_probe.",
+      "MINOR - Retained-preparation poisoning has no in-code remediation path. If _terminal_records fails before writing preparation-refusal.json (preparation_record_error / PREPARATION_RETENTION_INCOMPLETE) or the process dies after output.mkdir (state.update(output=...) follows mkdir in cylinder_pressure_resume.py), the root is in the campaign namespace but can never satisfy _preparation ('Retained preparation refusal missing') and cannot be omitted (set(roots) != observed). Likewise _preparation's streams[stderr] != b'' refusal means any uncaught traceback from main() - including from the new verify_streams(config) raise sites - permanently disqualifies that run's stream pair. Fail-closed but unrecoverable. Remedy: document the manual quarantine/retirement procedure, or add a reviewed digest-pinned retirement declaration analogous to LEGACY_PREPARATIONS.",
+      "MINOR - The stdout receipt's final bytes are never verified in-run although next-run ingestion requires exact equality. run_pressure_diagnostic.py main does verify_streams(config) then print(canonical_bytes(result).decode('utf-8')) with no flush/fsync/read-back, unlike write_exclusive (cylinder_pressure_journal.py:20-28) which fsyncs and readback-compares every on-disk record. _preparation later requires canonical_bytes(parse_json(streams[stdout])) == canonical_bytes(refusal), so a short write, truncated shutdown buffer or appended second invocation silently converts a valid preparation into the dead end described above. Remedy: after print, flush and os.fsync(sys.stdout.fileno()), then re-read the bound stdout path and compare against canonical_bytes(result), failing loudly on mismatch.",
+      "VERIFIED (not a defect) - The prior blocking finding is closed. verify_streams (cylinder_preparation_streams.py:45-52) resolves sys.stdout/sys.stderr via os.fstat and os.path.samestat against S_ISREG, st_ino and st_nlink == 1 on both handle and name (_same_file:33-42), and is reached before reservation acquisition, inside history_binding/account_storage, at refusal retention (_terminal_records) and before the stdout receipt. An attempt to de-anchor the declared preparation's lineage.original_root so that _refusal_identity's expected_stream_paths(original) would name a different _coordination directory than _streams(config, output) enumerates fails: expected_stream_paths refuses unless output.parent == original.parent, _preparation forces root.parent == parent, and _namespace forces parent == current original_root.parent, so the grandparents coincide. Omission is closed by the two set-equality gates plus the stdout-content-equals-refusal check. Config closure mutation is closed by the single deepcopy in production_callbacks and the frozen copies in history_binding/history_storage.",
+      "SCOPE - Native execution, licence, capacity, current resource ownership and stopping criteria are not waived and were not re-derived; 2/2 native attempts and the 64 null coarse-pressure responses were taken as frozen reference, not recomputed. Exact serialized path spelling remains fail-closed (owned_path's path == path.resolve() versus _checked_path's os.path.abspath can diverge on case or short names and refuses rather than normalizes), consistent with the stated F4 limitation. Regression evidence (887 passed, 2 skipped) was read as reported, not executed, and tests are not treated as approval. This is a diagnostic software review only; no human engineering checker identity and no engineering qualification is established."
+    ]
+  },
+  "source_pins": {
+    "src/digitalmodel/ansys/cylinder_preparation_history.py": "bf96b0d9bba7f96cdf687fc4645eee1444ccbd43318d5bee0bab545523e83f7b",
+    "src/digitalmodel/ansys/cylinder_pressure_resources.py": "257b51a83a4b396638e83cc13858ed0a74383cda2f4e7ea7b02d4c61d1dadbc0",
+    "src/digitalmodel/ansys/cylinder_pressure_admission.py": "61bf31aaec8d6a9454010c8ba23af8e63112f773b7bc82c6069d4be1373e5c48",
+    "scripts/ansys/run_pressure_diagnostic.py": "0ddb8caee905cb9fcb541b9c3923a16e2793ada2d1715ae388a68c27db230ed9",
+    "tests/ansys/test_cylinder_preparation_history.py": "c8e70aa41afcc43cbaa16ddf9f88a3276cec6ff28271e6153210252775be7da6",
+    "tests/ansys/test_cylinder_preparation_driver.py": "2971010fac6911a62b9f61a641e877f865bf8ee907240c9c6baba9fc563a6329",
+    "tests/ansys/test_cylinder_intermediate_driver.py": "63c0ff358c6f664751153ff75325513a60e29be5441ce5661d833d8701f3ecbf",
+    "tests/ansys/test_cylinder_pressure_admission.py": "1f29a7fb21e107f719caf87c1a3947943f9b0117ebe4578bafd5214c7ee2e9fc",
+    "src/digitalmodel/ansys/cylinder_pressure_resume.py": "e256a10119f65f70041effba3572be02adbcb3f39d8116fbfaf4471cd448c13c",
+    "tests/ansys/test_cylinder_preclaim_probe.py": "305b3ca1b89d8c9cc3e762cdf6682c4367d4f7f7034e1da743deb3106f57816c",
+    "docs/reviews/issue-2121-preparation-accounting-review.json": "fbb870cdb5ff3c044780cb5c3edc3b8bd09e0be6205523218cc02378d36b4a24",
+    "src/digitalmodel/ansys/cylinder_preparation_streams.py": "8dab8d6b8968511799778726b688f2585f69bb6148c34c17d83153f3416eeda6",
+    "tests/ansys/test_cylinder_preparation_streams.py": "d03918d12e25e9029073dd6ef242392c651219dab1e14f0083869bae445ca6ba",
+    "tests/ansys/test_cylinder_intermediate_resume.py": "d7aa889cc873c171761c8b2c68ebc0396ab1770389ff9c37d7fb6c81c5704597",
+    "tests/ansys/test_run_pressure_diagnostic.py": "5a2296e7f073606634428eba3dff385f19d8d83260b93be8f674b5cb3f5afd09"
+  },
+  "dispositions": [
+    "Completeness wording: retained limitation and downstream CLEAR requirement remain. No stronger enumeration or absence claim is made.",
+    "Refusal schema: exact typed settlement/zero-launch fields, identity/digest pins and inventory equality remain mandatory. Arbitrary metadata does not grant native or reuse authority; broader schema tightening is deferred.",
+    "Incomplete preparation: no automatic quarantine, retirement, deletion or namespace omission is authorized by this code. Incomplete evidence refuses; any future recovery requires a separately reviewed digest-pinned disposition while retaining originals. Current retained preparation passes.",
+    "Final stdout durability: in-run final readback remains unimplemented. The parent execution evidence workflow shall verify retained output after process exit before publication or future intake. Missing/truncated output remains incomplete, never qualified."
+  ],
+  "status": "DIAGNOSTIC_SOURCE_REVIEW_NONBLOCKING",
+  "limits": [
+    "No native execution admission from this review alone.",
+    "Fresh runtime/configuration review, licence, resource ownership, capacity and stop checks remain required.",
+    "No engineering qualification. Earlier MAJOR verdicts remain historical; the earlier disposition is not rewritten."
+  ]
+}

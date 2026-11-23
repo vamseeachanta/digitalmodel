@@ -1,0 +1,10 @@
+basename: foam_system_sizing
+
+default:
+  log_level: INFO
+  config:
+    generate_plots: false
+    overwrite:
+      output: true
+
+foam_system_sizing: {}

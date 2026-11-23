@@ -1,0 +1,81 @@
+source_type: python
+source_description: "Catenary riser mock return values from test_catenary.py and test_catenary_riser.py engine mock fixtures"
+extracted_date: "2026-03-16"
+legal_scan_passed: true
+category: "mooring_risers"
+subcategory: "catenary_riser_analysis"
+equations:
+  - name: "Von Mises utilization"
+    latex: "UF = \\sigma_{VM} / \\sigma_{yield}"
+    description: "Utilization factor is von Mises stress divided by yield strength"
+  - name: "Curvature at touchdown"
+    latex: "\\kappa = w / H"
+    description: "Maximum curvature at touchdown point for catenary"
+inputs:
+  - name: "Riser total length"
+    symbol: "L"
+    unit: "m"
+    test_value: 1500.0
+  - name: "Outer diameter"
+    symbol: "OD"
+    unit: "m"
+    test_value: 0.508
+  - name: "Wall thickness"
+    symbol: "t"
+    unit: "m"
+    test_value: 0.025
+outputs:
+  - name: "Touchdown point"
+    symbol: "TDP"
+    unit: "m"
+    test_expected: 950.2
+    tolerance: 0.1
+  - name: "Maximum tension"
+    symbol: "T_max"
+    unit: "kN"
+    test_expected: 3250.5
+    tolerance: 0.1
+  - name: "Hang-off angle"
+    symbol: "theta"
+    unit: "degrees"
+    test_expected: 72.1
+    tolerance: 0.1
+  - name: "Minimum bend radius"
+    symbol: "MBR"
+    unit: "m"
+    test_expected: 125.8
+    tolerance: 0.1
+worked_examples:
+  - description: "Simple catenary riser engine mock (test_catenary.py)"
+    inputs:
+      riser_length: 1250.0
+    outputs:
+      touchdown_point: 850.5
+      max_tension: 2450.8
+      hanging_angle: 65.2
+      effective_tension_top: 2450.8
+      effective_tension_bottom: 1250.3
+      effective_tension_touchdown: 0.0
+      max_curvature: 0.00085
+      curvature_at_touchdown: 0.00025
+    use_as_test: true
+  - description: "Catenary riser analysis mock (test_catenary_riser.py)"
+    inputs:
+      total_length: 1500.0
+      diameter: 0.508
+      wall_thickness: 0.025
+    outputs:
+      touchdown_point: 950.2
+      max_tension: 3250.5
+      hang_off_angle: 72.1
+      min_bend_radius: 125.8
+      max_von_mises: 185.3
+      utilization_factor: 0.68
+    use_as_test: true
+assumptions:
+  - "Values from engine mock return data in test fixtures"
+  - "Static catenary analysis without current loading"
+  - "Flexible riser assumption (no bending stiffness)"
+references:
+  - "digitalmodel/tests/subsea/catenary_riser/test_catenary.py"
+  - "digitalmodel/tests/subsea/catenary_riser/test_catenary_riser.py"

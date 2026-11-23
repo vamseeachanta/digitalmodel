@@ -1,0 +1,19 @@
+basename: diffraction
+
+diffraction:
+  operation: convert_spec
+  spec: null
+  solver: all
+  format: single
+  output_directory: prepared
+
+default:
+  log_level: INFO
+  config:
+    generate_plots: false
+    overwrite:
+      output: true
+    cfg_sensitivities: false
+
+Analysis:
+  fe_folder: null

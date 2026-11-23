@@ -1,0 +1,151 @@
+source_type: python
+source_description: "Extracted from digitalmodel test_plate_capacity.py and test_plate_buckling_units.py — plate buckling analysis per DNV rules"
+extracted_date: "2026-03-16"
+legal_scan_passed: true
+category: "structural"
+subcategory: "plate_buckling"
+equations:
+  - name: "Elastic Buckling Base Factor"
+    latex: "\\sigma_0 = \\frac{\\pi^2 E}{12(1 - \\nu^2)} \\left(\\frac{t}{b}\\right)^2"
+    description: "Base factor for elastic plate buckling stress calculation"
+  - name: "Slenderness Ratio"
+    latex: "\\lambda = \\sqrt{\\frac{\\sigma_{char}}{\\sigma_{el}}}"
+    description: "Plate slenderness ratio from characteristic resistance and elastic buckling stress"
+  - name: "Usage Factor"
+    latex: "UF = \\frac{\\sigma_{applied}}{\\sigma_{allowable}}"
+    description: "Usage factor (demand/capacity ratio) for plate buckling check"
+  - name: "Von Mises Stress"
+    latex: "\\sigma_{VM} = \\sqrt{\\sigma_x^2 + \\sigma_y^2 - \\sigma_x \\sigma_y + 3\\tau_{xy}^2}"
+    description: "Von Mises equivalent stress for biaxial stress state"
+  - name: "Pipe Cross-Section Area"
+    latex: "A = \\frac{\\pi}{4} (OD^2 - ID^2)"
+    description: "Cross-sectional area of hollow pipe"
+  - name: "Pipe Moment of Inertia"
+    latex: "I = \\frac{\\pi}{64} (OD^4 - ID^4)"
+    description: "Second moment of area for hollow pipe section"
+  - name: "API TR 5C3 Elastic Collapse"
+    latex: "P_e = \\frac{46.95 \\times 10^6}{(D/t)(D/t - 1)^2}"
+    description: "API TR 5C3 elastic collapse pressure for casing/tubing"
+inputs:
+  - name: "Plate length"
+    symbol: "l"
+    unit: "m"
+    test_value: 3.0
+  - name: "Plate breadth"
+    symbol: "b"
+    unit: "m"
+    test_value: 0.8
+  - name: "Plate thickness"
+    symbol: "t"
+    unit: "m"
+    test_value: 0.012
+  - name: "Young's modulus"
+    symbol: "E"
+    unit: "Pa"
+    test_value: 210000000000
+  - name: "Poisson ratio"
+    symbol: "nu"
+    unit: "dimensionless"
+    test_value: 0.3
+  - name: "Yield strength"
+    symbol: "fy"
+    unit: "Pa"
+    test_value: 355000000
+outputs:
+  - name: "Aspect ratio"
+    symbol: "alpha"
+    unit: "dimensionless"
+    test_expected: 3.75
+    tolerance: 0.01
+  - name: "Slenderness ratio (b/t)"
+    symbol: "b_over_t"
+    unit: "dimensionless"
+    test_expected: 66.67
+    tolerance: 0.1
+worked_examples:
+  - description: "Plate geometry — aspect ratio and slenderness"
+    inputs:
+      length: 3.0
+      breadth: 0.8
+      thickness: 0.012
+    outputs:
+      aspect_ratio: 3.75
+      slenderness_ratio: 66.67
+    use_as_test: true
+  - description: "Von Mises stress from biaxial + shear loading"
+    inputs:
+      sigma_x: 50.0e6
+      sigma_y: 30.0e6
+      tau_xy: 20.0e6
+    outputs:
+      sigma_vm: 56568542.5
+    use_as_test: true
+  - description: "Basic usage factor calculation"
+    inputs:
+      applied: 100.0e6
+      allowable: 200.0e6
+    outputs:
+      usage_factor: 0.5
+    use_as_test: true
+  - description: "Slenderness ratio from characteristic resistance and elastic stress"
+    inputs:
+      char_resistance: 355.0e6
+      elastic_stress: 500.0e6
+    outputs:
+      slenderness: 0.84261
+    use_as_test: true
+  - description: "Legacy plate buckling PlateBuckling_212 — imperial units"
+    inputs:
+      YoungsModulus: 30000000
+      PoissionsRatio: 0.3
+      constantvalueTable1: 0.425
+      PlateThickness: 0.552
+      PlateBreadth: 27.6
+      PlateLength: 104.04
+      TangentModulus: 25000000
+      YieldPoint: 33000
+    outputs:
+      critical_stress_edge_compression_positive: true
+      critical_stress_shear_positive: true
+    use_as_test: true
+  - description: "Pipe cross-section area — 12.75in OD, 0.375in WT"
+    inputs:
+      OD: 12.75
+      WT: 0.375
+      ID: 12.0
+    outputs:
+      area_in2: 14.5796
+    use_as_test: true
+  - description: "Pipe moment of inertia — 12.75in OD, 12.0in ID"
+    inputs:
+      OD: 12.75
+      ID: 12.0
+    outputs:
+      I_in4: 279.33
+    use_as_test: true
+  - description: "API TR 5C3 elastic collapse at D/t = 17.2"
+    inputs:
+      D_over_t: 17.2
+    outputs:
+      Pe_psi: 10401
+    use_as_test: true
+  - description: "API STD 2RD collapse pressure — 10.75in OD, 0.625in WT, X65"
+    inputs:
+      SMYS: 65000
+      E: 30000000
+      nu: 0.3
+      t_over_D: 0.05814
+    outputs:
+      Py_psi: 7558.1
+      Pc_less_than_max_Py_Pel: true
+    use_as_test: true
+assumptions:
+  - "Simply supported boundary condition is the default (most conservative)"
+  - "Clamped boundary conditions always give higher buckling resistance than simply supported"
+  - "Von Mises criterion used for biaxial stress interaction"
+  - "DNV plate buckling checks cover longitudinal, transverse, shear, and biaxial modes"
+  - "Legacy PlateBuckling_212 uses imperial units (psi, inches)"
+references:
+  - "DNV-RP-C201, Buckling Strength of Plated Structures"
+  - "API TR 5C3, Technical Report on Equations and Calculations for Casing, Tubing, and Line Pipe"
+  - "API STD 2RD:2013, Design of Risers for Floating Production Systems"

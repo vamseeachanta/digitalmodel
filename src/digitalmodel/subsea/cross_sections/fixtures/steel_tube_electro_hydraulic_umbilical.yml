@@ -1,0 +1,47 @@
+id: steel-tube-electro-hydraulic-umbilical
+name: Representative steel-tube electro-hydraulic umbilical
+family: steel_tube_electro_hydraulic_umbilical
+duty: dynamic
+description: Packed component schema fixture for an O&G steel-tube umbilical.
+design_metadata:
+  design_pressure: {value: 345, unit: bar}
+  notes: Packed layout is representative; exact vendor packing is project-specific.
+provenance:
+  - source_id: wiki-cross-section-recon-2026-04-26
+    source_type: wiki
+    citation: Offshore cable/umbilical cross-section reconnaissance, 2026-04-26
+    url_or_path: knowledge/wikis/marine-engineering/wiki/sources/offshore-cable-umbilical-cross-section-recon-2026-04-26.md
+  - source_id: project-assumption-2514
+    source_type: project_assumption
+    citation: Issue #2514 representative fixture assumptions
+    note: Representative layer dimensions are examples for schema validation, not design defaults.
+  - source_id: sut-umbilical-reference
+    source_type: wiki
+    citation: SUT umbilical reference noted in recon page
+    url_or_path: knowledge/wikis/marine-engineering/wiki/sources/offshore-cable-umbilical-cross-section-recon-2026-04-26.md
+radial_layers: []
+packed_components:
+  - name: hydraulic steel tube bundle
+    component_type: steel_tube
+    service_role: hydraulic
+    material: super duplex stainless steel
+    count: 4
+    diameter: {value: 12.7, unit: mm}
+    wall_thickness: {value: 1.2, unit: mm}
+    pressure_rating: {value: 345, unit: bar}
+    provenance: {source_id: sut-umbilical-reference, source_type: wiki}
+  - name: electrical power quad
+    component_type: electrical_cable
+    service_role: electrical
+    material: copper and polymer insulation
+    count: 2
+    diameter: {value: 18, unit: mm}
+    voltage_rating: {value: 3.3, unit: kV}
+    provenance: {source_id: project-assumption-2514, source_type: project_assumption, note: Representative power component.}
+  - name: fibre optic element
+    component_type: optical_fibre
+    service_role: fiber_optic
+    material: glass fibre in polymer tube
+    count: 1
+    diameter: {value: 8, unit: mm}
+    provenance: {source_id: project-assumption-2514, source_type: project_assumption, note: Representative fibre element.}

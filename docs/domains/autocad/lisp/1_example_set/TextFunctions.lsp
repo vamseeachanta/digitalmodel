@@ -1,0 +1,15 @@
+;;; Change all text styles on all objects to specified text style
+;;; (ax:ChangeTextStyleName "ISOCPEUR")
+(defun ax:ChangeTextStyleName (style / sset ename i)
+  (vl-load-com)
+  (setq i 0)
+  (setq sset (ssget "X" '((-4 . "<OR") (0 . "MTEXT") (0 . "TEXT") (-4 . "OR>"))))
+  (if sset
+    (repeat (sslength sset)
+      (setq ename (ssname sset i))
+      (setq i (1+ i))
+      (vla-put-stylename (vlax-ename->vla-object ename) style)
+    )
+  )
+  (setq sset nil)
+)

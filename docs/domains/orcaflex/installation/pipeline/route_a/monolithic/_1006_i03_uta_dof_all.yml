@@ -1,0 +1,19 @@
+﻿%YAML 1.1
+# Type: Model
+# Program: OrcaFlex 11.2d
+# File: docs/domains/orcaflex/installation/pipeline/route_a/monolithic/_1006_i03_uta_dof_all.yml
+# Created: 10:39 AM on 9/28/2023
+# User: 
+# Machine: 
+---
+BaseFile: _1006_i02_cal.yml
+General:
+  StaticsMaxIterations: 5200
+  StaticsTolerance: 0.01
+  StaticsMinDamping: 5
+  StaticsMaxDamping: 8
+6DBuoys:
+  UTA:
+    DegreesOfFreedomInStatics: All
+    InitialRotation2: -45
+...

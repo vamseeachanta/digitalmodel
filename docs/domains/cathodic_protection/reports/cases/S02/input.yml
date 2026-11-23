@@ -1,0 +1,50 @@
+basename: cathodic_protection
+inputs:
+  calculation_type: DNV_RP_B401_offshore
+  design_data:
+    design_life: 30.0
+    structure_type: monopile
+  structure:
+    zones:
+    - zone: submerged
+      area_m2: 1200.0
+      coating_category: III
+    - zone: splash
+      area_m2: 180.0
+      coating_category: III
+    - zone: atmospheric
+      area_m2: 120.0
+      coating_category: III
+  environment:
+    seawater_temperature_C: 8.0
+    seawater_resistivity_ohm_m: 0.28
+  anode:
+    material: aluminium
+    type: stand_off
+    individual_anode_mass_kg: 150.0
+    utilization_factor: 0.85
+    length_m: 0.9
+    radius_m: 0.06
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: true
+    cfg_sensitivities: false
+report:
+  document:
+    approved_by: Pending
+    checked_by: Pending
+    client: Internal module review - no client issuance
+    date: '2026-10-03'
+    number: R2281-CP-002-00
+    prepared_by: Automated regression report
+    project: Digitalmodel CP regression portfolio
+    revision: '00'
+    revision_history:
+    - approved: Pending
+      checked: Pending
+      date: '2026-10-03'
+      description: Internal review draft
+      rev: '00'
+    title: 'CP module review: Monopile'

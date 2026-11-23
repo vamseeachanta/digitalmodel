@@ -1,0 +1,159 @@
+metadata:
+  title: "On-Bottom Stability Check — DNV-RP-F109 (2011)"
+  doc_id: CALC-STAB-001
+  revision: "0"
+  date: "2026-03-15"
+  author: "workspace-hub/digitalmodel"
+  status: draft
+
+inputs:
+  # Pipe properties
+  - name: Steel outer diameter
+    symbol: OD_steel
+    value: 0.3239
+    unit: m
+    source: "12.75-inch pipeline (API 5L)"
+  - name: Steel wall thickness
+    symbol: WT
+    value: 0.0127
+    unit: m
+    source: "0.5-inch nominal wall"
+  - name: Coating thickness
+    symbol: t_coat
+    value: 0.050
+    unit: m
+    source: "Concrete weight coating"
+  - name: Steel density
+    symbol: rho_steel
+    value: 7850
+    unit: "kg/m³"
+  - name: Coating density
+    symbol: rho_coat
+    value: 3040
+    unit: "kg/m³"
+    source: "Concrete weight coating"
+  - name: Contents density
+    symbol: rho_contents
+    value: 200
+    unit: "kg/m³"
+    source: "Gas-filled pipeline"
+  - name: Seawater density
+    symbol: rho_sw
+    value: 1025
+    unit: "kg/m³"
+  # Hydrodynamic parameters
+  - name: Drag coefficient
+    symbol: C_D
+    value: 0.7
+    unit: "-"
+    source: "DNV-RP-F109 §3.3, smooth pipe on seabed"
+  - name: Inertia coefficient
+    symbol: C_M
+    value: 3.29
+    unit: "-"
+    source: "DNV-RP-F109 §3.3, pipe on seabed (C_M = 1 + C_a)"
+  - name: Lift coefficient
+    symbol: C_L
+    value: 0.9
+    unit: "-"
+    source: "DNV-RP-F109 §3.3, pipe on seabed"
+  # Environmental loads
+  - name: Design current velocity
+    symbol: U_c
+    value: 0.50
+    unit: "m/s"
+    source: "100-year bottom current"
+  - name: Significant wave velocity
+    symbol: U_s
+    value: 0.80
+    unit: "m/s"
+    source: "100-year wave-induced velocity at seabed"
+  # Stability parameters
+  - name: Friction coefficient (pipe-soil)
+    symbol: mu
+    value: 0.6
+    unit: "-"
+    source: "DNV-RP-F109 Table 3-5, sand seabed"
+  - name: Safety factor
+    symbol: gamma
+    value: 1.32
+    unit: "-"
+    source: "DNV-RP-F109 Table 3-5, Normal safety class, North Sea winter storms"
+
+methodology:
+  description: >
+    Simplified absolute stability check for a subsea pipeline on a sandy seabed.
+    Morison equation for hydrodynamic drag, inertia, and lift loads on a near-seabed pipe.
+    Lateral stability requires pipe submerged weight to resist horizontal hydrodynamic forces
+    via soil friction, with an appropriate safety factor.
+  standard: "DNV-RP-F109 (2011) On-Bottom Stability Design of Submarine Pipelines"
+  equations:
+    - id: eq1
+      name: "Submerged weight"
+      latex: "W_s = (W_{steel} + W_{coat} + W_{contents} - W_{buoyancy}) \\cdot g"
+      description: "Net submerged weight per unit length (§3.2)"
+    - id: eq2
+      name: "Drag force"
+      latex: "F_D = \\frac{1}{2} \\rho_{sw} C_D D U^2"
+      description: "Morison drag force per unit length (§3.3)"
+    - id: eq3
+      name: "Lift force"
+      latex: "F_L = \\frac{1}{2} \\rho_{sw} C_L D U^2"
+      description: "Lift force per unit length (§3.3)"
+    - id: eq4
+      name: "Lateral stability"
+      latex: "\\gamma \\cdot F_H \\leq \\mu \\cdot (W_s - F_L)"
+      description: "Stability criterion: factored horizontal load ≤ friction resistance (§3.4)"
+    - id: eq5
+      name: "Utilization"
+      latex: "U_{lat} = \\frac{\\gamma \\cdot F_H}{\\mu \\cdot (W_s - F_L)}"
+      description: "Utilization ratio — must be ≤ 1.0 for stability"
+
+outputs:
+  - name: Total outer diameter
+    symbol: OD_total
+    value: 0.4239
+    unit: m
+    notes: "OD_steel + 2 × t_coat = 0.3239 + 2 × 0.050"
+  - name: Submerged weight
+    symbol: W_s
+    value: 1425.9
+    unit: "N/m"
+    notes: "Code-validated: steel + concrete coating + contents − buoyancy"
+  - name: Design velocity
+    symbol: U_design
+    value: 1.30
+    unit: "m/s"
+    notes: "U_c + U_s = 0.50 + 0.80 (conservative superposition)"
+  - name: Drag force
+    symbol: F_D
+    value: 257.0
+    unit: "N/m"
+    notes: "Code-validated: 0.5 × 1025 × 0.7 × 0.4239 × 1.30²"
+  - name: Lift force
+    symbol: F_L
+    value: 330.4
+    unit: "N/m"
+    notes: "Code-validated: 0.5 × 1025 × 0.9 × 0.4239 × 1.30²"
+  - name: Lateral utilization
+    symbol: U_lat
+    value: 0.52
+    unit: "-"
+    pass_fail: PASS
+    limit: 1.0
+    notes: "Code-validated: γ × F_H / (μ × (W_s - F_L)) = 1.32 × 257.0 / (0.6 × (1425.9 - 330.4))"
+
+assumptions:
+  - "Simplified absolute stability method (not generalized stability)"
+  - "Sandy seabed (friction coefficient μ = 0.6)"
+  - "Conservative velocity superposition (U = U_c + U_s)"
+  - "Steady-state Morison forces (no time-domain wave-by-wave analysis)"
+  - "Normal safety class, North Sea winter storms (Table 3-5)"
+  - "No embedment credit"
+  - "No trenching or mattress stabilization"
+
+references:
+  - "DNV-RP-F109 (2011) On-Bottom Stability Design of Submarine Pipelines"
+  - "DNV-RP-F109 Table 3-1: Seabed roughness"
+  - "DNV-RP-F109 Table 3-5: Safety factors, North Sea winter storms"
+  - "DNV-RP-F109 §3.3: Hydrodynamic coefficients for pipe on seabed"

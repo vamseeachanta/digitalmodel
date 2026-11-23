@@ -1,0 +1,172 @@
+basename: cathodic_protection
+inputs:
+  calculation_type: DNV_RP_B401_offshore
+  design_data:
+    edition: '2021'
+    structure_type: hybrid_riser
+  components:
+  - name: buoyancy_tank
+    type: buoyancy_tank
+    design_life_years: 20.0
+    environment: &id001
+      seawater_temperature_C: 5.0
+      anode_environment: seawater
+      electrolyte_resistivity_ohm_m: 0.3
+      anode_surface_temperature_C: 30.0
+    zones:
+    - name: submerged
+      disposition: designed
+      base_zone: submerged
+      depth_m: 1000.0
+      area_m2: 100.0
+      coating_category: III
+      anode_family: upper_standoff
+  - name: riser_joints
+    type: riser_pipe_joints
+    design_life_years: 15.0
+    environment: *id001
+    zones:
+    - name: submerged
+      disposition: designed
+      base_zone: submerged
+      depth_m: 1000.0
+      area_m2: 200.0
+      coating:
+        basis: f103_linepipe
+        edition: '2010'
+        system: three_layer_fbe_pp
+        concrete_weight_coating: false
+        operating_temperature_C: 60.0
+      anode_family: upper_standoff
+  - name: top_assembly
+    type: top_assembly
+    design_life_years: 25.0
+    environment:
+      seawater_temperature_C: 5.0
+      anode_environment: seawater
+      electrolyte_resistivity_ohm_m: 0.25
+      anode_surface_temperature_C: 30.0
+    zones:
+    - name: atmospheric
+      disposition: no_cp_demand
+      base_zone: atmospheric
+      area_m2: 10.0
+      coating_category: bare
+  - name: foundation
+    type: suction_pile
+    design_life_years: 20.0
+    environment:
+      seawater_temperature_C: 5.0
+      anode_environment: sediment
+      electrolyte_resistivity_ohm_m: 1.0
+      anode_surface_temperature_C: 30.0
+    zones:
+    - name: buried
+      disposition: designed
+      base_zone: buried
+      area_m2: 50.0
+      coating_category: bare
+      anode_family: foundation_flush
+  - name: bottom_assembly
+    type: bottom_assembly
+    design_life_years: 20.0
+    environment: *id001
+    zones:
+    - name: submerged
+      disposition: designed
+      base_zone: submerged
+      depth_m: 1000.0
+      area_m2: 20.0
+      coating_category: bare
+      anode_family: lower_bracelet
+  - name: flexible_end_fittings
+    type: flexible_jumper_end_fittings
+    design_life_years: 10.0
+    environment: *id001
+    zones:
+    - name: submerged
+      disposition: designed
+      base_zone: submerged
+      depth_m: 1000.0
+      area_m2: 10.0
+      coating_category: bare
+      anode_family: lower_bracelet
+  anode_families:
+  - name: upper_standoff
+    installed_on_component: top_assembly
+    material: aluminium
+    type: stand_off
+    individual_anode_mass_kg: 50.0
+    length_m: 2.0
+    radius_m: 0.1
+    utilization_factor: 0.9
+    count: 4
+  - name: foundation_flush
+    installed_on_component: foundation
+    material: aluminium
+    type: flush_mounted
+    individual_anode_mass_kg: 25.0
+    length_m: 1.2
+    width_m: 0.1
+    thickness_m: 0.05
+    final_length_m: 1.0
+    final_width_m: 0.08
+    final_thickness_m: 0.04
+    utilization_factor: 0.85
+    count: 10
+  - name: lower_bracelet
+    installed_on_component: bottom_assembly
+    material: aluminium
+    type: bracelet
+    individual_anode_mass_kg: 20.0
+    length_m: 0.4
+    exposed_area_m2: 0.5
+    final_exposed_area_m2: 0.2
+    utilization_factor: 0.8
+    count: 10
+  allocations:
+  - anode_family: upper_standoff
+    component: buoyancy_tank
+    capacity_fraction: 0.9
+  - anode_family: upper_standoff
+    component: riser_joints
+    capacity_fraction: 0.1
+  - anode_family: foundation_flush
+    component: foundation
+    capacity_fraction: 1.0
+  - anode_family: lower_bracelet
+    component: bottom_assembly
+    capacity_fraction: 0.3
+  - anode_family: lower_bracelet
+    component: flexible_end_fittings
+    capacity_fraction: 0.7
+  electrical_continuity:
+  - components:
+    - top_assembly
+    - buoyancy_tank
+    available_for_years: 25.0
+  - components:
+    - top_assembly
+    - riser_joints
+    available_for_years: 20.0
+  - components:
+    - bottom_assembly
+    - flexible_end_fittings
+    available_for_years: 20.0
+report:
+  document:
+    approved_by: Pending
+    checked_by: Pending
+    client: Internal module review - no client issuance
+    date: '2026-10-03'
+    number: R2281-CP-008-00
+    prepared_by: Automated regression report
+    project: Digitalmodel CP regression portfolio
+    revision: '00'
+    revision_history:
+    - approved: Pending
+      checked: Pending
+      date: '2026-10-03'
+      description: Internal review draft
+      rev: '00'
+    title: 'CP module review: Multi-component riser'

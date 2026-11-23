@@ -1,0 +1,55 @@
+# Offline field-point input example; input-prepared, not physically validated.
+# Numeric basis and synthetic choices: README.md, Input basis.
+version: "1.0"
+analysis_type: diffraction
+
+vessel:
+  name: "UnitBoxFieldPoints"
+  type: "ship"
+  geometry:
+    mesh_file: "unit_box.gdf"
+    mesh_format: gdf
+    symmetry: none
+    reference_point: [0.0, 0.0, 0.0]
+    waterline_z: 0.0
+    length_units: m
+  inertia:
+    mass: 1025.0
+    # Geometric centroid of the unit box; assumes uniform mass distribution.
+    centre_of_gravity: [0.5, 0.5, -0.5]
+    radii_of_gyration: [0.4, 0.4, 0.4]
+
+environment:
+  water_depth: 100.0
+  water_density: 1025.0
+  gravity: 9.81  # Reference GDF header.
+
+frequencies:
+  input_type: frequency
+  values: [0.3, 0.6, 0.9]
+
+wave_headings:
+  values: [0.0, 90.0, 180.0]
+  symmetry: false
+
+solver_options:
+  solve_type: potential_and_source
+  irregular_frequency_method: interior_panels
+  load_rao_method: both
+  precision: double
+
+outputs:
+  formats: [csv]
+  components: [raos, added_mass, damping]
+  detect_field_points_inside_bodies: true
+  field_points:
+    - name: airgap_splash
+      detect_inside_bodies: true
+      points:
+        - [2.0, 0.0, 0.5]
+        - [2.0, 0.0, 1.0]
+        - [-2.0, 0.0, 0.5]
+
+metadata:
+  description: "Synthetic field-point inputs; no airgap or splash results"
+  tags: [example, orcawave, field_points, airgap, "issue-953"]

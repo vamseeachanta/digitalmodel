@@ -1,0 +1,46 @@
+atlas_id: c198e029c428
+basename: orcaflex_library
+physics: linear
+response: max_effective_tension_N
+axes:
+- name: case
+  values:
+  - operating-hs2
+  - storm-hs5
+  - extreme-hs8
+- name: heading_deg
+  scale: linear
+  grid:
+  - 0.0
+  - 45.0
+  - 90.0
+  - 135.0
+  - 180.0
+validation:
+  metric: null
+  max_rel_error: 0.0
+  threshold: null
+  passes: null
+provenance:
+  basename: orcaflex_library
+  kind: library
+  solver:
+    name: OrcaFlex/OrcFxAPI
+    version: STUB
+    licensed: false
+    run_date: STUB
+    note: "synthetic placeholder max line tension \u2014 replace with a licensed OrcaFlex\
+      \ run per case (operator, dev-secondary)."
+  coverage:
+    key_axis: case
+    covered_cases:
+    - operating-hs2
+    - storm-hs5
+    - extreme-hs8
+    continuous_axes:
+      heading_deg:
+        scale: linear
+        min: 0.0
+        max: 180.0
+    note: STUB OrcaFlex max-line-tension library, 3 canonical load cases. Queries
+      outside these cases escalate to a licensed run.

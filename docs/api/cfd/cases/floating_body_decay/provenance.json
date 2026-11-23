@@ -1,0 +1,35 @@
+{
+  "validation_case": "floating_body_decay",
+  "issue": "#1169",
+  "reference": "Archimedes draft + hydrostatic heave period (waterplane stiffness, closed-tank corrected)",
+  "citations": [
+    "$FOAM_TUTORIALS/multiphase/interFoam/RAS/floatingObject (ESI v2312); motion solver switched to sixDoFRigidBodyMotion with heave-only constraints",
+    "Newman (1977), Marine Hydrodynamics \u2014 hydrostatic stiffness and added mass"
+  ],
+  "body": {
+    "dimensions_m": [
+      0.3,
+      0.2,
+      0.5
+    ],
+    "density_kg_m3": 500.0,
+    "mass_kg": 15.0,
+    "waterplane_area_m2": 0.06
+  },
+  "expected": {
+    "draft_m": 0.25045081146062914,
+    "hydrostatic_period_s": 0.9733533166197418,
+    "equilibrium_com_height_m": 0.5331682172270087
+  },
+  "tolerances": {
+    "draft": 0.05,
+    "period_ratio_band": [
+      1.0,
+      1.6
+    ],
+    "added_mass_band": [
+      0.1,
+      1.5
+    ]
+  }
+}

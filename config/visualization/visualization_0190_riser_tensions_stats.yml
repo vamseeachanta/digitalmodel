@@ -1,0 +1,410 @@
+default:
+  log_level: DEBUG
+  config:
+    overwrite:
+      output: True
+  analysis:
+    db:
+      simple: False
+      table_statistics:
+        flag: False
+        statistics: [min, max, count, avg]
+        statistics_df_columns: [RiserId, SchemaName, TableName, ColumnName, ColumnDataType, StatisticsClassId, StartTime, EndTime, TableRows, Minimum, Maximum, Average, RMS, StandardDeviation]
+        schema: XOM
+#        tables: All
+        tables: [BD_TENSIONERS, BD_CALCULATEDDATAROOT, BD_RMSAS_VIVMONITOR, BD_RMSOUTPUT]
+      timeline_statistics:
+        flag: False
+        schema: XOM
+        time_interval_in_hours: 1
+        sets:
+          - table: YT_BOPYELLOWMRU_ACCMRU
+            time: TIMESTAMP
+            columns: [ACCMRU_FWD, ACCMRU_STBD]
+
+    run_example: False
+    statistics: True
+    fft: False
+    filter:
+      low_pass:
+        flag: False
+        frequency_maximum:
+      high_pass:
+        flag: False
+        frequency_minimum:
+      band_pass:
+        flag: False
+        frequency_minimum:
+        frequency_maximum:
+    ifft: True
+
+  units:
+    theta: degrees
+    time: s
+
+  input_data:
+    source: db
+    sets:
+      -
+        label: table_statistics
+        schema: XOM
+        table_name: TableStatistics
+        column_name: NULL
+
+  db:
+    dev:
+        server_type: mssql
+        server: guyanariser.database.windows.net
+        user: GuyanaRiserUser
+        password: M@ry12345
+        database: GuyanaRiser
+
+plot_settings: []
+
+plot_multiple:
+  -
+    file_name_extension: NULL
+    nrows: 4
+    ncols: 1
+    suptitle: Tension At Various Riser Locations
+    sets:
+
+    -
+      title: Top Tension
+      xlabel: Date
+      ylabel: Tension (kips)
+      xticklabels: NULL
+      autofmt:
+        xdate: True
+      grid: True
+      xlim: ["2018-03-01 00:00:00", "2020-01-01 00:00:00"]
+      legend: True
+      legend_location: best
+      data:
+       -
+          df: input_data_table_statistics
+          table_name: BD18_TOPTENSION
+          statistic: Maximum
+          label: [Event Maximum-Before Upgrade]
+          x: [StartTime]
+          y: [TENSION]
+          scale:
+            columns: [TENSION]
+            factors: [0.000224809]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD_TOPTENSION
+          statistic: Maximum
+          label: [Event Maximum-After Upgrade]
+          x: [StartTime]
+          y: [TOPTENSION]
+          scale:
+            columns: [TOPTENSION]
+            factors: [0.000224809]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD18_TOPTENSION
+          statistic: Minimum
+          label: [Event Minimum-Before Upgrade]
+          x: [StartTime]
+          y: [TENSION]
+          scale:
+            columns: [TENSION]
+            factors: [0.000224809]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD_TOPTENSION
+          statistic: Minimum
+          label: [Event Minimum-After Upgrade]
+          x: [StartTime]
+          y: [TOPTENSION]
+          scale:
+            columns: [TOPTENSION]
+            factors: [0.000224809]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD18_TOPTENSION
+          statistic: Average
+          label: [Event Mean-Before Upgrade]
+          x: [StartTime]
+          y: [TENSION]
+          scale:
+            columns: [TENSION]
+            factors: [0.000224809]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD_TOPTENSION
+          statistic: Average
+          label: [Event Mean-After Upgrade]
+          x: [StartTime]
+          y: [TOPTENSION]
+          scale:
+            columns: [TOPTENSION]
+            factors: [0.000224809]
+          plt_kind: line
+          marker: NULL
+
+    -
+      title: LFJ Tension
+      xlabel: Date
+      ylabel: Tension (kips)
+      xticklabels: NULL
+      autofmt:
+        xdate: True
+      ylim: [-2000, 1500]
+      grid: True
+      legend: True
+      legend_location: best
+      data:
+       -
+          df: input_data_table_statistics
+          table_name: BD18_LFJ_TENSION
+          statistic: Maximum
+          label: [Event Maximum-Before Upgrade]
+          x: [StartTime]
+          y: [TENSION]
+          scale:
+            columns: [TENSION]
+            factors: [0.000224809]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD_LFJ_TENSION
+          statistic: Maximum
+          label: [Event Maximum-After Upgrade]
+          x: [StartTime]
+          y: [LFJ_TENSION]
+          scale:
+            columns: [LFJ_TENSION]
+            factors: [0.000224809]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD18_LFJ_TENSION
+          statistic: Minimum
+          label: [Event Minimum-Before Upgrade]
+          x: [StartTime]
+          y: [TENSION]
+          scale:
+            columns: [TENSION]
+            factors: [0.000224809]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD_LFJ_TENSION
+          statistic: Minimum
+          label: [Event Minimum-After Upgrade]
+          x: [StartTime]
+          y: [LFJ_TENSION]
+          scale:
+            columns: [LFJ_TENSION]
+            factors: [0.000224809]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD18_LFJ_TENSION
+          statistic: Average
+          label: [Event Mean-Before Upgrade]
+          x: [StartTime]
+          y: [TENSION]
+          scale:
+            columns: [TENSION]
+            factors: [0.000224809]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD_LFJ_TENSION
+          statistic: Average
+          label: [Event Mean-After Upgrade]
+          x: [StartTime]
+          y: [LFJ_TENSION]
+          scale:
+            columns: [LFJ_TENSION]
+            factors: [0.000224809]
+          plt_kind: line
+          marker: NULL
+
+    -
+      title: LMRP Tension
+      xlabel: Date
+      ylabel: Tension (kips)
+      xticklabels: NULL
+      autofmt:
+        xdate: True
+      ylim: [-2000, 1500]
+      grid: True
+      legend: True
+      legend_location: best
+      data:
+       -
+          df: input_data_table_statistics
+          table_name: BD18_LMRP_CONNECTORTENSION
+          statistic: Maximum
+          label: [Event Maximum]
+          x: [StartTime]
+          y: [TENSION]
+          scale:
+            columns: [TENSION]
+            factors: [0.000224809]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD_LMRP_CONNECTORTENSION
+          statistic: Maximum
+          label: [Event Maximum]
+          x: [StartTime]
+          y: [LMRP_CONNECTORTENSION]
+          scale:
+            columns: [LMRP_CONNECTORTENSION]
+            factors: [0.000224809]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD18_LMRP_CONNECTORTENSION
+          statistic: Minimum
+          label: [Event Minimum]
+          x: [StartTime]
+          y: [TENSION]
+          scale:
+            columns: [TENSION]
+            factors: [0.000224809]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD_LMRP_CONNECTORTENSION
+          statistic: Minimum
+          label: [Event Minimum]
+          x: [StartTime]
+          y: [LMRP_CONNECTORTENSION]
+          scale:
+            columns: [LMRP_CONNECTORTENSION]
+            factors: [0.000224809]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD18_LMRP_CONNECTORTENSION
+          statistic: Average
+          label: [Event Mean]
+          x: [StartTime]
+          y: [TENSION]
+          scale:
+            columns: [TENSION]
+            factors: [0.000224809]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD_LMRP_CONNECTORTENSION
+          statistic: Average
+          label: [Event Mean]
+          x: [StartTime]
+          y: [LMRP_CONNECTORTENSION]
+          scale:
+            columns: [LMRP_CONNECTORTENSION]
+            factors: [0.000224809]
+          plt_kind: line
+          marker: NULL
+
+    -
+      title: BOP Tension
+      xlabel: Date
+      ylabel: Tension (kips)
+      xticklabels: NULL
+      autofmt:
+        xdate: True
+      ylim: [-2000, 1500]
+      grid: True
+      legend: True
+      legend_location: best
+      data:
+       -
+          df: input_data_table_statistics
+          table_name: BD18_BOP_CONNECTORTENSION
+          statistic: Maximum
+          label: [Event Maximum-Before Upgrade]
+          x: [StartTime]
+          y: [TENSION]
+          scale:
+            columns: [TENSION]
+            factors: [0.000224809]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD_BOP_CONNECTORTENSION
+          statistic: Maximum
+          label: [Event Maximum-After Upgrade]
+          x: [StartTime]
+          y: [BOP_CONNECTORTENSION]
+          scale:
+            columns: [BOP_CONNECTORTENSION]
+            factors: [0.000224809]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD18_BOP_CONNECTORTENSION
+          statistic: Minimum
+          label: [Event Minimum-Before Upgrade]
+          x: [StartTime]
+          y: [TENSION]
+          scale:
+            columns: [TENSION]
+            factors: [0.000224809]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD_BOP_CONNECTORTENSION
+          statistic: Minimum
+          label: [Event Minimum-After Upgrade]
+          x: [StartTime]
+          y: [BOP_CONNECTORTENSION]
+          scale:
+            columns: [BOP_CONNECTORTENSION]
+            factors: [0.000224809]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD18_BOP_CONNECTORTENSION
+          statistic: Average
+          label: [Event Mean-Before Upgrade]
+          x: [StartTime]
+          y: [TENSION]
+          scale:
+            columns: [TENSION]
+            factors: [0.000224809]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_table_statistics
+          table_name: BD_BOP_CONNECTORTENSION
+          statistic: Average
+          label: [Event Mean-After Upgrade]
+          x: [StartTime]
+          y: [BOP_CONNECTORTENSION]
+          scale:
+            columns: [BOP_CONNECTORTENSION]
+            factors: [0.000224809]
+          plt_kind: line
+          marker: NULL

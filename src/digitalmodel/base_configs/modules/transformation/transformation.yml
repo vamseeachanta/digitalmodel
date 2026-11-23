@@ -1,0 +1,15 @@
+basename: transformation
+
+type: eigen
+
+inputs: NULL
+
+default:
+  log_level: DEBUG
+  config:
+    overwrite:
+      output: True
+    cfg_sensitivities: False
+
+Analysis:
+  fe_folder: NULL

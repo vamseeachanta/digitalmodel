@@ -1,0 +1,15 @@
+%YAML 1.1
+# Type: Model
+# Program: OrcaFlex 11.6b
+# File: docs/domains/orcaflex/pipeline/installation/floating/24in_pipeline/monolithic/tension/900kN.yml
+# Created: 1/26/2026
+# User: (removed)
+# Machine: (removed)
+---
+BaseFile: ../basefile/vessel_end_winch.yml
+Winches:
+  vessel_winch:
+    StageValue[1]: 900
+    StageValue[2]: 900
+    StageValue[3]: 900
+...

@@ -1,0 +1,10 @@
+basename: mudmat_bearing_capacity
+
+default:
+  log_level: INFO
+  config:
+    generate_plots: false
+    overwrite:
+      output: true
+
+mudmat_bearing_capacity: {}

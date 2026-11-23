@@ -1,0 +1,106 @@
+# General Configuration
+# Generated from: F02 Passive compensation.yml
+# Date: 2026-01-18 22:18:17
+General:
+  UnitsSystem: SI
+  JacobianBufferingPolicy: 1
+  JacobianPerturbationFactor: 0
+  BuoysIncludedInStatics: Individually specified
+  LineStaticsStep1Policy: All lines included
+  LineStaticsStep2Policy: Solve coupled systems
+  WholeSystemStaticsEnabled: Yes
+  DynamicsSolutionMethod: Implicit time domain
+  ImplicitUseVariableTimeStep: No
+  ImplicitConstantTimeStep: 0.1
+  LogPrecision: Single
+  TargetLogSampleInterval: 0.1
+  LogStartTime: ~
+  StartTime: ~
+  FirstStage: ~
+  RampStartTime: ~
+  RampFinishTime: ~
+  TimeHistoryImportFrom: ~
+  TimeHistoryImportTo: ~
+  StageDuration:
+  - 10
+  - 100
+  RestartStateRecordingPeriodicCount: 0
+  RestartStateRecordingTest: ~
+  DefaultViewMode: Wire frame
+  DefaultViewSize: 130.6711409395973
+  DefaultViewCentre:
+  - 49.95525727069351
+  - 0
+  - -40.54457006441152
+  DefaultViewAzimuth: 270
+  DefaultViewElevation: 0
+ClumpTypes:
+- Name: Upper Wt
+  Mass: 0.8
+  Volume: 0.24
+  Height: 0.8
+  AlignWith: Line axes
+  DragArea:
+  - 0.08
+  - ~
+  - 0.05
+  Cd:
+  - 1.1
+  - ~
+  - 1.1
+  Ca:
+  - 1
+  - ~
+  - 1
+- Name: Lower Wt
+  Mass: 0.2
+  Volume: 0.06
+  Height: 0.2
+  AlignWith: Line axes
+  DragArea:
+  - 0.02
+  - ~
+  - 0.05
+  Cd:
+  - 1.1
+  - ~
+  - 1.1
+  Ca:
+  - 1
+  - ~
+  - 1
+Groups:
+  Structure:
+    DSV: Model
+    No heave compensation: Model
+    Crane wire: No heave compensation
+    Payload: No heave compensation
+    Bridle 1: Payload
+    Bridle 2: Payload
+    Bridle 3: Payload
+    Bridle 4: Payload
+    Template: Payload
+    Linear damping: Model
+    Crane wire linear: Linear damping
+    Upper PHC props linear: Linear damping
+    PHC device linear: Linear damping
+    Lower PHC props linear: Linear damping
+    Passive linear payload: Linear damping
+    Bridle 9: Passive linear payload
+    Bridle 10: Passive linear payload
+    Bridle 11: Passive linear payload
+    Bridle 12: Passive linear payload
+    Template linear: Passive linear payload
+    Nonlinear damping: Model
+    Crane wire nonlinear: Nonlinear damping
+    Upper PHC props nonlinear: Nonlinear damping
+    PHC device nonlinear: Nonlinear damping
+    Lower PHC props nonlinear: Nonlinear damping
+    Passive nonlinear payload: Nonlinear damping
+    Bridle 5: Passive nonlinear payload
+    Bridle 6: Passive nonlinear payload
+    Bridle 7: Passive nonlinear payload
+    Bridle 8: Passive nonlinear payload
+    Template nonlinear: Passive nonlinear payload
+  State:
+    Collapsed: []

@@ -1,0 +1,13 @@
+(defun C:SLOPE ()
+  	(setq p1 (getpoint "select first point: "))
+  	(setq p2 (getpoint "select second point: "))
+  	(setq Delta_X (- (car p1) (car p2)))
+  	(setq Delta_Y (- (cadr p1)(cadr p2)))
+  	(setq slope (/ (* (abs Delta_Y) 100) (abs Delta_X)))
+	(princ "\nSlope= ")
+	(princ slope)
+	(princ "%")
+	(princ)
+)
+
+(princ "\n")

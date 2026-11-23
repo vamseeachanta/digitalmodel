@@ -1,0 +1,184 @@
+# Parametric atlas drift gate (#833, epic #794)
+#
+# Fails the build when a COMPUTED parametric atlas is stale relative to its
+# build basis — i.e. a workflow's source, a cited standard, the input template,
+# or the parametric spec changed but the committed atlas under atlases/ was not
+# regenerated. This makes the refresh staleness mechanism enforced rather than
+# advisory: a change that should invalidate an atlas can no longer merge silently.
+#
+# Licensed-solver libraries (#801) are reported but do NOT fail the build — CI
+# cannot run a licensed solve; that drift is an operator concern.
+name: Parametric atlas drift
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, edited, ready_for_review]
+    # The atlas fingerprint covers the registry spec, the workflow input, the
+    # listed source files and the standards table, all under these paths. Pushes
+    # to main and develop stay unfiltered, so a missed path still shows on main.
+    paths:
+      - 'src/**'
+      - 'atlases/**'
+      - 'docs/registry/**'
+      - 'docs/plans/parametric-refresh/**'
+      - 'examples/workflows/**'
+      - 'config/**'
+      - 'tests/parametric/**'
+      - 'tests/conftest.py'
+      - 'pytest.ini'
+      - 'pyproject.toml'
+      - 'uv.lock'
+      - '.github/workflows/parametric-atlas-drift.yml'
+  push:
+    branches: [main, develop]
+
+concurrency:
+  # A title or description edit gets a group of its own, so its no-op run cancels nothing.
+  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || format('run-{0}', github.run_id) }}${{ (github.event.action == 'edited' && !github.event.changes.base) && format('-metadata-edit-{0}', github.run_id) || '' }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+jobs:
+  atlas-drift:
+    name: "${{ (github.event.action == 'edited' && !github.event.changes.base) && 'Not run for a metadata edit - Atlas staleness check' || 'Atlas staleness check' }}"
+    # Draft pull requests wait: the gates start when the pull request is marked ready.
+    # A title or description edit ("edited" without a base change) runs no job. The job then
+    # takes another name, so its skipped check does not stand in for an earlier result.
+    if: ${{ (github.event_name != 'pull_request' || !github.event.pull_request.draft) && !(github.event.action == 'edited' && !github.event.changes.base) }}
+    # Pull requests run on a GitHub-hosted runner (the repository is public, so the minutes are free);
+    # pushes and schedules stay on our own runners. Setting the repository variable
+    # DM_PR_RUNNER to self-hosted routes same-repository pull requests back to them.
+    runs-on: ${{ (github.event_name != 'pull_request' || (github.event.pull_request.head.repo.full_name == github.repository && vars.DM_PR_RUNNER == 'self-hosted')) && fromJSON('["self-hosted","Linux"]') || 'ubuntu-latest' }}
+    steps:
+      - &atlas-checkout
+        name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.event.pull_request.head.repo.full_name || github.repository }}
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+
+      - &atlas-build-merge
+        name: Build and guard local pull request merge
+        id: build_merge
+        if: github.event_name == 'pull_request'
+        shell: bash
+        env:
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+          BASE_REPOSITORY_URL: ${{ github.event.pull_request.base.repo.clone_url }}
+          HEAD_REPOSITORY_URL: ${{ github.event.pull_request.head.repo.clone_url }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          EVENT_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          set -euo pipefail
+          git config gc.auto 0
+          git config maintenance.auto false
+          if [ "$(git rev-parse HEAD)" != "$PR_HEAD_SHA" ]; then
+            echo "::error::Checkout does not match the pull request head"
+            exit 1
+          fi
+          base_ref="refs/remotes/base/${BASE_REF}"
+          if [ "$(git rev-parse --is-shallow-repository)" = true ]; then
+            git fetch --no-tags --depth=50 "$BASE_REPOSITORY_URL" "+refs/heads/${BASE_REF}:${base_ref}"
+          else
+            git fetch --no-tags "$BASE_REPOSITORY_URL" "+refs/heads/${BASE_REF}:${base_ref}"
+          fi
+          tip=$(git rev-parse "$base_ref")
+          for depth in 50 100 200; do
+            if git merge-base "$tip" "$PR_HEAD_SHA" >/dev/null; then
+              break
+            fi
+            if [ "$(git rev-parse --is-shallow-repository)" != true ]; then
+              break
+            fi
+            git fetch --no-tags --deepen="$depth" "$HEAD_REPOSITORY_URL" "$PR_HEAD_SHA"
+            git fetch --no-tags --deepen="$depth" "$BASE_REPOSITORY_URL" "$tip"
+          done
+          if ! git merge-base "$tip" "$PR_HEAD_SHA" >/dev/null; then
+            if [ "$(git rev-parse --is-shallow-repository)" = true ]; then
+              git fetch --no-tags --unshallow "$HEAD_REPOSITORY_URL" "$PR_HEAD_SHA"
+            fi
+            if [ "$(git rev-parse --is-shallow-repository)" = true ]; then
+              git fetch --no-tags --unshallow "$BASE_REPOSITORY_URL" "$tip"
+            fi
+          fi
+          if ! git merge-base "$tip" "$PR_HEAD_SHA" >/dev/null; then
+            echo "::error::No merge base between the current base tip and pull request head"
+            exit 1
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout --detach "$tip"
+          if ! git merge --no-ff --no-edit "$PR_HEAD_SHA"; then
+            echo "::error::Cannot merge the pull request head into the current base tip"
+            git merge --abort
+            exit 1
+          fi
+          tested=$(git rev-parse HEAD)
+          parent_text=$(git cat-file -p HEAD | sed -n '1,/^$/s/^parent //p' | tr '\n' ' ')
+          read -r -a parents <<< "$parent_text"
+          if [ "${#parents[@]}" -ne 2 ] || [ "${parents[0]:-missing}" != "$tip" ] || \
+             [ "${parents[1]:-missing}" != "$PR_HEAD_SHA" ]; then
+            echo "::error::Local merge must have exactly the current tip and pull request head as parents"
+            exit 1
+          fi
+          tree=$(git rev-parse 'HEAD^{tree}')
+          printf 'tested=%s first_parent=%s second_parent=%s tip=%s event_base=%s tree=%s\n' \
+            "$tested" "${parents[0]}" "${parents[1]}" "$tip" "$EVENT_BASE_SHA" "$tree"
+          printf 'tip=%s\n' "$tip" >> "$GITHUB_OUTPUT"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install uv
+        run: |
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+
+      - name: Create virtual environment and install
+        run: |
+          uv venv
+          echo "$PWD/.venv/bin" >> $GITHUB_PATH
+          UV_NO_SOURCES=true uv pip install -e .
+          uv pip install pyyaml
+
+      - name: Atlas drift check (computed atlases must be up to date)
+        run: python -m digitalmodel.parametric.refresh
+
+  parametric-tests:
+    name: "${{ (github.event.action == 'edited' && !github.event.changes.base) && 'Not run for a metadata edit - Parametric package tests' || 'Parametric package tests' }}"
+    # A title or description edit ("edited" without a base change) runs no job. The job then
+    # takes another name, so its skipped check does not stand in for an earlier result.
+    if: ${{ !(github.event.action == 'edited' && !github.event.changes.base) }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code with full history
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.event.pull_request.head.repo.full_name || github.repository }}
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+      - *atlas-build-merge
+      - name: Retain canonical default-branch history
+        shell: bash
+        env:
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+          DEFAULT_REPOSITORY_URL: ${{ github.event.repository.clone_url }}
+        run: |
+          set -euo pipefail
+          git config gc.auto 0
+          git config maintenance.auto false
+          git fetch --no-tags "$DEFAULT_REPOSITORY_URL" \
+            "+refs/heads/${DEFAULT_BRANCH}:refs/remotes/origin/${DEFAULT_BRANCH}"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - uses: astral-sh/setup-uv@v5
+      - name: Test parametric package
+        run: >-
+          uv run --no-sources --with-editable '.[test]'
+          python -m pytest tests/parametric/ -q -rA -p no:cacheprovider
+          --basetemp="$RUNNER_TEMP/parametric-tests"

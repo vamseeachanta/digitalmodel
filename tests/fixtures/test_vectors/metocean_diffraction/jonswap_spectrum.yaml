@@ -1,0 +1,95 @@
+source_type: python
+source_description: "JONSWAP spectrum tests from test_wave_spectra.py and test_wave_spectra_extended.py — DNV-RP-C205 Section 3.5.2"
+extracted_date: "2026-03-16"
+legal_scan_passed: true
+category: "metocean_diffraction"
+subcategory: "jonswap_spectrum"
+equations:
+  - name: "JONSWAP Spectrum"
+    latex: "S(\\omega) = \\alpha \\cdot g^2 / \\omega^5 \\cdot \\exp[-1.25(\\omega_p/\\omega)^4] \\cdot \\gamma^{\\exp[-(\\omega-\\omega_p)^2/(2\\sigma^2\\omega_p^2)]}"
+    description: "JONSWAP wave energy spectral density as a function of angular frequency"
+  - name: "Spectral Alpha Parameter"
+    latex: "\\alpha = \\frac{5}{16} \\cdot H_s^2 \\cdot \\omega_p^4 / g^2"
+    description: "Scale parameter linking significant wave height to spectral energy"
+  - name: "Significant Height from Spectrum"
+    latex: "H_s = 4 \\sqrt{m_0}"
+    description: "Recovers significant wave height from zeroth spectral moment"
+  - name: "Zeroth Moment Theoretical"
+    latex: "m_0 = H_s^2 / 16"
+    description: "Theoretical zeroth moment from significant wave height"
+inputs:
+  - name: "Significant wave height"
+    symbol: "Hs"
+    unit: "m"
+    test_value: 4.0
+  - name: "Peak period"
+    symbol: "Tp"
+    unit: "s"
+    test_value: 10.0
+  - name: "Peak enhancement factor"
+    symbol: "gamma"
+    unit: "dimensionless"
+    test_value: 3.3
+  - name: "Gravitational acceleration"
+    symbol: "g"
+    unit: "m/s^2"
+    test_value: 9.81
+outputs:
+  - name: "Peak angular frequency"
+    symbol: "omega_p"
+    unit: "rad/s"
+    test_expected: 0.6283185307
+    tolerance: 0.001
+  - name: "Zeroth moment (theoretical)"
+    symbol: "m0"
+    unit: "m^2"
+    test_expected: 1.0
+    tolerance: 0.02
+  - name: "Recovered Hs from m0"
+    symbol: "Hs_recovered"
+    unit: "m"
+    test_expected: 4.0
+    tolerance: 0.08
+worked_examples:
+  - description: "Standard JONSWAP Hs=4m Tp=10s gamma=3.3 — m0 recovers Hs^2/16"
+    inputs:
+      hs: 4.0
+      tp: 10.0
+      gamma: 3.3
+    outputs:
+      m0_theoretical: 1.0
+      hs_recovered: 4.0
+      omega_p: 0.6283185307
+    use_as_test: true
+  - description: "JONSWAP energy scaling — tripling Hs gives 9x energy"
+    inputs:
+      hs_1: 1.0
+      hs_3: 3.0
+      tp: 10.0
+    outputs:
+      energy_ratio: 9.0
+    use_as_test: true
+  - description: "JONSWAP North Sea conditions Hs=6m Tp=12s gamma=3.3 — peak frequency check"
+    inputs:
+      hs: 6.0
+      tp: 12.0
+      gamma: 3.3
+    outputs:
+      omega_p: 0.5235987756
+    use_as_test: true
+  - description: "Gravity constant stored in WaveSpectra"
+    inputs:
+      constructor: "WaveSpectra()"
+    outputs:
+      g: 9.81
+    use_as_test: true
+assumptions:
+  - "Spectrum frequency range defaults to 0.02-2.0 rad/s with 100 points"
+  - "Sigma spectral width parameter is 0.07 below peak, 0.09 above peak"
+  - "Numerical integration tolerance for m0 vs Hs^2/16 is within 2%"
+  - "Alpha parameter computed per DNV-RP-C205: alpha = (5/16) * Hs^2 * omega_p^4 / g^2"
+references:
+  - "DNV-RP-C205 Environmental Conditions and Environmental Loads, Section 3.5.2"
+  - "Hasselmann et al. (1973) — JONSWAP project"
+  - "digitalmodel/tests/marine_ops/marine_engineering/test_wave_spectra.py"
+  - "digitalmodel/tests/unit/hydrodynamics/test_wave_spectra_extended.py"

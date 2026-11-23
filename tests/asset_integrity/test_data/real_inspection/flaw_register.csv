@@ -1,0 +1,4 @@
+joint_id,weld,flaw_length_mm,flaw_depth_mm,flaw_type,zones
+J29,A,23,2.0,ext,"A, E"
+J08,A,17,1.9,emb,"A, E"
+J04,B,16,2.3,int,"B,C, D"

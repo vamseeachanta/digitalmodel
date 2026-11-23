@@ -1,0 +1,46 @@
+{
+  "test_date": "2025-08-24T20:23:44.345883",
+  "test_files": 2,
+  "baseline": {
+    "test_type": "baseline",
+    "num_threads": 30,
+    "num_files": 2,
+    "duration": 20.07919144630432,
+    "initial_memory_gb": 0.052690944,
+    "final_memory_gb": 0.053100544,
+    "memory_used_gb": 0.0004095999999999961,
+    "initial_cpu": 2.6,
+    "final_cpu": 3.2,
+    "successful": 2,
+    "failed": 0,
+    "parallel_speedup": 1.566063912356782,
+    "average_time_per_file": 10.03959572315216
+  },
+  "optimized": {
+    "test_type": "optimized",
+    "num_threads": 15,
+    "num_files": 2,
+    "duration": 17.080735445022583,
+    "initial_memory_gb": 0.05310464,
+    "final_memory_gb": 0.05373952,
+    "memory_used_gb": 0.0006348799999999974,
+    "initial_cpu": 4.8,
+    "final_cpu": 3.2,
+    "successful": 2,
+    "failed": 0,
+    "parallel_speedup": 1.67151040865257,
+    "average_time_per_file": 8.540367722511292,
+    "dynamic_threads_used": true
+  },
+  "comparison": {
+    "runtime_improvement": 14.933151114676082,
+    "memory_improvement": -55.000000000000846,
+    "speedup_ratio": 1.1755460712410661,
+    "baseline_duration": 20.07919144630432,
+    "optimized_duration": 17.080735445022583,
+    "baseline_memory": 0.0004095999999999961,
+    "optimized_memory": 0.0006348799999999974,
+    "baseline_threads": 30,
+    "optimized_threads": 15
+  }
+}

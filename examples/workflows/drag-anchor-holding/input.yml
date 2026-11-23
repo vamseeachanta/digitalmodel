@@ -1,0 +1,25 @@
+basename: geotechnical
+
+default:
+  log_level: INFO
+  config:
+    generate_plots: false
+    overwrite:
+      output: true
+
+geotechnical:
+  calculation: drag_anchor
+  drag_anchor:
+    case:
+      id: registry_drag_anchor_holding
+      description: DNV-RP-E302 / API RP 2SK empirical drag-anchor holding capacity in soft clay
+    anchor:
+      anchor_type: stevpris
+      soil_type: soft_clay
+      weight_kn: 120.0
+    design:
+      factor_of_safety: 1.5
+      required_holding_kn: 2000.0
+    outputs:
+      directory: results/drag_anchor_holding
+      summary_json: drag_anchor_holding_summary.json

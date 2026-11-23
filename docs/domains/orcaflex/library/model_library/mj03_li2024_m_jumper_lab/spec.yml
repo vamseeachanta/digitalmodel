@@ -1,0 +1,236 @@
+# M-shaped rigid jumper — lab-scale combined internal/external flow case
+# (Li et al. 2024)
+#
+# Provenance (see docs/domains/orcaflex/subsea/jumper/m_shaped/LITERATURE_GEOMETRY_SURVEY.md
+# Case 3, and digitalmodel issue #722):
+#   - Li, Li, Lin, Han, Zhou (Dalian Maritime Univ.), "Dynamic Response
+#     Analysis of a Subsea Rigid M-Shaped Jumper under Combined Internal and
+#     External Flows", J. Mar. Sci. Eng. 12(8):1261, 2024 (open access):
+#     https://www.mdpi.com/2077-1312/12/8/1261
+#
+# Geometry resolved from paper Figure 1 + Table 1 (2026-06-12 figure review):
+#   - 8 bends, 3 horizontal + 4 vertical segments, left-right symmetric,
+#     vertical overhang clamped to equipment at both ends
+#   - L1 = 800 mm: inlet/outlet vertical legs (segments 1 and 7)
+#   - L2 = 800 mm: top horizontals (segments 2 and 6)
+#   - L3 = 1000 mm: inner verticals (segments 3 and 5), dipping 200 mm
+#     below flange level
+#   - L4 = 2000 mm: bottom span (segment 4)
+#   - bend radius 1.5d = 72 mm; bends 1/8 are the inlet/outlet flange bends
+#   - "Total length 3744 mm" in Table 1 is the overall X-envelope
+#     (800 + 2000 + 800 + 2*72 = 3744), NOT centerline arc length.
+#   Centerline arc length = 6.192 m straights + 8 x (pi/2 x 0.072) arcs
+#   = 7.0968 m.
+#
+# Validation targets (computed, FEA): 13 modes < 100 Hz; f1 = 8.520 Hz
+# (out-of-plane), f2 = 13.825 Hz (in-plane), f3 = 17.473 Hz, f4 = 20.628 Hz.
+# External current 0.50 / 1.00 m/s normal to plane; internal air-water
+# stratified flow 0.02-0.90 m/s.
+#
+# Modeling assumptions (NOT from source — flagged per #722):
+#   A1: numerical/lab case has no site; 5 m water depth assumed, flanges z=-4
+#   A2: line ends placed at the bend-1/bend-8 corner points; flange stub
+#       offsets (72 mm) folded into the end arcs
+#   A3: end orientations horizontal (inlet flow enters +X per Figure 1);
+#       outlet orientation mirrored — flange facing not fully legible in figure
+#   A4: drag/added-mass coefficients not published (paper uses CFD pressure
+#       mapping); Cd=1.2 / Ca=1.0 assumed
+#   A5: contents density 0 placeholder (air-water mix varies per case);
+#       structural damping 1.2% (published Rayleigh a=1.160, b=4.368e-5)
+#       to be applied at analysis level on licensed runs
+# Derived (not verbatim): mass_per_length, EA, EI, GJ from published OD/ID,
+# rho=7850 kg/m3, E=2.1e11 Pa, nu=0.3.
+
+metadata:
+  name: mj03_li2024_m_jumper_lab
+  description: Lab-scale M-jumper combined internal/external flow case (Li et al. 2024, JMSE 12:1261)
+  structure: jumper
+  operation: generic
+  project: model_library
+
+environment:
+  water:
+    depth: 5.0         # A1: assumed (lab/numerical case)
+    density: 1.025
+  seabed:
+    slope: 0
+    stiffness:
+      normal: 100
+      shear: 100
+  waves:
+    type: airy
+    height: 0.0
+    period: 8
+    direction: 0
+  current:
+    direction: 90      # published external flow is normal to jumper plane (+Y)
+  wind:
+    speed: 0
+    direction: 0
+
+generic:
+  line_types:
+    - name: mj03_jumper_pipe_steel
+      category: General
+      outer_diameter: 0.060           # m (published)
+      inner_diameter: 0.048           # m (published; WT 6 mm)
+      mass_per_length: 0.0079904      # te/m — derived: A=1.01788e-3 m2 x 7.85 te/m3
+      bending_stiffness:              # EI — derived: E=2.1e11 Pa x I=3.75625e-7 m4
+        - 78.88
+        - ~
+      axial_stiffness: 213754.0       # kN — derived: E x A
+      properties:
+        BulkModulus: Infinity
+        CompressionIsLimited: false
+        PoissonRatio: 0.3             # published
+        ExpansionTable: None
+        GJ: 60.68                     # kN.m2 — derived: G=E/2(1+nu) x J=2I
+        TensionTorqueCoupling: 0
+        ClashStiffness: 0
+        Ca:                           # A4: assumed
+          - 1.0
+          - ~
+          - 0
+        Cd:                           # A4: assumed
+          - 1.2
+          - ~
+          - 0.008
+        Cl: 0
+        SeabedLateralFrictionCoefficient: 0.5
+        SeabedAxialFrictionCoefficient: ~
+        RayleighDampingCoefficients: (no damping)
+
+  lines:
+    - name: mj03_m_jumper
+      line_type_refs:
+        - mj03_jumper_pipe_steel
+      properties:
+        IncludeTorsion: false
+        TopEnd: End A
+        LengthAndEndOrientations: Explicit
+        Representation: Finite element
+        DragFormulation: Standard
+        StaticsVIV: None
+        DynamicsVIV: None
+        WaveCalculationMethod: Specified by environment
+        # Clamped at both flanges (vertical overhang, no other support).
+        # End A at bend-1 corner (origin); End B at bend-8 corner, 3.6 m
+        # along X. A3: end no-moment directions horizontal along +/-X.
+        ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth,
+          ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+        : - - Fixed
+            - 0.0
+            - 0.0
+            - -4.0
+            - 0
+            - 90         # inlet flange faces -X, flow enters along +X
+            - 0
+            - ~
+            - ~
+          - - Fixed
+            - 3.6
+            - 0.0
+            - -4.0
+            - 180
+            - 90         # A3: outlet mirrored
+            - 0
+            - ~
+            - ~
+        ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+          - - Infinity
+            - ~
+          - - Infinity
+            - ~
+        # Section chain from Figure 1: 8 x 90-deg arcs (pi/2 x 0.072 =
+        # 0.11310 m) alternating with corner-cut straights. Sum = 7.0968 m.
+        LineType, Length, TargetSegmentLength:
+          - - mj03_jumper_pipe_steel    # bend 1 (inlet flange bend)
+            - 0.11310
+            - 0.025
+          - - mj03_jumper_pipe_steel    # segment 1: inlet vertical (L1=800)
+            - 0.656
+            - 0.05
+          - - mj03_jumper_pipe_steel    # bend 2
+            - 0.11310
+            - 0.025
+          - - mj03_jumper_pipe_steel    # segment 2: top horizontal (L2=800)
+            - 0.656
+            - 0.05
+          - - mj03_jumper_pipe_steel    # bend 3
+            - 0.11310
+            - 0.025
+          - - mj03_jumper_pipe_steel    # segment 3: inner vertical down (L3=1000)
+            - 0.856
+            - 0.05
+          - - mj03_jumper_pipe_steel    # bend 4
+            - 0.11310
+            - 0.025
+          - - mj03_jumper_pipe_steel    # segment 4: bottom span (L4=2000)
+            - 1.856
+            - 0.05
+          - - mj03_jumper_pipe_steel    # bend 5
+            - 0.11310
+            - 0.025
+          - - mj03_jumper_pipe_steel    # segment 5: inner vertical up (L3=1000)
+            - 0.856
+            - 0.05
+          - - mj03_jumper_pipe_steel    # bend 6
+            - 0.11310
+            - 0.025
+          - - mj03_jumper_pipe_steel    # segment 6: top horizontal (L2=800)
+            - 0.656
+            - 0.05
+          - - mj03_jumper_pipe_steel    # bend 7
+            - 0.11310
+            - 0.025
+          - - mj03_jumper_pipe_steel    # segment 7: outlet vertical (L1=800)
+            - 0.656
+            - 0.05
+          - - mj03_jumper_pipe_steel    # bend 8 (outlet flange bend)
+            - 0.11310
+            - 0.025
+        ContentsMethod: Uniform
+        IncludeAxialContentsInertia: true
+        ContentsDensity: 0.0            # A5: air-water mix, set per load case
+        ContentsTemperature: ~
+        ContentsPressureRefZ: ~
+        ContentsPressure: 0
+        ContentsFlowRate: 0
+        IncludedInStatics: true
+        StaticsStep1: Spline
+        StaticsStep2: Full statics
+        StaticsSeabedFrictionPolicy: None
+        AsLaidTension: 0
+        SplineOrder: 3
+        # Corner coordinates: flanges z=-4, shoulders z=-3.2, dip z=-4.2.
+        SplineControlPointX, SplineControlPointY, SplineControlPointZ:
+          - - 0.0
+            - 0.0
+            - -4.0
+          - - 0.0
+            - 0.0
+            - -3.2
+          - - 0.8
+            - 0.0
+            - -3.2
+          - - 0.8
+            - 0.0
+            - -4.2
+          - - 2.8
+            - 0.0
+            - -4.2
+          - - 2.8
+            - 0.0
+            - -3.2
+          - - 3.6
+            - 0.0
+            - -3.2
+          - - 3.6
+            - 0.0
+            - -4.0
+
+simulation:
+  time_step: 0.001
+  stages:
+    - 5.0
+    - 30.0

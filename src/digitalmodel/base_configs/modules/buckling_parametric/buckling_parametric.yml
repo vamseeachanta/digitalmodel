@@ -1,0 +1,10 @@
+# Packaged base config for the `buckling_parametric` engine basename (workspace-hub#3285).
+# Minimal skeleton -- omitting a `buckling_parametric.sweep` falls back to the
+# DEFAULT_SHIP_PLATE_SWEEP (972 cases); the durable fixture supplies a small sweep.
+basename: buckling_parametric
+
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: true

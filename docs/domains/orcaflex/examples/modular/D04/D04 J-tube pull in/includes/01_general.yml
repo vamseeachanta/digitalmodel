@@ -1,0 +1,115 @@
+# General Configuration
+# Generated from: D04 J-tube pull in.yml
+# Date: 2026-01-18 22:18:09
+General:
+  UnitsSystem: SI
+  JacobianBufferingPolicy: 1
+  JacobianPerturbationFactor: 0
+  BuoysIncludedInStatics: Individually specified
+  LineStaticsStep1Policy: All lines included
+  LineStaticsStep2Policy: Parent lines excluded
+  WholeSystemStaticsEnabled: Yes
+  StaticsMinDamping: 5
+  StaticsMaxDamping: 50
+  DynamicsSolutionMethod: Implicit time domain
+  ImplicitUseVariableTimeStep: No
+  ImplicitConstantTimeStep: 0.01
+  LogPrecision: Single
+  TargetLogSampleInterval: 0.1
+  LogStartTime: ~
+  StartTime: ~
+  FirstStage: ~
+  RampStartTime: ~
+  RampFinishTime: ~
+  TimeHistoryImportFrom: ~
+  TimeHistoryImportTo: ~
+  StageDuration:
+  - 8
+  - 275
+  RestartStateRecordingPeriodicCount: 0
+  RestartStateRecordingTest: ~
+  DefaultViewMode: Wire frame
+  DefaultViewSize: 147.65734336943012
+  DefaultViewCentre:
+  - -15.956038595784484
+  - 9.76638345395742e-06
+  - -62.92441874552763
+  DefaultViewAzimuth: 270
+  DefaultViewElevation: 0
+SupportTypes:
+- Name: Support Type1
+  Geometry: Flat
+  NormalStiffness: 2000
+  ShearStiffness: 100
+  Diameter: 0.2
+  FlatSupportLength: 2
+  WireFrameDrawEnds: $000001
+LineContactData:
+  PenetratorData:
+  - PenetratorLocationsDataSetName: Clamp Locations
+    ? Penetratorx, Penetratory, Penetratorz, PenetratorzRelativeTo, PenetratorContactDiameter, PenetratorContactArea, PenetratorContactLength
+    : - - 6.6
+        - 0
+        - 10
+        - End A
+        - 1.9
+        - 1.9
+        - ~
+      - - 6.6
+        - 0
+        - 30
+        - End A
+        - 1.9
+        - 1.9
+        - ~
+      - - 6.6
+        - 0
+        - 50
+        - End A
+        - 1.9
+        - 1.9
+        - ~
+  Relationships:
+  - Name: Relationship1
+    Enabled: Yes
+    PenetratingLine: Riser
+    PenetratingLineIs: Inside
+    SplinedLine: J Tube
+    PenetratorLocations: (each node)
+    PenetratorCount: 1
+    ContainmentEnabled: Yes
+    NormalStiffness: 5000
+    ShearStiffness: 100
+    LateralFrictionCoefficient: 0
+    AxialFrictionCoefficient: 0.2
+  - Name: Relationship2
+    Enabled: Yes
+    PenetratingLine: Tower
+    PenetratingLineIs: Around
+    SplinedLine: J Tube
+    PenetratorLocations: Clamp Locations
+    PenetratorCount: 1
+    ContainmentEnabled: No
+    NormalStiffness: 10e3
+    ShearStiffness: 100
+    LateralFrictionCoefficient: 0
+    AxialFrictionCoefficient: ~
+Groups:
+  Structure:
+    Vessel Set: Model
+    Vessel1: Vessel Set
+    Moonpool Shielding: Vessel Set
+    Vessel Boundaries: Vessel Set
+    Deck: Vessel Boundaries
+    ChutePortSide: Vessel Boundaries
+    ChuteStbSide: Vessel Boundaries
+    Chute: Vessel Boundaries
+    J tube Set: Model
+    J Tube: J tube Set
+    Tower: J tube Set
+    Bell mouth: J tube Set
+    Bell mouth guide: J tube Set
+    Riser: Model
+  State:
+    Collapsed:
+    - Variable data

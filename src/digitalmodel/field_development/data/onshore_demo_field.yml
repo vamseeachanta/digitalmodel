@@ -1,0 +1,83 @@
+# ABOUTME: Demo onshore field for the field-development tracer (#1508, epic #1507).
+# ABOUTME: ALL layout/fluid/output constants live here — nothing hardcoded in code.
+#
+# Synthetic demo field. Coordinates are a local Cartesian grid in metres
+# (easting/northing from an arbitrary field datum). The terrain is a small
+# deterministic synthetic elevation grid standing in for a real DEM; USGS 3DEP
+# ingestion is worldenergydata#930's deliverable, not this tracer's.
+
+field:
+  name: Demo Onshore Field
+  coordinate_note: local Cartesian metres from field datum (synthetic demo)
+
+terrain:
+  kind: synthetic          # synthetic | csv_grid
+  x_min_m: 0.0
+  x_max_m: 3000.0
+  y_min_m: 0.0
+  y_max_m: 3000.0
+  nx: 61
+  ny: 61
+  base_elevation_m: 350.0
+  amplitude_m: 40.0
+  x_wavelength_m: 2400.0
+  y_wavelength_m: 1800.0
+
+host:
+  id: CPF-1
+  name: Central processing facility
+  x_m: 1500.0
+  y_m: 1500.0
+
+wells:
+  - id: W-1
+    name: Demo well 1
+    x_m: 400.0
+    y_m: 2600.0
+    rate_m3_per_day: 280.0   # gross liquid rate (demo value)
+  - id: W-2
+    name: Demo well 2
+    x_m: 2600.0
+    y_m: 2400.0
+    rate_m3_per_day: 320.0
+  - id: W-3
+    name: Demo well 3
+    x_m: 2200.0
+    y_m: 500.0
+    rate_m3_per_day: 260.0
+
+flowlines:
+  - id: FL-1
+    from_well: W-1
+    to: CPF-1
+    inner_diameter_m: 0.1524   # 6-inch nominal bore (demo)
+    roughness_m: 4.5e-05       # commercial steel absolute roughness (Moody chart)
+  - id: FL-2
+    from_well: W-2
+    to: CPF-1
+    inner_diameter_m: 0.1524
+    roughness_m: 4.5e-05
+  - id: FL-3
+    from_well: W-3
+    to: CPF-1
+    inner_diameter_m: 0.1016   # 4-inch nominal bore (demo)
+    roughness_m: 4.5e-05
+
+fluid:
+  name: stabilised crude (demo properties)
+  density_kg_per_m3: 850.0
+  viscosity_pa_s: 0.005        # 5 cP
+
+routing:
+  sample_spacing_m: 25.0       # terrain sampling step along each flowline
+
+screening:
+  max_velocity_m_per_s: 4.0    # simple velocity screen threshold
+
+plot:
+  output_path: outputs/field_development/onshore_demo_layout.png
+  format: png
+  dpi: 150
+
+scene_export:
+  output_path: outputs/field_development/onshore_demo_scene.json

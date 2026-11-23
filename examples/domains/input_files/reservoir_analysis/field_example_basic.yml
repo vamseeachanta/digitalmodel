@@ -1,0 +1,166 @@
+# Basic Reservoir Analysis Example
+# Simplified configuration for single well petrophysical analysis
+
+basename: reservoir_analysis
+
+default:
+  log_level: INFO
+  units:
+    depth: "ft"
+    porosity: "fraction"
+    permeability: "mD"
+    saturation: "fraction"
+    pressure: "psi"
+    temperature: "degF"
+  config:
+    overwrite:
+      output: true
+    generate_plots: true
+
+project:
+  field_name: "Example Oil Field"
+  basin: "Permian Basin"
+  play_type: "Unconventional Shale"
+
+coordinates:
+  projection: "UTM Zone 13N"
+  field_center:
+    x: 500000.0
+    y: 3500000.0
+
+wells:
+  - well_name: "EXAMPLE-001H"
+    well_type: "development"
+    spud_date: "2023-01-15"
+
+    coordinates:
+      surface:
+        x: 500100.0
+        y: 3500200.0
+        elevation: 3200.0
+      bottom_hole:
+        x: 502500.0
+        y: 3500200.0
+        tvd: 8500.0
+        md: 12000.0
+
+    log_curves:
+      - name: "GR"
+        description: "Gamma Ray"
+        units: "API"
+        null_value: -999.25
+
+      - name: "RHOB"
+        description: "Bulk Density"
+        units: "g/cm3"
+        null_value: -999.25
+
+      - name: "NPHI"
+        description: "Neutron Porosity"
+        units: "fraction"
+        null_value: -999.25
+
+      - name: "RT"
+        description: "Deep Resistivity"
+        units: "ohm-m"
+        null_value: -999.25
+
+stratigraphy:
+  formations:
+    - formation_name: "Wolfcamp A"
+      age: "Permian"
+      lithology: "Organic-rich shale with carbonate stringers"
+      top_marker: "Top_Wolfcamp_A"
+      base_marker: "Base_Wolfcamp_A"
+      average_thickness: 200.0
+      net_to_gross: 0.85
+
+log_analysis:
+  shale_parameters:
+    gamma_ray_shale: 200.0
+    neutron_shale: 0.35
+    density_shale: 2.55
+    resistivity_shale: 15.0
+
+  clean_sand_parameters:
+    gamma_ray_sand: 40.0
+    neutron_sand: 0.08
+    density_matrix: 2.68
+
+  fluid_properties:
+    water_resistivity: 0.10
+    formation_temperature: 220.0
+    oil_density: 0.82
+    water_density: 1.08
+
+  porosity_models:
+    density_porosity:
+      matrix_density: 2.68
+      fluid_density: 1.08
+
+    combined_porosity:
+      gas_correction_factor: 0.6
+
+  saturation_models:
+    archie:
+      tortuosity_factor: 1.0
+      cementation_exponent: 2.0
+      saturation_exponent: 2.0
+
+  lithofacies:
+    cutoffs:
+      net_reservoir:
+        porosity_min: 0.06
+        resistivity_min: 20.0
+        saturation_max: 0.70
+
+reservoir_characterization:
+  permeability_models:
+    - name: "Timur"
+      equation: "K = 8581 * (PHIE^4.4) / (SWI^2)"
+
+production_analysis:
+  fluid_contacts:
+    oil_water_contact: 8450.0
+
+  reservoir_pressure:
+    initial_pressure: 4200.0
+    pressure_gradient: 0.48
+
+  pvt_properties:
+    oil:
+      api_gravity: 40.0
+      gas_oil_ratio: 800.0
+      formation_volume_factor: 1.45
+
+volumetrics:
+  calculation_method: "deterministic"
+  reservoir_parameters:
+    gross_rock_volume: 50000000
+    net_to_gross: 0.85
+    porosity: 0.12
+    water_saturation: 0.45
+
+  recovery_factors:
+    primary_recovery: 0.08
+    secondary_recovery: 0.12
+    enhanced_recovery: 0.15
+
+workflow:
+  steps:
+    - step: "data_loading"
+      description: "Load well logs and basic data"
+    - step: "log_conditioning"
+      description: "Quality control"
+    - step: "petrophysical_analysis"
+      description: "Calculate porosity and saturation"
+    - step: "volumetric_assessment"
+      description: "Calculate reserves"
+
+output:
+  reports:
+    petrophysical_summary: true
+    volumetric_assessment: true
+  plots:
+    log_displays: true
+    histogram_analysis: true

@@ -1,0 +1,62 @@
+{% extends 'GoMFields/index.html' %}
+{% block subitem_page %}
+{% if context %}
+    <br>
+    <h4>Drilling and Completion Summary</h4>
+        <table id="summaryData" class="table">
+            <thead class="thead-light">
+                <tr>
+                    <th scope="col">Description</th>
+                    <th scope="col">Value</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+
+    <br>
+    <h4>Field Wells</h4>
+
+    <br>
+    <h5>Well Location Statistics</h5>
+        <table id="wellLocationStatistics" class="table">
+            <thead class="thead-light">
+                <tr>
+                    <th scope="col">Description</th>
+                    <th scope="col">Value</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+
+    <h4>Well Locations</h4>
+
+    <h5>Producing Well (Relative) Locations and Summary</h5>
+        <div class="chart" id="well_location">
+            <script>
+                var well_location = {{context.plot_data.well_location | safe}};
+                Plotly.newPlot('well_location', well_location.data, well_location.layout);
+            </script>
+        </div>
+        <br>
+    <p>Interpreting the plot:</p>
+        <ul>
+          <li>Hover on bubble for further well information. Bubble size proportional to cummulative production to date. </li>
+        </ul>
+    <br>
+
+<script>
+    var transform = {tag: 'tr',
+        children: [{"tag": "td","html": "${Description}"},{"tag": "td","html": "${Value}"}]
+        };
+    var data = {{context['cfg']['field_summary'][0]['drilling_completion_summary'] | safe}};
+    $('#summaryData > tbody ').json2html(data, transform);
+
+    var transform = {tag: 'tr',
+        children: [{"tag": "td","html": "${Description}"},{"tag": "td","html": "${Value}"}]
+        };
+    var data = {{context['cfg']['field_summary'][0]['wellhead_distances'] | safe}};
+    $('#wellLocationStatistics > tbody ').json2html(data, transform);
+</script>
+
+{% endif %}
+{% endblock %} {# subitem_page #}

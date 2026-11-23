@@ -1,0 +1,15 @@
+# Input Parameters for Parametric Analysis
+# Source: H03 Floating and stowed lines.yml
+# Generated: 2026-01-18 22:18:21
+
+water_depth: 50
+current_speed: 1.67
+wind_speed: 0
+water_density: 1.025
+stage_durations:
+- 9
+- 60
+hs: 13.2
+tp: 12
+wave_direction: 200
+

@@ -1,0 +1,25 @@
+basename: inspection_planning
+
+default:
+  log_level: INFO
+  config:
+    generate_plots: false
+    overwrite:
+      output: true
+
+inspection_planning:
+  equipment:
+    id: registry_inspection_planning
+    description: API 570 piping circuit — remaining life and next-inspection interval from thickness monitoring
+  thickness:
+    current_mm: 8.5         # last measured wall thickness
+    required_mm: 6.0        # minimum required thickness (t_min)
+  corrosion:
+    previous_mm: 11.0       # earlier reading...
+    years_between: 5.0      # ...this many years before the current one
+  design:
+    code_max_interval_years: 10.0       # API 570 maximum interval
+    required_remaining_life_years: 10.0 # service requirement to next turnaround
+  outputs:
+    directory: results/inspection_planning
+    summary_json: inspection_planning_summary.json

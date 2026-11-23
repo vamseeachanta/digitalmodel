@@ -1,0 +1,33 @@
+basename: rigging
+
+# Rigging catalog-resolution screen: resolve each element of a rigging
+# group to its vendor catalog entry (WLL ratings, geometry, weight) and
+# summarise the group. All part numbers below exist in the loaded
+# vendor workbooks (data/slings/*.xlsx, data/crosby/*.xlsx):
+#   - sling 1500            -> MIS-ProductSheets_twinPathSlings.xlsx
+#   - shackle G2100 2038614 -> 204_subsea_shackles_g2100.xlsx
+#   - shackle G2130 1019533 -> 26_shackles_bolt_type_anchor_g2130.xlsx
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: True
+
+rigging:
+  connections: NULL
+  groups:
+    - label: uta1_clump_weight
+      elements:
+        - category: shackle
+          subcategory: G2100
+          part_number: 2038614
+          wll_mt: 25
+        - category: sling
+          subcategory: polyester_endless_round
+          part_number: 1500
+          length: 4
+          wll_mt: 5
+        - category: shackle
+          subcategory: G2130
+          part_number: 1019533
+          wll_mt: 6.5

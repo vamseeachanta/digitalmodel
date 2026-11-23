@@ -1,0 +1,54 @@
+basename: jacket_checks
+
+default:
+  log_level: INFO
+  config:
+    generate_plots: false
+    overwrite:
+      output: true
+
+jacket_checks:
+  members:
+    - id: JKT-LEG-01
+      section:
+        outer_diameter: 24.0
+        wall_thickness: 0.75
+        yield_strength: 36.0
+        elastic_modulus: 29000.0
+        effective_length: 240.0
+      loads:
+        fa: 5.0
+        fb: 5.0
+        Cm: 0.85
+        is_tension: false
+    - id: TSD-BRACE-01
+      section:
+        outer_diameter: 24.0
+        wall_thickness: 0.75
+        yield_strength: 36.0
+        elastic_modulus: 29000.0
+        effective_length: 240.0
+      loads:
+        fa: 10.0
+        fb: 3.0
+        Cm: 0.85
+        is_tension: true
+  joints:
+    - id: JNT-T-01
+      geometry:
+        chord_od: 24.0
+        chord_wt: 1.0
+        brace_angles: [90.0]
+        brace_ods: [12.0]
+        brace_wts: [0.5]
+        gap: 6.0
+      loads:
+        axial_load: 20.0
+        ipb_moment: 0.0
+        opb_moment: 0.0
+      chord_fy: 36.0
+      brace_index: 0
+  output:
+    summary_json: results/jacket_checks_summary.json
+    members_csv: results/jacket_member_unity_checks.csv
+    joints_csv: results/jacket_joint_unity_checks.csv

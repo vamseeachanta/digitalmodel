@@ -1,0 +1,129 @@
+{
+  "engine_metrics": {
+    "total_lines": 180,
+    "code_lines": 160,
+    "empty_lines": 16,
+    "comment_lines": 4,
+    "statements": {
+      "if_statements": 37,
+      "elif_statements": 0,
+      "else_statements": 0,
+      "try_statements": 0,
+      "except_statements": 0,
+      "for_loops": 0,
+      "while_loops": 0,
+      "function_calls": 70,
+      "imports": 30,
+      "assignments": 71
+    },
+    "basename_patterns": 20,
+    "basename_in_patterns": 3,
+    "unique_basenames": 20,
+    "cyclomatic_complexity": 38
+  },
+  "repository_impact": {
+    "engine_percentage_of_repo": 0.13722009245203728,
+    "estimated_current_coverage": 15,
+    "engine_contribution": 0.10977607396162983,
+    "projected_new_coverage": 15.10977607396163,
+    "improvement": 0.10977607396162983
+  },
+  "coverage_estimate": {
+    "covered_scenarios": [
+      "engine function entry",
+      "basename extraction from root config",
+      "basename extraction from meta config",
+      "missing basename error handling",
+      "unsupported basename error handling",
+      "transformation routing",
+      "vertical_riser routing",
+      "orcaflex routing (3 variants)",
+      "aqwa routing",
+      "modal_analysis routing",
+      "fatigue_analysis routing",
+      "pipeline routing",
+      "mooring routing",
+      "cathodic_protection routing",
+      "plate_buckling routing",
+      "viv_analysis routing",
+      "time_series routing",
+      "pipe_capacity routing",
+      "ship_design routing",
+      "copy_and_paste routing",
+      "umbilical_analysis routing",
+      "rao_analysis routing",
+      "orcaflex_file_management routing (2 variants)",
+      "gis routing (alias)",
+      "code_dnvrph103 rectangular",
+      "code_dnvrph103 circular",
+      "installation with flag True",
+      "installation with flag False",
+      "config_flag=False path",
+      "config_flag=True path",
+      "app_manager.save_cfg call",
+      "output control QUIET mode",
+      "output control VERBOSE mode",
+      "ValueError for missing basename",
+      "Exception for unsupported basename",
+      "catenary dynamic import path",
+      "rigging dynamic import path"
+    ],
+    "uncovered_scenarios": [
+      "YAML file input processing",
+      "File path validation and tracking",
+      "FileManagement router calls",
+      "ApplicationManager configuration",
+      "Result folder configuration",
+      "Import error handling",
+      "Complex conditional branches",
+      "Meta basename with nested structure",
+      "Config file path preservation",
+      "Logger integration calls",
+      "Import statements (module level)",
+      "Global variable initialization"
+    ],
+    "estimated_coverage": 75.51020408163265,
+    "covered_count": 37,
+    "uncovered_count": 12,
+    "total_scenarios": 49
+  },
+  "recommendations": [
+    {
+      "priority": "HIGH",
+      "category": "Configuration Processing",
+      "recommendation": "Test YAML file input processing with real file I/O",
+      "implementation": "Create tests with actual temporary YAML files and mock file system operations"
+    },
+    {
+      "priority": "HIGH",
+      "category": "Error Handling",
+      "recommendation": "Test import error scenarios and exception handling",
+      "implementation": "Mock module import failures and test error propagation"
+    },
+    {
+      "priority": "MEDIUM",
+      "category": "Configuration Management",
+      "recommendation": "Test FileManagement and ApplicationManager integration",
+      "implementation": "Mock these dependencies and verify their method calls with various configurations"
+    },
+    {
+      "priority": "MEDIUM",
+      "category": "Dynamic Imports",
+      "recommendation": "Test dynamic import paths for catenary and rigging modules",
+      "implementation": "Mock the dynamic imports and test both success and failure scenarios"
+    },
+    {
+      "priority": "LOW",
+      "category": "Logging Integration",
+      "recommendation": "Test logger integration and output control",
+      "implementation": "Verify logger calls are made correctly with different configurations"
+    },
+    {
+      "priority": "LOW",
+      "category": "Path Handling",
+      "recommendation": "Test file path validation and config directory tracking",
+      "implementation": "Test with various file path scenarios including invalid paths"
+    }
+  ],
+  "timestamp": "1759115406.4029684"
+}

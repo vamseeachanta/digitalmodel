@@ -1,0 +1,88 @@
+{
+  "schema": "review-packet/1",
+  "created": "2026-10-10T04:13:09+00:00",
+  "git_head": "4f7bfc0cb4d9f62d7485fe5b03fb00550b2320eb",
+  "digest_domain": "raw-bytes",
+  "packet_bytes": 187644,
+  "packet_sha256": "449fcad075b7d9c55b89d6067a6e8481e0fa5c7ea8236db2d7b9678731f98b43",
+  "files": [
+    {
+      "path": "scripts/review/results/issue-2181/review-request.md",
+      "sha256": "77bd482e749ef34bc279cbe93d1aacf67c26bfe0185d82d79273a3feba22b4f6",
+      "bytes": 12625
+    },
+    {
+      "path": "src/digitalmodel/asset_integrity/pipeline_defect_screen.py",
+      "sha256": "21860ad884b2b6fbc02b368d09da14cac18447da65bc0483577009c3643bfefd",
+      "bytes": 14461
+    },
+    {
+      "path": "src/digitalmodel/asset_integrity/rstreng_2d.py",
+      "sha256": "79ada328af4155a77f812134c21fd5f524dfbbdcc4eaf3d0b3d0ffd63e2aa1b9",
+      "bytes": 9917
+    },
+    {
+      "path": "src/digitalmodel/asset_integrity/circumferential_defect.py",
+      "sha256": "d1ae4a23f5e6d8605a40292a976ef1523391ed98ef8c103e0febfb7227c7c952",
+      "bytes": 14817
+    },
+    {
+      "path": "src/digitalmodel/asset_integrity/corroded_pipe.py",
+      "sha256": "4c8a45a6a0f05e4a777e705e95ae71e98d2ecb044fce866409b13c700bf371bd",
+      "bytes": 14458
+    },
+    {
+      "path": "src/digitalmodel/asset_integrity/dnv_rp_f101.py",
+      "sha256": "62a2395c8ae229fb6b32f6c3be2b7363e06787749fd4cd4c37b88b312e198693",
+      "bytes": 24978
+    },
+    {
+      "path": "src/digitalmodel/asset_integrity/assessment/ffs_decision.py",
+      "sha256": "d81c744e993a5155eaa1c8bce4945a4a2c13c2ec1c32aeaee671c27a68a64d0b",
+      "bytes": 22285
+    },
+    {
+      "path": "src/digitalmodel/asset_integrity/assessment/ffs_report.py",
+      "sha256": "80418a1ea22f335c10299f0171f66bdc2536e318a947dbd5dad7b0bd891979b8",
+      "bytes": 25541
+    },
+    {
+      "path": "src/digitalmodel/asset_integrity/applicability.py",
+      "sha256": "be4a47ed436f8f3d8072c2112792e75ad61c5c281fae59fc03af244fda9694b6",
+      "bytes": 5654
+    },
+    {
+      "path": "tests/asset_integrity/test_pipeline_defect_screen.py",
+      "sha256": "69f927eac63fd0de68ad1495017008739fbc12f750d3d53d8b10e013aa71c75f",
+      "bytes": 9585
+    },
+    {
+      "path": "examples/workflows/pipeline-corroded-defect-screen/input.yml",
+      "sha256": "4202c4e9992026ce384fc2c42b17f2af1b75073b96ce8f3ba1af551fadd7d211",
+      "bytes": 736
+    },
+    {
+      "path": "examples/workflows/pipeline-corroded-defect-screen/synthetic.yml",
+      "sha256": "a5a1e88f40b8df7f77a017dc37df4f84c81d76bf3775a67e0a5d29b6e4d035ab",
+      "bytes": 776
+    },
+    {
+      "path": "examples/workflows/pipeline-corroded-defect-screen/README.md",
+      "sha256": "fff3b7795ba5ea94a4e7ff726920f621597ad46456c40ccace9b77a9fa44974a",
+      "bytes": 2547
+    },
+    {
+      "path": "src/digitalmodel/base_configs/modules/pipeline_defect_screen/pipeline_defect_screen.yml",
+      "sha256": "0e782258847c59e4db2a88ad7c80ee5072b6f8aa95bc16f1bbc1aad740bc9da2",
+      "bytes": 182
+    }
+  ],
+  "packet_transport": "stdin",
+  "shared_files_sha256": {
+    "src/digitalmodel/engine.py": "e731df37d5a183333184eba9c60b890bd8cee30736f92bd1de549b6dd25e54e1",
+    "docs/registry/workflows.yaml": "6395a2f87c1ee0c234920f593e5c292ab70e00d8a4ecaad8e72de269c6a05a76",
+    "tests/workflows/test_durable_workflows.py": "b2cd66a9d9392c5a6ecfda413196597b6c0c2a333828b227515b4ff97e37d3c8",
+    "src/digitalmodel/asset_integrity/data/ffs_offering_catalog.yml": "9fd8e6a252a8ce46f370f1ded62306af5b23baa38ef66aa60e6137f08129661e",
+    "docs/capability-map/capabilities-added.yml": "69d9fe530575ba2c6f3d27bb50695be133273652554aa8a2ab3ce500e58a0f63"
+  }
+}

@@ -1,0 +1,1 @@
+SYNTHETIC placeholder: not a GHS geometry definition.

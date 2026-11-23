@@ -1,0 +1,10 @@
+basename: lifting_lug
+
+default:
+  log_level: INFO
+  config:
+    generate_plots: false
+    overwrite:
+      output: true
+
+lifting_lug: {}

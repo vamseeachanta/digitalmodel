@@ -1,0 +1,26 @@
+{
+  "result": {
+    "kind": "in_memory",
+    "value": {
+      "assessment_type": "LML",
+      "code_reference": "API 579-1/ASME FFS-1 (2021)",
+      "component_id": "LINE-001",
+      "fca_in": 0.0,
+      "folias_factor": 1.5812689937754407,
+      "level_reached": 1,
+      "passes": true,
+      "remaining_life_yr": 25.945512820512818,
+      "rerated_pressure_psi": 1000.0,
+      "rsf": 1.0,
+      "rsf_a": 0.9,
+      "sufficiency_status": "TAKE_MORE",
+      "t_measured_avg_in": 0.4894444444444444,
+      "t_measured_min_in": 0.3,
+      "t_min_in": 0.1702724358974359,
+      "t_nominal_in": 0.5,
+      "verdict": "ACCEPT"
+    }
+  },
+  "result_hash": "6e4cd62678aedf127b27f7f561560609b702814c3b8a5a78747adb8e783da1cf",
+  "standard_revisions": []
+}

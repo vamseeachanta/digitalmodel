@@ -1,0 +1,30 @@
+basename: parametric_run
+
+parametric_run:
+  # Offline legacy-derived design matrix from:
+  # /mnt/remote/ace-linux-1/ace/aceengineercode/data_manager/data/risers/drilling/
+  # app_vertical_riser_<DEPTH>ft_WT<WT>_<PCF>pcf_stack_up_properties.csv.
+  # submerged_weight_kn is sum(wet_weight_per_unit_length * stack_length) from
+  # each legacy stack-up CSV. WT is retained in case_id only because the
+  # current riser_stackup workflow accepts OD, not wall thickness; legacy
+  # StressOD confirms the riser OD is 0.5334 m.
+  # design_pressure_mpa = mud_weight_pcf * water_depth_ft * 47.88025898 / 1e6,
+  # treating pcf as lbf/ft^3 and depth as hydrostatic head in ft.
+  base_input: examples/workflows/riser-stackup/input.yml
+  target_basename: riser_stackup
+  variants:
+    source: csv
+    file: examples/workflows/riser-stackup-parametric/design_matrix.csv
+    mapping:
+      submerged_weight_kn: riser_stackup.submerged_weight_kn
+      od_mm: riser_stackup.od_mm
+      design_pressure_mpa: riser_stackup.design_pressure_mpa
+      smys_mpa: riser_stackup.smys_mpa
+  render:
+    output_dir: examples/workflows/riser-stackup-parametric/results
+    output_pattern: case_{index}
+  run:
+    engine: python
+    mode: serial
+  collect:
+    manifest: examples/workflows/riser-stackup-parametric/results/cases.csv

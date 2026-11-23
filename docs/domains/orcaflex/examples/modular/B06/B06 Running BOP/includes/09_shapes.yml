@@ -1,0 +1,237 @@
+# Shapes Configuration
+# Generated from: B06 Running BOP.yml
+# Date: 2026-01-18 22:18:02
+Shapes:
+- Name: Template Base 1
+  ShapeType: Drawing
+  Shape: Block
+  Connection: Anchored
+  Origin:
+  - -4
+  - -4
+  - 0
+  Size:
+  - 8
+  - 8
+  - 0.2
+  Orientation:
+  - 0
+  - 0
+  - 0
+  OutsidePen:
+  - 1
+  - Solid
+  - Blue
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: Guide Cone 1
+  ShapeType: Elastic solid
+  Shape: Curved plate
+  Connection: BOP
+  Origin:
+  - 2.5
+  - 2.5
+  - 0
+  Orientation:
+  - 0
+  - 180
+  - 0
+  IncludedAngleOfRevolution: 360
+  IsHollow: Yes
+  Thickness: 0.05
+  ProfileDistanceAlongAxis, ProfileDiameter:
+  - - 0
+    - 0.36
+  - - 0.5
+    - 1
+  NormalStiffness: 100
+  ShearStiffness: 100
+  OutsidePen:
+  - 1
+  - Solid
+  - Yellow
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: Guide Cone 2
+  ShapeType: Elastic solid
+  Shape: Curved plate
+  Connection: BOP
+  Origin:
+  - -2.5
+  - 2.5
+  - 0
+  Orientation:
+  - 0
+  - 180
+  - 0
+  IncludedAngleOfRevolution: 360
+  IsHollow: Yes
+  Thickness: 0.05
+  ProfileDistanceAlongAxis, ProfileDiameter:
+  - - 0
+    - 0.36
+  - - 0.5
+    - 1
+  NormalStiffness: 100
+  ShearStiffness: 100
+  OutsidePen:
+  - 1
+  - Solid
+  - Yellow
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: Guide Cone 3
+  ShapeType: Elastic solid
+  Shape: Curved plate
+  Connection: BOP
+  Origin:
+  - -2.5
+  - -2.5
+  - 0
+  Orientation:
+  - 0
+  - 180
+  - 0
+  IncludedAngleOfRevolution: 360
+  IsHollow: Yes
+  Thickness: 0.05
+  ProfileDistanceAlongAxis, ProfileDiameter:
+  - - 0
+    - 0.36
+  - - 0.5
+    - 1
+  NormalStiffness: 100
+  ShearStiffness: 100
+  OutsidePen:
+  - 1
+  - Solid
+  - Yellow
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: Guide Cone 4
+  ShapeType: Elastic solid
+  Shape: Curved plate
+  Connection: BOP
+  Origin:
+  - 2.5
+  - -2.5
+  - 0
+  Orientation:
+  - 0
+  - 180
+  - 0
+  IncludedAngleOfRevolution: 360
+  IsHollow: Yes
+  Thickness: 0.05
+  ProfileDistanceAlongAxis, ProfileDiameter:
+  - - 0
+    - 0.36
+  - - 0.5
+    - 1
+  NormalStiffness: 100
+  ShearStiffness: 100
+  OutsidePen:
+  - 1
+  - Solid
+  - Yellow
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: Guide Support 2
+  ShapeType: Drawing
+  Shape: Block
+  Connection: BOP
+  Origin:
+  - -1.13137084989848
+  - 0.989949493661167
+  - 0
+  Size:
+  - 0.2
+  - 1.8
+  - 0.6
+  Orientation:
+  - 0
+  - 0
+  - 45
+  OutsidePen:
+  - 1
+  - Solid
+  - Yellow
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: Guide Support 3
+  ShapeType: Drawing
+  Shape: Block
+  Connection: BOP
+  Origin:
+  - -0.989949493661167
+  - -1.13137084989848
+  - 0
+  Size:
+  - 0.2
+  - 1.8
+  - 0.6
+  Orientation:
+  - 0
+  - 0
+  - 135
+  OutsidePen:
+  - 1
+  - Solid
+  - Yellow
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: Guide Support 4
+  ShapeType: Drawing
+  Shape: Block
+  Connection: BOP
+  Origin:
+  - 1.13137084989848
+  - -0.989949493661167
+  - 0
+  Size:
+  - 0.2
+  - 1.8
+  - 0.6
+  Orientation:
+  - 0
+  - 0
+  - -135
+  OutsidePen:
+  - 1
+  - Solid
+  - Yellow
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: Guide Support 1
+  ShapeType: Drawing
+  Shape: Block
+  Connection: BOP
+  Origin:
+  - 0.989949493661167
+  - 1.13137084989848
+  - 0
+  Size:
+  - 0.2
+  - 1.8
+  - 0.6
+  Orientation:
+  - 0
+  - 0
+  - -45
+  OutsidePen:
+  - 1
+  - Solid
+  - Yellow
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: Template Base 2
+  ShapeType: Elastic solid
+  Shape: Cylinder
+  Connection: Anchored
+  Origin:
+  - 0
+  - 0
+  - 0.2
+  Azimuth: 0
+  Declination: 0
+  Length: 0.5
+  OuterDiameter: 4.5
+  InnerDiameter: 0
+  NormalStiffness: 5000
+  ShearStiffness: 100
+  OutsidePen:
+  - 1
+  - Solid
+  - Blue
+  ShadedDrawingCullingMode: Anticlockwise

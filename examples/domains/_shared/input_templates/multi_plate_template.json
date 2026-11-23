@@ -1,0 +1,53 @@
+{
+  "multi_plate_analysis": {
+    "description": "Multi-plate analysis template",
+    "plates": [
+      {
+        "plate_id": "Deck_Panel_1",
+        "description": "Main deck panel",
+        "properties": {
+          "length": 3.0,
+          "breadth": 0.8,
+          "thickness": 0.012,
+          "youngs_modulus": 210000000000.0,
+          "poisson_ratio": 0.3,
+          "yield_strength": 355000000.0,
+          "water_depth": 0.0,
+          "length_unit": "m",
+          "stress_unit": "Pa"
+        },
+        "loads": {
+          "longitudinal_stress": 60000000.0,
+          "transverse_stress": 40000000.0,
+          "shear_stress": 25000000.0
+        },
+        "constants": {
+          "material_factor": 1.15
+        }
+      },
+      {
+        "plate_id": "Bottom_Panel_1",
+        "description": "Bottom panel under pressure",
+        "properties": {
+          "length": 2.5,
+          "breadth": 0.7,
+          "thickness": 0.015,
+          "youngs_modulus": 210000000000.0,
+          "poisson_ratio": 0.3,
+          "yield_strength": 275000000.0,
+          "water_depth": 50.0,
+          "length_unit": "m",
+          "stress_unit": "Pa"
+        },
+        "loads": {
+          "longitudinal_stress": 45000000.0,
+          "transverse_stress": 80000000.0,
+          "shear_stress": 15000000.0
+        },
+        "constants": {
+          "material_factor": 1.15
+        }
+      }
+    ]
+  }
+}

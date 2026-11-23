@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Diffraction Domain — Pillar (a) Session Review · 2026-05-28</title>
+<style>
+  :root{
+    --bg:#0f1419; --panel:#1a2129; --panel2:#222c37; --ink:#e6edf3; --muted:#9aa7b4;
+    --line:#2d3742; --accent:#4ea1ff; --good:#3fb950; --warn:#d29922; --bad:#f85149;
+    --done:#2ea043; --review:#bf8700; --approved:#1f6feb; --backlog:#6e7681; --merged:#8957e5;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
+  .wrap{max-width:1080px;margin:0 auto;padding:32px 24px 80px;}
+  header.hero{border:1px solid var(--line);border-radius:14px;
+    background:linear-gradient(160deg,#1a2129,#141a20);padding:26px 28px;margin-bottom:26px;}
+  .hero h1{margin:0 0 6px;font-size:25px;letter-spacing:.2px}
+  .hero .sub{color:var(--muted);font-size:14px}
+  .hero .meta{margin-top:14px;display:flex;flex-wrap:wrap;gap:8px}
+  h2{font-size:18px;margin:34px 0 12px;padding-bottom:7px;border-bottom:1px solid var(--line)}
+  h3{font-size:15px;margin:22px 0 8px;color:var(--accent)}
+  p{color:var(--ink)} .muted{color:var(--muted)}
+  table{width:100%;border-collapse:collapse;margin:10px 0 6px;font-size:13.5px}
+  th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--muted);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.4px}
+  tr:hover td{background:#1d2530}
+  code{background:#0d1117;border:1px solid var(--line);border-radius:5px;padding:1px 5px;font-size:12.5px;color:#9fd2ff}
+  .pill{display:inline-block;padding:2px 9px;border-radius:20px;font-size:11.5px;font-weight:600;white-space:nowrap}
+  .p-done{background:rgba(46,160,67,.16);color:#56d364;border:1px solid rgba(46,160,67,.4)}
+  .p-merged{background:rgba(137,87,229,.16);color:#b083f0;border:1px solid rgba(137,87,229,.4)}
+  .p-review{background:rgba(191,135,0,.16);color:#e3b341;border:1px solid rgba(191,135,0,.4)}
+  .p-approved{background:rgba(31,111,235,.16);color:#6cb0ff;border:1px solid rgba(31,111,235,.4)}
+  .p-backlog{background:rgba(110,118,129,.18);color:#b1bac4;border:1px solid rgba(110,118,129,.4)}
+  .p-lic{background:rgba(248,81,73,.13);color:#ff7b72;border:1px solid rgba(248,81,73,.35)}
+  .p-dev{background:rgba(63,185,80,.10);color:#7ee787;border:1px solid rgba(63,185,80,.3)}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:14px 0}
+  .card{border:1px solid var(--line);border-radius:10px;background:var(--panel);padding:14px 16px}
+  .card .n{font-size:26px;font-weight:700}
+  .card .l{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-top:2px}
+  .flow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:10px 0;font-size:13px}
+  .flow .step{border:1px solid var(--line);background:var(--panel2);border-radius:8px;padding:6px 11px}
+  .flow .arr{color:var(--muted)}
+  ul.tight{margin:6px 0;padding-left:20px} ul.tight li{margin:3px 0}
+  .kanban{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:12px 0}
+  .col{border:1px solid var(--line);border-radius:10px;background:var(--panel);overflow:hidden}
+  .col h4{margin:0;padding:9px 12px;font-size:12.5px;text-transform:uppercase;letter-spacing:.4px;
+    background:var(--panel2);border-bottom:1px solid var(--line)}
+  .col .body{padding:8px 10px} .ticket{font-size:12.5px;padding:5px 0;border-bottom:1px dashed var(--line)}
+  .ticket:last-child{border-bottom:0} .ticket b{color:var(--accent)}
+  a{color:var(--accent);text-decoration:none} a:hover{text-decoration:underline}
+  .legend{display:flex;flex-wrap:wrap;gap:14px;margin:8px 0 2px;font-size:12px;color:var(--muted)}
+  footer{margin-top:40px;padding-top:16px;border-top:1px solid var(--line);color:var(--muted);font-size:12px}
+  @media(max-width:760px){.kanban{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="hero">
+  <h1>Output-Driven Diffraction Domain — Pillar (a) Session Review</h1>
+  <div class="sub">Epic <a href="https://github.com/vamseeachanta/digitalmodel/issues/622">#622</a> · OrcaWave pilot → AQWA · <code>digitalmodel</code></div>
+  <div class="meta">
+    <span class="pill p-backlog">2026-05-29</span>
+    <span class="pill p-dev">machine: dev-primary (no license)</span>
+    <span class="pill p-review">phase: pillar (a) — planned &amp; decided, build pending go-ahead</span>
+  </div>
+</header>
+
+<p>This session acted as <b>orchestrator</b> for pillar (a) — the headline
+<em>"define an outcome + barebones data → sanity-checked result with every assumption flagged"</em>
+capability. Below: what was done, the adversarial-reviewed plan + locked decisions, the epic kanban,
+and the remaining work. <span class="muted">Refreshed 2026-05-29 after closing #611 + #625 and the
+fresh-session handoff.</span></p>
+
+<div class="grid">
+  <div class="card"><div class="n">4</div><div class="l">PRs merged (prior phases)</div></div>
+  <div class="card"><div class="n">2</div><div class="l">issues closed this session (#611,#625)</div></div>
+  <div class="card"><div class="n">11</div><div class="l">adversarial findings folded in</div></div>
+  <div class="card"><div class="n">3</div><div class="l">decisions locked</div></div>
+</div>
+
+<h2>1 · Work done this session</h2>
+<table>
+  <tr><th>Step</th><th>Detail</th><th>Evidence</th></tr>
+  <tr><td><b>Oriented</b></td><td>Read epic #622 + handoff, studied the live <code>DiffractionSpec</code> schema, estimators, reference-data interfaces (HullLookup, RAODatabase), <code>RunResult</code>, report seam.</td><td>—</td></tr>
+  <tr><td><b>Found arch doc off-main</b></td><td><code>DIFFRACTION_DOMAIN_ARCHITECTURE.html</code> is not on <code>main</code>; read it from commit <code>6d01048c</code> (branch <code>docs/orcawave-domain-architecture-and-scorecard</code>). §4 prescribes the <code>AssumptionRecord</code> shape exactly.</td><td>noted for future sessions</td></tr>
+  <tr><td><b>Drafted the plan</b></td><td>Resolver (#623) + AssumptionLedger (#624) as one coordinated change, grounded in verified schema facts.</td><td><a href="https://github.com/vamseeachanta/digitalmodel/issues/623">#623 comment</a></td></tr>
+  <tr><td><b>Adversarial review</b></td><td>Codex attacked the draft: <b>3 CRITICAL + 6 MAJOR + 2 MINOR</b>. All folded in before the plan reached the user.</td><td>see §3</td></tr>
+  <tr><td><b>Posted for approval</b></td><td>Plan on #623, pointer on #624. No code, no self-approval, no <code>status:*</code> edits.</td><td><a href="https://github.com/vamseeachanta/digitalmodel/issues/624">#624</a></td></tr>
+  <tr><td><b>Decisions locked</b></td><td>Interactive: single PR · CLI included · 3 outcomes. Recorded on the issue.</td><td><a href="https://github.com/vamseeachanta/digitalmodel/issues/623#issuecomment-4569258843">decision comment</a></td></tr>
+  <tr><td><b>Confirmed #631 merged</b></td><td>The #610 licensed E2E test merged (commit <code>7bc923d7</code>) since the handoff — clears the last "awaiting review" item.</td><td><a href="https://github.com/vamseeachanta/digitalmodel/pull/631">PR #631</a></td></tr>
+  <tr><td><b>Closed #611</b></td><td>Verified contract delivered (<b>111 tests pass</b>); completeness 90% (xlsx-production deferred per D2). Comment posted before close.</td><td><span class="pill p-done">closed 90%</span></td></tr>
+  <tr><td><b>Closed #625</b></td><td>Auto-validation on both backends + batch + CLI + report (<b>75 tests pass</b>); completeness 100%.</td><td><span class="pill p-done">closed 100%</span></td></tr>
+  <tr><td><b>#610 kept open</b></td><td>Test merged but acceptance #1/#4 need a <code>licensed-win-1</code> run (cannot run on dev-primary) — left OPEN with a verification-debt status comment, not force-closed.</td><td><span class="pill p-lic">awaiting licensed run</span></td></tr>
+  <tr><td><b>Fresh handoff posted</b></td><td>GitHub-anchored "🔁 Session handoff" on the epic so a fresh session can start the pillar-(a) build with no chat history.</td><td><a href="https://github.com/vamseeachanta/digitalmodel/issues/622">#622 handoff</a></td></tr>
+</table>
+
+<h2>2 · The pillar-(a) plan (approved-pending)</h2>
+<p class="muted">Contract: <code>resolve(outcome, inputs) → (DiffractionSpec, AssumptionLedger)</code> — outcome-first, gaps filled in priority order, every assumed value recorded &amp; surfaced. No silent assumptions.</p>
+<div class="flow">
+  <span class="step">outcome + barebones data</span><span class="arr">→</span>
+  <span class="step">DATABASE_LOOKUP <span class="muted">(threshold-gated)</span></span><span class="arr">→</span>
+  <span class="step">ESTIMATED_FROM_DATA</span><span class="arr">→</span>
+  <span class="step">ASSUMED_DEFAULT</span><span class="arr">→</span>
+  <span class="step">validated DiffractionSpec + ledger</span>
+</div>
+<table>
+  <tr><th>Layer</th><th>What ships</th></tr>
+  <tr><td><b>1. <code>assumption_ledger.py</code></b></td><td><code>AssumptionRecord</code> {field, value, source, basis, reference, confidence, impact}; ledger holds <b>only non-user-supplied</b> records → fully-detailed run yields a literally empty ledger.</td></tr>
+  <tr><td><b>2. <code>resolver.py</code></b></td><td><code>resolve()</code> + pluggable <code>OUTCOME_REQUIREMENTS</code> table; lookup gated by similarity thresholds; mesh→dimensions (units/symmetry/draft-aware, fail-closed); estimators promoted with back-compat wrappers; solver-agnostic.</td></tr>
+  <tr><td><b>3. Threading + report + CLI</b></td><td>ledger field on <b>both</b> OrcaWave &amp; AQWA result carriers; mandatory report Assumptions section (sorted by impact, confidence); <code>diffraction resolve</code> CLI subcommand.</td></tr>
+</table>
+
+<h3>Locked decisions</h3>
+<table>
+  <tr><th>#</th><th>Decision</th><th>Choice</th></tr>
+  <tr><td>1</td><td>PR shape</td><td><b>Single PR</b> — closes #623 + #624</td></tr>
+  <tr><td>2</td><td>CLI surface</td><td><b>Include <code>diffraction resolve</code> now</b></td></tr>
+  <tr><td>3</td><td>Starter outcomes</td><td><b>SHIP_RAOS + ADDED_MASS_DAMPING + QTF</b></td></tr>
+</table>
+<p class="muted">Honors locked epic decisions: <b>D1</b> AQWA in-scope (dual-backend) · <b>D2</b> path-fields stay <code>None</code> · <b>D3</b> verdict vocabulary untouched (ledger uses confidence, not verdict).</p>
+
+<h2>3 · Adversarial review — findings folded in</h2>
+<table>
+  <tr><th>Sev</th><th>Finding</th><th>Fix in the plan</th></tr>
+  <tr><td><span class="pill p-bad" style="background:rgba(248,81,73,.16);color:#ff7b72;border:1px solid rgba(248,81,73,.4)">CRIT</span></td><td>HullLookup is nearest-neighbour — never returns "no match", so every input would become a DATABASE_LOOKUP (fall-through tiers = dead code).</td><td>Similarity-score thresholds gate the DB tier; below-threshold falls through to estimate/default. Low-similarity test added.</td></tr>
+  <tr><td><span class="pill p-bad" style="background:rgba(248,81,73,.16);color:#ff7b72;border:1px solid rgba(248,81,73,.4)">CRIT</span></td><td>Ledger threaded only onto OrcaWave <code>RunResult</code> — AQWA has its own carrier (violates D1).</td><td>Thread both carriers; dual-backend ledger-travel test.</td></tr>
+  <tr><td><span class="pill p-bad" style="background:rgba(248,81,73,.16);color:#ff7b72;border:1px solid rgba(248,81,73,.4)">CRIT</span></td><td>Mesh→dimensions under-specified (units, half-mesh symmetry, draft ≠ z-extent).</td><td>Units/symmetry/waterline-aware; fail-closed if indeterminate; edge-case tests.</td></tr>
+  <tr><td><span class="pill p-review">MAJOR×6</span></td><td>"empty ledger for full spec" ambiguity · vessel inertia mode (free_floating vs explicit) · estimator back-compat · HullLookup-vs-RAODatabase conflation · vague #525 guard · conversion-only solver-agnostic test.</td><td>Ledger=assumed-only · default free_floating + explicit tested · keep estimator signatures as wrappers · source-specific resolvers (RAO db forbidden from solver-input fields) · deterministic field-manifest guard · dual-backend runner tests.</td></tr>
+  <tr><td><span class="pill p-backlog">MINOR×2</span></td><td>Sort key missed "impact" · entry point reachability.</td><td>Added <code>impact</code> rank · export <code>resolve</code> + CLI subcommand.</td></tr>
+</table>
+
+<h2>4 · Epic #622 kanban</h2>
+<div class="legend">
+  <span><span class="pill p-merged">merged/done</span> code landed</span>
+  <span><span class="pill p-approved">plan-approved</span> ready to build</span>
+  <span><span class="pill p-review">plan-review</span> awaiting plan sign-off</span>
+  <span><span class="pill p-backlog">backlog</span> not yet planned</span>
+  <span><span class="pill p-lic">lic</span> needs Windows license</span>
+  <span><span class="pill p-dev">dev</span> dev-primary buildable</span>
+</div>
+<div class="kanban">
+  <div class="col"><h4>Done / closed</h4><div class="body">
+    <div class="ticket"><b>#611</b> RunResult contract <span class="pill p-done">closed 90%</span></div>
+    <div class="ticket"><b>#625</b> auto-wire OutputValidator <span class="pill p-done">closed 100%</span></div>
+    <div class="ticket"><b>#629</b> baseline test fix <span class="pill p-merged">merged</span></div>
+    <div class="ticket"><b>#631</b> licensed E2E test <span class="pill p-merged">merged</span></div>
+    <div class="ticket"><b>#525</b> remove silent defaults <span class="pill p-done">closed</span></div>
+    <div class="ticket"><b>#468</b> smoke L01 <span class="pill p-done">closed</span></div>
+  </div></div>
+  <div class="col"><h4>Ready to build</h4><div class="body">
+    <div class="ticket"><b>#623</b> inverse resolver <span class="pill p-approved">plan posted</span> <span class="pill p-dev">dev</span></div>
+    <div class="ticket"><b>#624</b> AssumptionLedger <span class="pill p-approved">plan posted</span> <span class="pill p-dev">dev</span></div>
+    <div class="ticket"><b>#500</b> mesh pre-flight <span class="pill p-lic">lic</span></div>
+    <div class="ticket"><b>#501</b> QTF config expand <span class="pill p-lic">lic</span></div>
+    <div class="ticket"><b>#282</b> reporting standardize <span class="pill p-lic">lic</span> priority:high</div>
+  </div></div>
+  <div class="col"><h4>In plan-review</h4><div class="body">
+    <div class="ticket"><b>#605</b> self-contained pkgs <span class="pill p-dev">dev</span></div>
+    <div class="ticket"><b>#606</b> integrate MeshPipeline <span class="pill p-dev">dev</span></div>
+    <div class="ticket"><b>#607</b> given-mesh CLI <span class="pill p-dev">dev</span></div>
+    <div class="ticket"><b>#608</b> mesh quality gates <span class="pill p-dev">dev</span></div>
+    <div class="ticket"><b>#609</b> aux mesh handling <span class="pill p-dev">dev</span></div>
+    <div class="ticket"><b>#614</b> docs spec-to-run <span class="pill p-dev">dev</span></div>
+    <div class="ticket"><b>#612</b> batch mesh convergence</div>
+  </div></div>
+  <div class="col"><h4>Awaiting host / your action</h4><div class="body">
+    <div class="ticket"><b>#610</b> licensed E2E — test merged; assertions fire only on <span class="pill p-lic">licensed-win-1</span>. Closes on a green run there (also discharges #628 live-attrs debt).</div>
+    <div class="ticket muted">#611 / #625 — ✅ closed this session (completeness comments posted).</div>
+  </div></div>
+</div>
+
+<h2>5 · Remaining work — by pillar</h2>
+<table>
+  <tr><th>Pillar</th><th>Open issues</th><th>State</th><th>Where it runs</th></tr>
+  <tr><td><b>(a)</b> resolve + assume</td><td>#623, #624</td><td><span class="pill p-approved">planned, build pending approval</span></td><td><span class="pill p-dev">dev-primary</span></td></tr>
+  <tr><td><b>(b)</b> input prep</td><td>#605, #606, #607, #608, #609, #614 <span class="muted">(+#500, #501)</span></td><td><span class="pill p-review">plan-review</span> — 6 need plan sign-off; #500/#501 ready</td><td>mostly <span class="pill p-dev">dev-primary</span>; #500/#501 <span class="pill p-lic">lic</span></td></tr>
+  <tr><td><b>(c)</b> sanity-check</td><td>#612 <span class="muted">(#625/#611 merged)</span></td><td><span class="pill p-review">plan-review</span></td><td><span class="pill p-dev">dev-primary</span></td></tr>
+  <tr><td>reporting</td><td>#282</td><td><span class="pill p-approved">dispatch:ready</span> priority:high</td><td><span class="pill p-lic">licensed-win-1</span></td></tr>
+</table>
+
+<h2>6 · Recommended next steps</h2>
+<table>
+  <tr><th>#</th><th>Action</th><th>Owner</th></tr>
+  <tr><td>1</td><td>Approve the pillar-(a) plan → I dispatch the build to Codex (one agent, branch off <code>origin/main</code>), review every diff, adversarial code-review, bring PR for your merge gate.</td><td>you → me</td></tr>
+  <tr><td>2</td><td><s>Close #611 and #625</s> — ✅ done this session (90% / 100%). Remaining: close <b>#610</b> once <code>licensed-win-1</code> runs the merged test (also discharges the #628 live-attrs debt).</td><td>you (merge/close gate)</td></tr>
+  <tr><td>3</td><td>After (a) lands: the 6 dev-primary pillar-(b) issues (#605–#609, #614) are the next buildable cluster — they need plans drafted &amp; reviewed first.</td><td>me (next planning round)</td></tr>
+  <tr><td>4</td><td>License-gated work (#500, #501, #282) is pre-planned but waits on the Windows host — sequence when <code>licensed-win-1</code> is available.</td><td>scheduling</td></tr>
+</table>
+
+<footer>
+  Generated 2026-05-28, refreshed 2026-05-29 · digitalmodel · epic #622 pillar (a) · review artifact (uncommitted).
+  Status reflects GitHub issue state (incl. #611/#625 closed) + merged-PR state at refresh time.
+</footer>
+
+</div>
+</body>
+</html>

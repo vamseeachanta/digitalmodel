@@ -1,0 +1,7 @@
+Groups:
+  Structure:
+    Generic pipe: Model
+    Generic lay hull: Model
+    Tensioner: Model
+  State:
+    Collapsed: []

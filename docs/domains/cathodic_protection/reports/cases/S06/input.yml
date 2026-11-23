@@ -1,0 +1,43 @@
+basename: cathodic_protection
+inputs:
+  calculation_type: DNV_RP_F103
+  design_data:
+    design_life: 30
+  environment: {}
+  pipeline:
+    outer_diameter_m: 0.3239
+    wall_thickness_m: 0.0159
+    length_m: 1500.0
+    burial_condition: non_buried
+    internal_fluid_temperature_C: 60.0
+    coating_type: FBE
+    resistivity_ohm_m: 2.0e-07
+  anode:
+    material: aluminium
+    utilization_factor: 0.8
+    individual_anode_mass_kg: 25.0
+    length_m: 0.2
+    thickness_m: 0.04
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: true
+    cfg_sensitivities: false
+report:
+  document:
+    approved_by: Pending
+    checked_by: Pending
+    client: Internal module review - no client issuance
+    date: '2026-10-03'
+    number: R2281-CP-006-00
+    prepared_by: Automated regression report
+    project: Digitalmodel CP regression portfolio
+    revision: '00'
+    revision_history:
+    - approved: Pending
+      checked: Pending
+      date: '2026-10-03'
+      description: Internal review draft
+      rev: '00'
+    title: 'CP module review: Bracelet pipeline'

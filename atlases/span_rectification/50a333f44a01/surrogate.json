@@ -1,0 +1,30 @@
+{
+  "basename": "span_rectification",
+  "atlas_id": "50a333f44a01",
+  "physics": "utilization_threshold",
+  "response": "governing_utilisation",
+  "axes": [
+    {
+      "name": "actual_span_length_m",
+      "scale": "linear",
+      "grid": [
+        8.0,
+        10.5,
+        13.0,
+        15.5,
+        18.0
+      ]
+    },
+    {
+      "name": "current_velocity_ms",
+      "scale": "linear",
+      "grid": [
+        0.4,
+        0.6,
+        0.8,
+        1.0,
+        1.2
+      ]
+    }
+  ]
+}

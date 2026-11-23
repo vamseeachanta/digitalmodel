@@ -1,0 +1,64 @@
+---
+parameters:
+  file_io_01: &file_io_01 tests\data\compare_tool_5000ft_WT1000_120pcf_combined_fatigue_damage.csv
+  label_01: &label_01 VIV Damage
+  file_io_02: &file_io_02 tests\data\compare_tool_5000ft_WT1000_120pcf_combined_fatigue_damage.csv
+  label_02: &label_02 Wave Damage
+  file_io_03: &file_io_03 tests\data\compare_tool_5000ft_WT1000_120pcf_combined_fatigue_damage.csv
+  label_03: &label_03 Total Damage
+
+default:
+  log_level: DEBUG
+  config:
+    overwrite:
+      output: True
+
+files:
+  -
+    file_type: csv
+    io: *file_io_01
+    label: *label_01
+    data_type: DataFrame
+    columns:
+      - total_viv_fatigue_damage
+      - elevation_above_mudline
+  -
+    file_type: csv
+    io: *file_io_02
+    label: *label_02
+    data_type: DataFrame
+    columns:
+      - total_wave_fatigue_damage
+      - elevation_above_mudline
+  -
+    file_type: csv
+    io: *file_io_03
+    label: *label_03
+    data_type: DataFrame
+    columns:
+      - total_combined_fatigue_damage
+      - elevation_above_mudline
+
+
+plot:
+  -
+    file_suffix: QA_effective_tension
+    suptitle: Effective Tension Comparison
+    size: default
+    orientation: portrait
+    plt_kind: line
+    title: " "
+    grid: True
+    legend: True
+    legend_location: best
+    marker: NULL
+    ylim: NULL
+    xlabel: Effective Tension (kN)
+    ylabel: Elevation Above Mudline (m)
+    x_reverse: False
+    y_reverse: True
+    text_fields:
+      -
+        x : 2000
+        y: 11400
+        text: more records obtained by engine with query of bit_on_bottom = 1

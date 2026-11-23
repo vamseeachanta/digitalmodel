@@ -1,0 +1,12 @@
+FoamFile { version 2.0; format ascii; class dictionary; object setFieldsDict; }
+
+defaultFieldValues ( volScalarFieldValue alpha.water 0 );
+regions
+(
+    boxToCell
+    {
+        // reservoir: right 1.228 m of the tank, 0.55 m deep
+        box (1.992 -1 -1) (4 2 0.55);
+        fieldValues ( volScalarFieldValue alpha.water 1 );
+    }
+);

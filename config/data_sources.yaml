@@ -1,0 +1,29 @@
+# External Data Dependencies — digitalmodel
+# Policy: workspace-hub/docs/DATA_RESIDENCE_POLICY.md (ADR-004)
+version: "1.0"
+tier: 2  # Engineering Reference Data
+
+local_data:
+  fatigue:
+    sn_curves:
+      path: "data/fatigue/sn_curves.yaml"
+      description: "Standard SN curve parameters (DNV, API, BS, AWS)"
+      tier: 2
+  materials:
+    steel_grades:
+      path: "data/materials/steel_grades.yaml"
+      description: "Steel grade properties (API 5L, ASTM A106)"
+      tier: 2
+
+external_dependencies:
+  worldenergydata:
+    vessel_hull_models:
+      source_path: "worldenergydata/data/modules/vessel_hull_models/"
+      description: "Vessel hull 3D models and marine components"
+      type: read_only
+      tier: 1
+    metocean:
+      source_path: "worldenergydata/data/metocean/"
+      description: "Metocean data for offshore analysis"
+      type: read_only
+      tier: 1

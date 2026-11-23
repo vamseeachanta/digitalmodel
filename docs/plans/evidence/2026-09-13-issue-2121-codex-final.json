@@ -1,0 +1,69 @@
+{
+  "provider": "Codex",
+  "reviewer": "independent parametric_scope worker",
+  "verdict": "MINOR",
+  "reviewed_revision": "3848892a39fb02e925b37fbda95a4a83f3a864d4",
+  "reviewed_files": [
+    {
+      "path": "docs/plans/2026-09-13-issue-2121-ansys-cylinder-campaign.html",
+      "sha256": "8a64b15171a26702f8333006f722790bef7fe64033ce00aebb11383526cdc020"
+    },
+    {
+      "path": "docs/plans/README.md",
+      "sha256": "d8eef421644f4fcd257085df6b9994d95ca1286d63fc11d395ee0805cba59716"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-13-issue-2121-case-proposal.json",
+      "sha256": "cde7dba2452146553fdd1d6dd6272a857750d757bdb51a0a0f6dfd2755ec70fb"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-13-issue-2121-claude-r1.json",
+      "sha256": "4602d8a8e9026afd4791256d8d629521d8f08d14379af117eb1202d46a33bc83"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-13-issue-2121-claude-r2.json",
+      "sha256": "b536f6a18ac577418b3e5d860859f624cebaf6c8c8a1f4fad93e2c2ed34d742d"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-13-issue-2121-codex-r1.json",
+      "sha256": "914fe133ef042be97f0f90994109e9ecd79bbcd4b540238ff79715100ed3ad03"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-13-issue-2121-codex-r2.json",
+      "sha256": "3310dcc5e281ad0d504c2604d42d5d907a43f57a050a8d67e4bdc52ea7e8d14e"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-13-issue-2121-resource-intel.json",
+      "sha256": "5ae40fbe794ef3521362de400f648e5e66dcbde860ddcdeb7641c4c98a6c7a92"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-13-issue-2121-review-dispositions.json",
+      "sha256": "c4aa8e67cfa92881b5f23343fefcec85c4f493ef9d06bad742de24f016660ecc"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-13-issue-2121-vendor-source-metadata.json",
+      "sha256": "94ff7daab2b5015b24f2d598109e50ed90670ce2e0649aa3f7d70b747fecdf07"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-13-issue-2121-verification.json",
+      "sha256": "f960397de61a25b844ef5b9e1d793b6c3f33de9ba25f9e823e17d37849c57b03"
+    }
+  ],
+  "findings": [
+    {
+      "id": "CX3",
+      "severity": "MINOR",
+      "defect": "Machine-readable candidate control and auxiliary residual prose omit explicit absolute magnitudes while HTML requires magnitudes.",
+      "correction": "At criterion freeze require absolute magnitudes and positive/negative violation tests; existing discrepancy-stop prevents silent freeze."
+    }
+  ],
+  "verified": [
+    "28 unique attempts and 21 responses",
+    "PLANE183 keyopts and station mapping",
+    "Independent B1 feasibility hold and B2 stop",
+    "Separate identity spaces and exact decimals",
+    "Ten verification hashes match staged blobs",
+    "No native feasibility pass inferred"
+  ],
+  "authority": "Review only; no implementation or solve authorization"
+}

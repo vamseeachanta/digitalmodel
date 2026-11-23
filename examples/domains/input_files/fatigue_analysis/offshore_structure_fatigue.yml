@@ -1,0 +1,91 @@
+# Offshore Structure Fatigue Analysis Example
+# Example configuration for fatigue analysis of offshore platform tubular joint
+
+basename: fatigue_analysis
+
+default:
+  log_level: INFO
+  units:
+    stress: "MPa"
+    time: "years"
+    frequency: "Hz"
+  config:
+    overwrite:
+      output: true
+    generate_plots: true
+
+fatigue_data:
+  csv: true
+  io: "examples/input_files/fatigue_analysis/stress_time_series.csv"
+  format: "time_series"
+  columns:
+    time: "time"
+    stress: "stress_range"
+
+inputs:
+  software: "digitalmodel"
+  calculation_type: "damage"
+  fatigue_curve: "DNV 2005 D Seawater CP"
+
+  environment:
+    medium: "seawater"
+    temperature: 15.0
+    cathodic_protection: true
+    coating_condition: "good"
+
+  material:
+    type: "steel"
+    grade: "S355"
+    yield_strength: 355
+    ultimate_strength: 510
+
+  design:
+    design_life: 25
+    safety_factor: 10.0
+    inspection_strategy: "periodic"
+    inspection_interval: 5
+
+stress_analysis:
+  method: "rainflow"
+
+  rainflow:
+    hysteresis: 0.0
+    small_cycle_threshold: 0.05
+    mean_stress_correction: "Goodman"
+
+  stress_concentration:
+    geometry_factor: 2.5
+    fatigue_factor: 2.5
+    surface_factor: 1.0
+
+load_spectrum:
+  type: "measured"
+  measured:
+    duration: 8760
+    sampling_frequency: 4
+    scaling_factor: 1.0
+
+analysis_options:
+  damage_calculation:
+    method: "palmgren_miner"
+    interaction_effects: false
+
+  uncertainty:
+    include_scatter: true
+    scatter_factor: 2.0
+
+output:
+  summary:
+    damage_ratio: true
+    remaining_life: true
+
+  plots:
+    sn_curve: true
+    stress_time_history: true
+    rainflow_matrix: true
+
+cases:
+  - case_id: "nominal"
+    description: "Nominal design conditions"
+    load_factor: 1.0
+    curve_modifier: 1.0

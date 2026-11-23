@@ -1,0 +1,17 @@
+FairleadID,Type,Angle_deg,Radius_m,Capacity_kN,Mass_kg,Friction_Coef,Description
+VESSEL_BOW_45,Bow,45,15.0,3000,2500,0.15,Bow fairlead for FPSO at 45 degrees
+VESSEL_BOW_30,Bow,30,12.0,2500,2000,0.15,Bow fairlead at 30 degrees
+VESSEL_STERN_135,Stern,135,12.0,2500,2200,0.15,Stern fairlead at 135 degrees
+VESSEL_STERN_150,Stern,150,15.0,3000,2500,0.15,Stern fairlead at 150 degrees
+VESSEL_SIDE_90,Side,90,10.0,2000,1800,0.15,Side fairlead perpendicular to vessel
+BUOY_CHAIN_90,BuoyChain,90,6.0,4000,1800,0.1,CALM buoy chain fairlead vertical
+BUOY_CHAIN_45,BuoyChain,45,6.0,4000,1600,0.1,CALM buoy chain fairlead angled
+TURRET_INTERNAL_0,Turret,0,8.0,5000,3500,0.12,Internal turret fairlead vertical
+TURRET_INTERNAL_15,Turret,15,10.0,5000,3800,0.12,Internal turret fairlead 15 degrees
+TURRET_EXTERNAL_30,Turret,30,12.0,4500,4000,0.12,External turret fairlead
+GUIDE_ROLLER_H,Roller,0,0.5,1500,450,0.08,Horizontal guide roller fairlead
+GUIDE_ROLLER_V,Roller,90,0.5,1500,450,0.08,Vertical guide roller fairlead
+CHOCK_CLOSED,Chock,0,0.3,2000,350,0.15,Closed chock fairlead
+CHOCK_OPEN,Chock,0,0.4,1500,280,0.15,Open chock fairlead
+PANAMA_LEAD,Panama,90,0.6,2500,500,0.12,Panama lead type fairlead
+SMIT_BRACKET,SmitBracket,45,1.0,3000,650,0.15,Smit towing bracket fairlead

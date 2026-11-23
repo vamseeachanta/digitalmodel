@@ -1,0 +1,124 @@
+# Links Configuration
+# Generated from: B01 Drilling riser.yml
+# Date: 2026-01-18 22:18:02
+Links:
+- Name: Tens_AFT
+  LinkType: Spring/damper
+  Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo:
+  - - Semisub
+    - -2.799999999999997
+    - 0
+    - 25
+  - - Tensioner Ring
+    - 0
+    - 0
+    - 0
+  ReleaseStage: ~
+  LinearSpring: No
+  SpringLength, SpringTension:
+  - - 0
+    - 2300
+  - - 4
+    - 2800
+  - - 8
+    - 3000
+  - - 12
+    - 3200
+  - - 16
+    - 3600
+  LinearDamper: Yes
+  DampingConstant: 5
+  Pen:
+  - 1
+  - Solid
+  - $C0FF00
+- Name: Tens_FWD
+  LinkType: Spring/damper
+  Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo:
+  - - Semisub
+    - 2.8000000000000007
+    - 0
+    - 25
+  - - Tensioner Ring
+    - 0
+    - 0
+    - 0
+  ReleaseStage: ~
+  LinearSpring: No
+  SpringLength, SpringTension:
+  - - 0
+    - 2300
+  - - 4
+    - 2800
+  - - 8
+    - 3000
+  - - 12
+    - 3200
+  - - 16
+    - 3600
+  LinearDamper: Yes
+  DampingConstant: 5
+  Pen:
+  - 1
+  - Solid
+  - $C0FF00
+- Name: Tens_STBD
+  LinkType: Spring/damper
+  Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo:
+  - - Semisub
+    - 0
+    - -2.8
+    - 25
+  - - Tensioner Ring
+    - 0
+    - 0
+    - 0
+  ReleaseStage: ~
+  LinearSpring: No
+  SpringLength, SpringTension:
+  - - 0
+    - 2300
+  - - 4
+    - 2800
+  - - 8
+    - 3000
+  - - 12
+    - 3200
+  - - 16
+    - 3600
+  LinearDamper: Yes
+  DampingConstant: 5
+  Pen:
+  - 1
+  - Solid
+  - $C0FF00
+- Name: Tens_PORT
+  LinkType: Spring/damper
+  Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo:
+  - - Semisub
+    - 0
+    - 2.8
+    - 25
+  - - Tensioner Ring
+    - 0
+    - 0
+    - 0
+  ReleaseStage: ~
+  LinearSpring: No
+  SpringLength, SpringTension:
+  - - 0
+    - 2300
+  - - 4
+    - 2800
+  - - 8
+    - 3000
+  - - 12
+    - 3200
+  - - 16
+    - 3600
+  LinearDamper: Yes
+  DampingConstant: 5
+  Pen:
+  - 1
+  - Solid
+  - $C0FF00

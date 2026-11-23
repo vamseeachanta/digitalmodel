@@ -1,0 +1,59 @@
+{
+  "cases": [
+    {
+      "id": "published-input-1",
+      "source": "Park, Nam and Kim (2021), Figures 7, Tables 2 and 3",
+      "length_froude": 0.063,
+      "separation_to_length": 0.4,
+      "depth_to_draft": 1.324,
+      "reference": null,
+      "status": "NOT QUALIFIED: force and moment data only plotted; no plot digitisation performed."
+    },
+    {
+      "id": "published-input-2",
+      "source": "Park, Nam and Kim (2021), Figures 12, Tables 2 and 3",
+      "length_froude": 0.142,
+      "separation_to_length": 0.3,
+      "depth_to_draft": 1.324,
+      "reference": null,
+      "status": "NOT QUALIFIED: force and moment data only plotted; no plot digitisation performed."
+    },
+    {
+      "id": "published-input-3",
+      "source": "Park, Nam and Kim (2021), Figures 12, Tables 2 and 3",
+      "length_froude": 0.142,
+      "separation_to_length": 1.0,
+      "depth_to_draft": 1.324,
+      "reference": null,
+      "status": "NOT QUALIFIED: force and moment data only plotted; no plot digitisation performed."
+    },
+    {
+      "id": "published-input-4",
+      "source": "Park, Nam and Kim (2021), Figures 13, Tables 2 and 3",
+      "length_froude": 0.142,
+      "separation_to_length": 0.4,
+      "depth_to_draft": 1.108,
+      "reference": null,
+      "status": "NOT QUALIFIED: force and moment data only plotted; no plot digitisation performed."
+    },
+    {
+      "id": "published-input-5",
+      "source": "Park, Nam and Kim (2021), Figures 13, Tables 2 and 3",
+      "length_froude": 0.142,
+      "separation_to_length": 0.4,
+      "depth_to_draft": 3.919,
+      "reference": null,
+      "status": "NOT QUALIFIED: force and moment data only plotted; no plot digitisation performed."
+    },
+    {
+      "id": "published-input-6",
+      "source": "Park, Nam and Kim (2021), Figures 7, Tables 2 and 3",
+      "length_froude": 0.165,
+      "separation_to_length": 0.4,
+      "depth_to_draft": 1.324,
+      "reference": null,
+      "status": "NOT QUALIFIED: force and moment data only plotted; no plot digitisation performed."
+    }
+  ],
+  "limits": "Six input candidates from one paper; these are not six independent validated benchmarks. Vessel-size range and numeric reference results remain open under #2017."
+}

@@ -1,0 +1,28 @@
+# Input Parameters for CALM Buoy Parametric Analysis
+# Modify these values for different analysis cases
+
+# Environment
+water_depth: 100          # m
+hs: 3.5                   # m, significant wave height
+tp: 12.0                  # s, peak period
+wave_direction: 180       # deg
+current_speed: 1.2        # m/s
+wind_speed: 12            # m/s
+
+# Buoy
+buoy_diameter: 12.0       # m
+buoy_mass: 95000          # kg
+
+# Mooring
+num_mooring_legs: 6
+chain_length: 800         # m per leg
+anchor_radius: 750        # m
+
+# Hawser
+hawser_length: 80         # m
+hawser_pretension: 50     # kN
+
+# Analysis
+stage_durations:
+  - 10                    # Build-up (s)
+  - 100                   # Analysis (s)

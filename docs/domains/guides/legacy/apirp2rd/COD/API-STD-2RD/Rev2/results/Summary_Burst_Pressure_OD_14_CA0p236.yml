@@ -1,0 +1,189 @@
+LoadingConditionResults:
+- BendingMoment: 0
+  DesignFactor: 0.8
+  ExternalPressure: 0
+  InternalPressure: 750
+  Label: LC1, Normal Operating, SLS
+  LoadCategory: SLS
+  Method1Utilization: 0.6150198495128052
+  PressureCondition: Internal OverPressure
+  Tension: 1943
+- BendingMoment: 0
+  DesignFactor: 1.0
+  ExternalPressure: 0
+  InternalPressure: 0
+  Label: LC, Installation, Flooded, ALS
+  LoadCategory: ALS
+  Method1Utilization: 0.49080468203306166
+  PressureCondition: Internal OverPressure
+  Tension: 2328
+- BendingMoment: 0
+  DesignFactor: 1.0
+  ExternalPressure: 0
+  InternalPressure: 8000
+  Label: LC, Normal Operating, Design Pressure, ALS
+  LoadCategory: ALS
+  Method1Utilization: 0.6125830737114913
+  PressureCondition: Internal OverPressure
+  Tension: 1943
+Method1ALS:
+  A: 60.62488423264903
+  Ai: 93.31315579325083
+  AllowableStressFac: 0.667
+  Ao: 153.93804002589985
+  CorrosionAllowance: 0.236
+  E: 30000000.0
+  I: 1192.832487830015
+  ID: 10.9
+  OD: 14
+  Pa: 9024.217525793309
+  Pb: 13369.211149323419
+  Pc: 18483.09848294322
+  Pd: 8021.526689594051
+  Pel: 189594.3795700481
+  Poissionsratio: 0.3
+  Pp: 14459.285714285716
+  Pt: 12071.392814359664
+  Py: 18571.559633027526
+  S: 65300
+  U: 77600
+  alphafab: 1
+  bendingMoment: 0
+  designFactors: &id001
+    collapse:
+      ALS: 1.0
+      SLS: 0.8
+      SeamlessPipe: 0.7
+      ULS: 0.8
+      coldExpandedPipe: 0.8
+    externalPressure:
+      ALS: 1.0
+      SLS: 0.6
+      ULS: 0.6
+    internalPressure:
+      ALS: 1.0
+      SLS: 0.8
+      ULS: 0.8
+      design: 0.6
+      drillingRiserWithExtremePressure: 0.81
+      hydroStaticTest: 0.75
+      incidentalPressure: 0.675
+      productionCasingWithTubingLeak: 0.81
+  externalPressure: 0
+  internalPressure: 750
+  k: 0.45
+  t: 1.55
+Method1SLS:
+  A: 60.62488423264903
+  Ai: 93.31315579325083
+  AllowableStressFac: 0.667
+  Ao: 153.93804002589985
+  CorrosionAllowance: 0.236
+  E: 30000000.0
+  I: 1192.832487830015
+  ID: 10.9
+  OD: 14
+  Pa: 9024.217525793309
+  Pb: 13369.211149323419
+  Pc: 18483.09848294322
+  Pd: 8021.526689594051
+  Pel: 189594.3795700481
+  Poissionsratio: 0.3
+  Pp: 14459.285714285716
+  Pt: 12071.392814359664
+  Py: 18571.559633027526
+  S: 65300
+  U: 77600
+  alphafab: 1
+  bendingMoment: 0
+  designFactors: *id001
+  externalPressure: 0
+  internalPressure: 750
+  k: 0.45
+  t: 1.55
+default:
+  Analysis:
+    nominalWTAPISTD2RDMethod1: true
+    variableWTBurst: true
+    variableWTCollapse: true
+  logLevel: DEBUG
+  units:
+    BendingMoment: kNm
+    E: psi
+    EffectiveTension: kN
+    NominalID: inch
+    NominalOD: inch
+    NominalWT: inch
+    Pressure: psi
+    Temperature: deg F
+    YieldStrength: psi
+design:
+  pressure: 8000
+  temperature: 250
+  wallThickness: 1.9
+designFactors: *id001
+fatigueAnalysis:
+  serviceLife: 0.1
+  singleALSEvent: 1.0
+  singleULSEvent: 0.1
+geometry:
+  AllowableStressFac: 0.667
+  CorrosionAllowance: 0.236
+  DesignWT: 1.55
+  NominalID: null
+  NominalOD: 14
+  NominalWT:
+  - 1.0
+  - 1.1
+  - 1.2
+  - 1.3
+  - 1.4
+  - 1.5
+  - 1.6
+  - 1.7
+  - 1.8
+  - 1.9
+  - 2.0
+load:
+  bendingMoment: 0
+  externalPressure: 0
+  internalPressure: 750
+material:
+  E: 30000000.0
+  Poissionsratio: 0.3
+  SMUS: 77600
+  SMYS: 65300
+  alphafab: 1
+  k: 0.45
+  materialFabrication:
+    Seamless: 1.0
+    TRB: 0.925
+    UO: 0.925
+    UOE: 0.85
+  materialStrengthFactor:
+    Normal: 0.96
+    SupplementaryRequirementU: 1
+  ovality: 0.01
+  rho: 7800
+plotSettings:
+  nominalWTAPISTD2RDMethod1:
+    label1: Method 1 (Fd = 0.8) for SLS, ULS
+    label11: Method 2 (Fd = 0.8) for SLS, ULS
+    label2: Method 1 (Fd = 1.0) for ALS
+    label22: Method 2 (Fd = 1.0) for ALS
+    label3: Method 4 AxialLimit@Pr=
+    plotFileName: Method1_OD_{0}
+    pltSupTitle: Pipe Utilization, API STD 2RD, X-65, Method-I,II
+    pltTitle: InternalPressure = {0} psi, OD {1} inch, WT {2} inch
+    pltXLabel: Tension (kips)
+    pltYLabel: Resultant Bending Moment (kips.ft)
+  variableWTBurst:
+    label: Design Pressure Limit
+    plotFileName: Burst_Pressure_OD_14_CA0p236
+    pltSupTitle: Design Pressure With Thickness
+    pltTitle: API STD 2RD, X-65, OD of 14 inch, Corrosion Allowance 0.236 inch
+    pltXLabel: Thickness (inch)
+    pltYLabel: Pressure (psi)
+    yLim:
+    - 0
+    - 12500

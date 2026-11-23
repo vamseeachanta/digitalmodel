@@ -1,0 +1,19 @@
+basename: capex_estimate
+
+default:
+  log_level: INFO
+  config:
+    generate_plots: false
+    overwrite:
+      output: true
+
+capex_estimate:
+  case:
+    id: registry_capex_estimate
+    description: Mars-style TLP CAPEX estimate from GoM benchmarks
+  host_type: TLP
+  production_capacity_bopd: 100000.0
+  water_depth_m: 896.0
+  outputs:
+    directory: results/capex_estimate
+    summary_json: capex_estimate_summary.json

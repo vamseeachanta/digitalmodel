@@ -1,0 +1,77 @@
+source_type: textbook
+source_description: "USNA EN400 Principles of Ship Performance (Summer 2020), Chapter 1"
+extracted_date: "2026-03-16"
+legal_scan_passed: true
+category: "naval_architecture"
+subcategory: "engineering_fundamentals"
+equations:
+  - name: "Mass to Weight"
+    latex: "W = m \\cdot g"
+    description: "Convert mass in slugs to weight in pounds using gravitational acceleration"
+  - name: "Displaced Volume to Weight"
+    latex: "W_{LT} = \\frac{\\gamma \\cdot V}{2240}"
+    description: "Convert displaced volume to weight in long tons"
+  - name: "Water Density Interpolation"
+    latex: "\\rho(T) = \\rho_0 + \\frac{T - T_0}{T_1 - T_0} (\\rho_1 - \\rho_0)"
+    description: "Linear interpolation of fresh water density from tabulated values"
+inputs:
+  - name: "Gravitational acceleration"
+    symbol: "g"
+    unit: "ft/s^2"
+    test_value: 32.17
+  - name: "Salt water specific weight"
+    symbol: "gamma_sw"
+    unit: "lb/ft^3"
+    test_value: 64.0
+  - name: "Fresh water specific weight"
+    symbol: "gamma_fw"
+    unit: "lb/ft^3"
+    test_value: 62.4
+  - name: "Long ton conversion"
+    symbol: "LT_to_lb"
+    unit: "lb/LT"
+    test_value: 2240.0
+outputs:
+  - name: "Weight from 1 slug"
+    symbol: "W"
+    unit: "lb"
+    test_expected: 32.17
+    tolerance: 0.01
+  - name: "Displacement from 4000 ft3 saltwater"
+    symbol: "W_LT"
+    unit: "LT"
+    test_expected: 114.29
+    tolerance: 0.1
+  - name: "Fresh water density at 62.7 F"
+    symbol: "rho"
+    unit: "slug/ft^3"
+    test_expected: 1.93776
+    tolerance: 0.00001
+worked_examples:
+  - description: "Example 1.1 (p.17): Convert 1 slug to weight in pounds"
+    inputs:
+      mass_slug: 1.0
+    outputs:
+      weight_lb: 32.17
+    use_as_test: true
+  - description: "Example 1.2 (p.17): 4000 ft3 displaced volume in saltwater to long tons"
+    inputs:
+      volume_ft3: 4000.0
+      water: "saltwater"
+    outputs:
+      weight_lt: 114.29
+    use_as_test: true
+  - description: "Example 1.3 (p.21): Interpolate fresh water density at 62.7 deg F"
+    inputs:
+      temp_f: 62.7
+      water: "freshwater"
+    outputs:
+      density_slug_ft3: 1.93776
+    use_as_test: true
+assumptions:
+  - "Gravitational acceleration g = 32.17 ft/s^2"
+  - "Salt water specific weight gamma = 64.0 lb/ft^3"
+  - "Fresh water specific weight gamma = 62.4 lb/ft^3"
+  - "1 long ton = 2240 lb"
+references:
+  - "USNA EN400 Principles of Ship Performance, Summer 2020, Chapter 1"

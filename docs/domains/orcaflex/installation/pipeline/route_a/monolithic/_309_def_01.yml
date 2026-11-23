@@ -1,0 +1,21 @@
+﻿%YAML 1.1
+# Type: Model
+# Program: OrcaFlex 11.2d
+# File: docs/domains/orcaflex/installation/pipeline/route_a/monolithic/_309_def_01.yml
+# Created: 6:08 AM on 7/21/2023
+# User: 
+# Machine: 
+---
+BaseFile: _08_def_01.yml
+Vessels:
+  iv02:
+    InitialX: 670
+6DBuoys:
+  2ndbuoy:
+    Mass: 0.378
+Lines:
+  Deleted: Rigging2ndCrane1
+  900TeMainCraneWire:
+    EndBZ: -720
+    Length[1]: 755
+...

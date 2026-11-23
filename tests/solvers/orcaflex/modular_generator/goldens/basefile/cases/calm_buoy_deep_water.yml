@@ -1,0 +1,5 @@
+%YAML 1.1
+# Generated from: calm_buoy_base.yml + deep_water_200m.yml
+---
+BaseFile: ../base/calm_buoy_base.yml
+IncludeFile: ../variations/deep_water_200m.yml

@@ -1,0 +1,584 @@
+{
+  "scope": "floating",
+  "layer": "rao",
+  "coverage_note": "Layer 3 (motion RAOs). Real named-vessel/named-field RAO datasets are almost never public \u2014 operators treat hull hydrodynamic databases (AQWA/WAMIT .lis, OrcaFlex vessel-type RAOs) as proprietary. The honest, citable answer for this layer is the published BENCHMARK / model-test community datasets, which is what these records capture. Most are floating-offshore-wind floaters (OC3 spar, OC4/OC5 DeepCwind semisub) and academic seakeeping hull forms (S175, KCS, DTC, Wigley) \u2014 directly transferable RAO methodology to FPSO/FPU/drillship/FSRU hulls, but only the DeepCwind semisub and OTRC FPSO are floating-production-type geometries. Several key facts (exact period/frequency ranges, full 6-DOF coverage, heading sets, exact downloadable file formats) live inside paywalled journal articles (ScienceDirect, Springer, T&F) or conference proceedings I could see only as abstracts/search summaries; those are flagged as \"gap\". OrcaWave L01 default-vessel PDF is a public brochure-grade worked example but is a generic vessel, not a named real unit. NO numeric RAO ordinates are asserted here \u2014 RAO curves are figure/table data inside the cited reports, not transcribable to a single value; per-DOF amplitudes are therefore \"gap\" with the dataset pointer given instead. Radii of gyration / mass properties for these models are in the definition documents (cited where a public PDF exists, e.g. OC5 definition doc) or \"gap\". No fabricated numbers.",
+  "verdict": {
+    "physically_plausible": true,
+    "fabrication_suspected": false,
+    "citations_check": "solid",
+    "summary": "Spot-checked 5 headline records against the web; all primary facts verified and on-topic. OC5 DeepCwind (MARIN model 9697, 1:50, 2013 MARIN basin test, Robertson/Wendt OC5 Phase II) confirmed. OC3-Hywind correctly attributed to NREL/Jonkman, Statoil Hywind concept, 5MW spar. OTRC turret-moored FPSO (1:60, tanker-based, truncated mooring, Kim/Tahar, Ocean Engineering S002980180500051X) confirmed exactly. BSEE TAP-406 'FPSO Roll Motions' (Texas A&M OTRC, bilge-keel/roll-damping, 2-D viscous focus) confirmed; cited 406ab.pdf is a real BSEE file. OrcaWave L01 'Default vessel' correctly described as a public Orcina worked example recreating the generic OrcaFlex default-vessel hydrodynamic dataset, NOT a named real unit. Physical descriptions are all sane for the vessel classes (1:50 three-column ring-pontoon semisub; deep-draft cylindrical spar with long >20s heave/pitch natural periods; tanker FPSO roll near roll natural period in beam/quartering seas). The dataset is appropriately conservative: it asserts NO numeric RAO ordinates (all per-DOF amplitudes, period/frequency ranges, headings, radii of gyration, and mass properties are explicitly marked 'gap'), so there are no hard numbers exposed to fabrication. The honest coverage_note correctly states real named-vessel/named-field proprietary RAO databases are essentially never public and that these are benchmark/model-test community datasets, most being FOWT floaters rather than floating-production geometries. One genuine defect found: a citation label/URL mismatch on the OC3-Hywind record (see flagged_records) \u2014 but the cited URL still resolves to a real, on-topic NREL OC3 document, so this is a mislabel, not invented data. No fabrication.",
+    "flagged_records": [
+      {
+        "name": "OC3-Hywind spar-buoy (5 MW FOWT spar)",
+        "issue": "Citation label/URL mismatch. The source is labeled 'Definition of the Floating System for Phase IV of OC3 (NREL/TP-500-47535)' but the URL given is https://docs.nrel.gov/docs/fy11osti/48191.pdf, which is actually NREL/TP-5000-48191 'Offshore Code Comparison Collaboration (OC3) for IEA Wind Task 23' \u2014 a different report. The real TP-500-47535 definition doc lives at docs.nrel.gov/docs/fy10osti/47535.pdf. URL is still a real, on-topic OC3 NREL document, so this is a mislabel (radii_of_gyration/mass_properties are marked gap anyway, so no false numbers leak), but the citation pointer should be corrected to fy10osti/47535.pdf."
+      }
+    ]
+  },
+  "records": [
+    {
+      "name": "OC4 / DeepCwind semisubmersible (5 MW FOWT floater)",
+      "vessel_type": "semisubmersible (floating platform)",
+      "owner_operator": "Benchmark \u2014 DeepCwind consortium / IEA Wind Task 30 (model test by Technip/MARIN)",
+      "year_built": "model-test campaign 2011 (1:50 scale)",
+      "fields": {
+        "rao_kind": "model_test + computed (benchmark)",
+        "geometry_type": "three-column ring-pontoon semisubmersible with central tower column",
+        "dof_covered": "surge, heave, pitch primarily reported (3-DOF); full 6-DOF measured in test, RAOs most often published for surge/heave/pitch",
+        "headings": "gap \u2014 head-sea (0/180 deg) regular-wave cases most commonly published; full heading set: gap",
+        "period_frequency_range": "gap \u2014 regular-wave RAO cases span platform natural periods (surge/heave/pitch resonances) through wave-frequency band; exact tabulated range inside paywalled comparison papers",
+        "model_scale": "1:50 (MARIN model 9697 used in OC5 follow-on)",
+        "radii_of_gyration": "gap \u2014 published in OC4 system definition (NREL/TP-5000-60601); not transcribed here",
+        "mass_properties": "gap \u2014 defined in OC4 definition document",
+        "dataset_name": "OC4 DeepCwind semisubmersible (offshore-wind code-comparison benchmark)",
+        "availability": true,
+        "validation_codes": "OpenFAST, FAST-CHARM3D, ANSYS-AQWA, WAMIT (frequency-domain RAOs)"
+      },
+      "gaps": [
+        "period_frequency_range",
+        "headings",
+        "radii_of_gyration",
+        "mass_properties",
+        "per_DOF_RAO_ordinates"
+      ],
+      "citations": [
+        {
+          "fields": [
+            "rao_kind",
+            "dof_covered",
+            "validation_codes",
+            "geometry_type"
+          ],
+          "source": "Systematic comparisons among OpenFAST, Charm3D-FAST simulations and DeepCWind model test for 5 MW OC4 semisubmersible offshore wind turbine (ResearchGate listing)",
+          "url": "https://www.researchgate.net/publication/371945949_Systematic_comparisons_among_OpenFAST_Charm3D-FAST_simulations_and_DeepCWind_model_test_for_5_MW_OC4_semisubmersible_offshore_wind_turbine",
+          "access": "public",
+          "access_date": "2026-06-18"
+        },
+        {
+          "fields": [
+            "dof_covered",
+            "validation_codes"
+          ],
+          "source": "Wave-Current Interaction Effects on the OC4 DeepCwind Semi-Submersible (J. Mar. Sci. Eng. 12(9):1509)",
+          "url": "https://www.mdpi.com/2077-1312/12/9/1509",
+          "access": "public",
+          "access_date": "2026-06-18"
+        }
+      ]
+    },
+    {
+      "name": "OC5 DeepCwind semisubmersible (MARIN model 9697)",
+      "vessel_type": "semisubmersible (floating platform)",
+      "owner_operator": "Benchmark \u2014 OC5 project (IEA Wind Task 30); model test at MARIN",
+      "year_built": "model-test campaign 2013-2015 (1:50 scale)",
+      "fields": {
+        "rao_kind": "model_test + computed (benchmark)",
+        "geometry_type": "DeepCwind three-column semisubmersible at 1:50 (MARIN model 9697)",
+        "dof_covered": "surge, heave, pitch RAOs derived from regular-wave cases (focus on low-frequency surge/pitch resonant response)",
+        "headings": "gap \u2014 regular-wave validation; primary head-sea; full heading set: gap",
+        "period_frequency_range": "gap \u2014 regular-wave RAO cases; exact range in paywalled OC5 Phase II report",
+        "model_scale": "1:50",
+        "radii_of_gyration": "gap \u2014 given in OC5 Phase II definition document (public PDF cited)",
+        "mass_properties": "gap \u2014 in OC5 Phase II definition document",
+        "dataset_name": "OC5 Project Phase II \u2014 DeepCwind floating semisubmersible validation",
+        "availability": true,
+        "validation_codes": "OpenFAST, CFD (HOS coupling), AQWA; MARIN measured RAOs"
+      },
+      "gaps": [
+        "period_frequency_range",
+        "headings",
+        "radii_of_gyration",
+        "mass_properties",
+        "per_DOF_RAO_ordinates"
+      ],
+      "citations": [
+        {
+          "fields": [
+            "model_scale",
+            "geometry_type",
+            "dof_covered",
+            "rao_kind"
+          ],
+          "source": "OC5 Phase II definition + CFD validation summary (HOS/CFD coupling paper, ScienceDirect abstract); MARIN model 9697 at 1/50 scale",
+          "url": "https://www.sciencedirect.com/science/article/abs/pii/S0029801823020851",
+          "access": "paywalled",
+          "access_date": "2026-06-18"
+        },
+        {
+          "fields": [
+            "radii_of_gyration",
+            "mass_properties",
+            "geometry_type"
+          ],
+          "source": "Definition of the OC5 DeepCwind Semisubmersible Floating System (DOE WDH model definition PDF)",
+          "url": "https://wdh.energy.gov/api/datasets/oc5/oc5.phase2/files/oc5.phase2.model.definition-semisubmersible-floating-system-phase2-oc5-ver15.pdf",
+          "access": "public",
+          "access_date": "2026-06-18"
+        },
+        {
+          "fields": [
+            "dof_covered",
+            "validation_codes"
+          ],
+          "source": "OC5 Project Phase II: Validation of Global Loads of the DeepCwind Floating Semisubmersible Wind Turbine (Robertson, Wendt et al.)",
+          "url": "https://www.semanticscholar.org/paper/OC5-Project-Phase-II:-Validation-of-Global-Loads-of-Robertson-Wendt/512241f5545a39e4080684427811bf107d6baf40",
+          "access": "public",
+          "access_date": "2026-06-18"
+        }
+      ]
+    },
+    {
+      "name": "OC3-Hywind spar-buoy (5 MW FOWT spar)",
+      "vessel_type": "spar (floating platform)",
+      "owner_operator": "Benchmark \u2014 OC3 project (IEA Wind Task 23); concept from Statoil Hywind",
+      "year_built": "definition 2010 (NREL/TP-500-47535); model tests subsequent (e.g. UOU)",
+      "fields": {
+        "rao_kind": "computed (benchmark) + model_test",
+        "geometry_type": "deep-draft cylindrical spar buoy supporting NREL 5 MW turbine",
+        "dof_covered": "surge, heave, pitch RAOs (and 'effective RAO' definition incl. turbine operation effects)",
+        "headings": "gap \u2014 regular-wave validation, primary head-sea",
+        "period_frequency_range": "gap \u2014 regular-wave RAO cases through wave band; spar heave/pitch natural periods are long (>20 s); exact range: gap",
+        "model_scale": "model-test campaigns at various scales (e.g. UOU); definition is full-scale",
+        "radii_of_gyration": "gap \u2014 in OC3-Hywind definition (NREL/TP-500-47535)",
+        "mass_properties": "gap \u2014 in OC3-Hywind definition document",
+        "dataset_name": "OC3-Hywind spar (offshore-wind code-comparison benchmark); RAO discussion on NREL public forum + NREL definition report",
+        "availability": true,
+        "validation_codes": "OpenFAST/FAST v8, MOSES-AeroDyn, UOU+FAST; open-source MATLAB package (GitHub)"
+      },
+      "gaps": [
+        "period_frequency_range",
+        "headings",
+        "radii_of_gyration",
+        "mass_properties",
+        "per_DOF_RAO_ordinates",
+        "model_scale"
+      ],
+      "citations": [
+        {
+          "fields": [
+            "rao_kind",
+            "dof_covered",
+            "validation_codes"
+          ],
+          "source": "OC3-Hywind RAOs discussion (NREL Computer-Aided Engineering forum)",
+          "url": "https://forums.nrel.gov/t/oc3-hywind-raos/1085",
+          "access": "public",
+          "access_date": "2026-06-18"
+        },
+        {
+          "fields": [
+            "geometry_type",
+            "radii_of_gyration",
+            "mass_properties"
+          ],
+          "source": "Definition of the Floating System for Phase IV of OC3 (NREL/TP-500-47535)",
+          "url": "https://docs.nrel.gov/docs/fy11osti/48191.pdf",
+          "access": "public",
+          "access_date": "2026-06-18"
+        },
+        {
+          "fields": [
+            "validation_codes"
+          ],
+          "source": "OC3-Hywind-Spar MATLAB dynamic-simulation package (GitHub, Saptarshi-Sarkar)",
+          "url": "https://github.com/Saptarshi-Sarkar/OC3-Hywind-Spar",
+          "access": "public",
+          "access_date": "2026-06-18"
+        }
+      ]
+    },
+    {
+      "name": "Turret-moored FPSO \u2014 OTRC model-test benchmark",
+      "vessel_type": "FPSO",
+      "owner_operator": "Benchmark \u2014 Offshore Technology Research Center (Texas A&M) wave-basin model test",
+      "year_built": "OTRC 1:60 model-test campaign (GoM 100-yr hurricane conditions)",
+      "fields": {
+        "rao_kind": "model_test (benchmark, vessel/mooring/riser coupled)",
+        "geometry_type": "tanker-based turret-moored FPSO with truncated mooring",
+        "dof_covered": "6-DOF global motions measured; surge/heave/pitch most analyzed; mooring tensions also recorded",
+        "headings": "gap \u2014 non-collinear wind-wave-current 100-yr GoM hurricane heading; regular-wave/free-decay also run",
+        "period_frequency_range": "gap \u2014 RAO + natural-period data inside paywalled Ocean Engineering paper",
+        "model_scale": "1:60",
+        "radii_of_gyration": "gap",
+        "mass_properties": "gap",
+        "dataset_name": "OTRC FPSO experiment (used as benchmark in Kim/Tahar et al., vessel/mooring/riser coupled dynamic analysis)",
+        "availability": true,
+        "validation_codes": "WINPOST/WAMIT coupled analysis; compared to OTRC measurement"
+      },
+      "gaps": [
+        "headings",
+        "period_frequency_range",
+        "radii_of_gyration",
+        "mass_properties",
+        "per_DOF_RAO_ordinates"
+      ],
+      "citations": [
+        {
+          "fields": [
+            "rao_kind",
+            "model_scale",
+            "dof_covered",
+            "geometry_type",
+            "validation_codes"
+          ],
+          "source": "Vessel/mooring/riser coupled dynamic analysis of a turret-moored FPSO compared with OTRC experiment (Ocean Engineering, ScienceDirect abstract)",
+          "url": "https://www.sciencedirect.com/science/article/abs/pii/S002980180500051X",
+          "access": "paywalled",
+          "access_date": "2026-06-18"
+        },
+        {
+          "fields": [
+            "model_scale",
+            "dof_covered",
+            "validation_codes"
+          ],
+          "source": "Vessel/mooring/riser coupled dynamic analysis of a turret-moored FPSO compared with OTRC experiment (full text, Academia.edu)",
+          "url": "https://www.academia.edu/36456073/Vessel_mooring_riser_coupled_dynamic_analysis_of_a_turret_moored_FPSO_compared_with_OTRC_experiment",
+          "access": "public",
+          "access_date": "2026-06-18"
+        }
+      ]
+    },
+    {
+      "name": "FPSO roll motions \u2014 BSEE/TAP model-test study",
+      "vessel_type": "FPSO",
+      "owner_operator": "Benchmark \u2014 BSEE Technical Assessment Program (TAP) report",
+      "year_built": "gap (TAP study 406)",
+      "fields": {
+        "rao_kind": "model_test + computed (roll-motion focus)",
+        "geometry_type": "tanker-based FPSO (roll motion / bilge-keel / viscous-damping focus)",
+        "dof_covered": "roll (primary); large yaw motions discussed in companion TAP 366",
+        "headings": "beam/quartering seas (roll-excitation headings); exact set: gap",
+        "period_frequency_range": "gap \u2014 roll RAO near roll natural period; figure data in report",
+        "model_scale": "gap",
+        "radii_of_gyration": "gap",
+        "mass_properties": "gap",
+        "dataset_name": "BSEE TAP 406 'FPSO Roll Motions' (and TAP 366 dynamic analysis tool for moored tanker-based FPSOs incl. large yaw)",
+        "availability": true,
+        "validation_codes": "gap"
+      },
+      "gaps": [
+        "year_built",
+        "headings",
+        "period_frequency_range",
+        "model_scale",
+        "radii_of_gyration",
+        "mass_properties",
+        "validation_codes",
+        "per_DOF_RAO_ordinates"
+      ],
+      "citations": [
+        {
+          "fields": [
+            "rao_kind",
+            "dof_covered",
+            "geometry_type"
+          ],
+          "source": "FPSO Roll Motions (BSEE TAP technical assessment 406ab PDF)",
+          "url": "https://www.bsee.gov/sites/bsee.gov/files/tap-technical-assessment-program/406ab.pdf",
+          "access": "public",
+          "access_date": "2026-06-18"
+        },
+        {
+          "fields": [
+            "dof_covered"
+          ],
+          "source": "Dynamic Analysis Tool for Moored Tanker-Based FPSOs including Large Yaw Motions (BSEE TAP 366aa PDF)",
+          "url": "https://www.bsee.gov/sites/bsee.gov/files/tap-technical-assessment-program/366aa.pdf",
+          "access": "public",
+          "access_date": "2026-06-18"
+        }
+      ]
+    },
+    {
+      "name": "OrcaFlex default vessel (OrcaWave L01 worked example)",
+      "vessel_type": "generic ship-shaped vessel (not a named real unit)",
+      "owner_operator": "Benchmark / software example \u2014 Orcina Ltd",
+      "year_built": "n/a (software sample dataset)",
+      "fields": {
+        "rao_kind": "computed (diffraction/radiation, OrcaWave BEM)",
+        "geometry_type": "generic barge/ship-shaped vessel; recreates the OrcaFlex default vessel-type hydrodynamic dataset",
+        "dof_covered": "displacement RAOs all 6-DOF + load RAOs + wave-drift QTFs (Newman approx) + added mass/damping + hydrostatic stiffness",
+        "headings": "gap \u2014 multiple wave headings in example; exact set inside the .owr results file",
+        "period_frequency_range": "gap \u2014 wave-frequency range in example; exact values in downloadable model files",
+        "model_scale": "full scale (computed)",
+        "radii_of_gyration": "gap \u2014 specified in the example input; not transcribed",
+        "mass_properties": "gap \u2014 in example input files",
+        "dataset_name": "OrcaWave example L01 'Default vessel' (downloadable .owr/.dat model files + PDF)",
+        "availability": true,
+        "validation_codes": "OrcaWave (Orcina diffraction solver); reproduces OrcaFlex default vessel"
+      },
+      "gaps": [
+        "headings",
+        "period_frequency_range",
+        "radii_of_gyration",
+        "mass_properties",
+        "per_DOF_RAO_ordinates"
+      ],
+      "citations": [
+        {
+          "fields": [
+            "rao_kind",
+            "dof_covered",
+            "geometry_type",
+            "dataset_name"
+          ],
+          "source": "OrcaWave example L01 Default vessel (Orcina, public worked example PDF + downloadable model)",
+          "url": "https://www.orcina.com/wp-content/uploads/examples/l/l01/L01%20Default%20vessel.pdf",
+          "access": "brochure-pdf",
+          "access_date": "2026-06-18"
+        },
+        {
+          "fields": [
+            "rao_kind",
+            "dof_covered"
+          ],
+          "source": "OrcaFlex Vessel types: RAOs (Orcina web help)",
+          "url": "https://www.orcina.com/webhelp/OrcaFlex/Content/html/Vesseltypes,RAOs.htm",
+          "access": "public",
+          "access_date": "2026-06-18"
+        }
+      ]
+    },
+    {
+      "name": "S175 containership (ITTC standard seakeeping benchmark hull)",
+      "vessel_type": "containership (monohull benchmark)",
+      "owner_operator": "Benchmark \u2014 ITTC standard hull form",
+      "year_built": "n/a (standardized benchmark geometry)",
+      "fields": {
+        "rao_kind": "model_test + computed (benchmark)",
+        "geometry_type": "single-screw containership; Cb=0.5716, L/B=6.89",
+        "dof_covered": "heave and pitch RAOs in head seas (primary); other DOF in some studies",
+        "headings": "head seas (180 deg) primary; ITTC workshop comparative cases",
+        "period_frequency_range": "gap \u2014 RAO vs wavelength/wave-frequency; Froude number 0.2 common test condition",
+        "model_scale": "various; benchmark also used at full scale numerically",
+        "radii_of_gyration": "estimated:standard ITTC S175 pitch gyradius kyy\u22480.24-0.25 Lpp (conventional ship rule of thumb; exact value in ITTC definition)",
+        "mass_properties": "gap \u2014 main particulars tabulated in ITTC/literature",
+        "dataset_name": "S175 containership (ITTC seakeeping benchmark; widely tabulated with Wigley, Series 60, KCS)",
+        "availability": true,
+        "validation_codes": "strip theory, BEM/panel methods, RANS-CFD"
+      },
+      "gaps": [
+        "period_frequency_range",
+        "mass_properties",
+        "per_DOF_RAO_ordinates"
+      ],
+      "citations": [
+        {
+          "fields": [
+            "geometry_type",
+            "dof_covered"
+          ],
+          "source": "Main particulars of S175 containership / dimensions tables (ResearchGate)",
+          "url": "https://www.researchgate.net/figure/Main-particulars-of-S175-containership_tbl1_317970756",
+          "access": "public",
+          "access_date": "2026-06-18"
+        },
+        {
+          "fields": [
+            "rao_kind",
+            "dof_covered",
+            "validation_codes"
+          ],
+          "source": "ITTC 25th Seakeeping Committee report (ITTC Volume I)",
+          "url": "https://ittc.info/media/3463/volume1_7seakeepingcommittee.pdf",
+          "access": "public",
+          "access_date": "2026-06-18"
+        }
+      ]
+    },
+    {
+      "name": "6750-TEU containership (KRISO flexible model \u2014 ITTC-ISSC benchmark)",
+      "vessel_type": "containership (monohull benchmark, hydroelastic)",
+      "owner_operator": "Benchmark \u2014 2nd ITTC-ISSC joint workshop 2014; model test by KRISO/KORDI",
+      "year_built": "2014 (workshop dataset)",
+      "fields": {
+        "rao_kind": "model_test + computed (benchmark; 11 institutes / 17 codes)",
+        "geometry_type": "6750-TEU containership flexible (segmented backbone) scale model",
+        "dof_covered": "heave, pitch, and vertical bending moment in head regular waves",
+        "headings": "head seas (regular waves) for linear case; 3 nonlinear conditions",
+        "period_frequency_range": "gap \u2014 test matrix (1 linear + 3 nonlinear conditions); exact wave frequencies in paper",
+        "model_scale": "flexible scale model (KRISO basin)",
+        "radii_of_gyration": "gap",
+        "mass_properties": "gap",
+        "dataset_name": "Benchmark study on motions and loads of a 6750-TEU containership (Ocean Engineering); 'all model data included in the paper to encourage participation'",
+        "availability": true,
+        "validation_codes": "17 seakeeping/hydroelasticity codes (ITTC-ISSC workshop)"
+      },
+      "gaps": [
+        "period_frequency_range",
+        "radii_of_gyration",
+        "mass_properties",
+        "per_DOF_RAO_ordinates"
+      ],
+      "citations": [
+        {
+          "fields": [
+            "rao_kind",
+            "dof_covered",
+            "headings",
+            "dataset_name",
+            "validation_codes"
+          ],
+          "source": "Benchmark study on motions and loads of a 6750-TEU containership (Ocean Engineering, ScienceDirect abstract)",
+          "url": "https://www.sciencedirect.com/science/article/pii/S0029801816300804",
+          "access": "paywalled",
+          "access_date": "2026-06-18"
+        },
+        {
+          "fields": [
+            "rao_kind",
+            "dof_covered"
+          ],
+          "source": "Benchmark study on motions and loads of a 6750-TEU containership (ResearchGate listing)",
+          "url": "https://www.researchgate.net/publication/302067702_Benchmark_study_on_motions_and_loads_of_a_6750-TEU_containership",
+          "access": "public",
+          "access_date": "2026-06-18"
+        }
+      ]
+    },
+    {
+      "name": "KCS \u2014 KRISO Container Ship (open benchmark hull)",
+      "vessel_type": "containership (monohull benchmark)",
+      "owner_operator": "Benchmark \u2014 KRISO; open CFD/seakeeping test case",
+      "year_built": "n/a (standardized benchmark geometry, 1997 design)",
+      "fields": {
+        "rao_kind": "model_test + computed (benchmark)",
+        "geometry_type": "modern containership with bulbous bow and transom stern",
+        "dof_covered": "heave and pitch RAOs (head regular waves; measured at LBP/2 on centerline)",
+        "headings": "head seas primary; variable-heading added-resistance experiments also exist",
+        "period_frequency_range": "gap \u2014 several wavelength conditions at design speed; exact range in papers",
+        "model_scale": "towing-tank model (various basins)",
+        "radii_of_gyration": "estimated:conventional kyy\u22480.25 Lpp for KCS pitch (rule-of-thumb; exact in KCS definition/Tokyo workshop data)",
+        "mass_properties": "gap \u2014 main particulars publicly tabulated",
+        "dataset_name": "KCS open test case (Tokyo/Gothenburg CFD workshops; widely public)",
+        "availability": true,
+        "validation_codes": "RANS-CFD, potential-flow, fully-nonlinear potential flow"
+      },
+      "gaps": [
+        "period_frequency_range",
+        "mass_properties",
+        "per_DOF_RAO_ordinates"
+      ],
+      "citations": [
+        {
+          "fields": [
+            "geometry_type",
+            "dof_covered",
+            "validation_codes"
+          ],
+          "source": "On the Comparative Seakeeping Analysis of the Full Scale KCS by Several Hydrodynamic Approaches (J. Mar. Sci. Eng. 8(12):962)",
+          "url": "https://doi.org/10.3390/jmse8120962",
+          "access": "public",
+          "access_date": "2026-06-18"
+        },
+        {
+          "fields": [
+            "geometry_type",
+            "dataset_name"
+          ],
+          "source": "The KRISO container ship (KCS) test case: an open source overview (ResearchGate)",
+          "url": "https://www.researchgate.net/publication/282794885_The_Kriso_container_ship_KCS_test_case_An_open_source_overview",
+          "access": "public",
+          "access_date": "2026-06-18"
+        }
+      ]
+    },
+    {
+      "name": "DTC \u2014 Duisburg Test Case (14000-TEU post-Panamax containership)",
+      "vessel_type": "containership (monohull benchmark)",
+      "owner_operator": "Benchmark \u2014 ISMT, University of Duisburg-Essen; model tests at MARINTEK (SHOPERA project)",
+      "year_built": "2012 (hull definition); SHOPERA tests 2013-2016",
+      "fields": {
+        "rao_kind": "model_test + computed (benchmark)",
+        "geometry_type": "14000-TEU post-Panamax containership hull form",
+        "dof_covered": "full 6-DOF motions in regular waves (plus added resistance, drift forces/moments)",
+        "headings": "various wave headings at low-to-moderate speeds (SHOPERA campaign)",
+        "period_frequency_range": "gap \u2014 regular-wave matrix; exact frequencies in the T&F paper / SHOPERA database",
+        "model_scale": "MARINTEK basin model (SHOPERA)",
+        "radii_of_gyration": "gap \u2014 roll-damping and main particulars publicly available per DTC documentation",
+        "mass_properties": "gap \u2014 hull geometry + resistance/propulsion/roll-damping publicly available",
+        "dataset_name": "Duisburg Test Case (DTC); SHOPERA validation & benchmark database",
+        "availability": true,
+        "validation_codes": "linear/nonlinear seakeeping codes, CFD"
+      },
+      "gaps": [
+        "period_frequency_range",
+        "radii_of_gyration",
+        "mass_properties",
+        "per_DOF_RAO_ordinates"
+      ],
+      "citations": [
+        {
+          "fields": [
+            "geometry_type",
+            "rao_kind",
+            "mass_properties"
+          ],
+          "source": "Duisburg Test Case: Post-Panamax Container Ship for Benchmarking (definition paper PDF)",
+          "url": "https://home.hvl.no/ansatte/gste/ftp/Info_alle_klasser/Rapportskriving/Example_reports/Example_paper3_DTChull.pdf",
+          "access": "public",
+          "access_date": "2026-06-18"
+        },
+        {
+          "fields": [
+            "dof_covered",
+            "headings",
+            "rao_kind"
+          ],
+          "source": "Experimental and numerical studies on linear and nonlinear seakeeping phenomena of the DTC ship in regular waves (Ship Technology Research, T&F)",
+          "url": "https://www.tandfonline.com/doi/full/10.1080/09377255.2020.1857007",
+          "access": "paywalled",
+          "access_date": "2026-06-18"
+        },
+        {
+          "fields": [
+            "dataset_name"
+          ],
+          "source": "Establishment of a Validation and Benchmark Database for the Assessment of Ship Operation in Adverse Conditions (SINTEF / SHOPERA)",
+          "url": "https://www.sintef.no/en/publications/publication/?pubid=1396654",
+          "access": "public",
+          "access_date": "2026-06-18"
+        }
+      ]
+    },
+    {
+      "name": "Wigley hull (analytical benchmark hull form)",
+      "vessel_type": "mathematical monohull (benchmark)",
+      "owner_operator": "Benchmark \u2014 classic analytical hull; experiments by Journee (1992)",
+      "year_built": "n/a (parabolic mathematical hull)",
+      "fields": {
+        "rao_kind": "model_test (Journee 1992) + computed (benchmark)",
+        "geometry_type": "parabolic mathematical hull (Wigley I); wave amplitude a/L\u22480.005 in tests",
+        "dof_covered": "heave and pitch RAOs in head seas",
+        "headings": "head seas (180 deg)",
+        "period_frequency_range": "gap \u2014 RAO vs wavelength at Froude number 0.2 (and other Fn); exact range in Journee data tables",
+        "model_scale": "Delft towing-tank models (Journee)",
+        "radii_of_gyration": "estimated:kyy\u22480.25 Lpp (standard pitch gyradius assumed in Wigley seakeeping validation)",
+        "mass_properties": "analytically defined by parabolic hull equation",
+        "dataset_name": "Wigley hull seakeeping benchmark (Journee 1992 experimental heave/pitch RAOs); widely reproduced",
+        "availability": true,
+        "validation_codes": "strip theory, BEM, RANS-CFD (e.g. Weymouth et al. 2007)"
+      },
+      "gaps": [
+        "period_frequency_range",
+        "per_DOF_RAO_ordinates"
+      ],
+      "citations": [
+        {
+          "fields": [
+            "rao_kind",
+            "dof_covered",
+            "geometry_type",
+            "validation_codes"
+          ],
+          "source": "Calculations of the Heave and Pitch RAOs for Three Different Ship Hull Forms (JOMAse Vol.22, 2015 PDF; cites Journee 1992 Wigley data)",
+          "url": "https://www.isomase.org/JOMAse/Vol.22%20Aug%202015/22-1.pdf",
+          "access": "public",
+          "access_date": "2026-06-18"
+        }
+      ]
+    }
+  ],
+  "collected": "2026-06-18",
+  "method": "vessel-db-research workflow wf_1207d074-87f"
+}

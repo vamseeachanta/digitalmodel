@@ -1,0 +1,87 @@
+source_type: textbook
+source_description: "USNA EN400 Principles of Ship Performance (Summer 2020), Chapter 10"
+extracted_date: "2026-03-16"
+legal_scan_passed: true
+category: "naval_architecture"
+subcategory: "submarines"
+equations:
+  - name: "Main Ballast Tank Capacity"
+    latex: "MBT = \\Delta_{submerged} - \\Delta_{surface}"
+    description: "Water required in main ballast tanks to transition from surface to submerged"
+  - name: "Density Compensation"
+    latex: "\\Delta W = \\frac{\\rho_{final} \\cdot g \\cdot V - W_{lb}}{2240}"
+    description: "Water to flood or pump when entering water of different density"
+  - name: "Submerged BG After Weight Shift"
+    latex: "KG_{new} = KG + \\frac{w (z_{new} - z_{old})}{\\Delta}, \\quad BG = KB - KG_{new}"
+    description: "Stability margin (BG) after vertical weight shift in submerged submarine"
+inputs:
+  - name: "Surface displacement"
+    symbol: "Delta_surf"
+    unit: "LT"
+    test_value: 6900.0
+  - name: "Submerged displacement"
+    symbol: "Delta_sub"
+    unit: "LT"
+    test_value: 7800.0
+  - name: "Submerged weight"
+    symbol: "W_sub"
+    unit: "LT"
+    test_value: 7200.0
+  - name: "Initial water density"
+    symbol: "rho_i"
+    unit: "slug/ft^3"
+    test_value: 1.9890
+  - name: "Final water density"
+    symbol: "rho_f"
+    unit: "slug/ft^3"
+    test_value: 1.9976
+outputs:
+  - name: "MBT capacity"
+    symbol: "MBT"
+    unit: "LT"
+    test_expected: 900.0
+    tolerance: 1.0
+  - name: "Density compensation water"
+    symbol: "Delta_W"
+    unit: "LT"
+    test_expected: 31.1
+    tolerance: 2.0
+  - name: "BG after weight shift"
+    symbol: "BG"
+    unit: "ft"
+    test_expected: 1.492
+    tolerance: 0.01
+worked_examples:
+  - description: "Example 10.1 (p.349): MBT water required to submerge (surface=6900 LT, submerged=7800 LT)"
+    inputs:
+      surface_disp_lt: 6900.0
+      submerged_disp_lt: 7800.0
+    outputs:
+      mbt_capacity_lt: 900.0
+    use_as_test: true
+  - description: "Example 10.2 (p.350): Water adjustment for density change (7200 LT sub, rho 1.9890 to 1.9976)"
+    inputs:
+      submerged_weight_lt: 7200.0
+      rho_initial: 1.9890
+      rho_final: 1.9976
+    outputs:
+      density_compensation_lt: 31.1
+    use_as_test: true
+  - description: "Example 10.3 (p.355): Submarine stability after 6 LT shifted from 10 ft to 20 ft above keel"
+    inputs:
+      displacement_lt: 7200.0
+      kb_ft: 15.0
+      kg_ft: 13.5
+      moved_weight_lt: 6.0
+      old_pos_ft: 10.0
+      new_pos_ft: 20.0
+    outputs:
+      bg_ft: 1.492
+    use_as_test: true
+assumptions:
+  - "g = 32.17 ft/s^2"
+  - "1 LT = 2240 lb"
+  - "Volume remains constant during density compensation (rigid hull)"
+  - "Positive BG indicates stable configuration (B above G)"
+references:
+  - "USNA EN400 Principles of Ship Performance, Summer 2020, Chapter 10"

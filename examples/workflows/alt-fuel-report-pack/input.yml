@@ -1,0 +1,150 @@
+# Alternative-fuel ship sizing -> report_pack demo, step 2 of 2: the
+# standard report pack rendered from the trade-study CSVs produced by
+# sizing_input.yml (same pattern as the fatg_spectral_fatigue example in
+# examples/workflows/report-pack/). All document metadata is
+# placeholder-only (B0000 / Example Client).
+#
+# Run: python -m digitalmodel examples/workflows/alt-fuel-report-pack/input.yml
+
+basename: report_pack
+
+report_pack:
+  document:
+    number: B0000-RPT-002-00
+    revision: "00"
+    title: Example Alternative-Fuel (LH2) Concept Sizing Trade Study
+    project: B0000
+    client: Example Client
+    date: "2026-07-14"
+    prepared_by: Author Placeholder
+    checked_by: Checker Placeholder
+    approved_by: Approver Placeholder
+    revision_history:
+      - rev: "00"
+        date: "2026-07-14"
+        description: Issued for internal review
+        prepared: AP
+        checked: CP
+        approved: XP
+
+  sections:
+    - title: Introduction and Scope
+      content: |
+        This report presents a concept-design screening of the liquid-hydrogen
+        fuel chain for a representative ~40k DWT bulker-like vessel: required
+        fuel mass, boil-off gas (BOG) accounting over a voyage profile with a
+        port dwell, converged tank volume, and an endurance/fuel-cost trade
+        study over service speed.
+
+        Excluded from scope: bare-hull resistance and propulsion prediction
+        (shaft power is an input), tank structure and hold arrangement, weight
+        and stability, and any class compliance conclusion.
+    - title: References and Traceability
+      content: |
+        - Analysis workflow: `digitalmodel.alt_fuel_ship_sizing` (LH2 fuel
+          chain, voyage-profile BOG, trade study).
+        - Report generator: `digitalmodel.report_pack` standard report-pack
+          workflow.
+        - Cited property sources are listed in the References cited section
+          and the machine-readable citations sidecar emitted with this pack.
+    - title: Design Data and Basis
+      content: |
+        - Route: voyage profile of 2000 nm at 12 kn, a 240 h (10-day) port
+          dwell, and 2000 nm at 12 kn (4000 nm sea distance in total).
+        - Powering: 4750 kW shaft at service speed (input lane), 500 kW hotel.
+        - Plant: fuel cell at 50 % LHV efficiency, electric drivetrain 95 %.
+        - Fuel: liquid parahydrogen at the NBP; LHV rounded to 120.0 MJ/kg for
+          this synthetic example (published value 119.96 MJ/kg).
+        - Tank: plain cylinder, L/D 5, ullage 8 %, insulation heat flux
+          1.5 W/m2, BOG consumed by the fuel-cell plant at sea.
+        - Design margin 10 % on the burned voyage fuel; fuel price 6.0 /kg
+          (placeholder economics).
+    - title: Methodology and Assumptions
+      content: |
+        The fuel chain is composed per leg of the voyage profile:
+
+        ```text
+        electrical demand = shaft power / drivetrain eff. + hotel load
+        fuel mass flow    = electrical demand / fuel-cell eff. / LHV
+        BOG rate          = insulation heat flux x tank area / h_vap
+        ```
+
+        - Port dwell burns no fuel, but the tank keeps generating BOG, which
+          accrues against the inventory and is added to the required fuel.
+        - Tank volume is converged by fixed-point iteration (lost BOG grows
+          the required fuel, which grows the tank and its heat leak).
+        - The trade study sweeps the aggregate 4000 nm sea distance as a
+          single passage per speed (cube-law shaft power; port dwell
+          excluded) -- a speed-screening table, not a schedule model.
+    - title: Results
+      content: |
+        The design-point fuel-chain summary, the per-leg BOG accounting for
+        the voyage profile, and the speed trade study are tabulated below.
+        The 10-day port dwell adds ~3.1 t of lost BOG, growing the required
+        fuel from 121.0 t (dwell-free) to ~124.1 t and the gross tank volume
+        from 1856 m3 to ~1904 m3 -- port dwell, not sea endurance, drives
+        the tank size margin for this schedule.
+    - title: Conclusions and Limitations
+      content: |
+        Port-dwell boil-off is a first-order driver of concept tank size for
+        this schedule and should be carried in all sizing iterations.
+
+        - Concept-design screening only: public physics, uncalibrated.
+        - Shaft power vs speed uses the cube law between prediction points.
+        - No class compliance conclusion is drawn.
+
+  results:
+    tables:
+      - title: Fuel-chain design-point summary (voyage profile)
+        csv: data/sizing_input_fuel_chain_summary.csv
+      - title: Per-leg BOG accounting (sea / port / sea)
+        csv: data/sizing_input_voyage_legs.csv
+      - title: Endurance / fuel-cost trade study (speed sweep)
+        csv: data/sizing_input_trade_study.csv
+
+  appendices:
+    - letter: A
+      title: Reference Documents
+      content: |
+        Source documents backing the fuel-property basis (see also the
+        References cited section).
+    - letter: B
+      title: Calculation Records
+      files:
+        - data/sizing_input_fuel_chain_summary.csv
+        - data/sizing_input_voyage_legs.csv
+        - data/sizing_input_trade_study.csv
+
+  citations:
+    - code_id: NBS-MONOGRAPH-168
+      publisher: U.S. National Bureau of Standards
+      revision: "1981"
+      section: Selected properties of hydrogen; saturated LH2 density and heat of vaporization at the NBP
+      wiki_path: wikis/marine-engineering/wiki/references/nbs-monograph-168.md
+      note: LH2 density 70.85 kg/m3 and h_vap 446 kJ/kg at 20.28 K.
+    - code_id: DOE-H2-HARC
+      publisher: U.S. Department of Energy
+      revision: Hydrogen Analysis Resource Center
+      section: Lower heating value of hydrogen
+      wiki_path: wikis/marine-engineering/wiki/references/doe-hydrogen-analysis-resource-center.md
+      note: LHV 119.96 MJ/kg; rounded to 120.0 MJ/kg in this synthetic example.
+
+  manifest:
+    issue: https://github.com/vamseeachanta/digitalmodel/issues/1591
+    project: B0000
+    artifact_class: example-report-pack-output
+    privacy_classification: public-example
+    publishability_decision: public repository example; placeholder metadata only
+    input_source_ids:
+      - EXAMPLE-ALT-FUEL-TRADE-STUDY
+    source_artifacts:
+      sizing_input: examples/workflows/alt-fuel-report-pack/sizing_input.yml
+      fuel_chain_summary_csv: examples/workflows/alt-fuel-report-pack/data/sizing_input_fuel_chain_summary.csv
+      voyage_legs_csv: examples/workflows/alt-fuel-report-pack/data/sizing_input_voyage_legs.csv
+      trade_study_csv: examples/workflows/alt-fuel-report-pack/data/sizing_input_trade_study.csv
+    raw_output_path: digitalmodel:examples/workflows/alt-fuel-report-pack/data
+    final_output_path: digitalmodel:examples/workflows/alt-fuel-report-pack/results
+    compute_environment: not-recorded
+
+  pdf: auto
+  output_dir: results

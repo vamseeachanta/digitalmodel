@@ -1,0 +1,29 @@
+basename: rao_tabulation
+
+rao_tabulation:
+  # Periods are converted internally with omega_rad_s = 2*pi/period_s.
+  rao_database:
+    vessel_name: demo_vessel
+    periods_s: [8.0, 12.0]
+    headings_deg: [0.0, 90.0]
+    amplitudes:
+      - - [0.05, 0.02, 0.60, 0.010, 0.020, 0.005]
+        - [0.04, 0.03, 0.55, 0.020, 0.015, 0.006]
+      - - [0.08, 0.03, 0.90, 0.015, 0.025, 0.007]
+        - [0.06, 0.04, 0.85, 0.025, 0.020, 0.008]
+    phases_deg:
+      - - [0.0, 5.0, 10.0, 0.0, 2.0, 1.0]
+        - [1.0, 6.0, 12.0, 1.0, 3.0, 2.0]
+      - - [2.0, 7.0, 15.0, 2.0, 4.0, 3.0]
+        - [3.0, 8.0, 17.0, 3.0, 5.0, 4.0]
+  query_points:
+    - period_s: 10.0
+      heading_deg: 45.0
+  interpolation_method: linear
+  output_dir: results
+
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: true

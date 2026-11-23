@@ -1,0 +1,23 @@
+# Unified riser input schema (#809) - Steel Catenary Riser example
+riser_type: SCR
+name: scr_1500m_example
+geometry:
+  water_depth: 1500.0
+  hang_off_elevation: -10.0
+  vessel_draft: 12.0
+material:
+  outer_diameter: 0.2731
+  wall_thickness: 0.0254
+  coating_thickness: 0.04
+  grade: X65
+  contents_density: 800.0
+environment:
+  surface_current: 1.0
+  wave_height: 4.5
+  wave_period: 11.0
+analysis:
+  run_statics: true
+  run_dynamics: false
+  safety_factor: 1.5
+hang_off_angle_from_vertical: 12.0
+min_tdp_offset: 200.0

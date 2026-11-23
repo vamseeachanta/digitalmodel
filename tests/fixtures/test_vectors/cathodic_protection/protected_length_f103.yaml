@@ -1,0 +1,71 @@
+source_type: standard
+source_description: "DNV-RP-F103 protected length calculations for rigid riser line pipes"
+extracted_date: "2026-03-16"
+legal_scan_passed: true
+category: "cathodic_protection"
+subcategory: "protected_length"
+equations:
+  - name: "Protected Length"
+    latex: "PL = \\sqrt{\\frac{\\Delta E_{me} \\cdot WT \\cdot (D - WT)}{\\rho_{me} \\cdot D \\cdot f_{cf} \\cdot i_{cm}}}"
+    description: "Protected length of rigid riser line pipe per DNV-RP-F103 section 5.6.7, Eq 14"
+inputs:
+  - name: "Metallic voltage drop"
+    symbol: "delta_E_me"
+    unit: "V"
+    test_value: 0.15
+  - name: "Wall thickness"
+    symbol: "WT"
+    unit: "m"
+    test_value: 0.022
+  - name: "Outer diameter"
+    symbol: "D"
+    unit: "m"
+    test_value: 0.329
+  - name: "Steel resistivity"
+    symbol: "rho_me"
+    unit: "ohm-m"
+    test_value: 2.0e-7
+  - name: "Final coating breakdown factor"
+    symbol: "f_cf"
+    unit: "dimensionless"
+    test_value: 0.0042
+  - name: "Design mean current density"
+    symbol: "i_cm"
+    unit: "A/m2"
+    test_value: 0.250
+outputs:
+  - name: "Protected length"
+    symbol: "PL"
+    unit: "m"
+    test_expected: 3829
+    tolerance: 76.6
+worked_examples:
+  - description: "12-inch production riser upper line pipe (D=0.329m, WT=0.022m)"
+    inputs:
+      delta_E_me: 0.15
+      WT: 0.022
+      D: 0.329
+      rho_me: 2.0e-7
+      f_cf: 0.0042
+      i_cm: 0.250
+    outputs:
+      protected_length_m: 3829
+    use_as_test: true
+  - description: "8-inch gas lift riser upper line pipe (D=0.219m, WT=0.0239m)"
+    inputs:
+      delta_E_me: 0.15
+      WT: 0.0239
+      D: 0.219
+      rho_me: 2.0e-7
+      f_cf: 0.0042
+      i_cm: 0.235
+    outputs:
+      protected_length_m: 4022
+    use_as_test: true
+assumptions:
+  - "Steel resistivity 2.0e-7 ohm-m per DNV-RP-F103 section 5.6.10"
+  - "Insulating coating with f_cf=0.0042"
+  - "Metallic voltage drop 0.15 V per DNV-RP-F103 section 5.6.3"
+references:
+  - "DNV-RP-F103, Section 5.6.7, Eq 14"
+  - "DNV-RP-F103, Section 5.6.10 (steel resistivity)"

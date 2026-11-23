@@ -1,0 +1,14 @@
+{
+  "issue": 2538,
+  "generated_at": "2026-04-29T02:12:17.177122+00:00",
+  "stage": "aoi_preparation",
+  "addresses_total": 1,
+  "addresses": [
+    {
+      "slug": "11511-piping-rock",
+      "stage": "aoi_prepared",
+      "status": "complete",
+      "metadata": "/mnt/local-analysis/ace2-gis-timelapse/outputs/11511-piping-rock/manifests/11511-piping-rock-aoi-metadata.json"
+    }
+  ]
+}

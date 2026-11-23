@@ -1,0 +1,681 @@
+pipe_type,nominal_size,od_m,wt_m,span_m,v_current_ms,e_over_d,content_density_kg_m3,boundary_condition,wt_selection,schedule,case_id,f_n_hz,v_r,a_over_d,status,max_allowable_span_m,m_eff_kg_per_m
+pipeline,8in,0.2191,0.0082,10,0.2,0.5,800.0,pinned,thinnest,Sch 40,PL-0001,1.3573,0.673,0.0,PASS,23.6,109.1
+pipeline,8in,0.2191,0.0082,10,0.2,1.0,800.0,pinned,thinnest,Sch 40,PL-0002,1.3573,0.673,0.0,PASS,21.1,109.1
+pipeline,8in,0.2191,0.0082,10,0.2,2.0,800.0,pinned,thinnest,Sch 40,PL-0003,1.3573,0.673,0.0,PASS,21.1,109.1
+pipeline,8in,0.2191,0.0082,10,0.2,5.0,800.0,pinned,thinnest,Sch 40,PL-0004,1.3573,0.673,0.0,PASS,21.1,109.1
+pipeline,8in,0.2191,0.0082,10,0.4,0.5,800.0,pinned,thinnest,Sch 40,PL-0005,1.3573,1.345,0.0538,INLINE_ONLY,16.7,109.1
+pipeline,8in,0.2191,0.0082,10,0.4,1.0,800.0,pinned,thinnest,Sch 40,PL-0006,1.3573,1.345,0.0673,INLINE_ONLY,14.9,109.1
+pipeline,8in,0.2191,0.0082,10,0.4,2.0,800.0,pinned,thinnest,Sch 40,PL-0007,1.3573,1.345,0.0673,INLINE_ONLY,14.9,109.1
+pipeline,8in,0.2191,0.0082,10,0.4,5.0,800.0,pinned,thinnest,Sch 40,PL-0008,1.3573,1.345,0.0673,INLINE_ONLY,14.9,109.1
+pipeline,8in,0.2191,0.0082,10,0.6,0.5,800.0,pinned,thinnest,Sch 40,PL-0009,1.3573,2.018,0.0807,INLINE_ONLY,13.6,109.1
+pipeline,8in,0.2191,0.0082,10,0.6,1.0,800.0,pinned,thinnest,Sch 40,PL-0010,1.3573,2.018,0.1009,INLINE_ONLY,12.2,109.1
+pipeline,8in,0.2191,0.0082,10,0.6,2.0,800.0,pinned,thinnest,Sch 40,PL-0011,1.3573,2.018,0.1009,INLINE_ONLY,12.2,109.1
+pipeline,8in,0.2191,0.0082,10,0.6,5.0,800.0,pinned,thinnest,Sch 40,PL-0012,1.3573,2.018,0.1009,INLINE_ONLY,12.2,109.1
+pipeline,8in,0.2191,0.0082,10,0.8,0.5,800.0,pinned,thinnest,Sch 40,PL-0013,1.3573,2.69,0.1076,INLINE_ONLY,11.8,109.1
+pipeline,8in,0.2191,0.0082,10,0.8,1.0,800.0,pinned,thinnest,Sch 40,PL-0014,1.3573,2.69,0.1345,INLINE_ONLY,10.6,109.1
+pipeline,8in,0.2191,0.0082,10,0.8,2.0,800.0,pinned,thinnest,Sch 40,PL-0015,1.3573,2.69,0.1345,INLINE_ONLY,10.6,109.1
+pipeline,8in,0.2191,0.0082,10,0.8,5.0,800.0,pinned,thinnest,Sch 40,PL-0016,1.3573,2.69,0.1345,INLINE_ONLY,10.6,109.1
+pipeline,8in,0.2191,0.0082,10,1.0,0.5,800.0,pinned,thinnest,Sch 40,PL-0017,1.3573,3.363,0.1345,INLINE_ONLY,10.6,109.1
+pipeline,8in,0.2191,0.0082,10,1.0,1.0,800.0,pinned,thinnest,Sch 40,PL-0018,1.3573,3.363,0.1886,FAIL_CF,9.4,109.1
+pipeline,8in,0.2191,0.0082,10,1.0,2.0,800.0,pinned,thinnest,Sch 40,PL-0019,1.3573,3.363,0.1886,FAIL_CF,9.4,109.1
+pipeline,8in,0.2191,0.0082,10,1.0,5.0,800.0,pinned,thinnest,Sch 40,PL-0020,1.3573,3.363,0.1886,FAIL_CF,9.4,109.1
+pipeline,8in,0.2191,0.0082,20,0.2,0.5,800.0,pinned,thinnest,Sch 40,PL-0021,0.3393,2.69,0.1076,INLINE_ONLY,23.6,109.1
+pipeline,8in,0.2191,0.0082,20,0.2,1.0,800.0,pinned,thinnest,Sch 40,PL-0022,0.3393,2.69,0.1345,INLINE_ONLY,21.1,109.1
+pipeline,8in,0.2191,0.0082,20,0.2,2.0,800.0,pinned,thinnest,Sch 40,PL-0023,0.3393,2.69,0.1345,INLINE_ONLY,21.1,109.1
+pipeline,8in,0.2191,0.0082,20,0.2,5.0,800.0,pinned,thinnest,Sch 40,PL-0024,0.3393,2.69,0.1345,INLINE_ONLY,21.1,109.1
+pipeline,8in,0.2191,0.0082,20,0.4,0.5,800.0,pinned,thinnest,Sch 40,PL-0025,0.3393,5.38,0.9,FAIL_LOCKIN,16.7,109.1
+pipeline,8in,0.2191,0.0082,20,0.4,1.0,800.0,pinned,thinnest,Sch 40,PL-0026,0.3393,5.38,0.9,FAIL_LOCKIN,14.9,109.1
+pipeline,8in,0.2191,0.0082,20,0.4,2.0,800.0,pinned,thinnest,Sch 40,PL-0027,0.3393,5.38,0.9,FAIL_LOCKIN,14.9,109.1
+pipeline,8in,0.2191,0.0082,20,0.4,5.0,800.0,pinned,thinnest,Sch 40,PL-0028,0.3393,5.38,0.9,FAIL_LOCKIN,14.9,109.1
+pipeline,8in,0.2191,0.0082,20,0.6,0.5,800.0,pinned,thinnest,Sch 40,PL-0029,0.3393,8.07,0.9,FAIL_CF,13.6,109.1
+pipeline,8in,0.2191,0.0082,20,0.6,1.0,800.0,pinned,thinnest,Sch 40,PL-0030,0.3393,8.07,0.9,FAIL_CF,12.2,109.1
+pipeline,8in,0.2191,0.0082,20,0.6,2.0,800.0,pinned,thinnest,Sch 40,PL-0031,0.3393,8.07,0.9,FAIL_CF,12.2,109.1
+pipeline,8in,0.2191,0.0082,20,0.6,5.0,800.0,pinned,thinnest,Sch 40,PL-0032,0.3393,8.07,0.9,FAIL_CF,12.2,109.1
+pipeline,8in,0.2191,0.0082,20,0.8,0.5,800.0,pinned,thinnest,Sch 40,PL-0033,0.3393,10.76,0.9,FAIL_CF,11.8,109.1
+pipeline,8in,0.2191,0.0082,20,0.8,1.0,800.0,pinned,thinnest,Sch 40,PL-0034,0.3393,10.76,0.9,FAIL_CF,10.6,109.1
+pipeline,8in,0.2191,0.0082,20,0.8,2.0,800.0,pinned,thinnest,Sch 40,PL-0035,0.3393,10.76,0.9,FAIL_CF,10.6,109.1
+pipeline,8in,0.2191,0.0082,20,0.8,5.0,800.0,pinned,thinnest,Sch 40,PL-0036,0.3393,10.76,0.9,FAIL_CF,10.6,109.1
+pipeline,8in,0.2191,0.0082,20,1.0,0.5,800.0,pinned,thinnest,Sch 40,PL-0037,0.3393,13.451,0.9,FAIL_CF,10.6,109.1
+pipeline,8in,0.2191,0.0082,20,1.0,1.0,800.0,pinned,thinnest,Sch 40,PL-0038,0.3393,13.451,0.9,FAIL_CF,9.4,109.1
+pipeline,8in,0.2191,0.0082,20,1.0,2.0,800.0,pinned,thinnest,Sch 40,PL-0039,0.3393,13.451,0.9,FAIL_CF,9.4,109.1
+pipeline,8in,0.2191,0.0082,20,1.0,5.0,800.0,pinned,thinnest,Sch 40,PL-0040,0.3393,13.451,0.9,FAIL_CF,9.4,109.1
+pipeline,8in,0.2191,0.0082,30,0.2,0.5,800.0,pinned,thinnest,Sch 40,PL-0041,0.1508,6.053,0.9,FAIL_LOCKIN,23.6,109.1
+pipeline,8in,0.2191,0.0082,30,0.2,1.0,800.0,pinned,thinnest,Sch 40,PL-0042,0.1508,6.053,0.9,FAIL_LOCKIN,21.1,109.1
+pipeline,8in,0.2191,0.0082,30,0.2,2.0,800.0,pinned,thinnest,Sch 40,PL-0043,0.1508,6.053,0.9,FAIL_LOCKIN,21.1,109.1
+pipeline,8in,0.2191,0.0082,30,0.2,5.0,800.0,pinned,thinnest,Sch 40,PL-0044,0.1508,6.053,0.9,FAIL_LOCKIN,21.1,109.1
+pipeline,8in,0.2191,0.0082,30,0.4,0.5,800.0,pinned,thinnest,Sch 40,PL-0045,0.1508,12.106,0.9,FAIL_CF,16.7,109.1
+pipeline,8in,0.2191,0.0082,30,0.4,1.0,800.0,pinned,thinnest,Sch 40,PL-0046,0.1508,12.106,0.9,FAIL_CF,14.9,109.1
+pipeline,8in,0.2191,0.0082,30,0.4,2.0,800.0,pinned,thinnest,Sch 40,PL-0047,0.1508,12.106,0.9,FAIL_CF,14.9,109.1
+pipeline,8in,0.2191,0.0082,30,0.4,5.0,800.0,pinned,thinnest,Sch 40,PL-0048,0.1508,12.106,0.9,FAIL_CF,14.9,109.1
+pipeline,8in,0.2191,0.0082,30,0.6,0.5,800.0,pinned,thinnest,Sch 40,PL-0049,0.1508,18.158,0.9,FAIL_CF,13.6,109.1
+pipeline,8in,0.2191,0.0082,30,0.6,1.0,800.0,pinned,thinnest,Sch 40,PL-0050,0.1508,18.158,0.9,FAIL_CF,12.2,109.1
+pipeline,8in,0.2191,0.0082,30,0.6,2.0,800.0,pinned,thinnest,Sch 40,PL-0051,0.1508,18.158,0.9,FAIL_CF,12.2,109.1
+pipeline,8in,0.2191,0.0082,30,0.6,5.0,800.0,pinned,thinnest,Sch 40,PL-0052,0.1508,18.158,0.9,FAIL_CF,12.2,109.1
+pipeline,8in,0.2191,0.0082,30,0.8,0.5,800.0,pinned,thinnest,Sch 40,PL-0053,0.1508,24.211,0.9,FAIL_CF,11.8,109.1
+pipeline,8in,0.2191,0.0082,30,0.8,1.0,800.0,pinned,thinnest,Sch 40,PL-0054,0.1508,24.211,0.9,FAIL_CF,10.6,109.1
+pipeline,8in,0.2191,0.0082,30,0.8,2.0,800.0,pinned,thinnest,Sch 40,PL-0055,0.1508,24.211,0.9,FAIL_CF,10.6,109.1
+pipeline,8in,0.2191,0.0082,30,0.8,5.0,800.0,pinned,thinnest,Sch 40,PL-0056,0.1508,24.211,0.9,FAIL_CF,10.6,109.1
+pipeline,8in,0.2191,0.0082,30,1.0,0.5,800.0,pinned,thinnest,Sch 40,PL-0057,0.1508,30.264,0.9,FAIL_CF,10.6,109.1
+pipeline,8in,0.2191,0.0082,30,1.0,1.0,800.0,pinned,thinnest,Sch 40,PL-0058,0.1508,30.264,0.9,FAIL_CF,9.4,109.1
+pipeline,8in,0.2191,0.0082,30,1.0,2.0,800.0,pinned,thinnest,Sch 40,PL-0059,0.1508,30.264,0.9,FAIL_CF,9.4,109.1
+pipeline,8in,0.2191,0.0082,30,1.0,5.0,800.0,pinned,thinnest,Sch 40,PL-0060,0.1508,30.264,0.9,FAIL_CF,9.4,109.1
+pipeline,8in,0.2191,0.0082,40,0.2,0.5,800.0,pinned,thinnest,Sch 40,PL-0061,0.0848,10.76,0.9,FAIL_CF,23.6,109.1
+pipeline,8in,0.2191,0.0082,40,0.2,1.0,800.0,pinned,thinnest,Sch 40,PL-0062,0.0848,10.76,0.9,FAIL_CF,21.1,109.1
+pipeline,8in,0.2191,0.0082,40,0.2,2.0,800.0,pinned,thinnest,Sch 40,PL-0063,0.0848,10.76,0.9,FAIL_CF,21.1,109.1
+pipeline,8in,0.2191,0.0082,40,0.2,5.0,800.0,pinned,thinnest,Sch 40,PL-0064,0.0848,10.76,0.9,FAIL_CF,21.1,109.1
+pipeline,8in,0.2191,0.0082,40,0.4,0.5,800.0,pinned,thinnest,Sch 40,PL-0065,0.0848,21.521,0.9,FAIL_CF,16.7,109.1
+pipeline,8in,0.2191,0.0082,40,0.4,1.0,800.0,pinned,thinnest,Sch 40,PL-0066,0.0848,21.521,0.9,FAIL_CF,14.9,109.1
+pipeline,8in,0.2191,0.0082,40,0.4,2.0,800.0,pinned,thinnest,Sch 40,PL-0067,0.0848,21.521,0.9,FAIL_CF,14.9,109.1
+pipeline,8in,0.2191,0.0082,40,0.4,5.0,800.0,pinned,thinnest,Sch 40,PL-0068,0.0848,21.521,0.9,FAIL_CF,14.9,109.1
+pipeline,8in,0.2191,0.0082,40,0.6,0.5,800.0,pinned,thinnest,Sch 40,PL-0069,0.0848,32.281,0.9,FAIL_CF,13.6,109.1
+pipeline,8in,0.2191,0.0082,40,0.6,1.0,800.0,pinned,thinnest,Sch 40,PL-0070,0.0848,32.281,0.9,FAIL_CF,12.2,109.1
+pipeline,8in,0.2191,0.0082,40,0.6,2.0,800.0,pinned,thinnest,Sch 40,PL-0071,0.0848,32.281,0.9,FAIL_CF,12.2,109.1
+pipeline,8in,0.2191,0.0082,40,0.6,5.0,800.0,pinned,thinnest,Sch 40,PL-0072,0.0848,32.281,0.9,FAIL_CF,12.2,109.1
+pipeline,8in,0.2191,0.0082,40,0.8,0.5,800.0,pinned,thinnest,Sch 40,PL-0073,0.0848,43.042,0.9,FAIL_CF,11.8,109.1
+pipeline,8in,0.2191,0.0082,40,0.8,1.0,800.0,pinned,thinnest,Sch 40,PL-0074,0.0848,43.042,0.9,FAIL_CF,10.6,109.1
+pipeline,8in,0.2191,0.0082,40,0.8,2.0,800.0,pinned,thinnest,Sch 40,PL-0075,0.0848,43.042,0.9,FAIL_CF,10.6,109.1
+pipeline,8in,0.2191,0.0082,40,0.8,5.0,800.0,pinned,thinnest,Sch 40,PL-0076,0.0848,43.042,0.9,FAIL_CF,10.6,109.1
+pipeline,8in,0.2191,0.0082,40,1.0,0.5,800.0,pinned,thinnest,Sch 40,PL-0077,0.0848,53.802,0.9,FAIL_CF,10.6,109.1
+pipeline,8in,0.2191,0.0082,40,1.0,1.0,800.0,pinned,thinnest,Sch 40,PL-0078,0.0848,53.802,0.9,FAIL_CF,9.4,109.1
+pipeline,8in,0.2191,0.0082,40,1.0,2.0,800.0,pinned,thinnest,Sch 40,PL-0079,0.0848,53.802,0.9,FAIL_CF,9.4,109.1
+pipeline,8in,0.2191,0.0082,40,1.0,5.0,800.0,pinned,thinnest,Sch 40,PL-0080,0.0848,53.802,0.9,FAIL_CF,9.4,109.1
+pipeline,8in,0.2191,0.0082,50,0.2,0.5,800.0,pinned,thinnest,Sch 40,PL-0081,0.0543,16.813,0.9,FAIL_CF,23.6,109.1
+pipeline,8in,0.2191,0.0082,50,0.2,1.0,800.0,pinned,thinnest,Sch 40,PL-0082,0.0543,16.813,0.9,FAIL_CF,21.1,109.1
+pipeline,8in,0.2191,0.0082,50,0.2,2.0,800.0,pinned,thinnest,Sch 40,PL-0083,0.0543,16.813,0.9,FAIL_CF,21.1,109.1
+pipeline,8in,0.2191,0.0082,50,0.2,5.0,800.0,pinned,thinnest,Sch 40,PL-0084,0.0543,16.813,0.9,FAIL_CF,21.1,109.1
+pipeline,8in,0.2191,0.0082,50,0.4,0.5,800.0,pinned,thinnest,Sch 40,PL-0085,0.0543,33.627,0.9,FAIL_CF,16.7,109.1
+pipeline,8in,0.2191,0.0082,50,0.4,1.0,800.0,pinned,thinnest,Sch 40,PL-0086,0.0543,33.627,0.9,FAIL_CF,14.9,109.1
+pipeline,8in,0.2191,0.0082,50,0.4,2.0,800.0,pinned,thinnest,Sch 40,PL-0087,0.0543,33.627,0.9,FAIL_CF,14.9,109.1
+pipeline,8in,0.2191,0.0082,50,0.4,5.0,800.0,pinned,thinnest,Sch 40,PL-0088,0.0543,33.627,0.9,FAIL_CF,14.9,109.1
+pipeline,8in,0.2191,0.0082,50,0.6,0.5,800.0,pinned,thinnest,Sch 40,PL-0089,0.0543,50.44,0.9,FAIL_CF,13.6,109.1
+pipeline,8in,0.2191,0.0082,50,0.6,1.0,800.0,pinned,thinnest,Sch 40,PL-0090,0.0543,50.44,0.9,FAIL_CF,12.2,109.1
+pipeline,8in,0.2191,0.0082,50,0.6,2.0,800.0,pinned,thinnest,Sch 40,PL-0091,0.0543,50.44,0.9,FAIL_CF,12.2,109.1
+pipeline,8in,0.2191,0.0082,50,0.6,5.0,800.0,pinned,thinnest,Sch 40,PL-0092,0.0543,50.44,0.9,FAIL_CF,12.2,109.1
+pipeline,8in,0.2191,0.0082,50,0.8,0.5,800.0,pinned,thinnest,Sch 40,PL-0093,0.0543,67.253,0.9,FAIL_CF,11.8,109.1
+pipeline,8in,0.2191,0.0082,50,0.8,1.0,800.0,pinned,thinnest,Sch 40,PL-0094,0.0543,67.253,0.9,FAIL_CF,10.6,109.1
+pipeline,8in,0.2191,0.0082,50,0.8,2.0,800.0,pinned,thinnest,Sch 40,PL-0095,0.0543,67.253,0.9,FAIL_CF,10.6,109.1
+pipeline,8in,0.2191,0.0082,50,0.8,5.0,800.0,pinned,thinnest,Sch 40,PL-0096,0.0543,67.253,0.9,FAIL_CF,10.6,109.1
+pipeline,8in,0.2191,0.0082,50,1.0,0.5,800.0,pinned,thinnest,Sch 40,PL-0097,0.0543,84.066,0.9,FAIL_CF,10.6,109.1
+pipeline,8in,0.2191,0.0082,50,1.0,1.0,800.0,pinned,thinnest,Sch 40,PL-0098,0.0543,84.066,0.9,FAIL_CF,9.4,109.1
+pipeline,8in,0.2191,0.0082,50,1.0,2.0,800.0,pinned,thinnest,Sch 40,PL-0099,0.0543,84.066,0.9,FAIL_CF,9.4,109.1
+pipeline,8in,0.2191,0.0082,50,1.0,5.0,800.0,pinned,thinnest,Sch 40,PL-0100,0.0543,84.066,0.9,FAIL_CF,9.4,109.1
+pipeline,8in,0.2191,0.0082,60,0.2,0.5,800.0,pinned,thinnest,Sch 40,PL-0101,0.0377,24.211,0.9,FAIL_CF,23.6,109.1
+pipeline,8in,0.2191,0.0082,60,0.2,1.0,800.0,pinned,thinnest,Sch 40,PL-0102,0.0377,24.211,0.9,FAIL_CF,21.1,109.1
+pipeline,8in,0.2191,0.0082,60,0.2,2.0,800.0,pinned,thinnest,Sch 40,PL-0103,0.0377,24.211,0.9,FAIL_CF,21.1,109.1
+pipeline,8in,0.2191,0.0082,60,0.2,5.0,800.0,pinned,thinnest,Sch 40,PL-0104,0.0377,24.211,0.9,FAIL_CF,21.1,109.1
+pipeline,8in,0.2191,0.0082,60,0.4,0.5,800.0,pinned,thinnest,Sch 40,PL-0105,0.0377,48.422,0.9,FAIL_CF,16.7,109.1
+pipeline,8in,0.2191,0.0082,60,0.4,1.0,800.0,pinned,thinnest,Sch 40,PL-0106,0.0377,48.422,0.9,FAIL_CF,14.9,109.1
+pipeline,8in,0.2191,0.0082,60,0.4,2.0,800.0,pinned,thinnest,Sch 40,PL-0107,0.0377,48.422,0.9,FAIL_CF,14.9,109.1
+pipeline,8in,0.2191,0.0082,60,0.4,5.0,800.0,pinned,thinnest,Sch 40,PL-0108,0.0377,48.422,0.9,FAIL_CF,14.9,109.1
+pipeline,8in,0.2191,0.0082,60,0.6,0.5,800.0,pinned,thinnest,Sch 40,PL-0109,0.0377,72.633,0.9,FAIL_CF,13.6,109.1
+pipeline,8in,0.2191,0.0082,60,0.6,1.0,800.0,pinned,thinnest,Sch 40,PL-0110,0.0377,72.633,0.9,FAIL_CF,12.2,109.1
+pipeline,8in,0.2191,0.0082,60,0.6,2.0,800.0,pinned,thinnest,Sch 40,PL-0111,0.0377,72.633,0.9,FAIL_CF,12.2,109.1
+pipeline,8in,0.2191,0.0082,60,0.6,5.0,800.0,pinned,thinnest,Sch 40,PL-0112,0.0377,72.633,0.9,FAIL_CF,12.2,109.1
+pipeline,8in,0.2191,0.0082,60,0.8,0.5,800.0,pinned,thinnest,Sch 40,PL-0113,0.0377,96.844,0.9,FAIL_CF,11.8,109.1
+pipeline,8in,0.2191,0.0082,60,0.8,1.0,800.0,pinned,thinnest,Sch 40,PL-0114,0.0377,96.844,0.9,FAIL_CF,10.6,109.1
+pipeline,8in,0.2191,0.0082,60,0.8,2.0,800.0,pinned,thinnest,Sch 40,PL-0115,0.0377,96.844,0.9,FAIL_CF,10.6,109.1
+pipeline,8in,0.2191,0.0082,60,0.8,5.0,800.0,pinned,thinnest,Sch 40,PL-0116,0.0377,96.844,0.9,FAIL_CF,10.6,109.1
+pipeline,8in,0.2191,0.0082,60,1.0,0.5,800.0,pinned,thinnest,Sch 40,PL-0117,0.0377,121.055,0.9,FAIL_CF,10.6,109.1
+pipeline,8in,0.2191,0.0082,60,1.0,1.0,800.0,pinned,thinnest,Sch 40,PL-0118,0.0377,121.055,0.9,FAIL_CF,9.4,109.1
+pipeline,8in,0.2191,0.0082,60,1.0,2.0,800.0,pinned,thinnest,Sch 40,PL-0119,0.0377,121.055,0.9,FAIL_CF,9.4,109.1
+pipeline,8in,0.2191,0.0082,60,1.0,5.0,800.0,pinned,thinnest,Sch 40,PL-0120,0.0377,121.055,0.9,FAIL_CF,9.4,109.1
+pipeline,8in,0.2191,0.0082,70,0.2,0.5,800.0,pinned,thinnest,Sch 40,PL-0121,0.0277,32.954,0.9,FAIL_CF,23.6,109.1
+pipeline,8in,0.2191,0.0082,70,0.2,1.0,800.0,pinned,thinnest,Sch 40,PL-0122,0.0277,32.954,0.9,FAIL_CF,21.1,109.1
+pipeline,8in,0.2191,0.0082,70,0.2,2.0,800.0,pinned,thinnest,Sch 40,PL-0123,0.0277,32.954,0.9,FAIL_CF,21.1,109.1
+pipeline,8in,0.2191,0.0082,70,0.2,5.0,800.0,pinned,thinnest,Sch 40,PL-0124,0.0277,32.954,0.9,FAIL_CF,21.1,109.1
+pipeline,8in,0.2191,0.0082,70,0.4,0.5,800.0,pinned,thinnest,Sch 40,PL-0125,0.0277,65.908,0.9,FAIL_CF,16.7,109.1
+pipeline,8in,0.2191,0.0082,70,0.4,1.0,800.0,pinned,thinnest,Sch 40,PL-0126,0.0277,65.908,0.9,FAIL_CF,14.9,109.1
+pipeline,8in,0.2191,0.0082,70,0.4,2.0,800.0,pinned,thinnest,Sch 40,PL-0127,0.0277,65.908,0.9,FAIL_CF,14.9,109.1
+pipeline,8in,0.2191,0.0082,70,0.4,5.0,800.0,pinned,thinnest,Sch 40,PL-0128,0.0277,65.908,0.9,FAIL_CF,14.9,109.1
+pipeline,8in,0.2191,0.0082,70,0.6,0.5,800.0,pinned,thinnest,Sch 40,PL-0129,0.0277,98.862,0.9,FAIL_CF,13.6,109.1
+pipeline,8in,0.2191,0.0082,70,0.6,1.0,800.0,pinned,thinnest,Sch 40,PL-0130,0.0277,98.862,0.9,FAIL_CF,12.2,109.1
+pipeline,8in,0.2191,0.0082,70,0.6,2.0,800.0,pinned,thinnest,Sch 40,PL-0131,0.0277,98.862,0.9,FAIL_CF,12.2,109.1
+pipeline,8in,0.2191,0.0082,70,0.6,5.0,800.0,pinned,thinnest,Sch 40,PL-0132,0.0277,98.862,0.9,FAIL_CF,12.2,109.1
+pipeline,8in,0.2191,0.0082,70,0.8,0.5,800.0,pinned,thinnest,Sch 40,PL-0133,0.0277,131.816,0.9,FAIL_CF,11.8,109.1
+pipeline,8in,0.2191,0.0082,70,0.8,1.0,800.0,pinned,thinnest,Sch 40,PL-0134,0.0277,131.816,0.9,FAIL_CF,10.6,109.1
+pipeline,8in,0.2191,0.0082,70,0.8,2.0,800.0,pinned,thinnest,Sch 40,PL-0135,0.0277,131.816,0.9,FAIL_CF,10.6,109.1
+pipeline,8in,0.2191,0.0082,70,0.8,5.0,800.0,pinned,thinnest,Sch 40,PL-0136,0.0277,131.816,0.9,FAIL_CF,10.6,109.1
+pipeline,8in,0.2191,0.0082,70,1.0,0.5,800.0,pinned,thinnest,Sch 40,PL-0137,0.0277,164.77,0.9,FAIL_CF,10.6,109.1
+pipeline,8in,0.2191,0.0082,70,1.0,1.0,800.0,pinned,thinnest,Sch 40,PL-0138,0.0277,164.77,0.9,FAIL_CF,9.4,109.1
+pipeline,8in,0.2191,0.0082,70,1.0,2.0,800.0,pinned,thinnest,Sch 40,PL-0139,0.0277,164.77,0.9,FAIL_CF,9.4,109.1
+pipeline,8in,0.2191,0.0082,70,1.0,5.0,800.0,pinned,thinnest,Sch 40,PL-0140,0.0277,164.77,0.9,FAIL_CF,9.4,109.1
+pipeline,8in,0.2191,0.0082,80,0.2,0.5,800.0,pinned,thinnest,Sch 40,PL-0141,0.0212,43.042,0.9,FAIL_CF,23.6,109.1
+pipeline,8in,0.2191,0.0082,80,0.2,1.0,800.0,pinned,thinnest,Sch 40,PL-0142,0.0212,43.042,0.9,FAIL_CF,21.1,109.1
+pipeline,8in,0.2191,0.0082,80,0.2,2.0,800.0,pinned,thinnest,Sch 40,PL-0143,0.0212,43.042,0.9,FAIL_CF,21.1,109.1
+pipeline,8in,0.2191,0.0082,80,0.2,5.0,800.0,pinned,thinnest,Sch 40,PL-0144,0.0212,43.042,0.9,FAIL_CF,21.1,109.1
+pipeline,8in,0.2191,0.0082,80,0.4,0.5,800.0,pinned,thinnest,Sch 40,PL-0145,0.0212,86.084,0.9,FAIL_CF,16.7,109.1
+pipeline,8in,0.2191,0.0082,80,0.4,1.0,800.0,pinned,thinnest,Sch 40,PL-0146,0.0212,86.084,0.9,FAIL_CF,14.9,109.1
+pipeline,8in,0.2191,0.0082,80,0.4,2.0,800.0,pinned,thinnest,Sch 40,PL-0147,0.0212,86.084,0.9,FAIL_CF,14.9,109.1
+pipeline,8in,0.2191,0.0082,80,0.4,5.0,800.0,pinned,thinnest,Sch 40,PL-0148,0.0212,86.084,0.9,FAIL_CF,14.9,109.1
+pipeline,8in,0.2191,0.0082,80,0.6,0.5,800.0,pinned,thinnest,Sch 40,PL-0149,0.0212,129.126,0.9,FAIL_CF,13.6,109.1
+pipeline,8in,0.2191,0.0082,80,0.6,1.0,800.0,pinned,thinnest,Sch 40,PL-0150,0.0212,129.126,0.9,FAIL_CF,12.2,109.1
+pipeline,8in,0.2191,0.0082,80,0.6,2.0,800.0,pinned,thinnest,Sch 40,PL-0151,0.0212,129.126,0.9,FAIL_CF,12.2,109.1
+pipeline,8in,0.2191,0.0082,80,0.6,5.0,800.0,pinned,thinnest,Sch 40,PL-0152,0.0212,129.126,0.9,FAIL_CF,12.2,109.1
+pipeline,8in,0.2191,0.0082,80,0.8,0.5,800.0,pinned,thinnest,Sch 40,PL-0153,0.0212,172.168,0.9,FAIL_CF,11.8,109.1
+pipeline,8in,0.2191,0.0082,80,0.8,1.0,800.0,pinned,thinnest,Sch 40,PL-0154,0.0212,172.168,0.9,FAIL_CF,10.6,109.1
+pipeline,8in,0.2191,0.0082,80,0.8,2.0,800.0,pinned,thinnest,Sch 40,PL-0155,0.0212,172.168,0.9,FAIL_CF,10.6,109.1
+pipeline,8in,0.2191,0.0082,80,0.8,5.0,800.0,pinned,thinnest,Sch 40,PL-0156,0.0212,172.168,0.9,FAIL_CF,10.6,109.1
+pipeline,8in,0.2191,0.0082,80,1.0,0.5,800.0,pinned,thinnest,Sch 40,PL-0157,0.0212,215.21,0.9,FAIL_CF,10.6,109.1
+pipeline,8in,0.2191,0.0082,80,1.0,1.0,800.0,pinned,thinnest,Sch 40,PL-0158,0.0212,215.21,0.9,FAIL_CF,9.4,109.1
+pipeline,8in,0.2191,0.0082,80,1.0,2.0,800.0,pinned,thinnest,Sch 40,PL-0159,0.0212,215.21,0.9,FAIL_CF,9.4,109.1
+pipeline,8in,0.2191,0.0082,80,1.0,5.0,800.0,pinned,thinnest,Sch 40,PL-0160,0.0212,215.21,0.9,FAIL_CF,9.4,109.1
+pipeline,12in,0.3239,0.0095,10,0.2,0.5,800.0,pinned,thinnest,Sch 40,PL-0161,1.8701,0.33,0.0,PASS,33.7,220.44
+pipeline,12in,0.3239,0.0095,10,0.2,1.0,800.0,pinned,thinnest,Sch 40,PL-0162,1.8701,0.33,0.0,PASS,30.1,220.44
+pipeline,12in,0.3239,0.0095,10,0.2,2.0,800.0,pinned,thinnest,Sch 40,PL-0163,1.8701,0.33,0.0,PASS,30.1,220.44
+pipeline,12in,0.3239,0.0095,10,0.2,5.0,800.0,pinned,thinnest,Sch 40,PL-0164,1.8701,0.33,0.0,PASS,30.1,220.44
+pipeline,12in,0.3239,0.0095,10,0.4,0.5,800.0,pinned,thinnest,Sch 40,PL-0165,1.8701,0.66,0.0,PASS,23.8,220.44
+pipeline,12in,0.3239,0.0095,10,0.4,1.0,800.0,pinned,thinnest,Sch 40,PL-0166,1.8701,0.66,0.0,PASS,21.3,220.44
+pipeline,12in,0.3239,0.0095,10,0.4,2.0,800.0,pinned,thinnest,Sch 40,PL-0167,1.8701,0.66,0.0,PASS,21.3,220.44
+pipeline,12in,0.3239,0.0095,10,0.4,5.0,800.0,pinned,thinnest,Sch 40,PL-0168,1.8701,0.66,0.0,PASS,21.3,220.44
+pipeline,12in,0.3239,0.0095,10,0.6,0.5,800.0,pinned,thinnest,Sch 40,PL-0169,1.8701,0.991,0.0,PASS,19.5,220.44
+pipeline,12in,0.3239,0.0095,10,0.6,1.0,800.0,pinned,thinnest,Sch 40,PL-0170,1.8701,0.991,0.0,PASS,17.4,220.44
+pipeline,12in,0.3239,0.0095,10,0.6,2.0,800.0,pinned,thinnest,Sch 40,PL-0171,1.8701,0.991,0.0,PASS,17.4,220.44
+pipeline,12in,0.3239,0.0095,10,0.6,5.0,800.0,pinned,thinnest,Sch 40,PL-0172,1.8701,0.991,0.0,PASS,17.4,220.44
+pipeline,12in,0.3239,0.0095,10,0.8,0.5,800.0,pinned,thinnest,Sch 40,PL-0173,1.8701,1.321,0.0528,INLINE_ONLY,16.9,220.44
+pipeline,12in,0.3239,0.0095,10,0.8,1.0,800.0,pinned,thinnest,Sch 40,PL-0174,1.8701,1.321,0.066,INLINE_ONLY,15.1,220.44
+pipeline,12in,0.3239,0.0095,10,0.8,2.0,800.0,pinned,thinnest,Sch 40,PL-0175,1.8701,1.321,0.066,INLINE_ONLY,15.1,220.44
+pipeline,12in,0.3239,0.0095,10,0.8,5.0,800.0,pinned,thinnest,Sch 40,PL-0176,1.8701,1.321,0.066,INLINE_ONLY,15.1,220.44
+pipeline,12in,0.3239,0.0095,10,1.0,0.5,800.0,pinned,thinnest,Sch 40,PL-0177,1.8701,1.651,0.066,INLINE_ONLY,15.1,220.44
+pipeline,12in,0.3239,0.0095,10,1.0,1.0,800.0,pinned,thinnest,Sch 40,PL-0178,1.8701,1.651,0.0825,INLINE_ONLY,13.5,220.44
+pipeline,12in,0.3239,0.0095,10,1.0,2.0,800.0,pinned,thinnest,Sch 40,PL-0179,1.8701,1.651,0.0825,INLINE_ONLY,13.5,220.44
+pipeline,12in,0.3239,0.0095,10,1.0,5.0,800.0,pinned,thinnest,Sch 40,PL-0180,1.8701,1.651,0.0825,INLINE_ONLY,13.5,220.44
+pipeline,12in,0.3239,0.0095,20,0.2,0.5,800.0,pinned,thinnest,Sch 40,PL-0181,0.4675,1.321,0.0528,INLINE_ONLY,33.7,220.44
+pipeline,12in,0.3239,0.0095,20,0.2,1.0,800.0,pinned,thinnest,Sch 40,PL-0182,0.4675,1.321,0.066,INLINE_ONLY,30.1,220.44
+pipeline,12in,0.3239,0.0095,20,0.2,2.0,800.0,pinned,thinnest,Sch 40,PL-0183,0.4675,1.321,0.066,INLINE_ONLY,30.1,220.44
+pipeline,12in,0.3239,0.0095,20,0.2,5.0,800.0,pinned,thinnest,Sch 40,PL-0184,0.4675,1.321,0.066,INLINE_ONLY,30.1,220.44
+pipeline,12in,0.3239,0.0095,20,0.4,0.5,800.0,pinned,thinnest,Sch 40,PL-0185,0.4675,2.641,0.1057,INLINE_ONLY,23.8,220.44
+pipeline,12in,0.3239,0.0095,20,0.4,1.0,800.0,pinned,thinnest,Sch 40,PL-0186,0.4675,2.641,0.1321,INLINE_ONLY,21.3,220.44
+pipeline,12in,0.3239,0.0095,20,0.4,2.0,800.0,pinned,thinnest,Sch 40,PL-0187,0.4675,2.641,0.1321,INLINE_ONLY,21.3,220.44
+pipeline,12in,0.3239,0.0095,20,0.4,5.0,800.0,pinned,thinnest,Sch 40,PL-0188,0.4675,2.641,0.1321,INLINE_ONLY,21.3,220.44
+pipeline,12in,0.3239,0.0095,20,0.6,0.5,800.0,pinned,thinnest,Sch 40,PL-0189,0.4675,3.962,0.5003,FAIL_CF,19.5,220.44
+pipeline,12in,0.3239,0.0095,20,0.6,1.0,800.0,pinned,thinnest,Sch 40,PL-0190,0.4675,3.962,0.5003,FAIL_CF,17.4,220.44
+pipeline,12in,0.3239,0.0095,20,0.6,2.0,800.0,pinned,thinnest,Sch 40,PL-0191,0.4675,3.962,0.5003,FAIL_CF,17.4,220.44
+pipeline,12in,0.3239,0.0095,20,0.6,5.0,800.0,pinned,thinnest,Sch 40,PL-0192,0.4675,3.962,0.5003,FAIL_CF,17.4,220.44
+pipeline,12in,0.3239,0.0095,20,0.8,0.5,800.0,pinned,thinnest,Sch 40,PL-0193,0.4675,5.283,0.9,FAIL_LOCKIN,16.9,220.44
+pipeline,12in,0.3239,0.0095,20,0.8,1.0,800.0,pinned,thinnest,Sch 40,PL-0194,0.4675,5.283,0.9,FAIL_LOCKIN,15.1,220.44
+pipeline,12in,0.3239,0.0095,20,0.8,2.0,800.0,pinned,thinnest,Sch 40,PL-0195,0.4675,5.283,0.9,FAIL_LOCKIN,15.1,220.44
+pipeline,12in,0.3239,0.0095,20,0.8,5.0,800.0,pinned,thinnest,Sch 40,PL-0196,0.4675,5.283,0.9,FAIL_LOCKIN,15.1,220.44
+pipeline,12in,0.3239,0.0095,20,1.0,0.5,800.0,pinned,thinnest,Sch 40,PL-0197,0.4675,6.604,0.9,FAIL_LOCKIN,15.1,220.44
+pipeline,12in,0.3239,0.0095,20,1.0,1.0,800.0,pinned,thinnest,Sch 40,PL-0198,0.4675,6.604,0.9,FAIL_LOCKIN,13.5,220.44
+pipeline,12in,0.3239,0.0095,20,1.0,2.0,800.0,pinned,thinnest,Sch 40,PL-0199,0.4675,6.604,0.9,FAIL_LOCKIN,13.5,220.44
+pipeline,12in,0.3239,0.0095,20,1.0,5.0,800.0,pinned,thinnest,Sch 40,PL-0200,0.4675,6.604,0.9,FAIL_LOCKIN,13.5,220.44
+pipeline,12in,0.3239,0.0095,30,0.2,0.5,800.0,pinned,thinnest,Sch 40,PL-0201,0.2078,2.972,0.1189,INLINE_ONLY,33.7,220.44
+pipeline,12in,0.3239,0.0095,30,0.2,1.0,800.0,pinned,thinnest,Sch 40,PL-0202,0.2078,2.972,0.1486,INLINE_ONLY,30.1,220.44
+pipeline,12in,0.3239,0.0095,30,0.2,2.0,800.0,pinned,thinnest,Sch 40,PL-0203,0.2078,2.972,0.1486,INLINE_ONLY,30.1,220.44
+pipeline,12in,0.3239,0.0095,30,0.2,5.0,800.0,pinned,thinnest,Sch 40,PL-0204,0.2078,2.972,0.1486,INLINE_ONLY,30.1,220.44
+pipeline,12in,0.3239,0.0095,30,0.4,0.5,800.0,pinned,thinnest,Sch 40,PL-0205,0.2078,5.943,0.9,FAIL_LOCKIN,23.8,220.44
+pipeline,12in,0.3239,0.0095,30,0.4,1.0,800.0,pinned,thinnest,Sch 40,PL-0206,0.2078,5.943,0.9,FAIL_LOCKIN,21.3,220.44
+pipeline,12in,0.3239,0.0095,30,0.4,2.0,800.0,pinned,thinnest,Sch 40,PL-0207,0.2078,5.943,0.9,FAIL_LOCKIN,21.3,220.44
+pipeline,12in,0.3239,0.0095,30,0.4,5.0,800.0,pinned,thinnest,Sch 40,PL-0208,0.2078,5.943,0.9,FAIL_LOCKIN,21.3,220.44
+pipeline,12in,0.3239,0.0095,30,0.6,0.5,800.0,pinned,thinnest,Sch 40,PL-0209,0.2078,8.915,0.9,FAIL_CF,19.5,220.44
+pipeline,12in,0.3239,0.0095,30,0.6,1.0,800.0,pinned,thinnest,Sch 40,PL-0210,0.2078,8.915,0.9,FAIL_CF,17.4,220.44
+pipeline,12in,0.3239,0.0095,30,0.6,2.0,800.0,pinned,thinnest,Sch 40,PL-0211,0.2078,8.915,0.9,FAIL_CF,17.4,220.44
+pipeline,12in,0.3239,0.0095,30,0.6,5.0,800.0,pinned,thinnest,Sch 40,PL-0212,0.2078,8.915,0.9,FAIL_CF,17.4,220.44
+pipeline,12in,0.3239,0.0095,30,0.8,0.5,800.0,pinned,thinnest,Sch 40,PL-0213,0.2078,11.886,0.9,FAIL_CF,16.9,220.44
+pipeline,12in,0.3239,0.0095,30,0.8,1.0,800.0,pinned,thinnest,Sch 40,PL-0214,0.2078,11.886,0.9,FAIL_CF,15.1,220.44
+pipeline,12in,0.3239,0.0095,30,0.8,2.0,800.0,pinned,thinnest,Sch 40,PL-0215,0.2078,11.886,0.9,FAIL_CF,15.1,220.44
+pipeline,12in,0.3239,0.0095,30,0.8,5.0,800.0,pinned,thinnest,Sch 40,PL-0216,0.2078,11.886,0.9,FAIL_CF,15.1,220.44
+pipeline,12in,0.3239,0.0095,30,1.0,0.5,800.0,pinned,thinnest,Sch 40,PL-0217,0.2078,14.858,0.9,FAIL_CF,15.1,220.44
+pipeline,12in,0.3239,0.0095,30,1.0,1.0,800.0,pinned,thinnest,Sch 40,PL-0218,0.2078,14.858,0.9,FAIL_CF,13.5,220.44
+pipeline,12in,0.3239,0.0095,30,1.0,2.0,800.0,pinned,thinnest,Sch 40,PL-0219,0.2078,14.858,0.9,FAIL_CF,13.5,220.44
+pipeline,12in,0.3239,0.0095,30,1.0,5.0,800.0,pinned,thinnest,Sch 40,PL-0220,0.2078,14.858,0.9,FAIL_CF,13.5,220.44
+pipeline,12in,0.3239,0.0095,40,0.2,0.5,800.0,pinned,thinnest,Sch 40,PL-0221,0.1169,5.283,0.9,FAIL_LOCKIN,33.7,220.44
+pipeline,12in,0.3239,0.0095,40,0.2,1.0,800.0,pinned,thinnest,Sch 40,PL-0222,0.1169,5.283,0.9,FAIL_LOCKIN,30.1,220.44
+pipeline,12in,0.3239,0.0095,40,0.2,2.0,800.0,pinned,thinnest,Sch 40,PL-0223,0.1169,5.283,0.9,FAIL_LOCKIN,30.1,220.44
+pipeline,12in,0.3239,0.0095,40,0.2,5.0,800.0,pinned,thinnest,Sch 40,PL-0224,0.1169,5.283,0.9,FAIL_LOCKIN,30.1,220.44
+pipeline,12in,0.3239,0.0095,40,0.4,0.5,800.0,pinned,thinnest,Sch 40,PL-0225,0.1169,10.566,0.9,FAIL_CF,23.8,220.44
+pipeline,12in,0.3239,0.0095,40,0.4,1.0,800.0,pinned,thinnest,Sch 40,PL-0226,0.1169,10.566,0.9,FAIL_CF,21.3,220.44
+pipeline,12in,0.3239,0.0095,40,0.4,2.0,800.0,pinned,thinnest,Sch 40,PL-0227,0.1169,10.566,0.9,FAIL_CF,21.3,220.44
+pipeline,12in,0.3239,0.0095,40,0.4,5.0,800.0,pinned,thinnest,Sch 40,PL-0228,0.1169,10.566,0.9,FAIL_CF,21.3,220.44
+pipeline,12in,0.3239,0.0095,40,0.6,0.5,800.0,pinned,thinnest,Sch 40,PL-0229,0.1169,15.848,0.9,FAIL_CF,19.5,220.44
+pipeline,12in,0.3239,0.0095,40,0.6,1.0,800.0,pinned,thinnest,Sch 40,PL-0230,0.1169,15.848,0.9,FAIL_CF,17.4,220.44
+pipeline,12in,0.3239,0.0095,40,0.6,2.0,800.0,pinned,thinnest,Sch 40,PL-0231,0.1169,15.848,0.9,FAIL_CF,17.4,220.44
+pipeline,12in,0.3239,0.0095,40,0.6,5.0,800.0,pinned,thinnest,Sch 40,PL-0232,0.1169,15.848,0.9,FAIL_CF,17.4,220.44
+pipeline,12in,0.3239,0.0095,40,0.8,0.5,800.0,pinned,thinnest,Sch 40,PL-0233,0.1169,21.131,0.9,FAIL_CF,16.9,220.44
+pipeline,12in,0.3239,0.0095,40,0.8,1.0,800.0,pinned,thinnest,Sch 40,PL-0234,0.1169,21.131,0.9,FAIL_CF,15.1,220.44
+pipeline,12in,0.3239,0.0095,40,0.8,2.0,800.0,pinned,thinnest,Sch 40,PL-0235,0.1169,21.131,0.9,FAIL_CF,15.1,220.44
+pipeline,12in,0.3239,0.0095,40,0.8,5.0,800.0,pinned,thinnest,Sch 40,PL-0236,0.1169,21.131,0.9,FAIL_CF,15.1,220.44
+pipeline,12in,0.3239,0.0095,40,1.0,0.5,800.0,pinned,thinnest,Sch 40,PL-0237,0.1169,26.414,0.9,FAIL_CF,15.1,220.44
+pipeline,12in,0.3239,0.0095,40,1.0,1.0,800.0,pinned,thinnest,Sch 40,PL-0238,0.1169,26.414,0.9,FAIL_CF,13.5,220.44
+pipeline,12in,0.3239,0.0095,40,1.0,2.0,800.0,pinned,thinnest,Sch 40,PL-0239,0.1169,26.414,0.9,FAIL_CF,13.5,220.44
+pipeline,12in,0.3239,0.0095,40,1.0,5.0,800.0,pinned,thinnest,Sch 40,PL-0240,0.1169,26.414,0.9,FAIL_CF,13.5,220.44
+pipeline,12in,0.3239,0.0095,50,0.2,0.5,800.0,pinned,thinnest,Sch 40,PL-0241,0.0748,8.254,0.9,FAIL_CF,33.7,220.44
+pipeline,12in,0.3239,0.0095,50,0.2,1.0,800.0,pinned,thinnest,Sch 40,PL-0242,0.0748,8.254,0.9,FAIL_CF,30.1,220.44
+pipeline,12in,0.3239,0.0095,50,0.2,2.0,800.0,pinned,thinnest,Sch 40,PL-0243,0.0748,8.254,0.9,FAIL_CF,30.1,220.44
+pipeline,12in,0.3239,0.0095,50,0.2,5.0,800.0,pinned,thinnest,Sch 40,PL-0244,0.0748,8.254,0.9,FAIL_CF,30.1,220.44
+pipeline,12in,0.3239,0.0095,50,0.4,0.5,800.0,pinned,thinnest,Sch 40,PL-0245,0.0748,16.509,0.9,FAIL_CF,23.8,220.44
+pipeline,12in,0.3239,0.0095,50,0.4,1.0,800.0,pinned,thinnest,Sch 40,PL-0246,0.0748,16.509,0.9,FAIL_CF,21.3,220.44
+pipeline,12in,0.3239,0.0095,50,0.4,2.0,800.0,pinned,thinnest,Sch 40,PL-0247,0.0748,16.509,0.9,FAIL_CF,21.3,220.44
+pipeline,12in,0.3239,0.0095,50,0.4,5.0,800.0,pinned,thinnest,Sch 40,PL-0248,0.0748,16.509,0.9,FAIL_CF,21.3,220.44
+pipeline,12in,0.3239,0.0095,50,0.6,0.5,800.0,pinned,thinnest,Sch 40,PL-0249,0.0748,24.763,0.9,FAIL_CF,19.5,220.44
+pipeline,12in,0.3239,0.0095,50,0.6,1.0,800.0,pinned,thinnest,Sch 40,PL-0250,0.0748,24.763,0.9,FAIL_CF,17.4,220.44
+pipeline,12in,0.3239,0.0095,50,0.6,2.0,800.0,pinned,thinnest,Sch 40,PL-0251,0.0748,24.763,0.9,FAIL_CF,17.4,220.44
+pipeline,12in,0.3239,0.0095,50,0.6,5.0,800.0,pinned,thinnest,Sch 40,PL-0252,0.0748,24.763,0.9,FAIL_CF,17.4,220.44
+pipeline,12in,0.3239,0.0095,50,0.8,0.5,800.0,pinned,thinnest,Sch 40,PL-0253,0.0748,33.018,0.9,FAIL_CF,16.9,220.44
+pipeline,12in,0.3239,0.0095,50,0.8,1.0,800.0,pinned,thinnest,Sch 40,PL-0254,0.0748,33.018,0.9,FAIL_CF,15.1,220.44
+pipeline,12in,0.3239,0.0095,50,0.8,2.0,800.0,pinned,thinnest,Sch 40,PL-0255,0.0748,33.018,0.9,FAIL_CF,15.1,220.44
+pipeline,12in,0.3239,0.0095,50,0.8,5.0,800.0,pinned,thinnest,Sch 40,PL-0256,0.0748,33.018,0.9,FAIL_CF,15.1,220.44
+pipeline,12in,0.3239,0.0095,50,1.0,0.5,800.0,pinned,thinnest,Sch 40,PL-0257,0.0748,41.272,0.9,FAIL_CF,15.1,220.44
+pipeline,12in,0.3239,0.0095,50,1.0,1.0,800.0,pinned,thinnest,Sch 40,PL-0258,0.0748,41.272,0.9,FAIL_CF,13.5,220.44
+pipeline,12in,0.3239,0.0095,50,1.0,2.0,800.0,pinned,thinnest,Sch 40,PL-0259,0.0748,41.272,0.9,FAIL_CF,13.5,220.44
+pipeline,12in,0.3239,0.0095,50,1.0,5.0,800.0,pinned,thinnest,Sch 40,PL-0260,0.0748,41.272,0.9,FAIL_CF,13.5,220.44
+pipeline,12in,0.3239,0.0095,60,0.2,0.5,800.0,pinned,thinnest,Sch 40,PL-0261,0.0519,11.886,0.9,FAIL_CF,33.7,220.44
+pipeline,12in,0.3239,0.0095,60,0.2,1.0,800.0,pinned,thinnest,Sch 40,PL-0262,0.0519,11.886,0.9,FAIL_CF,30.1,220.44
+pipeline,12in,0.3239,0.0095,60,0.2,2.0,800.0,pinned,thinnest,Sch 40,PL-0263,0.0519,11.886,0.9,FAIL_CF,30.1,220.44
+pipeline,12in,0.3239,0.0095,60,0.2,5.0,800.0,pinned,thinnest,Sch 40,PL-0264,0.0519,11.886,0.9,FAIL_CF,30.1,220.44
+pipeline,12in,0.3239,0.0095,60,0.4,0.5,800.0,pinned,thinnest,Sch 40,PL-0265,0.0519,23.773,0.9,FAIL_CF,23.8,220.44
+pipeline,12in,0.3239,0.0095,60,0.4,1.0,800.0,pinned,thinnest,Sch 40,PL-0266,0.0519,23.773,0.9,FAIL_CF,21.3,220.44
+pipeline,12in,0.3239,0.0095,60,0.4,2.0,800.0,pinned,thinnest,Sch 40,PL-0267,0.0519,23.773,0.9,FAIL_CF,21.3,220.44
+pipeline,12in,0.3239,0.0095,60,0.4,5.0,800.0,pinned,thinnest,Sch 40,PL-0268,0.0519,23.773,0.9,FAIL_CF,21.3,220.44
+pipeline,12in,0.3239,0.0095,60,0.6,0.5,800.0,pinned,thinnest,Sch 40,PL-0269,0.0519,35.659,0.9,FAIL_CF,19.5,220.44
+pipeline,12in,0.3239,0.0095,60,0.6,1.0,800.0,pinned,thinnest,Sch 40,PL-0270,0.0519,35.659,0.9,FAIL_CF,17.4,220.44
+pipeline,12in,0.3239,0.0095,60,0.6,2.0,800.0,pinned,thinnest,Sch 40,PL-0271,0.0519,35.659,0.9,FAIL_CF,17.4,220.44
+pipeline,12in,0.3239,0.0095,60,0.6,5.0,800.0,pinned,thinnest,Sch 40,PL-0272,0.0519,35.659,0.9,FAIL_CF,17.4,220.44
+pipeline,12in,0.3239,0.0095,60,0.8,0.5,800.0,pinned,thinnest,Sch 40,PL-0273,0.0519,47.545,0.9,FAIL_CF,16.9,220.44
+pipeline,12in,0.3239,0.0095,60,0.8,1.0,800.0,pinned,thinnest,Sch 40,PL-0274,0.0519,47.545,0.9,FAIL_CF,15.1,220.44
+pipeline,12in,0.3239,0.0095,60,0.8,2.0,800.0,pinned,thinnest,Sch 40,PL-0275,0.0519,47.545,0.9,FAIL_CF,15.1,220.44
+pipeline,12in,0.3239,0.0095,60,0.8,5.0,800.0,pinned,thinnest,Sch 40,PL-0276,0.0519,47.545,0.9,FAIL_CF,15.1,220.44
+pipeline,12in,0.3239,0.0095,60,1.0,0.5,800.0,pinned,thinnest,Sch 40,PL-0277,0.0519,59.432,0.9,FAIL_CF,15.1,220.44
+pipeline,12in,0.3239,0.0095,60,1.0,1.0,800.0,pinned,thinnest,Sch 40,PL-0278,0.0519,59.432,0.9,FAIL_CF,13.5,220.44
+pipeline,12in,0.3239,0.0095,60,1.0,2.0,800.0,pinned,thinnest,Sch 40,PL-0279,0.0519,59.432,0.9,FAIL_CF,13.5,220.44
+pipeline,12in,0.3239,0.0095,60,1.0,5.0,800.0,pinned,thinnest,Sch 40,PL-0280,0.0519,59.432,0.9,FAIL_CF,13.5,220.44
+pipeline,12in,0.3239,0.0095,70,0.2,0.5,800.0,pinned,thinnest,Sch 40,PL-0281,0.0382,16.179,0.9,FAIL_CF,33.7,220.44
+pipeline,12in,0.3239,0.0095,70,0.2,1.0,800.0,pinned,thinnest,Sch 40,PL-0282,0.0382,16.179,0.9,FAIL_CF,30.1,220.44
+pipeline,12in,0.3239,0.0095,70,0.2,2.0,800.0,pinned,thinnest,Sch 40,PL-0283,0.0382,16.179,0.9,FAIL_CF,30.1,220.44
+pipeline,12in,0.3239,0.0095,70,0.2,5.0,800.0,pinned,thinnest,Sch 40,PL-0284,0.0382,16.179,0.9,FAIL_CF,30.1,220.44
+pipeline,12in,0.3239,0.0095,70,0.4,0.5,800.0,pinned,thinnest,Sch 40,PL-0285,0.0382,32.357,0.9,FAIL_CF,23.8,220.44
+pipeline,12in,0.3239,0.0095,70,0.4,1.0,800.0,pinned,thinnest,Sch 40,PL-0286,0.0382,32.357,0.9,FAIL_CF,21.3,220.44
+pipeline,12in,0.3239,0.0095,70,0.4,2.0,800.0,pinned,thinnest,Sch 40,PL-0287,0.0382,32.357,0.9,FAIL_CF,21.3,220.44
+pipeline,12in,0.3239,0.0095,70,0.4,5.0,800.0,pinned,thinnest,Sch 40,PL-0288,0.0382,32.357,0.9,FAIL_CF,21.3,220.44
+pipeline,12in,0.3239,0.0095,70,0.6,0.5,800.0,pinned,thinnest,Sch 40,PL-0289,0.0382,48.536,0.9,FAIL_CF,19.5,220.44
+pipeline,12in,0.3239,0.0095,70,0.6,1.0,800.0,pinned,thinnest,Sch 40,PL-0290,0.0382,48.536,0.9,FAIL_CF,17.4,220.44
+pipeline,12in,0.3239,0.0095,70,0.6,2.0,800.0,pinned,thinnest,Sch 40,PL-0291,0.0382,48.536,0.9,FAIL_CF,17.4,220.44
+pipeline,12in,0.3239,0.0095,70,0.6,5.0,800.0,pinned,thinnest,Sch 40,PL-0292,0.0382,48.536,0.9,FAIL_CF,17.4,220.44
+pipeline,12in,0.3239,0.0095,70,0.8,0.5,800.0,pinned,thinnest,Sch 40,PL-0293,0.0382,64.714,0.9,FAIL_CF,16.9,220.44
+pipeline,12in,0.3239,0.0095,70,0.8,1.0,800.0,pinned,thinnest,Sch 40,PL-0294,0.0382,64.714,0.9,FAIL_CF,15.1,220.44
+pipeline,12in,0.3239,0.0095,70,0.8,2.0,800.0,pinned,thinnest,Sch 40,PL-0295,0.0382,64.714,0.9,FAIL_CF,15.1,220.44
+pipeline,12in,0.3239,0.0095,70,0.8,5.0,800.0,pinned,thinnest,Sch 40,PL-0296,0.0382,64.714,0.9,FAIL_CF,15.1,220.44
+pipeline,12in,0.3239,0.0095,70,1.0,0.5,800.0,pinned,thinnest,Sch 40,PL-0297,0.0382,80.893,0.9,FAIL_CF,15.1,220.44
+pipeline,12in,0.3239,0.0095,70,1.0,1.0,800.0,pinned,thinnest,Sch 40,PL-0298,0.0382,80.893,0.9,FAIL_CF,13.5,220.44
+pipeline,12in,0.3239,0.0095,70,1.0,2.0,800.0,pinned,thinnest,Sch 40,PL-0299,0.0382,80.893,0.9,FAIL_CF,13.5,220.44
+pipeline,12in,0.3239,0.0095,70,1.0,5.0,800.0,pinned,thinnest,Sch 40,PL-0300,0.0382,80.893,0.9,FAIL_CF,13.5,220.44
+pipeline,12in,0.3239,0.0095,80,0.2,0.5,800.0,pinned,thinnest,Sch 40,PL-0301,0.0292,21.131,0.9,FAIL_CF,33.7,220.44
+pipeline,12in,0.3239,0.0095,80,0.2,1.0,800.0,pinned,thinnest,Sch 40,PL-0302,0.0292,21.131,0.9,FAIL_CF,30.1,220.44
+pipeline,12in,0.3239,0.0095,80,0.2,2.0,800.0,pinned,thinnest,Sch 40,PL-0303,0.0292,21.131,0.9,FAIL_CF,30.1,220.44
+pipeline,12in,0.3239,0.0095,80,0.2,5.0,800.0,pinned,thinnest,Sch 40,PL-0304,0.0292,21.131,0.9,FAIL_CF,30.1,220.44
+pipeline,12in,0.3239,0.0095,80,0.4,0.5,800.0,pinned,thinnest,Sch 40,PL-0305,0.0292,42.263,0.9,FAIL_CF,23.8,220.44
+pipeline,12in,0.3239,0.0095,80,0.4,1.0,800.0,pinned,thinnest,Sch 40,PL-0306,0.0292,42.263,0.9,FAIL_CF,21.3,220.44
+pipeline,12in,0.3239,0.0095,80,0.4,2.0,800.0,pinned,thinnest,Sch 40,PL-0307,0.0292,42.263,0.9,FAIL_CF,21.3,220.44
+pipeline,12in,0.3239,0.0095,80,0.4,5.0,800.0,pinned,thinnest,Sch 40,PL-0308,0.0292,42.263,0.9,FAIL_CF,21.3,220.44
+pipeline,12in,0.3239,0.0095,80,0.6,0.5,800.0,pinned,thinnest,Sch 40,PL-0309,0.0292,63.394,0.9,FAIL_CF,19.5,220.44
+pipeline,12in,0.3239,0.0095,80,0.6,1.0,800.0,pinned,thinnest,Sch 40,PL-0310,0.0292,63.394,0.9,FAIL_CF,17.4,220.44
+pipeline,12in,0.3239,0.0095,80,0.6,2.0,800.0,pinned,thinnest,Sch 40,PL-0311,0.0292,63.394,0.9,FAIL_CF,17.4,220.44
+pipeline,12in,0.3239,0.0095,80,0.6,5.0,800.0,pinned,thinnest,Sch 40,PL-0312,0.0292,63.394,0.9,FAIL_CF,17.4,220.44
+pipeline,12in,0.3239,0.0095,80,0.8,0.5,800.0,pinned,thinnest,Sch 40,PL-0313,0.0292,84.525,0.9,FAIL_CF,16.9,220.44
+pipeline,12in,0.3239,0.0095,80,0.8,1.0,800.0,pinned,thinnest,Sch 40,PL-0314,0.0292,84.525,0.9,FAIL_CF,15.1,220.44
+pipeline,12in,0.3239,0.0095,80,0.8,2.0,800.0,pinned,thinnest,Sch 40,PL-0315,0.0292,84.525,0.9,FAIL_CF,15.1,220.44
+pipeline,12in,0.3239,0.0095,80,0.8,5.0,800.0,pinned,thinnest,Sch 40,PL-0316,0.0292,84.525,0.9,FAIL_CF,15.1,220.44
+pipeline,12in,0.3239,0.0095,80,1.0,0.5,800.0,pinned,thinnest,Sch 40,PL-0317,0.0292,105.656,0.9,FAIL_CF,15.1,220.44
+pipeline,12in,0.3239,0.0095,80,1.0,1.0,800.0,pinned,thinnest,Sch 40,PL-0318,0.0292,105.656,0.9,FAIL_CF,13.5,220.44
+pipeline,12in,0.3239,0.0095,80,1.0,2.0,800.0,pinned,thinnest,Sch 40,PL-0319,0.0292,105.656,0.9,FAIL_CF,13.5,220.44
+pipeline,12in,0.3239,0.0095,80,1.0,5.0,800.0,pinned,thinnest,Sch 40,PL-0320,0.0292,105.656,0.9,FAIL_CF,13.5,220.44
+pipeline,16in,0.4064,0.0095,10,0.2,0.5,800.0,pinned,thinnest,Sch 30,PL-0321,2.1796,0.226,0.0,PASS,40.8,326.38
+pipeline,16in,0.4064,0.0095,10,0.2,1.0,800.0,pinned,thinnest,Sch 30,PL-0322,2.1796,0.226,0.0,PASS,36.5,326.38
+pipeline,16in,0.4064,0.0095,10,0.2,2.0,800.0,pinned,thinnest,Sch 30,PL-0323,2.1796,0.226,0.0,PASS,36.5,326.38
+pipeline,16in,0.4064,0.0095,10,0.2,5.0,800.0,pinned,thinnest,Sch 30,PL-0324,2.1796,0.226,0.0,PASS,36.5,326.38
+pipeline,16in,0.4064,0.0095,10,0.4,0.5,800.0,pinned,thinnest,Sch 30,PL-0325,2.1796,0.452,0.0,PASS,28.8,326.38
+pipeline,16in,0.4064,0.0095,10,0.4,1.0,800.0,pinned,thinnest,Sch 30,PL-0326,2.1796,0.452,0.0,PASS,25.8,326.38
+pipeline,16in,0.4064,0.0095,10,0.4,2.0,800.0,pinned,thinnest,Sch 30,PL-0327,2.1796,0.452,0.0,PASS,25.8,326.38
+pipeline,16in,0.4064,0.0095,10,0.4,5.0,800.0,pinned,thinnest,Sch 30,PL-0328,2.1796,0.452,0.0,PASS,25.8,326.38
+pipeline,16in,0.4064,0.0095,10,0.6,0.5,800.0,pinned,thinnest,Sch 30,PL-0329,2.1796,0.677,0.0,PASS,23.5,326.38
+pipeline,16in,0.4064,0.0095,10,0.6,1.0,800.0,pinned,thinnest,Sch 30,PL-0330,2.1796,0.677,0.0,PASS,21.0,326.38
+pipeline,16in,0.4064,0.0095,10,0.6,2.0,800.0,pinned,thinnest,Sch 30,PL-0331,2.1796,0.677,0.0,PASS,21.0,326.38
+pipeline,16in,0.4064,0.0095,10,0.6,5.0,800.0,pinned,thinnest,Sch 30,PL-0332,2.1796,0.677,0.0,PASS,21.0,326.38
+pipeline,16in,0.4064,0.0095,10,0.8,0.5,800.0,pinned,thinnest,Sch 30,PL-0333,2.1796,0.903,0.0,PASS,20.4,326.38
+pipeline,16in,0.4064,0.0095,10,0.8,1.0,800.0,pinned,thinnest,Sch 30,PL-0334,2.1796,0.903,0.0,PASS,18.2,326.38
+pipeline,16in,0.4064,0.0095,10,0.8,2.0,800.0,pinned,thinnest,Sch 30,PL-0335,2.1796,0.903,0.0,PASS,18.2,326.38
+pipeline,16in,0.4064,0.0095,10,0.8,5.0,800.0,pinned,thinnest,Sch 30,PL-0336,2.1796,0.903,0.0,PASS,18.2,326.38
+pipeline,16in,0.4064,0.0095,10,1.0,0.5,800.0,pinned,thinnest,Sch 30,PL-0337,2.1796,1.129,0.0,PASS,18.2,326.38
+pipeline,16in,0.4064,0.0095,10,1.0,1.0,800.0,pinned,thinnest,Sch 30,PL-0338,2.1796,1.129,0.0564,INLINE_ONLY,16.3,326.38
+pipeline,16in,0.4064,0.0095,10,1.0,2.0,800.0,pinned,thinnest,Sch 30,PL-0339,2.1796,1.129,0.0564,INLINE_ONLY,16.3,326.38
+pipeline,16in,0.4064,0.0095,10,1.0,5.0,800.0,pinned,thinnest,Sch 30,PL-0340,2.1796,1.129,0.0564,INLINE_ONLY,16.3,326.38
+pipeline,16in,0.4064,0.0095,20,0.2,0.5,800.0,pinned,thinnest,Sch 30,PL-0341,0.5449,0.903,0.0,PASS,40.8,326.38
+pipeline,16in,0.4064,0.0095,20,0.2,1.0,800.0,pinned,thinnest,Sch 30,PL-0342,0.5449,0.903,0.0,PASS,36.5,326.38
+pipeline,16in,0.4064,0.0095,20,0.2,2.0,800.0,pinned,thinnest,Sch 30,PL-0343,0.5449,0.903,0.0,PASS,36.5,326.38
+pipeline,16in,0.4064,0.0095,20,0.2,5.0,800.0,pinned,thinnest,Sch 30,PL-0344,0.5449,0.903,0.0,PASS,36.5,326.38
+pipeline,16in,0.4064,0.0095,20,0.4,0.5,800.0,pinned,thinnest,Sch 30,PL-0345,0.5449,1.806,0.0723,INLINE_ONLY,28.8,326.38
+pipeline,16in,0.4064,0.0095,20,0.4,1.0,800.0,pinned,thinnest,Sch 30,PL-0346,0.5449,1.806,0.0903,INLINE_ONLY,25.8,326.38
+pipeline,16in,0.4064,0.0095,20,0.4,2.0,800.0,pinned,thinnest,Sch 30,PL-0347,0.5449,1.806,0.0903,INLINE_ONLY,25.8,326.38
+pipeline,16in,0.4064,0.0095,20,0.4,5.0,800.0,pinned,thinnest,Sch 30,PL-0348,0.5449,1.806,0.0903,INLINE_ONLY,25.8,326.38
+pipeline,16in,0.4064,0.0095,20,0.6,0.5,800.0,pinned,thinnest,Sch 30,PL-0349,0.5449,2.709,0.1084,INLINE_ONLY,23.5,326.38
+pipeline,16in,0.4064,0.0095,20,0.6,1.0,800.0,pinned,thinnest,Sch 30,PL-0350,0.5449,2.709,0.1355,INLINE_ONLY,21.0,326.38
+pipeline,16in,0.4064,0.0095,20,0.6,2.0,800.0,pinned,thinnest,Sch 30,PL-0351,0.5449,2.709,0.1355,INLINE_ONLY,21.0,326.38
+pipeline,16in,0.4064,0.0095,20,0.6,5.0,800.0,pinned,thinnest,Sch 30,PL-0352,0.5449,2.709,0.1355,INLINE_ONLY,21.0,326.38
+pipeline,16in,0.4064,0.0095,20,0.8,0.5,800.0,pinned,thinnest,Sch 30,PL-0353,0.5449,3.613,0.1445,INLINE_ONLY,20.4,326.38
+pipeline,16in,0.4064,0.0095,20,0.8,1.0,800.0,pinned,thinnest,Sch 30,PL-0354,0.5449,3.613,0.3185,FAIL_CF,18.2,326.38
+pipeline,16in,0.4064,0.0095,20,0.8,2.0,800.0,pinned,thinnest,Sch 30,PL-0355,0.5449,3.613,0.3185,FAIL_CF,18.2,326.38
+pipeline,16in,0.4064,0.0095,20,0.8,5.0,800.0,pinned,thinnest,Sch 30,PL-0356,0.5449,3.613,0.3185,FAIL_CF,18.2,326.38
+pipeline,16in,0.4064,0.0095,20,1.0,0.5,800.0,pinned,thinnest,Sch 30,PL-0357,0.5449,4.516,0.7882,FAIL_LOCKIN,18.2,326.38
+pipeline,16in,0.4064,0.0095,20,1.0,1.0,800.0,pinned,thinnest,Sch 30,PL-0358,0.5449,4.516,0.7882,FAIL_LOCKIN,16.3,326.38
+pipeline,16in,0.4064,0.0095,20,1.0,2.0,800.0,pinned,thinnest,Sch 30,PL-0359,0.5449,4.516,0.7882,FAIL_LOCKIN,16.3,326.38
+pipeline,16in,0.4064,0.0095,20,1.0,5.0,800.0,pinned,thinnest,Sch 30,PL-0360,0.5449,4.516,0.7882,FAIL_LOCKIN,16.3,326.38
+pipeline,16in,0.4064,0.0095,30,0.2,0.5,800.0,pinned,thinnest,Sch 30,PL-0361,0.2422,2.032,0.0813,INLINE_ONLY,40.8,326.38
+pipeline,16in,0.4064,0.0095,30,0.2,1.0,800.0,pinned,thinnest,Sch 30,PL-0362,0.2422,2.032,0.1016,INLINE_ONLY,36.5,326.38
+pipeline,16in,0.4064,0.0095,30,0.2,2.0,800.0,pinned,thinnest,Sch 30,PL-0363,0.2422,2.032,0.1016,INLINE_ONLY,36.5,326.38
+pipeline,16in,0.4064,0.0095,30,0.2,5.0,800.0,pinned,thinnest,Sch 30,PL-0364,0.2422,2.032,0.1016,INLINE_ONLY,36.5,326.38
+pipeline,16in,0.4064,0.0095,30,0.4,0.5,800.0,pinned,thinnest,Sch 30,PL-0365,0.2422,4.064,0.5534,FAIL_LOCKIN,28.8,326.38
+pipeline,16in,0.4064,0.0095,30,0.4,1.0,800.0,pinned,thinnest,Sch 30,PL-0366,0.2422,4.064,0.5534,FAIL_LOCKIN,25.8,326.38
+pipeline,16in,0.4064,0.0095,30,0.4,2.0,800.0,pinned,thinnest,Sch 30,PL-0367,0.2422,4.064,0.5534,FAIL_LOCKIN,25.8,326.38
+pipeline,16in,0.4064,0.0095,30,0.4,5.0,800.0,pinned,thinnest,Sch 30,PL-0368,0.2422,4.064,0.5534,FAIL_LOCKIN,25.8,326.38
+pipeline,16in,0.4064,0.0095,30,0.6,0.5,800.0,pinned,thinnest,Sch 30,PL-0369,0.2422,6.096,0.9,FAIL_LOCKIN,23.5,326.38
+pipeline,16in,0.4064,0.0095,30,0.6,1.0,800.0,pinned,thinnest,Sch 30,PL-0370,0.2422,6.096,0.9,FAIL_LOCKIN,21.0,326.38
+pipeline,16in,0.4064,0.0095,30,0.6,2.0,800.0,pinned,thinnest,Sch 30,PL-0371,0.2422,6.096,0.9,FAIL_LOCKIN,21.0,326.38
+pipeline,16in,0.4064,0.0095,30,0.6,5.0,800.0,pinned,thinnest,Sch 30,PL-0372,0.2422,6.096,0.9,FAIL_LOCKIN,21.0,326.38
+pipeline,16in,0.4064,0.0095,30,0.8,0.5,800.0,pinned,thinnest,Sch 30,PL-0373,0.2422,8.128,0.9,FAIL_CF,20.4,326.38
+pipeline,16in,0.4064,0.0095,30,0.8,1.0,800.0,pinned,thinnest,Sch 30,PL-0374,0.2422,8.128,0.9,FAIL_CF,18.2,326.38
+pipeline,16in,0.4064,0.0095,30,0.8,2.0,800.0,pinned,thinnest,Sch 30,PL-0375,0.2422,8.128,0.9,FAIL_CF,18.2,326.38
+pipeline,16in,0.4064,0.0095,30,0.8,5.0,800.0,pinned,thinnest,Sch 30,PL-0376,0.2422,8.128,0.9,FAIL_CF,18.2,326.38
+pipeline,16in,0.4064,0.0095,30,1.0,0.5,800.0,pinned,thinnest,Sch 30,PL-0377,0.2422,10.16,0.9,FAIL_CF,18.2,326.38
+pipeline,16in,0.4064,0.0095,30,1.0,1.0,800.0,pinned,thinnest,Sch 30,PL-0378,0.2422,10.16,0.9,FAIL_CF,16.3,326.38
+pipeline,16in,0.4064,0.0095,30,1.0,2.0,800.0,pinned,thinnest,Sch 30,PL-0379,0.2422,10.16,0.9,FAIL_CF,16.3,326.38
+pipeline,16in,0.4064,0.0095,30,1.0,5.0,800.0,pinned,thinnest,Sch 30,PL-0380,0.2422,10.16,0.9,FAIL_CF,16.3,326.38
+pipeline,16in,0.4064,0.0095,40,0.2,0.5,800.0,pinned,thinnest,Sch 30,PL-0381,0.1362,3.613,0.1445,INLINE_ONLY,40.8,326.38
+pipeline,16in,0.4064,0.0095,40,0.2,1.0,800.0,pinned,thinnest,Sch 30,PL-0382,0.1362,3.613,0.3185,FAIL_CF,36.5,326.38
+pipeline,16in,0.4064,0.0095,40,0.2,2.0,800.0,pinned,thinnest,Sch 30,PL-0383,0.1362,3.613,0.3185,FAIL_CF,36.5,326.38
+pipeline,16in,0.4064,0.0095,40,0.2,5.0,800.0,pinned,thinnest,Sch 30,PL-0384,0.1362,3.613,0.3185,FAIL_CF,36.5,326.38
+pipeline,16in,0.4064,0.0095,40,0.4,0.5,800.0,pinned,thinnest,Sch 30,PL-0385,0.1362,7.225,0.9,FAIL_LOCKIN,28.8,326.38
+pipeline,16in,0.4064,0.0095,40,0.4,1.0,800.0,pinned,thinnest,Sch 30,PL-0386,0.1362,7.225,0.9,FAIL_LOCKIN,25.8,326.38
+pipeline,16in,0.4064,0.0095,40,0.4,2.0,800.0,pinned,thinnest,Sch 30,PL-0387,0.1362,7.225,0.9,FAIL_LOCKIN,25.8,326.38
+pipeline,16in,0.4064,0.0095,40,0.4,5.0,800.0,pinned,thinnest,Sch 30,PL-0388,0.1362,7.225,0.9,FAIL_LOCKIN,25.8,326.38
+pipeline,16in,0.4064,0.0095,40,0.6,0.5,800.0,pinned,thinnest,Sch 30,PL-0389,0.1362,10.838,0.9,FAIL_CF,23.5,326.38
+pipeline,16in,0.4064,0.0095,40,0.6,1.0,800.0,pinned,thinnest,Sch 30,PL-0390,0.1362,10.838,0.9,FAIL_CF,21.0,326.38
+pipeline,16in,0.4064,0.0095,40,0.6,2.0,800.0,pinned,thinnest,Sch 30,PL-0391,0.1362,10.838,0.9,FAIL_CF,21.0,326.38
+pipeline,16in,0.4064,0.0095,40,0.6,5.0,800.0,pinned,thinnest,Sch 30,PL-0392,0.1362,10.838,0.9,FAIL_CF,21.0,326.38
+pipeline,16in,0.4064,0.0095,40,0.8,0.5,800.0,pinned,thinnest,Sch 30,PL-0393,0.1362,14.45,0.9,FAIL_CF,20.4,326.38
+pipeline,16in,0.4064,0.0095,40,0.8,1.0,800.0,pinned,thinnest,Sch 30,PL-0394,0.1362,14.45,0.9,FAIL_CF,18.2,326.38
+pipeline,16in,0.4064,0.0095,40,0.8,2.0,800.0,pinned,thinnest,Sch 30,PL-0395,0.1362,14.45,0.9,FAIL_CF,18.2,326.38
+pipeline,16in,0.4064,0.0095,40,0.8,5.0,800.0,pinned,thinnest,Sch 30,PL-0396,0.1362,14.45,0.9,FAIL_CF,18.2,326.38
+pipeline,16in,0.4064,0.0095,40,1.0,0.5,800.0,pinned,thinnest,Sch 30,PL-0397,0.1362,18.063,0.9,FAIL_CF,18.2,326.38
+pipeline,16in,0.4064,0.0095,40,1.0,1.0,800.0,pinned,thinnest,Sch 30,PL-0398,0.1362,18.063,0.9,FAIL_CF,16.3,326.38
+pipeline,16in,0.4064,0.0095,40,1.0,2.0,800.0,pinned,thinnest,Sch 30,PL-0399,0.1362,18.063,0.9,FAIL_CF,16.3,326.38
+pipeline,16in,0.4064,0.0095,40,1.0,5.0,800.0,pinned,thinnest,Sch 30,PL-0400,0.1362,18.063,0.9,FAIL_CF,16.3,326.38
+pipeline,16in,0.4064,0.0095,50,0.2,0.5,800.0,pinned,thinnest,Sch 30,PL-0401,0.0872,5.645,0.9,FAIL_LOCKIN,40.8,326.38
+pipeline,16in,0.4064,0.0095,50,0.2,1.0,800.0,pinned,thinnest,Sch 30,PL-0402,0.0872,5.645,0.9,FAIL_LOCKIN,36.5,326.38
+pipeline,16in,0.4064,0.0095,50,0.2,2.0,800.0,pinned,thinnest,Sch 30,PL-0403,0.0872,5.645,0.9,FAIL_LOCKIN,36.5,326.38
+pipeline,16in,0.4064,0.0095,50,0.2,5.0,800.0,pinned,thinnest,Sch 30,PL-0404,0.0872,5.645,0.9,FAIL_LOCKIN,36.5,326.38
+pipeline,16in,0.4064,0.0095,50,0.4,0.5,800.0,pinned,thinnest,Sch 30,PL-0405,0.0872,11.289,0.9,FAIL_CF,28.8,326.38
+pipeline,16in,0.4064,0.0095,50,0.4,1.0,800.0,pinned,thinnest,Sch 30,PL-0406,0.0872,11.289,0.9,FAIL_CF,25.8,326.38
+pipeline,16in,0.4064,0.0095,50,0.4,2.0,800.0,pinned,thinnest,Sch 30,PL-0407,0.0872,11.289,0.9,FAIL_CF,25.8,326.38
+pipeline,16in,0.4064,0.0095,50,0.4,5.0,800.0,pinned,thinnest,Sch 30,PL-0408,0.0872,11.289,0.9,FAIL_CF,25.8,326.38
+pipeline,16in,0.4064,0.0095,50,0.6,0.5,800.0,pinned,thinnest,Sch 30,PL-0409,0.0872,16.934,0.9,FAIL_CF,23.5,326.38
+pipeline,16in,0.4064,0.0095,50,0.6,1.0,800.0,pinned,thinnest,Sch 30,PL-0410,0.0872,16.934,0.9,FAIL_CF,21.0,326.38
+pipeline,16in,0.4064,0.0095,50,0.6,2.0,800.0,pinned,thinnest,Sch 30,PL-0411,0.0872,16.934,0.9,FAIL_CF,21.0,326.38
+pipeline,16in,0.4064,0.0095,50,0.6,5.0,800.0,pinned,thinnest,Sch 30,PL-0412,0.0872,16.934,0.9,FAIL_CF,21.0,326.38
+pipeline,16in,0.4064,0.0095,50,0.8,0.5,800.0,pinned,thinnest,Sch 30,PL-0413,0.0872,22.579,0.9,FAIL_CF,20.4,326.38
+pipeline,16in,0.4064,0.0095,50,0.8,1.0,800.0,pinned,thinnest,Sch 30,PL-0414,0.0872,22.579,0.9,FAIL_CF,18.2,326.38
+pipeline,16in,0.4064,0.0095,50,0.8,2.0,800.0,pinned,thinnest,Sch 30,PL-0415,0.0872,22.579,0.9,FAIL_CF,18.2,326.38
+pipeline,16in,0.4064,0.0095,50,0.8,5.0,800.0,pinned,thinnest,Sch 30,PL-0416,0.0872,22.579,0.9,FAIL_CF,18.2,326.38
+pipeline,16in,0.4064,0.0095,50,1.0,0.5,800.0,pinned,thinnest,Sch 30,PL-0417,0.0872,28.223,0.9,FAIL_CF,18.2,326.38
+pipeline,16in,0.4064,0.0095,50,1.0,1.0,800.0,pinned,thinnest,Sch 30,PL-0418,0.0872,28.223,0.9,FAIL_CF,16.3,326.38
+pipeline,16in,0.4064,0.0095,50,1.0,2.0,800.0,pinned,thinnest,Sch 30,PL-0419,0.0872,28.223,0.9,FAIL_CF,16.3,326.38
+pipeline,16in,0.4064,0.0095,50,1.0,5.0,800.0,pinned,thinnest,Sch 30,PL-0420,0.0872,28.223,0.9,FAIL_CF,16.3,326.38
+pipeline,16in,0.4064,0.0095,60,0.2,0.5,800.0,pinned,thinnest,Sch 30,PL-0421,0.0605,8.128,0.9,FAIL_CF,40.8,326.38
+pipeline,16in,0.4064,0.0095,60,0.2,1.0,800.0,pinned,thinnest,Sch 30,PL-0422,0.0605,8.128,0.9,FAIL_CF,36.5,326.38
+pipeline,16in,0.4064,0.0095,60,0.2,2.0,800.0,pinned,thinnest,Sch 30,PL-0423,0.0605,8.128,0.9,FAIL_CF,36.5,326.38
+pipeline,16in,0.4064,0.0095,60,0.2,5.0,800.0,pinned,thinnest,Sch 30,PL-0424,0.0605,8.128,0.9,FAIL_CF,36.5,326.38
+pipeline,16in,0.4064,0.0095,60,0.4,0.5,800.0,pinned,thinnest,Sch 30,PL-0425,0.0605,16.257,0.9,FAIL_CF,28.8,326.38
+pipeline,16in,0.4064,0.0095,60,0.4,1.0,800.0,pinned,thinnest,Sch 30,PL-0426,0.0605,16.257,0.9,FAIL_CF,25.8,326.38
+pipeline,16in,0.4064,0.0095,60,0.4,2.0,800.0,pinned,thinnest,Sch 30,PL-0427,0.0605,16.257,0.9,FAIL_CF,25.8,326.38
+pipeline,16in,0.4064,0.0095,60,0.4,5.0,800.0,pinned,thinnest,Sch 30,PL-0428,0.0605,16.257,0.9,FAIL_CF,25.8,326.38
+pipeline,16in,0.4064,0.0095,60,0.6,0.5,800.0,pinned,thinnest,Sch 30,PL-0429,0.0605,24.385,0.9,FAIL_CF,23.5,326.38
+pipeline,16in,0.4064,0.0095,60,0.6,1.0,800.0,pinned,thinnest,Sch 30,PL-0430,0.0605,24.385,0.9,FAIL_CF,21.0,326.38
+pipeline,16in,0.4064,0.0095,60,0.6,2.0,800.0,pinned,thinnest,Sch 30,PL-0431,0.0605,24.385,0.9,FAIL_CF,21.0,326.38
+pipeline,16in,0.4064,0.0095,60,0.6,5.0,800.0,pinned,thinnest,Sch 30,PL-0432,0.0605,24.385,0.9,FAIL_CF,21.0,326.38
+pipeline,16in,0.4064,0.0095,60,0.8,0.5,800.0,pinned,thinnest,Sch 30,PL-0433,0.0605,32.513,0.9,FAIL_CF,20.4,326.38
+pipeline,16in,0.4064,0.0095,60,0.8,1.0,800.0,pinned,thinnest,Sch 30,PL-0434,0.0605,32.513,0.9,FAIL_CF,18.2,326.38
+pipeline,16in,0.4064,0.0095,60,0.8,2.0,800.0,pinned,thinnest,Sch 30,PL-0435,0.0605,32.513,0.9,FAIL_CF,18.2,326.38
+pipeline,16in,0.4064,0.0095,60,0.8,5.0,800.0,pinned,thinnest,Sch 30,PL-0436,0.0605,32.513,0.9,FAIL_CF,18.2,326.38
+pipeline,16in,0.4064,0.0095,60,1.0,0.5,800.0,pinned,thinnest,Sch 30,PL-0437,0.0605,40.641,0.9,FAIL_CF,18.2,326.38
+pipeline,16in,0.4064,0.0095,60,1.0,1.0,800.0,pinned,thinnest,Sch 30,PL-0438,0.0605,40.641,0.9,FAIL_CF,16.3,326.38
+pipeline,16in,0.4064,0.0095,60,1.0,2.0,800.0,pinned,thinnest,Sch 30,PL-0439,0.0605,40.641,0.9,FAIL_CF,16.3,326.38
+pipeline,16in,0.4064,0.0095,60,1.0,5.0,800.0,pinned,thinnest,Sch 30,PL-0440,0.0605,40.641,0.9,FAIL_CF,16.3,326.38
+pipeline,16in,0.4064,0.0095,70,0.2,0.5,800.0,pinned,thinnest,Sch 30,PL-0441,0.0445,11.063,0.9,FAIL_CF,40.8,326.38
+pipeline,16in,0.4064,0.0095,70,0.2,1.0,800.0,pinned,thinnest,Sch 30,PL-0442,0.0445,11.063,0.9,FAIL_CF,36.5,326.38
+pipeline,16in,0.4064,0.0095,70,0.2,2.0,800.0,pinned,thinnest,Sch 30,PL-0443,0.0445,11.063,0.9,FAIL_CF,36.5,326.38
+pipeline,16in,0.4064,0.0095,70,0.2,5.0,800.0,pinned,thinnest,Sch 30,PL-0444,0.0445,11.063,0.9,FAIL_CF,36.5,326.38
+pipeline,16in,0.4064,0.0095,70,0.4,0.5,800.0,pinned,thinnest,Sch 30,PL-0445,0.0445,22.127,0.9,FAIL_CF,28.8,326.38
+pipeline,16in,0.4064,0.0095,70,0.4,1.0,800.0,pinned,thinnest,Sch 30,PL-0446,0.0445,22.127,0.9,FAIL_CF,25.8,326.38
+pipeline,16in,0.4064,0.0095,70,0.4,2.0,800.0,pinned,thinnest,Sch 30,PL-0447,0.0445,22.127,0.9,FAIL_CF,25.8,326.38
+pipeline,16in,0.4064,0.0095,70,0.4,5.0,800.0,pinned,thinnest,Sch 30,PL-0448,0.0445,22.127,0.9,FAIL_CF,25.8,326.38
+pipeline,16in,0.4064,0.0095,70,0.6,0.5,800.0,pinned,thinnest,Sch 30,PL-0449,0.0445,33.19,0.9,FAIL_CF,23.5,326.38
+pipeline,16in,0.4064,0.0095,70,0.6,1.0,800.0,pinned,thinnest,Sch 30,PL-0450,0.0445,33.19,0.9,FAIL_CF,21.0,326.38
+pipeline,16in,0.4064,0.0095,70,0.6,2.0,800.0,pinned,thinnest,Sch 30,PL-0451,0.0445,33.19,0.9,FAIL_CF,21.0,326.38
+pipeline,16in,0.4064,0.0095,70,0.6,5.0,800.0,pinned,thinnest,Sch 30,PL-0452,0.0445,33.19,0.9,FAIL_CF,21.0,326.38
+pipeline,16in,0.4064,0.0095,70,0.8,0.5,800.0,pinned,thinnest,Sch 30,PL-0453,0.0445,44.254,0.9,FAIL_CF,20.4,326.38
+pipeline,16in,0.4064,0.0095,70,0.8,1.0,800.0,pinned,thinnest,Sch 30,PL-0454,0.0445,44.254,0.9,FAIL_CF,18.2,326.38
+pipeline,16in,0.4064,0.0095,70,0.8,2.0,800.0,pinned,thinnest,Sch 30,PL-0455,0.0445,44.254,0.9,FAIL_CF,18.2,326.38
+pipeline,16in,0.4064,0.0095,70,0.8,5.0,800.0,pinned,thinnest,Sch 30,PL-0456,0.0445,44.254,0.9,FAIL_CF,18.2,326.38
+pipeline,16in,0.4064,0.0095,70,1.0,0.5,800.0,pinned,thinnest,Sch 30,PL-0457,0.0445,55.317,0.9,FAIL_CF,18.2,326.38
+pipeline,16in,0.4064,0.0095,70,1.0,1.0,800.0,pinned,thinnest,Sch 30,PL-0458,0.0445,55.317,0.9,FAIL_CF,16.3,326.38
+pipeline,16in,0.4064,0.0095,70,1.0,2.0,800.0,pinned,thinnest,Sch 30,PL-0459,0.0445,55.317,0.9,FAIL_CF,16.3,326.38
+pipeline,16in,0.4064,0.0095,70,1.0,5.0,800.0,pinned,thinnest,Sch 30,PL-0460,0.0445,55.317,0.9,FAIL_CF,16.3,326.38
+pipeline,16in,0.4064,0.0095,80,0.2,0.5,800.0,pinned,thinnest,Sch 30,PL-0461,0.0341,14.45,0.9,FAIL_CF,40.8,326.38
+pipeline,16in,0.4064,0.0095,80,0.2,1.0,800.0,pinned,thinnest,Sch 30,PL-0462,0.0341,14.45,0.9,FAIL_CF,36.5,326.38
+pipeline,16in,0.4064,0.0095,80,0.2,2.0,800.0,pinned,thinnest,Sch 30,PL-0463,0.0341,14.45,0.9,FAIL_CF,36.5,326.38
+pipeline,16in,0.4064,0.0095,80,0.2,5.0,800.0,pinned,thinnest,Sch 30,PL-0464,0.0341,14.45,0.9,FAIL_CF,36.5,326.38
+pipeline,16in,0.4064,0.0095,80,0.4,0.5,800.0,pinned,thinnest,Sch 30,PL-0465,0.0341,28.901,0.9,FAIL_CF,28.8,326.38
+pipeline,16in,0.4064,0.0095,80,0.4,1.0,800.0,pinned,thinnest,Sch 30,PL-0466,0.0341,28.901,0.9,FAIL_CF,25.8,326.38
+pipeline,16in,0.4064,0.0095,80,0.4,2.0,800.0,pinned,thinnest,Sch 30,PL-0467,0.0341,28.901,0.9,FAIL_CF,25.8,326.38
+pipeline,16in,0.4064,0.0095,80,0.4,5.0,800.0,pinned,thinnest,Sch 30,PL-0468,0.0341,28.901,0.9,FAIL_CF,25.8,326.38
+pipeline,16in,0.4064,0.0095,80,0.6,0.5,800.0,pinned,thinnest,Sch 30,PL-0469,0.0341,43.351,0.9,FAIL_CF,23.5,326.38
+pipeline,16in,0.4064,0.0095,80,0.6,1.0,800.0,pinned,thinnest,Sch 30,PL-0470,0.0341,43.351,0.9,FAIL_CF,21.0,326.38
+pipeline,16in,0.4064,0.0095,80,0.6,2.0,800.0,pinned,thinnest,Sch 30,PL-0471,0.0341,43.351,0.9,FAIL_CF,21.0,326.38
+pipeline,16in,0.4064,0.0095,80,0.6,5.0,800.0,pinned,thinnest,Sch 30,PL-0472,0.0341,43.351,0.9,FAIL_CF,21.0,326.38
+pipeline,16in,0.4064,0.0095,80,0.8,0.5,800.0,pinned,thinnest,Sch 30,PL-0473,0.0341,57.801,0.9,FAIL_CF,20.4,326.38
+pipeline,16in,0.4064,0.0095,80,0.8,1.0,800.0,pinned,thinnest,Sch 30,PL-0474,0.0341,57.801,0.9,FAIL_CF,18.2,326.38
+pipeline,16in,0.4064,0.0095,80,0.8,2.0,800.0,pinned,thinnest,Sch 30,PL-0475,0.0341,57.801,0.9,FAIL_CF,18.2,326.38
+pipeline,16in,0.4064,0.0095,80,0.8,5.0,800.0,pinned,thinnest,Sch 30,PL-0476,0.0341,57.801,0.9,FAIL_CF,18.2,326.38
+pipeline,16in,0.4064,0.0095,80,1.0,0.5,800.0,pinned,thinnest,Sch 30,PL-0477,0.0341,72.251,0.9,FAIL_CF,18.2,326.38
+pipeline,16in,0.4064,0.0095,80,1.0,1.0,800.0,pinned,thinnest,Sch 30,PL-0478,0.0341,72.251,0.9,FAIL_CF,16.3,326.38
+pipeline,16in,0.4064,0.0095,80,1.0,2.0,800.0,pinned,thinnest,Sch 30,PL-0479,0.0341,72.251,0.9,FAIL_CF,16.3,326.38
+pipeline,16in,0.4064,0.0095,80,1.0,5.0,800.0,pinned,thinnest,Sch 30,PL-0480,0.0341,72.251,0.9,FAIL_CF,16.3,326.38
+jumper,8in-jumper,0.2191,0.0183,5,0.2,0.5,800.0,pinned,thinnest,Sch 120 (jumper),JM-0001,6.4015,0.143,0.0,PASS,25.6,152.18
+jumper,8in-jumper,0.2191,0.0183,5,0.2,1.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0002,6.4015,0.143,0.0,PASS,22.9,152.18
+jumper,8in-jumper,0.2191,0.0183,5,0.2,2.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0003,6.4015,0.143,0.0,PASS,22.9,152.18
+jumper,8in-jumper,0.2191,0.0183,5,0.2,5.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0004,6.4015,0.143,0.0,PASS,22.9,152.18
+jumper,8in-jumper,0.2191,0.0183,5,0.2,inf,800.0,pinned,thinnest,Sch 120 (jumper),JM-0005,6.4015,0.143,0.0,PASS,22.9,152.18
+jumper,8in-jumper,0.2191,0.0183,5,0.4,0.5,800.0,pinned,thinnest,Sch 120 (jumper),JM-0006,6.4015,0.285,0.0,PASS,18.1,152.18
+jumper,8in-jumper,0.2191,0.0183,5,0.4,1.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0007,6.4015,0.285,0.0,PASS,16.2,152.18
+jumper,8in-jumper,0.2191,0.0183,5,0.4,2.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0008,6.4015,0.285,0.0,PASS,16.2,152.18
+jumper,8in-jumper,0.2191,0.0183,5,0.4,5.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0009,6.4015,0.285,0.0,PASS,16.2,152.18
+jumper,8in-jumper,0.2191,0.0183,5,0.4,inf,800.0,pinned,thinnest,Sch 120 (jumper),JM-0010,6.4015,0.285,0.0,PASS,16.2,152.18
+jumper,8in-jumper,0.2191,0.0183,5,0.6,0.5,800.0,pinned,thinnest,Sch 120 (jumper),JM-0011,6.4015,0.428,0.0,PASS,14.8,152.18
+jumper,8in-jumper,0.2191,0.0183,5,0.6,1.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0012,6.4015,0.428,0.0,PASS,13.2,152.18
+jumper,8in-jumper,0.2191,0.0183,5,0.6,2.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0013,6.4015,0.428,0.0,PASS,13.2,152.18
+jumper,8in-jumper,0.2191,0.0183,5,0.6,5.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0014,6.4015,0.428,0.0,PASS,13.2,152.18
+jumper,8in-jumper,0.2191,0.0183,5,0.6,inf,800.0,pinned,thinnest,Sch 120 (jumper),JM-0015,6.4015,0.428,0.0,PASS,13.2,152.18
+jumper,8in-jumper,0.2191,0.0183,5,0.8,0.5,800.0,pinned,thinnest,Sch 120 (jumper),JM-0016,6.4015,0.57,0.0,PASS,12.8,152.18
+jumper,8in-jumper,0.2191,0.0183,5,0.8,1.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0017,6.4015,0.57,0.0,PASS,11.5,152.18
+jumper,8in-jumper,0.2191,0.0183,5,0.8,2.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0018,6.4015,0.57,0.0,PASS,11.5,152.18
+jumper,8in-jumper,0.2191,0.0183,5,0.8,5.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0019,6.4015,0.57,0.0,PASS,11.5,152.18
+jumper,8in-jumper,0.2191,0.0183,5,0.8,inf,800.0,pinned,thinnest,Sch 120 (jumper),JM-0020,6.4015,0.57,0.0,PASS,11.5,152.18
+jumper,8in-jumper,0.2191,0.0183,5,1.0,0.5,800.0,pinned,thinnest,Sch 120 (jumper),JM-0021,6.4015,0.713,0.0,PASS,11.5,152.18
+jumper,8in-jumper,0.2191,0.0183,5,1.0,1.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0022,6.4015,0.713,0.0,PASS,10.3,152.18
+jumper,8in-jumper,0.2191,0.0183,5,1.0,2.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0023,6.4015,0.713,0.0,PASS,10.3,152.18
+jumper,8in-jumper,0.2191,0.0183,5,1.0,5.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0024,6.4015,0.713,0.0,PASS,10.3,152.18
+jumper,8in-jumper,0.2191,0.0183,5,1.0,inf,800.0,pinned,thinnest,Sch 120 (jumper),JM-0025,6.4015,0.713,0.0,PASS,10.3,152.18
+jumper,8in-jumper,0.2191,0.0183,10,0.2,0.5,800.0,pinned,thinnest,Sch 120 (jumper),JM-0026,1.6004,0.57,0.0,PASS,25.6,152.18
+jumper,8in-jumper,0.2191,0.0183,10,0.2,1.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0027,1.6004,0.57,0.0,PASS,22.9,152.18
+jumper,8in-jumper,0.2191,0.0183,10,0.2,2.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0028,1.6004,0.57,0.0,PASS,22.9,152.18
+jumper,8in-jumper,0.2191,0.0183,10,0.2,5.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0029,1.6004,0.57,0.0,PASS,22.9,152.18
+jumper,8in-jumper,0.2191,0.0183,10,0.2,inf,800.0,pinned,thinnest,Sch 120 (jumper),JM-0030,1.6004,0.57,0.0,PASS,22.9,152.18
+jumper,8in-jumper,0.2191,0.0183,10,0.4,0.5,800.0,pinned,thinnest,Sch 120 (jumper),JM-0031,1.6004,1.141,0.0,PASS,18.1,152.18
+jumper,8in-jumper,0.2191,0.0183,10,0.4,1.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0032,1.6004,1.141,0.057,INLINE_ONLY,16.2,152.18
+jumper,8in-jumper,0.2191,0.0183,10,0.4,2.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0033,1.6004,1.141,0.057,INLINE_ONLY,16.2,152.18
+jumper,8in-jumper,0.2191,0.0183,10,0.4,5.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0034,1.6004,1.141,0.057,INLINE_ONLY,16.2,152.18
+jumper,8in-jumper,0.2191,0.0183,10,0.4,inf,800.0,pinned,thinnest,Sch 120 (jumper),JM-0035,1.6004,1.141,0.057,INLINE_ONLY,16.2,152.18
+jumper,8in-jumper,0.2191,0.0183,10,0.6,0.5,800.0,pinned,thinnest,Sch 120 (jumper),JM-0036,1.6004,1.711,0.0684,INLINE_ONLY,14.8,152.18
+jumper,8in-jumper,0.2191,0.0183,10,0.6,1.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0037,1.6004,1.711,0.0856,INLINE_ONLY,13.2,152.18
+jumper,8in-jumper,0.2191,0.0183,10,0.6,2.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0038,1.6004,1.711,0.0856,INLINE_ONLY,13.2,152.18
+jumper,8in-jumper,0.2191,0.0183,10,0.6,5.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0039,1.6004,1.711,0.0856,INLINE_ONLY,13.2,152.18
+jumper,8in-jumper,0.2191,0.0183,10,0.6,inf,800.0,pinned,thinnest,Sch 120 (jumper),JM-0040,1.6004,1.711,0.0856,INLINE_ONLY,13.2,152.18
+jumper,8in-jumper,0.2191,0.0183,10,0.8,0.5,800.0,pinned,thinnest,Sch 120 (jumper),JM-0041,1.6004,2.282,0.0913,INLINE_ONLY,12.8,152.18
+jumper,8in-jumper,0.2191,0.0183,10,0.8,1.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0042,1.6004,2.282,0.1141,INLINE_ONLY,11.5,152.18
+jumper,8in-jumper,0.2191,0.0183,10,0.8,2.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0043,1.6004,2.282,0.1141,INLINE_ONLY,11.5,152.18
+jumper,8in-jumper,0.2191,0.0183,10,0.8,5.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0044,1.6004,2.282,0.1141,INLINE_ONLY,11.5,152.18
+jumper,8in-jumper,0.2191,0.0183,10,0.8,inf,800.0,pinned,thinnest,Sch 120 (jumper),JM-0045,1.6004,2.282,0.1141,INLINE_ONLY,11.5,152.18
+jumper,8in-jumper,0.2191,0.0183,10,1.0,0.5,800.0,pinned,thinnest,Sch 120 (jumper),JM-0046,1.6004,2.852,0.1141,INLINE_ONLY,11.5,152.18
+jumper,8in-jumper,0.2191,0.0183,10,1.0,1.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0047,1.6004,2.852,0.1426,INLINE_ONLY,10.3,152.18
+jumper,8in-jumper,0.2191,0.0183,10,1.0,2.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0048,1.6004,2.852,0.1426,INLINE_ONLY,10.3,152.18
+jumper,8in-jumper,0.2191,0.0183,10,1.0,5.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0049,1.6004,2.852,0.1426,INLINE_ONLY,10.3,152.18
+jumper,8in-jumper,0.2191,0.0183,10,1.0,inf,800.0,pinned,thinnest,Sch 120 (jumper),JM-0050,1.6004,2.852,0.1426,INLINE_ONLY,10.3,152.18
+jumper,8in-jumper,0.2191,0.0183,15,0.2,0.5,800.0,pinned,thinnest,Sch 120 (jumper),JM-0051,0.7113,1.283,0.0513,INLINE_ONLY,25.6,152.18
+jumper,8in-jumper,0.2191,0.0183,15,0.2,1.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0052,0.7113,1.283,0.0642,INLINE_ONLY,22.9,152.18
+jumper,8in-jumper,0.2191,0.0183,15,0.2,2.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0053,0.7113,1.283,0.0642,INLINE_ONLY,22.9,152.18
+jumper,8in-jumper,0.2191,0.0183,15,0.2,5.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0054,0.7113,1.283,0.0642,INLINE_ONLY,22.9,152.18
+jumper,8in-jumper,0.2191,0.0183,15,0.2,inf,800.0,pinned,thinnest,Sch 120 (jumper),JM-0055,0.7113,1.283,0.0642,INLINE_ONLY,22.9,152.18
+jumper,8in-jumper,0.2191,0.0183,15,0.4,0.5,800.0,pinned,thinnest,Sch 120 (jumper),JM-0056,0.7113,2.567,0.1027,INLINE_ONLY,18.1,152.18
+jumper,8in-jumper,0.2191,0.0183,15,0.4,1.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0057,0.7113,2.567,0.1283,INLINE_ONLY,16.2,152.18
+jumper,8in-jumper,0.2191,0.0183,15,0.4,2.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0058,0.7113,2.567,0.1283,INLINE_ONLY,16.2,152.18
+jumper,8in-jumper,0.2191,0.0183,15,0.4,5.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0059,0.7113,2.567,0.1283,INLINE_ONLY,16.2,152.18
+jumper,8in-jumper,0.2191,0.0183,15,0.4,inf,800.0,pinned,thinnest,Sch 120 (jumper),JM-0060,0.7113,2.567,0.1283,INLINE_ONLY,16.2,152.18
+jumper,8in-jumper,0.2191,0.0183,15,0.6,0.5,800.0,pinned,thinnest,Sch 120 (jumper),JM-0061,0.7113,3.85,0.442,FAIL_CF,14.8,152.18
+jumper,8in-jumper,0.2191,0.0183,15,0.6,1.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0062,0.7113,3.85,0.442,FAIL_CF,13.2,152.18
+jumper,8in-jumper,0.2191,0.0183,15,0.6,2.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0063,0.7113,3.85,0.442,FAIL_CF,13.2,152.18
+jumper,8in-jumper,0.2191,0.0183,15,0.6,5.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0064,0.7113,3.85,0.442,FAIL_CF,13.2,152.18
+jumper,8in-jumper,0.2191,0.0183,15,0.6,inf,800.0,pinned,thinnest,Sch 120 (jumper),JM-0065,0.7113,3.85,0.442,FAIL_CF,13.2,152.18
+jumper,8in-jumper,0.2191,0.0183,15,0.8,0.5,800.0,pinned,thinnest,Sch 120 (jumper),JM-0066,0.7113,5.133,0.9,FAIL_LOCKIN,12.8,152.18
+jumper,8in-jumper,0.2191,0.0183,15,0.8,1.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0067,0.7113,5.133,0.9,FAIL_LOCKIN,11.5,152.18
+jumper,8in-jumper,0.2191,0.0183,15,0.8,2.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0068,0.7113,5.133,0.9,FAIL_LOCKIN,11.5,152.18
+jumper,8in-jumper,0.2191,0.0183,15,0.8,5.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0069,0.7113,5.133,0.9,FAIL_LOCKIN,11.5,152.18
+jumper,8in-jumper,0.2191,0.0183,15,0.8,inf,800.0,pinned,thinnest,Sch 120 (jumper),JM-0070,0.7113,5.133,0.9,FAIL_LOCKIN,11.5,152.18
+jumper,8in-jumper,0.2191,0.0183,15,1.0,0.5,800.0,pinned,thinnest,Sch 120 (jumper),JM-0071,0.7113,6.417,0.9,FAIL_LOCKIN,11.5,152.18
+jumper,8in-jumper,0.2191,0.0183,15,1.0,1.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0072,0.7113,6.417,0.9,FAIL_LOCKIN,10.3,152.18
+jumper,8in-jumper,0.2191,0.0183,15,1.0,2.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0073,0.7113,6.417,0.9,FAIL_LOCKIN,10.3,152.18
+jumper,8in-jumper,0.2191,0.0183,15,1.0,5.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0074,0.7113,6.417,0.9,FAIL_LOCKIN,10.3,152.18
+jumper,8in-jumper,0.2191,0.0183,15,1.0,inf,800.0,pinned,thinnest,Sch 120 (jumper),JM-0075,0.7113,6.417,0.9,FAIL_LOCKIN,10.3,152.18
+jumper,8in-jumper,0.2191,0.0183,20,0.2,0.5,800.0,pinned,thinnest,Sch 120 (jumper),JM-0076,0.4001,2.282,0.0913,INLINE_ONLY,25.6,152.18
+jumper,8in-jumper,0.2191,0.0183,20,0.2,1.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0077,0.4001,2.282,0.1141,INLINE_ONLY,22.9,152.18
+jumper,8in-jumper,0.2191,0.0183,20,0.2,2.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0078,0.4001,2.282,0.1141,INLINE_ONLY,22.9,152.18
+jumper,8in-jumper,0.2191,0.0183,20,0.2,5.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0079,0.4001,2.282,0.1141,INLINE_ONLY,22.9,152.18
+jumper,8in-jumper,0.2191,0.0183,20,0.2,inf,800.0,pinned,thinnest,Sch 120 (jumper),JM-0080,0.4001,2.282,0.1141,INLINE_ONLY,22.9,152.18
+jumper,8in-jumper,0.2191,0.0183,20,0.4,0.5,800.0,pinned,thinnest,Sch 120 (jumper),JM-0081,0.4001,4.563,0.8128,FAIL_LOCKIN,18.1,152.18
+jumper,8in-jumper,0.2191,0.0183,20,0.4,1.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0082,0.4001,4.563,0.8128,FAIL_LOCKIN,16.2,152.18
+jumper,8in-jumper,0.2191,0.0183,20,0.4,2.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0083,0.4001,4.563,0.8128,FAIL_LOCKIN,16.2,152.18
+jumper,8in-jumper,0.2191,0.0183,20,0.4,5.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0084,0.4001,4.563,0.8128,FAIL_LOCKIN,16.2,152.18
+jumper,8in-jumper,0.2191,0.0183,20,0.4,inf,800.0,pinned,thinnest,Sch 120 (jumper),JM-0085,0.4001,4.563,0.8128,FAIL_LOCKIN,16.2,152.18
+jumper,8in-jumper,0.2191,0.0183,20,0.6,0.5,800.0,pinned,thinnest,Sch 120 (jumper),JM-0086,0.4001,6.845,0.9,FAIL_LOCKIN,14.8,152.18
+jumper,8in-jumper,0.2191,0.0183,20,0.6,1.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0087,0.4001,6.845,0.9,FAIL_LOCKIN,13.2,152.18
+jumper,8in-jumper,0.2191,0.0183,20,0.6,2.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0088,0.4001,6.845,0.9,FAIL_LOCKIN,13.2,152.18
+jumper,8in-jumper,0.2191,0.0183,20,0.6,5.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0089,0.4001,6.845,0.9,FAIL_LOCKIN,13.2,152.18
+jumper,8in-jumper,0.2191,0.0183,20,0.6,inf,800.0,pinned,thinnest,Sch 120 (jumper),JM-0090,0.4001,6.845,0.9,FAIL_LOCKIN,13.2,152.18
+jumper,8in-jumper,0.2191,0.0183,20,0.8,0.5,800.0,pinned,thinnest,Sch 120 (jumper),JM-0091,0.4001,9.126,0.9,FAIL_CF,12.8,152.18
+jumper,8in-jumper,0.2191,0.0183,20,0.8,1.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0092,0.4001,9.126,0.9,FAIL_CF,11.5,152.18
+jumper,8in-jumper,0.2191,0.0183,20,0.8,2.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0093,0.4001,9.126,0.9,FAIL_CF,11.5,152.18
+jumper,8in-jumper,0.2191,0.0183,20,0.8,5.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0094,0.4001,9.126,0.9,FAIL_CF,11.5,152.18
+jumper,8in-jumper,0.2191,0.0183,20,0.8,inf,800.0,pinned,thinnest,Sch 120 (jumper),JM-0095,0.4001,9.126,0.9,FAIL_CF,11.5,152.18
+jumper,8in-jumper,0.2191,0.0183,20,1.0,0.5,800.0,pinned,thinnest,Sch 120 (jumper),JM-0096,0.4001,11.408,0.9,FAIL_CF,11.5,152.18
+jumper,8in-jumper,0.2191,0.0183,20,1.0,1.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0097,0.4001,11.408,0.9,FAIL_CF,10.3,152.18
+jumper,8in-jumper,0.2191,0.0183,20,1.0,2.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0098,0.4001,11.408,0.9,FAIL_CF,10.3,152.18
+jumper,8in-jumper,0.2191,0.0183,20,1.0,5.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0099,0.4001,11.408,0.9,FAIL_CF,10.3,152.18
+jumper,8in-jumper,0.2191,0.0183,20,1.0,inf,800.0,pinned,thinnest,Sch 120 (jumper),JM-0100,0.4001,11.408,0.9,FAIL_CF,10.3,152.18
+jumper,8in-jumper,0.2191,0.0183,25,0.2,0.5,800.0,pinned,thinnest,Sch 120 (jumper),JM-0101,0.2561,3.565,0.1426,INLINE_ONLY,25.6,152.18
+jumper,8in-jumper,0.2191,0.0183,25,0.2,1.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0102,0.2561,3.565,0.2937,FAIL_CF,22.9,152.18
+jumper,8in-jumper,0.2191,0.0183,25,0.2,2.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0103,0.2561,3.565,0.2937,FAIL_CF,22.9,152.18
+jumper,8in-jumper,0.2191,0.0183,25,0.2,5.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0104,0.2561,3.565,0.2937,FAIL_CF,22.9,152.18
+jumper,8in-jumper,0.2191,0.0183,25,0.2,inf,800.0,pinned,thinnest,Sch 120 (jumper),JM-0105,0.2561,3.565,0.2937,FAIL_CF,22.9,152.18
+jumper,8in-jumper,0.2191,0.0183,25,0.4,0.5,800.0,pinned,thinnest,Sch 120 (jumper),JM-0106,0.2561,7.13,0.9,FAIL_LOCKIN,18.1,152.18
+jumper,8in-jumper,0.2191,0.0183,25,0.4,1.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0107,0.2561,7.13,0.9,FAIL_LOCKIN,16.2,152.18
+jumper,8in-jumper,0.2191,0.0183,25,0.4,2.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0108,0.2561,7.13,0.9,FAIL_LOCKIN,16.2,152.18
+jumper,8in-jumper,0.2191,0.0183,25,0.4,5.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0109,0.2561,7.13,0.9,FAIL_LOCKIN,16.2,152.18
+jumper,8in-jumper,0.2191,0.0183,25,0.4,inf,800.0,pinned,thinnest,Sch 120 (jumper),JM-0110,0.2561,7.13,0.9,FAIL_LOCKIN,16.2,152.18
+jumper,8in-jumper,0.2191,0.0183,25,0.6,0.5,800.0,pinned,thinnest,Sch 120 (jumper),JM-0111,0.2561,10.695,0.9,FAIL_CF,14.8,152.18
+jumper,8in-jumper,0.2191,0.0183,25,0.6,1.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0112,0.2561,10.695,0.9,FAIL_CF,13.2,152.18
+jumper,8in-jumper,0.2191,0.0183,25,0.6,2.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0113,0.2561,10.695,0.9,FAIL_CF,13.2,152.18
+jumper,8in-jumper,0.2191,0.0183,25,0.6,5.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0114,0.2561,10.695,0.9,FAIL_CF,13.2,152.18
+jumper,8in-jumper,0.2191,0.0183,25,0.6,inf,800.0,pinned,thinnest,Sch 120 (jumper),JM-0115,0.2561,10.695,0.9,FAIL_CF,13.2,152.18
+jumper,8in-jumper,0.2191,0.0183,25,0.8,0.5,800.0,pinned,thinnest,Sch 120 (jumper),JM-0116,0.2561,14.26,0.9,FAIL_CF,12.8,152.18
+jumper,8in-jumper,0.2191,0.0183,25,0.8,1.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0117,0.2561,14.26,0.9,FAIL_CF,11.5,152.18
+jumper,8in-jumper,0.2191,0.0183,25,0.8,2.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0118,0.2561,14.26,0.9,FAIL_CF,11.5,152.18
+jumper,8in-jumper,0.2191,0.0183,25,0.8,5.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0119,0.2561,14.26,0.9,FAIL_CF,11.5,152.18
+jumper,8in-jumper,0.2191,0.0183,25,0.8,inf,800.0,pinned,thinnest,Sch 120 (jumper),JM-0120,0.2561,14.26,0.9,FAIL_CF,11.5,152.18
+jumper,8in-jumper,0.2191,0.0183,25,1.0,0.5,800.0,pinned,thinnest,Sch 120 (jumper),JM-0121,0.2561,17.824,0.9,FAIL_CF,11.5,152.18
+jumper,8in-jumper,0.2191,0.0183,25,1.0,1.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0122,0.2561,17.824,0.9,FAIL_CF,10.3,152.18
+jumper,8in-jumper,0.2191,0.0183,25,1.0,2.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0123,0.2561,17.824,0.9,FAIL_CF,10.3,152.18
+jumper,8in-jumper,0.2191,0.0183,25,1.0,5.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0124,0.2561,17.824,0.9,FAIL_CF,10.3,152.18
+jumper,8in-jumper,0.2191,0.0183,25,1.0,inf,800.0,pinned,thinnest,Sch 120 (jumper),JM-0125,0.2561,17.824,0.9,FAIL_CF,10.3,152.18
+jumper,8in-jumper,0.2191,0.0183,30,0.2,0.5,800.0,pinned,thinnest,Sch 120 (jumper),JM-0126,0.1778,5.133,0.9,FAIL_LOCKIN,25.6,152.18
+jumper,8in-jumper,0.2191,0.0183,30,0.2,1.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0127,0.1778,5.133,0.9,FAIL_LOCKIN,22.9,152.18
+jumper,8in-jumper,0.2191,0.0183,30,0.2,2.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0128,0.1778,5.133,0.9,FAIL_LOCKIN,22.9,152.18
+jumper,8in-jumper,0.2191,0.0183,30,0.2,5.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0129,0.1778,5.133,0.9,FAIL_LOCKIN,22.9,152.18
+jumper,8in-jumper,0.2191,0.0183,30,0.2,inf,800.0,pinned,thinnest,Sch 120 (jumper),JM-0130,0.1778,5.133,0.9,FAIL_LOCKIN,22.9,152.18
+jumper,8in-jumper,0.2191,0.0183,30,0.4,0.5,800.0,pinned,thinnest,Sch 120 (jumper),JM-0131,0.1778,10.267,0.9,FAIL_CF,18.1,152.18
+jumper,8in-jumper,0.2191,0.0183,30,0.4,1.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0132,0.1778,10.267,0.9,FAIL_CF,16.2,152.18
+jumper,8in-jumper,0.2191,0.0183,30,0.4,2.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0133,0.1778,10.267,0.9,FAIL_CF,16.2,152.18
+jumper,8in-jumper,0.2191,0.0183,30,0.4,5.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0134,0.1778,10.267,0.9,FAIL_CF,16.2,152.18
+jumper,8in-jumper,0.2191,0.0183,30,0.4,inf,800.0,pinned,thinnest,Sch 120 (jumper),JM-0135,0.1778,10.267,0.9,FAIL_CF,16.2,152.18
+jumper,8in-jumper,0.2191,0.0183,30,0.6,0.5,800.0,pinned,thinnest,Sch 120 (jumper),JM-0136,0.1778,15.4,0.9,FAIL_CF,14.8,152.18
+jumper,8in-jumper,0.2191,0.0183,30,0.6,1.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0137,0.1778,15.4,0.9,FAIL_CF,13.2,152.18
+jumper,8in-jumper,0.2191,0.0183,30,0.6,2.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0138,0.1778,15.4,0.9,FAIL_CF,13.2,152.18
+jumper,8in-jumper,0.2191,0.0183,30,0.6,5.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0139,0.1778,15.4,0.9,FAIL_CF,13.2,152.18
+jumper,8in-jumper,0.2191,0.0183,30,0.6,inf,800.0,pinned,thinnest,Sch 120 (jumper),JM-0140,0.1778,15.4,0.9,FAIL_CF,13.2,152.18
+jumper,8in-jumper,0.2191,0.0183,30,0.8,0.5,800.0,pinned,thinnest,Sch 120 (jumper),JM-0141,0.1778,20.534,0.9,FAIL_CF,12.8,152.18
+jumper,8in-jumper,0.2191,0.0183,30,0.8,1.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0142,0.1778,20.534,0.9,FAIL_CF,11.5,152.18
+jumper,8in-jumper,0.2191,0.0183,30,0.8,2.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0143,0.1778,20.534,0.9,FAIL_CF,11.5,152.18
+jumper,8in-jumper,0.2191,0.0183,30,0.8,5.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0144,0.1778,20.534,0.9,FAIL_CF,11.5,152.18
+jumper,8in-jumper,0.2191,0.0183,30,0.8,inf,800.0,pinned,thinnest,Sch 120 (jumper),JM-0145,0.1778,20.534,0.9,FAIL_CF,11.5,152.18
+jumper,8in-jumper,0.2191,0.0183,30,1.0,0.5,800.0,pinned,thinnest,Sch 120 (jumper),JM-0146,0.1778,25.667,0.9,FAIL_CF,11.5,152.18
+jumper,8in-jumper,0.2191,0.0183,30,1.0,1.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0147,0.1778,25.667,0.9,FAIL_CF,10.3,152.18
+jumper,8in-jumper,0.2191,0.0183,30,1.0,2.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0148,0.1778,25.667,0.9,FAIL_CF,10.3,152.18
+jumper,8in-jumper,0.2191,0.0183,30,1.0,5.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0149,0.1778,25.667,0.9,FAIL_CF,10.3,152.18
+jumper,8in-jumper,0.2191,0.0183,30,1.0,inf,800.0,pinned,thinnest,Sch 120 (jumper),JM-0150,0.1778,25.667,0.9,FAIL_CF,10.3,152.18
+jumper,8in-jumper,0.2191,0.0183,35,0.2,0.5,800.0,pinned,thinnest,Sch 120 (jumper),JM-0151,0.1306,6.987,0.9,FAIL_LOCKIN,25.6,152.18
+jumper,8in-jumper,0.2191,0.0183,35,0.2,1.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0152,0.1306,6.987,0.9,FAIL_LOCKIN,22.9,152.18
+jumper,8in-jumper,0.2191,0.0183,35,0.2,2.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0153,0.1306,6.987,0.9,FAIL_LOCKIN,22.9,152.18
+jumper,8in-jumper,0.2191,0.0183,35,0.2,5.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0154,0.1306,6.987,0.9,FAIL_LOCKIN,22.9,152.18
+jumper,8in-jumper,0.2191,0.0183,35,0.2,inf,800.0,pinned,thinnest,Sch 120 (jumper),JM-0155,0.1306,6.987,0.9,FAIL_LOCKIN,22.9,152.18
+jumper,8in-jumper,0.2191,0.0183,35,0.4,0.5,800.0,pinned,thinnest,Sch 120 (jumper),JM-0156,0.1306,13.974,0.9,FAIL_CF,18.1,152.18
+jumper,8in-jumper,0.2191,0.0183,35,0.4,1.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0157,0.1306,13.974,0.9,FAIL_CF,16.2,152.18
+jumper,8in-jumper,0.2191,0.0183,35,0.4,2.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0158,0.1306,13.974,0.9,FAIL_CF,16.2,152.18
+jumper,8in-jumper,0.2191,0.0183,35,0.4,5.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0159,0.1306,13.974,0.9,FAIL_CF,16.2,152.18
+jumper,8in-jumper,0.2191,0.0183,35,0.4,inf,800.0,pinned,thinnest,Sch 120 (jumper),JM-0160,0.1306,13.974,0.9,FAIL_CF,16.2,152.18
+jumper,8in-jumper,0.2191,0.0183,35,0.6,0.5,800.0,pinned,thinnest,Sch 120 (jumper),JM-0161,0.1306,20.962,0.9,FAIL_CF,14.8,152.18
+jumper,8in-jumper,0.2191,0.0183,35,0.6,1.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0162,0.1306,20.962,0.9,FAIL_CF,13.2,152.18
+jumper,8in-jumper,0.2191,0.0183,35,0.6,2.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0163,0.1306,20.962,0.9,FAIL_CF,13.2,152.18
+jumper,8in-jumper,0.2191,0.0183,35,0.6,5.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0164,0.1306,20.962,0.9,FAIL_CF,13.2,152.18
+jumper,8in-jumper,0.2191,0.0183,35,0.6,inf,800.0,pinned,thinnest,Sch 120 (jumper),JM-0165,0.1306,20.962,0.9,FAIL_CF,13.2,152.18
+jumper,8in-jumper,0.2191,0.0183,35,0.8,0.5,800.0,pinned,thinnest,Sch 120 (jumper),JM-0166,0.1306,27.949,0.9,FAIL_CF,12.8,152.18
+jumper,8in-jumper,0.2191,0.0183,35,0.8,1.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0167,0.1306,27.949,0.9,FAIL_CF,11.5,152.18
+jumper,8in-jumper,0.2191,0.0183,35,0.8,2.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0168,0.1306,27.949,0.9,FAIL_CF,11.5,152.18
+jumper,8in-jumper,0.2191,0.0183,35,0.8,5.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0169,0.1306,27.949,0.9,FAIL_CF,11.5,152.18
+jumper,8in-jumper,0.2191,0.0183,35,0.8,inf,800.0,pinned,thinnest,Sch 120 (jumper),JM-0170,0.1306,27.949,0.9,FAIL_CF,11.5,152.18
+jumper,8in-jumper,0.2191,0.0183,35,1.0,0.5,800.0,pinned,thinnest,Sch 120 (jumper),JM-0171,0.1306,34.936,0.9,FAIL_CF,11.5,152.18
+jumper,8in-jumper,0.2191,0.0183,35,1.0,1.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0172,0.1306,34.936,0.9,FAIL_CF,10.3,152.18
+jumper,8in-jumper,0.2191,0.0183,35,1.0,2.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0173,0.1306,34.936,0.9,FAIL_CF,10.3,152.18
+jumper,8in-jumper,0.2191,0.0183,35,1.0,5.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0174,0.1306,34.936,0.9,FAIL_CF,10.3,152.18
+jumper,8in-jumper,0.2191,0.0183,35,1.0,inf,800.0,pinned,thinnest,Sch 120 (jumper),JM-0175,0.1306,34.936,0.9,FAIL_CF,10.3,152.18
+jumper,8in-jumper,0.2191,0.0183,40,0.2,0.5,800.0,pinned,thinnest,Sch 120 (jumper),JM-0176,0.1,9.126,0.9,FAIL_CF,25.6,152.18
+jumper,8in-jumper,0.2191,0.0183,40,0.2,1.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0177,0.1,9.126,0.9,FAIL_CF,22.9,152.18
+jumper,8in-jumper,0.2191,0.0183,40,0.2,2.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0178,0.1,9.126,0.9,FAIL_CF,22.9,152.18
+jumper,8in-jumper,0.2191,0.0183,40,0.2,5.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0179,0.1,9.126,0.9,FAIL_CF,22.9,152.18
+jumper,8in-jumper,0.2191,0.0183,40,0.2,inf,800.0,pinned,thinnest,Sch 120 (jumper),JM-0180,0.1,9.126,0.9,FAIL_CF,22.9,152.18
+jumper,8in-jumper,0.2191,0.0183,40,0.4,0.5,800.0,pinned,thinnest,Sch 120 (jumper),JM-0181,0.1,18.252,0.9,FAIL_CF,18.1,152.18
+jumper,8in-jumper,0.2191,0.0183,40,0.4,1.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0182,0.1,18.252,0.9,FAIL_CF,16.2,152.18
+jumper,8in-jumper,0.2191,0.0183,40,0.4,2.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0183,0.1,18.252,0.9,FAIL_CF,16.2,152.18
+jumper,8in-jumper,0.2191,0.0183,40,0.4,5.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0184,0.1,18.252,0.9,FAIL_CF,16.2,152.18
+jumper,8in-jumper,0.2191,0.0183,40,0.4,inf,800.0,pinned,thinnest,Sch 120 (jumper),JM-0185,0.1,18.252,0.9,FAIL_CF,16.2,152.18
+jumper,8in-jumper,0.2191,0.0183,40,0.6,0.5,800.0,pinned,thinnest,Sch 120 (jumper),JM-0186,0.1,27.378,0.9,FAIL_CF,14.8,152.18
+jumper,8in-jumper,0.2191,0.0183,40,0.6,1.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0187,0.1,27.378,0.9,FAIL_CF,13.2,152.18
+jumper,8in-jumper,0.2191,0.0183,40,0.6,2.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0188,0.1,27.378,0.9,FAIL_CF,13.2,152.18
+jumper,8in-jumper,0.2191,0.0183,40,0.6,5.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0189,0.1,27.378,0.9,FAIL_CF,13.2,152.18
+jumper,8in-jumper,0.2191,0.0183,40,0.6,inf,800.0,pinned,thinnest,Sch 120 (jumper),JM-0190,0.1,27.378,0.9,FAIL_CF,13.2,152.18
+jumper,8in-jumper,0.2191,0.0183,40,0.8,0.5,800.0,pinned,thinnest,Sch 120 (jumper),JM-0191,0.1,36.505,0.9,FAIL_CF,12.8,152.18
+jumper,8in-jumper,0.2191,0.0183,40,0.8,1.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0192,0.1,36.505,0.9,FAIL_CF,11.5,152.18
+jumper,8in-jumper,0.2191,0.0183,40,0.8,2.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0193,0.1,36.505,0.9,FAIL_CF,11.5,152.18
+jumper,8in-jumper,0.2191,0.0183,40,0.8,5.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0194,0.1,36.505,0.9,FAIL_CF,11.5,152.18
+jumper,8in-jumper,0.2191,0.0183,40,0.8,inf,800.0,pinned,thinnest,Sch 120 (jumper),JM-0195,0.1,36.505,0.9,FAIL_CF,11.5,152.18
+jumper,8in-jumper,0.2191,0.0183,40,1.0,0.5,800.0,pinned,thinnest,Sch 120 (jumper),JM-0196,0.1,45.631,0.9,FAIL_CF,11.5,152.18
+jumper,8in-jumper,0.2191,0.0183,40,1.0,1.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0197,0.1,45.631,0.9,FAIL_CF,10.3,152.18
+jumper,8in-jumper,0.2191,0.0183,40,1.0,2.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0198,0.1,45.631,0.9,FAIL_CF,10.3,152.18
+jumper,8in-jumper,0.2191,0.0183,40,1.0,5.0,800.0,pinned,thinnest,Sch 120 (jumper),JM-0199,0.1,45.631,0.9,FAIL_CF,10.3,152.18
+jumper,8in-jumper,0.2191,0.0183,40,1.0,inf,800.0,pinned,thinnest,Sch 120 (jumper),JM-0200,0.1,45.631,0.9,FAIL_CF,10.3,152.18

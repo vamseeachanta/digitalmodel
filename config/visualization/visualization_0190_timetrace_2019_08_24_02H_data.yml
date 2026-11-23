@@ -1,0 +1,106 @@
+---
+parameters:
+  start_datetime: &start_datetime "2019-08-23 20:00:00"
+  end_datetime: &end_datetime "2019-08-24 08:00:00"
+  file_io_02: &file_io_02 data_manager\data\shear7\lid_02_cp03_2500ft_WT0750_064pcf.plt
+  label_02: &label_02 label 2
+
+default:
+  log_level: DEBUG
+  config:
+    overwrite:
+      output: True
+  analysis:
+    db:
+      simple: False
+      table_statistics:
+        flag: False
+        statistics: [min, max, count, avg]
+        statistics_df_columns: [RiserId, SchemaName, TableName, ColumnName, ColumnDataType, StatisticsClassId, StartTime, EndTime, TableRows, Minimum, Maximum, Average, RMS, StandardDeviation]
+        schema: XOM
+#        tables: All
+        tables: [BD_TENSIONERS, BD_CALCULATEDDATAROOT, BD_RMSAS_VIVMONITOR, BD_RMSOUTPUT]
+      timeline_statistics:
+        flag: False
+        schema: XOM
+        time_interval_in_hours: 1
+        sets:
+          - table: YT_BOPYELLOWMRU_ACCMRU
+            time: TIMESTAMP
+            columns: [ACCMRU_FWD, ACCMRU_STBD]
+
+    run_example: False
+    statistics: True
+
+  input_data:
+    source: db
+    save_data_to_xlsx: True
+    sets:
+#      -
+#        label: bm
+#        schema: XOM
+#        query:
+#          filename: get_time_window_records_from_table.sql
+#          arguments: [XOM.BD_WHBENDINGMOMENT, TIMESTAMP, *start_datetime, *end_datetime]
+#      -
+#        label: vm
+#        schema: XOM
+#        query:
+#          filename: get_time_window_records_from_table.sql
+#          arguments: [XOM.BD_VESSEL, TIMESTAMP, *start_datetime, *end_datetime]
+      -
+        label: acc_blue
+        schema: XOM
+        query:
+          filename: get_time_window_records_from_table.sql
+          arguments: [XOM.BD_BOPBLUEMRUACC, TIMESTAMP, *start_datetime, *end_datetime]
+      -
+        label: acc_yellow
+        schema: XOM
+        query:
+          filename: get_time_window_records_from_table.sql
+          arguments: [XOM.YT_BOPYELLOWMRU_ACCMRU, TIMESTAMP, *start_datetime, *end_datetime]
+#      -
+#        label: angles_ufj
+#        schema: XOM
+#        query:
+#          filename: get_time_window_records_from_table.sql
+#          arguments: [XOM.BD_UFJPrimaryMRU, TIMESTAMP, *start_datetime, *end_datetime]
+#      -
+#        label: angles_lrj_blue
+#        schema: XOM
+#        query:
+#          filename: get_time_window_records_from_table.sql
+#          arguments: [XOM.BD_LRJBLUEMRU, TIMESTAMP, *start_datetime, *end_datetime]
+#      -
+#        label: angles_lrj_yellow
+#        schema: XOM
+#        query:
+#          filename: get_time_window_records_from_table.sql
+#          arguments: [XOM.YT_LRJYELLOWMRU, TIMESTAMP, *start_datetime, *end_datetime]
+#      -
+#        label: angles_bop_blue
+#        schema: XOM
+#        query:
+#          filename: get_time_window_records_from_table.sql
+#          arguments: [XOM.BD_BOPBLUEMRU, TIMESTAMP, *start_datetime, *end_datetime]
+#      -
+#        label: angles_bop_yellow
+#        schema: XOM
+#        query:
+#          filename: get_time_window_records_from_table.sql
+#          arguments: [XOM.YT_BOPYELLOWMRU, TIMESTAMP, *start_datetime, *end_datetime]
+#
+
+  db:
+    dev:
+        server_type: mssql
+        server: guyanariser.database.windows.net
+        user: GuyanaRiserUser
+        password: M@ry12345
+        database: GuyanaRiser
+        pd_parse_dates_columns: [TIMESTAMP]
+
+plot_settings: []
+
+plot_multiple: []

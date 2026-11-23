@@ -1,0 +1,6 @@
+%YAML 1.1
+# Type: Model
+---
+General:
+  UnitsSystem: SI
+  ModelName: ValidModel1

@@ -1,0 +1,933 @@
+meta:
+  transcription_deviations:
+  - row_id: P57
+    field: test_or_derivation_method
+    reason: source terms forbid copying text
+  - row_id: P60
+    field: value_or_range
+    reason: source terms forbid copying tables
+  unstated_terms_rows: 27
+  unstated_terms_statement: '27 of the 60 rows rest on sources whose reuse terms are "not stated".'
+  description: 'First geotechnical parameter database: sources and parameters; gaps and exclusions retained.'
+  source_statement: research note on the issue, 2026-10-12
+  licence_codes:
+    BY: CC BY 4.0 as stated
+    NS: terms not stated
+    CO: copyright or repository terms restrict copying, cite as fact
+  licence_definition_statement: 'Values are as printed; units are as printed. "Sec" = section. Licence column: BY
+    = CC BY 4.0 as stated; NS = terms not stated; CO = copyright or repository terms restrict copying, cite as fact.'
+  confidence_grade_definition_statement: 'Confidence grades: A = measured at a named site and read directly in an
+    openly licensed paper; B = typical value in an agency manual that itself cites an older source, or a value from
+    a table the extractor flattened, or a cite-only source; C = an assumption made for a generic or reference design.'
+  confidence_grades:
+    A: measured at a named site and read directly in an openly licensed paper
+    B: typical value in an agency manual that itself cites an older source, or a value from a table the extractor
+      flattened, or a cite-only source
+    C: an assumption made for a generic or reference design
+  record_pages_read_papers_not_read: 'Record pages read (not the papers themselves): Imperial College repository
+    record for Zdravković et al., "Ground characterisation for PISA pile testing and analysis", Géotechnique 70(11),
+    945-960, doi 10.1680/jgeot.18.PISA.001 (record states CC BY 4.0; the PDF itself returned HTTP 405); IOS Press
+    record for Barros, Silveira and Amaral, "Geotechnical properties of Brazilian marine clays", 17th ICSMGE (2009),
+    doi 10.3233/978-1-60750-031-5-143 (record states CC BY-NC 3.0; scope: 56 cores from eight Campos Basin fields
+    and one Sergipe-Alagoas field; the ISSMGE library PDF downloaded but its text did not extract).'
+  counts_statement: 'Counts: 17 sources opened and read (plus 2 record pages); 21 located but not read; 60 rows
+    proposed, all read on an opened page.'
+  counts:
+    sources_opened_and_read: 17
+    record_pages: 2
+    located_but_not_read: 21
+    rows_proposed: 60
+sources:
+- source_id: S01
+  citation: Gundersen et al., "Characterization and engineering properties of the NGTS Onsøy soft clay site", AIMS
+    Geosciences 5(3), 665-703 (2019)
+  access: https://aimspress.com/aimspress-data/aimsgeo/2019/3/PDF/geosci-05-03-665.pdf
+  reuse_terms: '"open access article distributed under the terms of the Creative Commons Attribution License (http://creativecommons.org/licenses/by/4.0)"'
+  redistribution: 'yes'
+  read_status: read
+- source_id: S02
+  citation: 'Quinteros et al., "Øysand research site: Geotechnical characterisation of deltaic sandy-silty soils",
+    AIMS Geosciences 5(4), 750-783 (2019), doi 10.3934/geosci.2019.4.750'
+  access: https://www.aimspress.com/aimspress-data/aimsgeo/2019/4/PDF/geosci-05-04-750.pdf
+  reuse_terms: Same CC BY 4.0 statement
+  redistribution: 'yes'
+  read_status: read
+- source_id: S03
+  citation: '"Suction Caissons: Seafloor Characterization for Deepwater Foundation Systems" (R. Gilbert, principal
+    investigator), OTRC Library Number 6/06B171, MMS Project 362 (PDF dated June 2006)'
+  access: https://www.bsee.gov/sites/bsee.gov/files/tap-technical-assessment-program/362aa6.pdf
+  reuse_terms: Terms not stated (US-agency-funded research report; carries only a views disclaimer)
+  redistribution: not-stated
+  read_status: read
+- source_id: S04
+  citation: Iowa DOT Design Manual, Chapter 200 Geotechnical Design, Section 200E-1 "Engineering Properties of Soil
+    and Rock" (originally issued 01-15-14, revised 05-19-15)
+  access: https://documents.iowa.gov/home/download/9593050
+  reuse_terms: Terms not stated (public state-agency manual)
+  redistribution: not-stated
+  read_status: read
+- source_id: S05
+  citation: '"Definition of the IEA 15-Megawatt Offshore Reference Wind Turbine", NREL/TP-5000-75698'
+  access: https://www.osti.gov/servlets/purl/1603478 (redirects to the laboratory document server)
+  reuse_terms: 'Terms not checked in the extracted text: treat as "terms not stated"'
+  redistribution: not-stated
+  read_status: read
+- source_id: S06
+  citation: Lehane et al., "A New 'Unified' CPT-Based Axial Pile Capacity Design Method for Driven Piles in Sand",
+    Proc. 4th Int. Symp. Frontiers in Offshore Geotechnics, pp. 462-477 (2020)
+  access: https://repository.tudelft.nl/file/File_4a46e02f-190c-4e7e-8f1e-c6724a8b55c5
+  reuse_terms: 'Repository cover: "Other than for strictly personal use, it is not permitted to download, forward
+    or distribute the text or part of it, without the consent of the author(s) and/or copyright holder(s), unless
+    the work is under an open content license such as Creative Commons." Cite as fact; do not copy text'
+  redistribution: cite-only
+  read_status: read
+- source_id: S07
+  citation: Robertson and Cabal, "Guide to Cone Penetration Testing", Seventh Edition, December 2022 (Gregg Drilling)
+  access: Free PDF; the copy read was a third-party mirror, so link the publisher's page in the build
+  reuse_terms: '"Copyright © 2022 Gregg Drilling LLC. All rights reserved." Cite as fact; do not copy tables'
+  redistribution: cite-only
+  read_status: read
+- source_id: S08
+  citation: Brødbæk, Møller, Sørensen and Augustesen, "Review of p-y relationships in cohesionless soil", Aalborg
+    University DCE Technical Report No. 57 (2009)
+  access: https://vbn.aau.dk/ws/files/16545021/Review_of_p-y_relationships_in_cohesionless_soil
+  reuse_terms: '"You may not further distribute the material or use it for any profit-making activity or commercial
+    gain"; "You may freely distribute the URL". Cite as fact; link only'
+  redistribution: cite-only
+  read_status: read
+- source_id: S09
+  citation: PISA Cowden field-test paper, Géotechnique 70(11), pp. 970-985, publisher id jgeot.18.PISA.003 (title
+    page did not extract)
+  access: https://www.vliz.be/imisdocs/publications/361397.pdf
+  reuse_terms: '"Published with permission by the ICE under the CC-BY 4.0 license"'
+  redistribution: 'yes'
+  read_status: read
+- source_id: S10
+  citation: Oberhollenzer et al., "Cone penetration test dataset Premstaller Geotechnik", Data in Brief 34:106618
+    (2020), doi 10.1016/j.dib.2020.106618
+  access: https://pmc.ncbi.nlm.nih.gov/articles/PMC7744689/
+  reuse_terms: '"open access article under the CC BY license (http://creativecommons.org/licenses/by/4.0/)"'
+  redistribution: 'yes'
+  read_status: read
+- source_id: S11
+  citation: Bennett, Holzer, Noce and Grant, "An Open Repository of U.S. Cone Penetration Test (CPT) data", USGS
+    data release (2025), doi 10.5066/P13M3WVY
+  access: https://www.usgs.gov/data/open-repository-us-cone-penetration-test-cpt-data
+  reuse_terms: Marked CC0 1.0 Universal
+  redistribution: 'yes'
+  read_status: read
+- source_id: S12
+  citation: 'Buczkowski et al., "usSEABED: Offshore surficial-sediment database for samples collected within the
+    United States Exclusive Economic Zone", USGS data release (2020), doi 10.5066/P9H3LGWM'
+  access: usgs.gov data-release page
+  reuse_terms: '"This work is marked with CC0 1.0 Universal"'
+  redistribution: 'yes'
+  read_status: read
+- source_id: S13
+  citation: FHWA Deep Foundation Load Test Database v.2 user manual (file 17034.pdf) and the FHWA software page
+  access: https://www.fhwa.dot.gov/publications/research/infrastructure/structures/bridge/dfltd/17034.pdf
+  reuse_terms: 'Manual: "No restrictions. This document is available to the U.S. public through the National Technical
+    Information Service". Database page states no licence; download is behind "Register and Download"'
+  redistribution: not-stated
+  read_status: read
+- source_id: S14
+  citation: '"Suction Caissons: Finite Element Studies", MMS Project 362 (only the header and scope were read)'
+  access: https://bsee.gov/sites/bsee.gov/files/tap-technical-assessment-program/362aa1.pdf
+  reuse_terms: Terms not stated
+  redistribution: not-stated
+  read_status: read
+- source_id: S15
+  citation: Marine Data Exchange (UK offshore wind survey data), terms-of-use page
+  access: https://www.marinedataexchange.co.uk/content/info/terms-of-use
+  reuse_terms: 'Bespoke: "non-exclusive non-transferable licence (without the right to sublicense)"; digital copies
+    must not be provided to third parties. Not redistributable'
+  redistribution: 'no'
+  read_status: read
+- source_id: S16
+  citation: EMODnet Geology landing page
+  access: https://emodnet.ec.europa.eu/en/geology
+  reuse_terms: 'Terms page could not be opened (HTTP 403): "terms not stated" until someone reads it'
+  redistribution: not-stated
+  read_status: read
+- source_id: S17
+  citation: WSDOT Geotechnical Design Manual M 46-03, Chapter 5
+  access: wsdot.wa.gov
+  reuse_terms: Read; no typical-value tables were found in the extracted text, so it supplies no rows
+  redistribution: not-stated
+  read_status: read
+parameters:
+- row_id: P01
+  soil_unit: Unit I, weathered clay crust
+  parameter: Total unit weight
+  value_or_range: '17.5'
+  units_as_printed: kN/m3
+  test_or_derivation_method: Water content, core logging, direct measurement
+  site_or_region: Onsøy, Norway
+  depth_range: approx. 0-1 m
+  source_id: S01
+  locator: Sec 4.2
+  licence: BY
+  confidence_grade: A
+- row_id: P02
+  soil_unit: Unit II clay (and top of Unit IV)
+  parameter: Total unit weight
+  value_or_range: '16.2'
+  units_as_printed: kN/m3
+  test_or_derivation_method: As P01
+  site_or_region: Onsøy
+  depth_range: approx. 1 m to 8 m (south-central) or 10.5 m (south-east corner)
+  source_id: S01
+  locator: Sec 4.2
+  licence: BY
+  confidence_grade: A
+- row_id: P03
+  soil_unit: Unit III clay
+  parameter: Total unit weight
+  value_or_range: around 17.8
+  units_as_printed: kN/m3
+  test_or_derivation_method: As P01
+  site_or_region: Onsøy
+  depth_range: below Unit II; about 5.5 m thick (south-central), about 9 m (south-east)
+  source_id: S01
+  locator: Sec 4.2
+  licence: BY
+  confidence_grade: A
+- row_id: P04
+  soil_unit: All units
+  parameter: Unit weight of solid particles
+  value_or_range: 27.1 (best estimate)
+  units_as_printed: kN/m3
+  test_or_derivation_method: Laboratory
+  site_or_region: Onsøy
+  depth_range: whole profile
+  source_id: S01
+  locator: Sec 4.3
+  licence: BY
+  confidence_grade: A
+- row_id: P05
+  soil_unit: Unit II clay
+  parameter: Plasticity index
+  value_or_range: typically around 44
+  units_as_printed: '%'
+  test_or_derivation_method: Atterberg limits
+  site_or_region: Onsøy
+  depth_range: as P02
+  source_id: S01
+  locator: Sec 3 (stratigraphy text, Fig. 8)
+  licence: BY
+  confidence_grade: A
+- row_id: P06
+  soil_unit: Unit II clay
+  parameter: Water content
+  value_or_range: typically 70
+  units_as_printed: '%'
+  test_or_derivation_method: Laboratory
+  site_or_region: Onsøy
+  depth_range: as P02
+  source_id: S01
+  locator: Sec 3
+  licence: BY
+  confidence_grade: A
+- row_id: P07
+  soil_unit: Unit III clay
+  parameter: Plasticity index
+  value_or_range: typically about 27
+  units_as_printed: '%'
+  test_or_derivation_method: Atterberg limits
+  site_or_region: Onsøy
+  depth_range: as P03
+  source_id: S01
+  locator: Sec 3
+  licence: BY
+  confidence_grade: A
+- row_id: P08
+  soil_unit: Unit III clay
+  parameter: Water content
+  value_or_range: about 45
+  units_as_printed: '%'
+  test_or_derivation_method: Laboratory
+  site_or_region: Onsøy
+  depth_range: as P03
+  source_id: S01
+  locator: Sec 3
+  licence: BY
+  confidence_grade: A
+- row_id: P09
+  soil_unit: Soft clay profile
+  parameter: Overconsolidation ratio
+  value_or_range: largely 1.3 to 1.8
+  units_as_printed: '-'
+  test_or_derivation_method: Oedometer tests on block samples, best-estimate profile
+  site_or_region: Onsøy
+  depth_range: 3-20 m
+  source_id: S01
+  locator: Sec 5.2, Eq 3
+  licence: BY
+  confidence_grade: A
+- row_id: P10
+  soil_unit: Soft clay profile
+  parameter: Apparent preconsolidation stress
+  value_or_range: 6.9 (z + 4.54), z in m
+  units_as_printed: kPa
+  test_or_derivation_method: Best-estimate fit to oedometer data
+  site_or_region: Onsøy
+  depth_range: 3-20 m
+  source_id: S01
+  locator: Eq 3
+  licence: BY
+  confidence_grade: A
+- row_id: P11
+  soil_unit: Soft clay, upper
+  parameter: Undrained shear strength, triaxial compression
+  value_or_range: '15.8'
+  units_as_printed: kPa
+  test_or_derivation_method: Anisotropically consolidated triaxial compression, emphasis on block samples
+  site_or_region: Onsøy
+  depth_range: 2-5 m
+  source_id: S01
+  locator: Eq 9a
+  licence: BY
+  confidence_grade: A
+- row_id: P12
+  soil_unit: Soft clay, lower
+  parameter: Strength ratio in triaxial compression, su/σ'v0
+  value_or_range: '0.43'
+  units_as_printed: '-'
+  test_or_derivation_method: As P11
+  site_or_region: Onsøy
+  depth_range: 5-20 m
+  source_id: S01
+  locator: Eq 9b
+  licence: BY
+  confidence_grade: A
+- row_id: P13
+  soil_unit: Soft clay
+  parameter: Strength anisotropy, simple shear / triaxial compression
+  value_or_range: '0.74'
+  units_as_printed: '-'
+  test_or_derivation_method: Direct simple shear versus triaxial compression
+  site_or_region: Onsøy
+  depth_range: profile
+  source_id: S01
+  locator: Sec 5.4.2
+  licence: BY
+  confidence_grade: A
+- row_id: P14
+  soil_unit: Soft clay
+  parameter: Strength anisotropy, triaxial extension / compression
+  value_or_range: '0.52'
+  units_as_printed: '-'
+  test_or_derivation_method: Triaxial extension versus compression
+  site_or_region: Onsøy
+  depth_range: profile
+  source_id: S01
+  locator: Sec 5.4.2
+  licence: BY
+  confidence_grade: A
+- row_id: P15
+  soil_unit: Soft clay
+  parameter: Sensitivity
+  value_or_range: generally 5 to 8
+  units_as_printed: '-'
+  test_or_derivation_method: Fall cone and field vane
+  site_or_region: Onsøy
+  depth_range: down to 14 m
+  source_id: S01
+  locator: Sec 5.4.3
+  licence: BY
+  confidence_grade: A
+- row_id: P16
+  soil_unit: Soft clay
+  parameter: Constant-volume friction angle
+  value_or_range: '30'
+  units_as_printed: degrees
+  test_or_derivation_method: Effective-stress interpretation of triaxial tests (with attraction 5 kPa)
+  site_or_region: Onsøy
+  depth_range: profile
+  source_id: S01
+  locator: Sec 5.4
+  licence: BY
+  confidence_grade: A
+- row_id: P17
+  soil_unit: Soft clay
+  parameter: Cone factor Nkt (site-specific)
+  value_or_range: '9'
+  units_as_printed: '-'
+  test_or_derivation_method: Piezocone calibrated to laboratory triaxial compression strength
+  site_or_region: Onsøy
+  depth_range: profile
+  source_id: S01
+  locator: Sec 5.4, triaxial compression strength text
+  licence: BY
+  confidence_grade: A
+- row_id: P18
+  soil_unit: Soft clay
+  parameter: Pore-pressure cone factor NΔu (site-specific)
+  value_or_range: '7.2'
+  units_as_printed: '-'
+  test_or_derivation_method: As P17
+  site_or_region: Onsøy
+  depth_range: profile
+  source_id: S01
+  locator: Sec 5.4, triaxial compression strength text
+  licence: BY
+  confidence_grade: A
+- row_id: P19
+  soil_unit: Deep-water soft clay
+  parameter: Cone factor Nkt, recommended
+  value_or_range: '12.5'
+  units_as_printed: '-'
+  test_or_derivation_method: Reported from an earlier study
+  site_or_region: Luva field, Norwegian Sea
+  depth_range: not stated
+  source_id: S01
+  locator: Table 2
+  licence: BY
+  confidence_grade: B
+- row_id: P20
+  soil_unit: Deep-water soft clay
+  parameter: T-bar factor, recommended
+  value_or_range: '9.5'
+  units_as_printed: '-'
+  test_or_derivation_method: As P19
+  site_or_region: Luva field
+  depth_range: not stated
+  source_id: S01
+  locator: Table 2
+  licence: BY
+  confidence_grade: B
+- row_id: P21
+  soil_unit: Soft clay
+  parameter: OCR from normalised cone resistance, factor k in OCR = k Qt
+  value_or_range: 0.36 (site); 0.3 (general, plots low)
+  units_as_printed: '-'
+  test_or_derivation_method: Piezocone versus oedometer
+  site_or_region: Onsøy
+  depth_range: profile
+  source_id: S01
+  locator: Sec 5.2
+  licence: BY
+  confidence_grade: A
+- row_id: P22
+  soil_unit: Soft clay
+  parameter: Vertical hydraulic conductivity at in-situ state
+  value_or_range: best estimate 1e-9; usual soft-clay range 5e-10 to 5e-9
+  units_as_printed: m/s
+  test_or_derivation_method: Constant-rate-of-strain oedometer
+  site_or_region: Onsøy
+  depth_range: profile
+  source_id: S01
+  locator: Sec 5.6
+  licence: BY
+  confidence_grade: A
+- row_id: P23
+  soil_unit: Sandy-silty deltaic soil
+  parameter: Total unit weight
+  value_or_range: 18 to 20; representative 19
+  units_as_printed: kN/m3
+  test_or_derivation_method: Laboratory and water content
+  site_or_region: Øysand, Norway
+  depth_range: 5-20 m
+  source_id: S02
+  locator: Sec 6, unit weight text (before 6.4)
+  licence: BY
+  confidence_grade: A
+- row_id: P24
+  soil_unit: Unit II sand
+  parameter: Unit weight of solid particles
+  value_or_range: 26.6 to 26.9; average 26.7
+  units_as_printed: kN/m3
+  test_or_derivation_method: Laboratory
+  site_or_region: Øysand
+  depth_range: Unit II
+  source_id: S02
+  locator: Sec 6, solid-particle unit weight text
+  licence: BY
+  confidence_grade: A
+- row_id: P25
+  soil_unit: Sandy-silty soil
+  parameter: Relative density
+  value_or_range: average around 60; locally 30
+  units_as_printed: '%'
+  test_or_derivation_method: Indirect estimate from in-situ and laboratory data
+  site_or_region: Øysand
+  depth_range: investigated depth
+  source_id: S02
+  locator: Sec 6.4
+  licence: BY
+  confidence_grade: A
+- row_id: P26
+  soil_unit: Unit II sandy silty soil
+  parameter: Peak friction angle
+  value_or_range: 37 to 40
+  units_as_printed: degrees
+  test_or_derivation_method: Anisotropically consolidated drained triaxial compression (K = 0.5), push-piston samples
+  site_or_region: Øysand
+  depth_range: Unit II
+  source_id: S02
+  locator: Sec 8.1
+  licence: BY
+  confidence_grade: A
+- row_id: P27
+  soil_unit: Unit II sand
+  parameter: Critical-state friction angle
+  value_or_range: about 34
+  units_as_printed: degrees
+  test_or_derivation_method: Large-strain end of the same tests
+  site_or_region: Øysand
+  depth_range: Unit II
+  source_id: S02
+  locator: Sec 8.1
+  licence: BY
+  confidence_grade: A
+- row_id: P28
+  soil_unit: Sandy-silty soil
+  parameter: Hydraulic conductivity
+  value_or_range: 1e-7 to 1e-3
+  units_as_printed: m/s
+  test_or_derivation_method: Hazen's formula on gradings (silt content 0 to 70 %)
+  site_or_region: Øysand
+  depth_range: profile
+  source_id: S02
+  locator: Hydraulic conductivity discussion (Hazen and slug tests)
+  licence: BY
+  confidence_grade: B
+- row_id: P29
+  soil_unit: Sand
+  parameter: Ageing coefficient used for K0 estimate
+  value_or_range: 0.005 (sand deposited hundreds to thousands of years ago); 0.002 (freshly deposited)
+  units_as_printed: '-'
+  test_or_derivation_method: Literature value adopted in the paper
+  site_or_region: Øysand
+  depth_range: profile
+  source_id: S02
+  locator: Sec 9.2
+  licence: BY
+  confidence_grade: B
+- row_id: P30
+  soil_unit: Generic normally consolidated clay
+  parameter: Undrained strength at mudline (intercept)
+  value_or_range: '80'
+  units_as_printed: psf
+  test_or_derivation_method: Generic design profile for a deepwater study
+  site_or_region: Gulf of Mexico (generic)
+  depth_range: mudline
+  source_id: S03
+  locator: Fig. 3
+  licence: NS
+  confidence_grade: C
+- row_id: P31
+  soil_unit: Generic normally consolidated clay
+  parameter: Undrained strength gradient
+  value_or_range: '10'
+  units_as_printed: psf/ft
+  test_or_derivation_method: As P30
+  site_or_region: Gulf of Mexico (generic)
+  depth_range: below mudline
+  source_id: S03
+  locator: Fig. 3 and text
+  licence: NS
+  confidence_grade: C
+- row_id: P32
+  soil_unit: Generic normally consolidated clay
+  parameter: Plastic limit
+  value_or_range: '25'
+  units_as_printed: '%'
+  test_or_derivation_method: As P30
+  site_or_region: Gulf of Mexico (generic)
+  depth_range: profile
+  source_id: S03
+  locator: Fig. 3
+  licence: NS
+  confidence_grade: C
+- row_id: P33
+  soil_unit: Generic normally consolidated clay
+  parameter: Liquid limit
+  value_or_range: '70'
+  units_as_printed: '%'
+  test_or_derivation_method: As P30
+  site_or_region: Gulf of Mexico (generic)
+  depth_range: profile
+  source_id: S03
+  locator: Fig. 3
+  licence: NS
+  confidence_grade: C
+- row_id: P34
+  soil_unit: Normally consolidated clay, suction caisson wall
+  parameter: Side-shear adhesion factor, recommended with P35
+  value_or_range: on the order of 0.8
+  units_as_printed: '-'
+  test_or_derivation_method: Calibration against 25 pullout tests
+  site_or_region: Generic
+  depth_range: n/a
+  source_id: S03
+  locator: '"Calibration of Suction Caisson Design Method"'
+  licence: NS
+  confidence_grade: B
+- row_id: P35
+  soil_unit: Normally consolidated clay, caisson tip
+  parameter: Reverse end-bearing factor, recommended with P34
+  value_or_range: '12'
+  units_as_printed: '-'
+  test_or_derivation_method: As P34
+  site_or_region: Generic
+  depth_range: n/a
+  source_id: S03
+  locator: Same section
+  licence: NS
+  confidence_grade: B
+- row_id: P36
+  soil_unit: Normally consolidated clay
+  parameter: Adhesion factor range used by designers for suction caissons
+  value_or_range: 0.6 to 0.8
+  units_as_printed: '-'
+  test_or_derivation_method: Reported practice
+  site_or_region: Generic
+  depth_range: n/a
+  source_id: S03
+  locator: '"Capacity for Axial (Uplift) Loading"'
+  licence: NS
+  confidence_grade: B
+- row_id: P37
+  soil_unit: Uniform sand, loose
+  parameter: Dry / wet unit weight
+  value_or_range: 90 / 118
+  units_as_printed: pcf
+  test_or_derivation_method: Typical values, natural state (after Peck, Hanson and Thornburn)
+  site_or_region: Generic
+  depth_range: n/a
+  source_id: S04
+  locator: Table 1
+  licence: NS
+  confidence_grade: B
+- row_id: P38
+  soil_unit: Uniform sand, dense
+  parameter: Dry / wet unit weight
+  value_or_range: 109 / 130
+  units_as_printed: pcf
+  test_or_derivation_method: As P37
+  site_or_region: Generic
+  depth_range: n/a
+  source_id: S04
+  locator: Table 1
+  licence: NS
+  confidence_grade: B
+- row_id: P39
+  soil_unit: Well-graded sand, loose
+  parameter: Dry / wet unit weight
+  value_or_range: 99 / 124
+  units_as_printed: pcf
+  test_or_derivation_method: As P37
+  site_or_region: Generic
+  depth_range: n/a
+  source_id: S04
+  locator: Table 1
+  licence: NS
+  confidence_grade: B
+- row_id: P40
+  soil_unit: Well-graded sand, dense
+  parameter: Dry / wet unit weight
+  value_or_range: 116 / 135
+  units_as_printed: pcf
+  test_or_derivation_method: As P37
+  site_or_region: Generic
+  depth_range: n/a
+  source_id: S04
+  locator: Table 1
+  licence: NS
+  confidence_grade: B
+- row_id: P41
+  soil_unit: Glacial till
+  parameter: Dry / wet unit weight
+  value_or_range: 132 / 145
+  units_as_printed: pcf
+  test_or_derivation_method: As P37
+  site_or_region: Generic
+  depth_range: n/a
+  source_id: S04
+  locator: Table 1
+  licence: NS
+  confidence_grade: B
+- row_id: P42
+  soil_unit: Soft glacial clay
+  parameter: Dry / wet unit weight
+  value_or_range: 76 / 110
+  units_as_printed: pcf
+  test_or_derivation_method: As P37
+  site_or_region: Generic
+  depth_range: n/a
+  source_id: S04
+  locator: Table 1
+  licence: NS
+  confidence_grade: B
+- row_id: P43
+  soil_unit: Stiff glacial clay
+  parameter: Dry / wet unit weight
+  value_or_range: 106 / 129
+  units_as_printed: pcf
+  test_or_derivation_method: As P37
+  site_or_region: Generic
+  depth_range: n/a
+  source_id: S04
+  locator: Table 1
+  licence: NS
+  confidence_grade: B
+- row_id: P44
+  soil_unit: Soft slightly organic clay
+  parameter: Dry / wet unit weight
+  value_or_range: 58 / 98
+  units_as_printed: pcf
+  test_or_derivation_method: As P37
+  site_or_region: Generic
+  depth_range: n/a
+  source_id: S04
+  locator: Table 1
+  licence: NS
+  confidence_grade: B
+- row_id: P45
+  soil_unit: Cohesionless, very loose
+  parameter: Relative density; SPT N; friction angle
+  value_or_range: <20; <4; <30
+  units_as_printed: '%; blows/ft; degrees'
+  test_or_derivation_method: Correlation (after Meyerhof), relatively clean sands
+  site_or_region: Generic
+  depth_range: n/a
+  source_id: S04
+  locator: Table 2
+  licence: NS
+  confidence_grade: B
+- row_id: P46
+  soil_unit: Cohesionless, loose
+  parameter: Relative density; SPT N; friction angle
+  value_or_range: 20-40; 4-10; 30-35
+  units_as_printed: '%; blows/ft; degrees'
+  test_or_derivation_method: As P45
+  site_or_region: Generic
+  depth_range: n/a
+  source_id: S04
+  locator: Table 2
+  licence: NS
+  confidence_grade: B
+- row_id: P47
+  soil_unit: Cohesionless, compact
+  parameter: Relative density; SPT N; friction angle
+  value_or_range: 40-60; 10-30; 35-40
+  units_as_printed: '%; blows/ft; degrees'
+  test_or_derivation_method: As P45
+  site_or_region: Generic
+  depth_range: n/a
+  source_id: S04
+  locator: Table 2
+  licence: NS
+  confidence_grade: B
+- row_id: P48
+  soil_unit: Cohesionless, dense
+  parameter: Relative density; SPT N; friction angle
+  value_or_range: 60-80; 30-50; 40-45
+  units_as_printed: '%; blows/ft; degrees'
+  test_or_derivation_method: As P45
+  site_or_region: Generic
+  depth_range: n/a
+  source_id: S04
+  locator: Table 2
+  licence: NS
+  confidence_grade: B
+- row_id: P49
+  soil_unit: Cohesionless, very dense
+  parameter: Relative density; SPT N; friction angle
+  value_or_range: '>80; >50; >45'
+  units_as_printed: '%; blows/ft; degrees'
+  test_or_derivation_method: As P45
+  site_or_region: Generic
+  depth_range: n/a
+  source_id: S04
+  locator: Table 2
+  licence: NS
+  confidence_grade: B
+- row_id: P50
+  soil_unit: Sand, loose
+  parameter: Equivalent elastic modulus
+  value_or_range: 10,000 to 30,000
+  units_as_printed: kPa
+  test_or_derivation_method: Typical values (modified after FHWA circular)
+  site_or_region: Generic
+  depth_range: n/a
+  source_id: S04
+  locator: Table 3
+  licence: NS
+  confidence_grade: B
+- row_id: P51
+  soil_unit: Sand, medium dense
+  parameter: Equivalent elastic modulus
+  value_or_range: 30,000 to 50,000
+  units_as_printed: kPa
+  test_or_derivation_method: As P50
+  site_or_region: Generic
+  depth_range: n/a
+  source_id: S04
+  locator: Table 3
+  licence: NS
+  confidence_grade: B
+- row_id: P52
+  soil_unit: Sand, dense
+  parameter: Equivalent elastic modulus
+  value_or_range: 50,000 to 80,000
+  units_as_printed: kPa
+  test_or_derivation_method: As P50
+  site_or_region: Generic
+  depth_range: n/a
+  source_id: S04
+  locator: Table 3
+  licence: NS
+  confidence_grade: B
+- row_id: P53
+  soil_unit: Inorganic clay (sensitivity up to 4, liquid limit below 100)
+  parameter: Compression index
+  value_or_range: 0.009 × (LL − 10), LL in %
+  units_as_printed: '-'
+  test_or_derivation_method: Correlation attributed to Terzaghi and Peck
+  site_or_region: Generic
+  depth_range: n/a
+  source_id: S04
+  locator: Eq 200E-1_1
+  licence: NS
+  confidence_grade: B
+- row_id: P54
+  soil_unit: Clay
+  parameter: Recompression index as a fraction of compression index
+  value_or_range: approximately 10 to 20
+  units_as_printed: '%'
+  test_or_derivation_method: Attributed to Ladd
+  site_or_region: Generic
+  depth_range: n/a
+  source_id: S04
+  locator: '"Recompression Index"'
+  licence: NS
+  confidence_grade: B
+- row_id: P55
+  soil_unit: Soil at reference monopile
+  parameter: Shear modulus
+  value_or_range: 140E6
+  units_as_printed: Pa
+  test_or_derivation_method: Assumed summary value, "representative of dense sand or gravel soils"
+  site_or_region: Generic reference site
+  depth_range: n/a
+  source_id: S05
+  locator: Table 4-1
+  licence: NS
+  confidence_grade: C
+- row_id: P56
+  soil_unit: Soil at reference monopile
+  parameter: Poisson's ratio
+  value_or_range: '0.4'
+  units_as_printed: '-'
+  test_or_derivation_method: As P55
+  site_or_region: Generic reference site
+  depth_range: n/a
+  source_id: S05
+  locator: Table 4-1
+  licence: NS
+  confidence_grade: C
+- row_id: P57
+  soil_unit: Silica sand against steel pile surface
+  parameter: Constant-volume interface friction angle
+  value_or_range: 29 (mean measured)
+  units_as_printed: degrees
+  test_or_derivation_method: Ring-shear interface tests with fast pre-shearing; the value is a default when local interface measurements
+    are unavailable
+  site_or_region: Generic silica sands
+  depth_range: n/a
+  source_id: S06
+  locator: '"Interface friction angle"'
+  licence: CO
+  confidence_grade: B
+- row_id: P58
+  soil_unit: Sand, driven pile shaft
+  parameter: Tension-to-compression coefficient on shaft friction
+  value_or_range: 1.0 compression; 0.75 tension
+  units_as_printed: '-'
+  test_or_derivation_method: Method coefficient
+  site_or_region: Generic silica sands
+  depth_range: n/a
+  source_id: S06
+  locator: Eq 1 and following text
+  licence: CO
+  confidence_grade: B
+- row_id: P59
+  soil_unit: Clay
+  parameter: Cone factor Nkt, general
+  value_or_range: 10 to 18; 14 as an average
+  units_as_printed: '-'
+  test_or_derivation_method: Empirical; rises with plasticity, falls with sensitivity
+  site_or_region: Generic
+  depth_range: n/a
+  source_id: S07
+  locator: '"Undrained shear strength" section'
+  licence: CO
+  confidence_grade: B
+- row_id: P60
+  note: Classes are defined only by their numeric ranges; the source's descriptors are not reproduced.
+  soil_unit: Soft clays
+  parameter: Ratio of horizontal to vertical permeability
+  value_or_range: 1 to 1.5 (class A); 2 to 4 (class B); 3 to 10 (class C)
+  units_as_printed: '-'
+  test_or_derivation_method: Field values (modified from Jamiolkowski et al.)
+  site_or_region: Generic
+  depth_range: n/a
+  source_id: S07
+  locator: Table 7
+  licence: CO
+  confidence_grade: B
+gaps:
+- topic: Axial pile capacity in clay and sand (main-text methods), limiting shaft friction and end-bearing values
+    by soil class
+  where_commonly_defined: API RP 2GEO; API RP 2A; ISO 19901-4
+- topic: Axial load-transfer curves (t-z, q-z)
+  where_commonly_defined: API RP 2GEO; ISO 19901-4
+- topic: Lateral soil reaction curves for soft clay, stiff clay and sand, including cyclic versions; initial modulus
+    of subgrade reaction versus friction angle or relative density
+  where_commonly_defined: API RP 2GEO; ISO 19901-4; DNV-RP-C212
+- topic: Monopile-specific soil reaction and stiffness guidance
+  where_commonly_defined: DNV-ST-0126; DNV-RP-C212
+- topic: Suction-anchor design method and safety format
+  where_commonly_defined: DNV-RP-E303; API RP 2SK; ISO 19901-7
+- topic: Drag-embedment and plate anchor holding-capacity charts and design
+  where_commonly_defined: API RP 2SK; ISO 19901-7; DNV-RP-E301; DNV-RP-E302
+- topic: Cyclic degradation and soil damping for offshore foundations
+  where_commonly_defined: DNV-RP-C212; ISO 19901-4
+- topic: Offshore site-investigation and laboratory test requirements
+  where_commonly_defined: ISO 19901-8; NORSOK G-001; ISO 22476-1; ASTM D5778
+- topic: Soil classification systems as normative text
+  where_commonly_defined: ASTM D2487; ISO 14688-1 and -2; BS 5930
+- topic: Carbonate sand design parameters (shaft friction limits, compressibility, cementation)
+  where_commonly_defined: ISO 19901-4 guidance; paid conference volumes
+- topic: Steel-clay adhesion and interface values by clay type; typical sensitivity and small-strain stiffness tables
+    by soil type
+  where_commonly_defined: Paid textbooks and standards; open agency manuals exist but were unreachable here
+- topic: Region-specific design profiles for West Africa, the North West Shelf, offshore Brazil and US Atlantic
+    wind areas
+  where_commonly_defined: Paywalled conference papers; operator and developer reports
+- topic: carbonate sand parameters
+  where_commonly_defined: null
+- topic: small-strain stiffness tables by soil type
+  where_commonly_defined: null
+- topic: steel-clay interface (adhesion) tables
+  where_commonly_defined: null
+- topic: typical sensitivity by clay type
+  where_commonly_defined: null
+excluded:
+- 'Excluded although read: the Onsøy remoulded strength values (the extractor may have dropped decimal points),
+  the Onsøy stiffness correlation (equation garbled by extraction), the suction-caisson test table (belongs in `datasets`),
+  and every chart-only value.'
+- 'Federal defence and transport geotechnical manuals with the fullest typical-value tables (naval marine geotechnics
+  handbook, the unified soil-mechanics criteria, the bearing-capacity engineer manual, FHWA Geotechnical Engineering
+  Circular No. 5): servers returned HTTP 403 or the file exceeded the 10 MB fetch limit. They are public documents
+  and are the first thing a follow-up should read.'
+- 'OC3 monopile soil profile, the Brazilian marine clays paper, and two state-agency manuals with correlation tables
+  (SCDOT Chapter 7, Caltrans soil correlations): downloaded, but the text did not extract.'
+- 'PISA ground characterisation and the two PISA design-model papers; the plastic-limit-analysis anchor report;
+  the Gulf of Guinea paper: located, not read.'
+- 'Any statement about which standard has adopted the unified cone-based method, and the originating open references
+  for the clay adhesion method and the soft-clay lateral curves: unverified.'
+- 'EMODnet and Dutch public-registry licence terms: pages did not expose them.'
+- 'S05 reuse notice and the S09 title and author list: not captured by the extractor.'

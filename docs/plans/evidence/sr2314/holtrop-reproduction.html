@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><title>sr2314 Holtrop discrepancy reproduction</title>
+<style>body{font:16px/1.5 system-ui;max-width:1100px;margin:3rem auto;padding:0 1rem;color:#172635}table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}td,th{padding:.5rem;border:1px solid #bcc6cf;text-align:right}td:first-child,th:first-child{text-align:left}caption{caption-side:bottom;text-align:left;margin:.4rem 0 1.5rem}pre{overflow:auto;background:#eef2f5;padding:1rem}</style>
+<h1>Holtrop discrepancy reproduction — sr2314</h1>
+<p>The reported −31.5% and +50.6% discrepancies are reproduced against the two existing approximate fixture values. Both exceed the fixture's declared 15% band. This establishes disagreement with the fixture; accuracy against a primary worked example is not established. No Holtrop method coefficients are changed.</p>
+<p>Owner: digitalmodel. Input identity: <code>tests/fixtures/test_vectors/naval_architecture/holtrop_mennen.yaml</code>, vintage 2026-03-20; synthetic/public hull parameters from the existing fixture, not measured vessel data. Source status: approximate fixture references unverified for engineering acceptance. Observed reproduction: 2026-10-09. Source and method byte digests are retained below. No licensed papers are copied.</p>
+<p>Evidence: <a href="https://github.com/vamseeachanta/digitalmodel/issues/2020">issue 2020</a> reports these exact two hull rows and their speed of 7.72 m/s. The current fixture retains those inputs and reported C<sub>T</sub> references. The <a href="https://github.com/vamseeachanta/digitalmodel/issues/2020#issuecomment-5303408217">approved-plan closeout comment</a> already distinguishes fixed-speed coincidence from hull-form collapse and records that primary-paper acquisition remains required. This diagnostic does not implement that separate coefficient-correction plan.</p>
+<h2>Fixed-speed comparison</h2>
+<p>C<sub>T</sub> = R<sub>T</sub> / (½ρSV²), with ρ = 1025 kg/m³. S is the Holtrop-regression wetted surface, not mesh-derived wetted area. Percentage error = 100 × (computed C<sub>T</sub> / fixture <code>ct_approx</code> − 1); its denominator is the fixture reference, not the computed coefficient. C<sub>T</sub>, Froude number and form factor are dimensionless.</p>
+<table><thead><tr><th>Case</th><th>Fn (1)</th><th>Computed C<sub>T</sub> (1)</th><th>Fixture C<sub>T</sub> (1)</th><th>Error (%)</th><th>Current method floor (1)</th></tr></thead><tbody><tr><td>series60_cb060</td><td>0.223264403</td><td>0.00263612177414</td><td>0.00385</td><td>-31.529304568</td><td>0.00221449406576</td></tr><tr><td>tanker_cb080</td><td>0.172178941</td><td>0.00263622493686</td><td>0.00175</td><td>50.641424963</td><td>0.00224149912815</td></tr></tbody><caption>Table 1. Both hulls at V = 7.72 m/s; current method floor is C<sub>F</sub>(1+k₁) + C<sub>A</sub> for these zero-bulb, zero-transom, zero-appendage fixtures.</caption></table>
+<table><thead><tr><th>Case</th><th>S (m²)</th><th>1+k₁ (1)</th><th>R<sub>F</sub> (N)</th><th>R<sub>W</sub> (N)</th><th>R<sub>A</sub> (N)</th><th>R<sub>T</sub> (N)</th></tr></thead><tbody><tr><td>series60_cb060</td><td>2429.246060</td><td>1.101890912</td><td>116939.111950</td><td>31284.493021</td><td>35459.828843</td><td>195598.466627</td></tr><tr><td>tanker_cb080</td><td>9598.835040</td><td>1.278299572</td><td>433257.675683</td><td>115729.085629</td><td>103348.767164</td><td>772910.954199</td></tr></tbody><caption>Table 2. Individual components discriminate between hulls; R<sub>F</sub> is shown before multiplication by the form factor.</caption></table>
+<p>The current tanker floor is 0.00224149912815, above its approximate reference 0.00175 by 28.085665%. The older issue comment cites a different floor (0.0022966); that figure is not reproduced. For the current equations and these inputs, reducing the non-negative wave term alone cannot reach the fixture reference. This floor is an internal component bound, not evidence of method accuracy or a claim that all possible coefficient corrections preserve the bound.</p>
+<h2>Common Froude number</h2>
+<p>The tanker C<sub>B</sub> = 0.80 rows at Fn = 0.25 and 0.30 are treated as diagnostic extrapolations outside the commonly cited full-form operating range. The primary-paper applicability boundary is not verified; those rows do not establish accuracy or suitability for engineering acceptance.</p>
+<p>Each speed is calculated as V = Fn √(gL), g = 9.80665 m/s²; speeds therefore differ by hull length. Percentage separation uses the Series 60 coefficient as denominator: 100 × (C<sub>T,tanker</sub> / C<sub>T,series60</sub> − 1). The fixed-speed approximate references are not compared against these changed operating points.</p>
+<table><thead><tr><th>Fn (1)</th><th>Series 60 C<sub>T</sub> (1)</th><th>Tanker C<sub>T</sub> (1)</th><th>Separation (%)</th></tr></thead><tbody><tr><td>0.15</td><td>0.00233825059678</td><td>0.0024162545692</td><td>3.335997114</td></tr><tr><td>0.20</td><td>0.00247449035474</td><td>0.00321286360068</td><td>29.839406911</td></tr><tr><td>0.25</td><td>0.00291224353913</td><td>0.00529281849347</td><td>81.743677078</td></tr><tr><td>0.30</td><td>0.00350943478464</td><td>0.00838827339887</td><td>139.020637614</td></tr></tbody><caption>Table 3. The common-Froude comparison does not reproduce near-identical coefficients; it refutes hull-form independence for these sampled operating points.</caption></table>
+<p>The third fixture row gives computed 1+k₁ = 1.1201416007041778 versus the approximate fixture interval [1.18, 1.25]. That disagreement also reproduces; a sourced worked example is still required to establish which value is correct. No accuracy threshold is introduced or widened.</p>
+<h2>Execution and retained record</h2>
+<pre>PYTHONPATH=src UV_CACHE_DIR=/tmp/sr2314-uv-cache uv run --no-project --with pyyaml python scripts/validation/reproduce_holtrop_discrepancy.py
+PYTHONPATH=src UV_CACHE_DIR=/tmp/sr2314-uv-cache uv run --no-project --with pytest --with pytest-cov --with pytest-socket --with numpy==2.4.4 --with scipy --with pyyaml python -m pytest tests/naval_architecture/test_holtrop_reproduction.py tests/naval_architecture/test_holtrop_mennen.py -q</pre>
+<p>TDD: 2 diagnostic tests failed before the script existed; final focused verification returned 23 passed (3 diagnostic tests and 20 existing method tests), using Python 3.11.14, NumPy 2.4.4, SciPy 1.17.1, pytest 9.1.1 and PyYAML 6.0.3. The diagnostic tests check operating-point handling and component normalization, not agreement with a primary resistance oracle.</p>
+<details><summary>Exact retained JSON output and SHA-256 source digests</summary><pre>{
+  &quot;reference_status&quot;: &quot;unverified_approximate_fixture_values&quot;,
+  &quot;purpose&quot;: &quot;issue-2020 reproduction; not engineering acceptance&quot;,
+  &quot;source_sha256&quot;: {
+    &quot;tests/fixtures/test_vectors/naval_architecture/holtrop_mennen.yaml&quot;: &quot;c9bc0d6b30d8db1efbeff8bd147a689901afae5b5aad3009a4521d2f4e1f1b6e&quot;,
+    &quot;src/digitalmodel/naval_architecture/holtrop_mennen.py&quot;: &quot;e24a22120fb9ac2660dfecba8e49d1fa9a6cef6c7f805fe5f1e3da407a40aa77&quot;,
+    &quot;src/digitalmodel/naval_architecture/holtrop_coefficients.py&quot;: &quot;7be63f297c6e42996adf23cabfa71aaaebd5c63feda629bfba7ccfd21fa4fc4c&quot;
+  },
+  &quot;constants&quot;: {
+    &quot;rho_kg_m3&quot;: 1025.0,
+    &quot;nu_m2_s&quot;: 1.1892e-06,
+    &quot;g_m_s2&quot;: 9.80665
+  },
+  &quot;error_definition&quot;: &quot;100 * (computed_ct / fixture_ct_approx - 1)&quot;,
+  &quot;ct_normalization&quot;: &quot;RT / (0.5 * rho * V^2 * S); S is Holtrop-regression wetted surface, not mesh S&quot;,
+  &quot;fixed_speed&quot;: [
+    {
+      &quot;id&quot;: &quot;series60_cb060&quot;,
+      &quot;speed_ms&quot;: 7.72,
+      &quot;lwl_m&quot;: 121.92,
+      &quot;froude_number&quot;: 0.22326440317117074,
+      &quot;wetted_surface_m2&quot;: 2429.2460603931177,
+      &quot;form_factor&quot;: 1.101890912401969,
+      &quot;rf_n&quot;: 116939.11195036361,
+      &quot;rw_n&quot;: 31284.493021286667,
+      &quot;ra_n&quot;: 35459.828842913805,
+      &quot;rt_n&quot;: 195598.46662666264,
+      &quot;viscous_ct&quot;: 0.001736594476196964,
+      &quot;wave_ct&quot;: 0.000421627708379435,
+      &quot;ca&quot;: 0.0004778995895631695,
+      &quot;floor_ct&quot;: 0.0022144940657601335,
+      &quot;ct&quot;: 0.002636121774139569,
+      &quot;ct_approx&quot;: 0.00385,
+      &quot;error_pct&quot;: -31.529304567803408
+    },
+    {
+      &quot;id&quot;: &quot;tanker_cb080&quot;,
+      &quot;speed_ms&quot;: 7.72,
+      &quot;lwl_m&quot;: 205.0,
+      &quot;froude_number&quot;: 0.1721789408775901,
+      &quot;wetted_surface_m2&quot;: 9598.835040052367,
+      &quot;form_factor&quot;: 1.2782995720357273,
+      &quot;rf_n&quot;: 433257.6756825705,
+      &quot;rw_n&quot;: 115729.0856289307,
+      &quot;ra_n&quot;: 103348.7671636336,
+      &quot;rt_n&quot;: 772910.9541987882,
+      &quot;viscous_ct&quot;: 0.0018889997933822674,
+      &quot;wave_ct&quot;: 0.0003947258087071646,
+      &quot;ca&quot;: 0.000352499334768404,
+      &quot;floor_ct&quot;: 0.0022414991281506716,
+      &quot;ct&quot;: 0.002636224936857836,
+      &quot;ct_approx&quot;: 0.00175,
+      &quot;error_pct&quot;: 50.64142496330491
+    }
+  ],
+  &quot;common_froude&quot;: [
+    {
+      &quot;froude_number&quot;: 0.15,
+      &quot;rows&quot;: [
+        {
+          &quot;id&quot;: &quot;series60_cb060&quot;,
+          &quot;speed_ms&quot;: 5.186675455433855,
+          &quot;lwl_m&quot;: 121.92,
+          &quot;froude_number&quot;: 0.15,
+          &quot;wetted_surface_m2&quot;: 2429.2460603931177,
+          &quot;form_factor&quot;: 1.101890912401969,
+          &quot;rf_n&quot;: 55530.12176194174,
+          &quot;rw_n&quot;: 1119.0897418117545,
+          &quot;ra_n&quot;: 16005.90305190977,
+          &quot;rt_n&quot;: 78313.12932777993,
+          &quot;viscous_ct&quot;: 0.0018269375517848496,
+          &quot;wave_ct&quot;: 3.3413455433392666e-05,
+          &quot;ca&quot;: 0.0004778995895631695,
+          &quot;floor_ct&quot;: 0.002304837141348019,
+          &quot;ct&quot;: 0.0023382505967814117
+        },
+        {
+          &quot;id&quot;: &quot;tanker_cb080&quot;,
+          &quot;speed_ms&quot;: 6.725561175470787,
+          &quot;lwl_m&quot;: 205.0,
+          &quot;froude_number&quot;: 0.15,
+          &quot;wetted_surface_m2&quot;: 9598.835040052367,
+          &quot;form_factor&quot;: 1.2782995720357273,
+          &quot;rf_n&quot;: 334427.02348120965,
+          &quot;rw_n&quot;: 31729.31822950739,
+          &quot;ra_n&quot;: 78438.22447193136,
+          &quot;rt_n&quot;: 537665.4636946511,
+          &quot;viscous_ct&quot;: 0.0019211645059470665,
+          &quot;wave_ct&quot;: 0.00014259072848542967,
+          &quot;ca&quot;: 0.000352499334768404,
+          &quot;floor_ct&quot;: 0.0022736638407154708,
+          &quot;ct&quot;: 0.0024162545692009
+        }
+      ],
+      &quot;tanker_relative_to_series60_pct&quot;: 3.335997113690903
+    },
+    {
+      &quot;froude_number&quot;: 0.2,
+      &quot;rows&quot;: [
+        {
+          &quot;id&quot;: &quot;series60_cb060&quot;,
+          &quot;speed_ms&quot;: 6.915567273911808,
+          &quot;lwl_m&quot;: 121.92,
+          &quot;froude_number&quot;: 0.2,
+          &quot;wetted_surface_m2&quot;: 2429.2460603931177,
+          &quot;form_factor&quot;: 1.101890912401969,
+          &quot;rf_n&quot;: 95152.23023955674,
+          &quot;rw_n&quot;: 14032.966926552752,
+          &quot;ra_n&quot;: 28454.938758950717,
+          &quot;rt_n&quot;: 147335.28348125087,
+          &quot;viscous_ct&quot;: 0.0017609076315302512,
+          &quot;wave_ct&quot;: 0.00023568313365086963,
+          &quot;ca&quot;: 0.0004778995895631695,
+          &quot;floor_ct&quot;: 0.0022388072210934207,
+          &quot;ct&quot;: 0.00247449035474429
+        },
+        {
+          &quot;id&quot;: &quot;tanker_cb080&quot;,
+          &quot;speed_ms&quot;: 8.967414900627716,
+          &quot;lwl_m&quot;: 205.0,
+          &quot;froude_number&quot;: 0.2,
+          &quot;wetted_surface_m2&quot;: 9598.835040052367,
+          &quot;form_factor&quot;: 1.2782995720357273,
+          &quot;rf_n&quot;: 574051.873587288,
+          &quot;rw_n&quot;: 397725.4596618793,
+          &quot;ra_n&quot;: 139445.73239454464,
+          &quot;rt_n&quot;: 1270981.4563893615,
+          &quot;viscous_ct&quot;: 0.0018549698551671614,
+          &quot;wave_ct&quot;: 0.001005394410741787,
+          &quot;ca&quot;: 0.000352499334768404,
+          &quot;floor_ct&quot;: 0.0022074691899355656,
+          &quot;ct&quot;: 0.0032128636006773523
+        }
+      ],
+      &quot;tanker_relative_to_series60_pct&quot;: 29.839406911301715
+    },
+    {
+      &quot;froude_number&quot;: 0.25,
+      &quot;rows&quot;: [
+        {
+          &quot;id&quot;: &quot;series60_cb060&quot;,
+          &quot;speed_ms&quot;: 8.64445909238976,
+          &quot;lwl_m&quot;: 121.92,
+          &quot;froude_number&quot;: 0.25,
+          &quot;wetted_surface_m2&quot;: 2429.2460603931177,
+          &quot;form_factor&quot;: 1.101890912401969,
+          &quot;rf_n&quot;: 144556.60512590816,
+          &quot;rw_n&quot;: 67190.79602725957,
+          &quot;ra_n&quot;: 44460.84181086048,
+          &quot;rt_n&quot;: 270937.2473540381,
+          &quot;viscous_ct&quot;: 0.0017121251940034573,
+          &quot;wave_ct&quot;: 0.0007222187555613565,
+          &quot;ca&quot;: 0.0004778995895631695,
+          &quot;floor_ct&quot;: 0.002190024783566627,
+          &quot;ct&quot;: 0.0029122435391279833
+        },
+        {
+          &quot;id&quot;: &quot;tanker_cb080&quot;,
+          &quot;speed_ms&quot;: 11.209268625784645,
+          &quot;lwl_m&quot;: 205.0,
+          &quot;froude_number&quot;: 0.25,
+          &quot;wetted_surface_m2&quot;: 9598.835040052367,
+          &quot;form_factor&quot;: 1.2782995720357273,
+          &quot;rf_n&quot;: 873254.4210025016,
+          &quot;rw_n&quot;: 1937388.2342423382,
+          &quot;ra_n&quot;: 217883.95686647602,
+          &quot;rt_n&quot;: 3271552.943754619,
+          &quot;viscous_ct&quot;: 0.00180595317058409,
+          &quot;wave_ct&quot;: 0.0031343659881166476,
+          &quot;ca&quot;: 0.000352499334768404,
+          &quot;floor_ct&quot;: 0.002158452505352494,
+          &quot;ct&quot;: 0.005292818493469142
+        }
+      ],
+      &quot;tanker_relative_to_series60_pct&quot;: 81.7436770777068
+    },
+    {
+      &quot;froude_number&quot;: 0.3,
+      &quot;rows&quot;: [
+        {
+          &quot;id&quot;: &quot;series60_cb060&quot;,
+          &quot;speed_ms&quot;: 10.37335091086771,
+          &quot;lwl_m&quot;: 121.92,
+          &quot;froude_number&quot;: 0.3,
+          &quot;wetted_surface_m2&quot;: 2429.2460603931177,
+          &quot;form_factor&quot;: 1.101890912401969,
+          &quot;rf_n&quot;: 203496.58200376932,
+          &quot;rw_n&quot;: 181899.95619875862,
+          &quot;ra_n&quot;: 64023.61220763908,
+          &quot;rt_n&quot;: 470154.60282121314,
+          &quot;viscous_ct&quot;: 0.001673756222417255,
+          &quot;wave_ct&quot;: 0.001357778972654921,
+          &quot;ca&quot;: 0.0004778995895631695,
+          &quot;floor_ct&quot;: 0.0021516558119804245,
+          &quot;ct&quot;: 0.003509434784635345
+        },
+        {
+          &quot;id&quot;: &quot;tanker_cb080&quot;,
+          &quot;speed_ms&quot;: 13.451122350941574,
+          &quot;lwl_m&quot;: 205.0,
+          &quot;froude_number&quot;: 0.3,
+          &quot;wetted_surface_m2&quot;: 9598.835040052367,
+          &quot;form_factor&quot;: 1.2782995720357273,
+          &quot;rf_n&quot;: 1230594.1305164176,
+          &quot;rw_n&quot;: 5579420.439525744,
+          &quot;ra_n&quot;: 313752.89788772544,
+          &quot;rt_n&quot;: 7466241.287802284,
+          &quot;viscous_ct&quot;: 0.0017673315841563327,
+          &quot;wave_ct&quot;: 0.00626844247994754,
+          &quot;ca&quot;: 0.000352499334768404,
+          &quot;floor_ct&quot;: 0.0021198309189247367,
+          &quot;ct&quot;: 0.008388273398872277
+        }
+      ],
+      &quot;tanker_relative_to_series60_pct&quot;: 139.02063761369706
+    }
+  ],
+  &quot;form_factor_diagnostic&quot;: {
+    &quot;computed&quot;: 1.1201416007041778,
+    &quot;unverified_fixture_range&quot;: {
+      &quot;k1_plus_1_min&quot;: 1.18,
+      &quot;k1_plus_1_max&quot;: 1.25
+    }
+  }
+}</pre></details><p>Review regression: reversing fixture-row order preserves the named tanker/Series 60 separation. The new ordering test failed before the ID-based selection was added; all 3 diagnostic tests now pass.</p></html>

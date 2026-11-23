@@ -1,0 +1,19 @@
+version: '3.7'
+services:
+  db:
+    image: postgres
+    restart: always
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - 5000:5432
+    environment:
+       POSTGRES_PASSWORD: docker
+       POSTGRES_DB: acedb
+       SCHEMA: public
+       ANON: web_anon
+       AUTHENTICATOR: authenticator
+
+  
+
+

@@ -1,0 +1,90 @@
+---
+parameters:
+  start_datetime_range1: &start_datetime_range1 "2019-08-01 00:00:00"
+  end_datetime_range1: &end_datetime_range1 "2019-09-01 00:00:00"
+
+default:
+  log_level: DEBUG
+  config:
+    overwrite:
+      output: True
+  analysis:
+    db:
+      simple: False
+      table_statistics:
+        flag: False
+        statistics: [min, max, count, avg]
+        statistics_df_columns: [RiserId, SchemaName, TableName, ColumnName, ColumnDataType, StatisticsClassId, StartTime, EndTime, TableRows, Minimum, Maximum, Average, RMS, StandardDeviation]
+        schema: XOM
+#        tables: All
+        tables: [BD_TENSIONERS, BD_CALCULATEDDATAROOT, BD_RMSAS_VIVMONITOR, BD_RMSOUTPUT]
+      timeline_statistics:
+        flag: False
+        schema: XOM
+        time_interval_in_hours: 1
+        sets:
+          - table: YT_BOPYELLOWMRU_ACCMRU
+            time: TIMESTAMP
+            columns: [ACCMRU_FWD, ACCMRU_STBD]
+
+    run_example: False
+    statistics: False
+
+  input_data:
+    source: db
+    sets:
+      -
+        label: 2018sands
+        schema: master
+        query:
+          sql: SELECT * FROM [master].[dbo].[2018sands] WHERE BOEM_FIELD in ('WR205', 'WR206', 'WR469', 'WR470')
+
+  db:
+    dev:
+      server_type: mssql
+      server: localhost\SQLEXPRESS
+      user: NULL
+      password: NULL
+      database: master
+
+plot_settings: []
+
+plot_multiple:
+
+  -
+    file_name_extension: NULL
+    suptitle: Subsea Wellhead Locations at Cascade Chinook
+    sets:
+    -
+      title: Field Names - WR205, WR206, WR469, WR470
+      xlabel: Easting
+      ylabel: Northing
+      xticklabels: NULL
+      grid: True
+      legend: True
+      legend_location: best
+      data:
+       -
+          df: input_data_2018sands
+          label: [cascade chinook]
+          x: [Easting]
+          y: [Northing]
+          scale:
+            columns: [Easting]
+            factors: [1]
+          plt_kind: scatter
+          gis:
+            flag: True
+            zone: 15R
+            long_lat_to_northing_easting:
+              flag: True
+              Longitude: LONG
+              Latitude: LAT
+            northing_easting_to_long_lat:
+              flag: False
+              Northing: NORTHING
+              Easting: EASTING
+          marker:
+            type: 'o'
+            size: 8
+            edge_color: None

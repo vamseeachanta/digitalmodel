@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>On-Bottom Stability — DNV-RP-F109 — CALC-OBS-001</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+
+<style>
+:root {
+  --bg:         #f3efe6;
+  --panel:      #fffdf8;
+  --ink:        #172126;
+  --muted:      #55636b;
+  --accent:     #0f766e;
+  --accent-2:   #8a5a2b;
+  --line:       #d9d0c0;
+  --shadow:     0 16px 40px rgba(20,33,38,0.08);
+  --good:       #166534;
+  --warn:       #b45309;
+  --bad:        #b91c1c;
+}
+*{box-sizing:border-box;}
+body{font-family:Georgia,"Times New Roman",serif;
+  background:radial-gradient(circle at top,#fffaf0 0,var(--bg) 48%,#ebe5d7 100%);
+  color:var(--ink);line-height:1.55;margin:0;padding:0;}
+a{color:var(--accent);text-decoration:none;}
+a:hover{text-decoration:underline;}
+code{font-family:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;
+  background:rgba(27,31,35,0.06);padding:.2em .4em;border-radius:3px;font-size:.88em;}
+
+.hero{padding:28px 24px 20px;border-bottom:1px solid rgba(23,33,38,0.08);
+  background:linear-gradient(135deg,rgba(15,118,110,0.07),rgba(138,90,43,0.09));}
+.hero-inner{max-width:1100px;margin:0 auto;}
+.eyebrow{text-transform:uppercase;letter-spacing:.12em;font-size:.68rem;
+  color:var(--accent);font-weight:700;margin:0 0 6px;}
+h1.report-title{margin:0 0 8px;font-size:clamp(1.6rem,3vw,2.4rem);line-height:1.1;}
+.lede{color:var(--muted);font-size:.92rem;margin:0 0 14px;max-width:72ch;}
+
+.meta-chips{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 2px;}
+.meta-chip{background:var(--panel);border:1px solid var(--line);border-radius:8px;
+  padding:5px 10px;font-size:.8rem;}
+.meta-chip strong{font-size:.65rem;text-transform:uppercase;letter-spacing:.07em;
+  color:var(--accent-2);display:block;margin-bottom:1px;}
+
+.content{max-width:1100px;margin:0 auto;padding:24px 24px 56px;}
+.card{background:var(--panel);padding:26px;border-radius:18px;
+  box-shadow:var(--shadow);border:1px solid var(--line);margin-bottom:20px;}
+.card h2{border-bottom:1px solid var(--line);padding-bottom:.3em;margin-top:0;
+  color:var(--accent-2);letter-spacing:.02em;font-size:1.2rem;}
+.card p,.card li,.card td,.card th{color:var(--muted);}
+.card strong,.card code{color:var(--ink);}
+
+table{border-collapse:collapse;width:100%;margin:14px 0;font-size:.9rem;}
+thead th{background:var(--panel);border-bottom:2px solid var(--accent);
+  font-weight:700;text-transform:uppercase;letter-spacing:.06em;
+  font-size:.78rem;padding:8px 10px;text-align:left;color:var(--ink);}
+tbody td{border-bottom:1px solid var(--line);padding:7px 10px;
+  color:var(--muted);vertical-align:top;}
+tbody tr:last-child td{border-bottom:none;}
+tbody td strong,tbody td code{color:var(--ink);}
+tbody tr:hover>td{background:rgba(15,118,110,.03);}
+
+.badge{display:inline-block;padding:2px 8px;border-radius:999px;
+  font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;
+  white-space:nowrap;}
+.badge-pass{background:#dcfce7;color:var(--good);}
+.badge-fail{background:#fee2e2;color:var(--bad);}
+.badge-draft{background:#fef3c7;color:var(--warn);}
+.badge-reviewed{background:#dbeafe;color:#1d4ed8;}
+.badge-approved{background:#dcfce7;color:var(--good);}
+
+.equation-block{background:#f8f9fa;border:1px solid var(--line);border-radius:10px;
+  padding:16px 20px;margin:12px 0;position:relative;}
+.equation-block .eq-number{position:absolute;right:16px;top:50%;transform:translateY(-50%);
+  font-size:.82rem;color:var(--muted);font-weight:700;}
+.equation-name{font-size:.85rem;font-weight:700;color:var(--accent);margin-bottom:6px;}
+.equation-desc{font-size:.85rem;color:var(--muted);margin-top:8px;}
+.variable-list{margin:8px 0 0;padding:0 0 0 18px;font-size:.82rem;}
+.variable-list li{margin:2px 0;color:var(--muted);}
+.variable-list li .var-sym{color:var(--ink);font-weight:600;}
+
+.chart-container{margin:16px 0;position:relative;}
+.chart-container canvas{max-height:400px;width:100%;}
+.chart-title{font-size:.9rem;font-weight:700;color:var(--accent-2);margin-bottom:8px;}
+
+details{margin:8px 0;}
+details summary{cursor:pointer;font-weight:700;color:var(--accent);
+  font-size:.9rem;padding:4px 0;}
+details summary:hover{text-decoration:underline;}
+details[open] summary{margin-bottom:8px;}
+
+.report-footer{text-align:center;padding:20px;font-size:.75rem;color:var(--muted);
+  border-top:1px solid var(--line);margin-top:40px;}
+
+@media print{
+  body{background:#fff;}
+  .card{box-shadow:none;border:1px solid #ccc;break-inside:avoid;}
+  .hero{background:#f8f8f8;border-bottom:2px solid #333;}
+  .chart-container canvas{max-height:300px;}
+}
+
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">CALC-OBS-001</div>
+    <h1 class="report-title">On-Bottom Stability — DNV-RP-F109</h1>
+    <div class="meta-chips">
+      <div class="meta-chip"><strong>Status</strong><span class="badge badge-draft">DRAFT</span></div>
+      <div class="meta-chip"><strong>Revision</strong>A</div>
+      <div class="meta-chip"><strong>Date</strong>2026-03-14</div>
+      <div class="meta-chip"><strong>Author</strong>ACE Engineering</div>
+      <div class="meta-chip"><strong>Standard</strong>DNV-RP-F109</div>
+    </div>
+  </div>
+</div>
+
+<div class="content">
+<div class="card">
+  <h2>Inputs</h2>
+  <table>
+    <thead><tr><th>Name</th><th>Symbol</th><th>Value</th><th>Unit</th><th>Source</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>Pipe outer diameter</strong></td>
+        <td class="katex-inline">$D$</td>
+        <td>0.5</td>
+        <td>m</td>
+        <td>—</td>
+      </tr>
+      <tr>
+        <td><strong>Submerged weight</strong></td>
+        <td class="katex-inline">$W_s$</td>
+        <td>2.0</td>
+        <td>kN/m</td>
+        <td>Submerged weight calculation</td>
+      </tr>
+      <tr>
+        <td><strong>Current velocity</strong></td>
+        <td class="katex-inline">$U$</td>
+        <td>1.0</td>
+        <td>m/s</td>
+        <td>Metocean study</td>
+      </tr>
+      <tr>
+        <td><strong>Wave particle acceleration</strong></td>
+        <td class="katex-inline">$a$</td>
+        <td>0.5</td>
+        <td>m/s^2</td>
+        <td>Metocean study</td>
+      </tr>
+      <tr>
+        <td><strong>Water density</strong></td>
+        <td class="katex-inline">$\rho_{sw}$</td>
+        <td>1025.0</td>
+        <td>kg/m^3</td>
+        <td>—</td>
+      </tr>
+      <tr>
+        <td><strong>Drag coefficient</strong></td>
+        <td class="katex-inline">$C_D$</td>
+        <td>0.7</td>
+        <td>-</td>
+        <td>DNV-RP-F109 Table 3-2</td>
+      </tr>
+      <tr>
+        <td><strong>Lift coefficient</strong></td>
+        <td class="katex-inline">$C_L$</td>
+        <td>0.9</td>
+        <td>-</td>
+        <td>DNV-RP-F109 Table 3-2</td>
+      </tr>
+      <tr>
+        <td><strong>Inertia coefficient</strong></td>
+        <td class="katex-inline">$C_M$</td>
+        <td>3.29</td>
+        <td>-</td>
+        <td>DNV-RP-F109 Table 3-2</td>
+      </tr>
+      <tr>
+        <td><strong>Friction coefficient</strong></td>
+        <td class="katex-inline">$\mu$</td>
+        <td>0.6</td>
+        <td>-</td>
+        <td>Sand seabed — DNV-RP-F109 Table 4-1</td>
+      </tr>
+      <tr>
+        <td><strong>Safety factor</strong></td>
+        <td class="katex-inline">$\gamma$</td>
+        <td>1.1</td>
+        <td>-</td>
+        <td>DNV-RP-F109 Sec 4.2</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="card">
+  <h2>Methodology</h2>
+  <p>On-bottom stability of subsea pipeline using simplified method per DNV-RP-F109</p>
+  <p><strong>Standard:</strong> DNV-RP-F109</p>
+  <div class="equation-block">
+    <div class="equation-name">Equation eq1: Drag force</div>
+    <div class="katex-display">$$F_D = \frac{1}{2} \rho C_D D U^2$$</div>
+    <div class="equation-desc">Hydrodynamic drag force per unit length</div>
+    <span class="eq-number">(eq1)</span>
+    
+  </div>
+  <div class="equation-block">
+    <div class="equation-name">Equation eq2: Lift force</div>
+    <div class="katex-display">$$F_L = \frac{1}{2} \rho C_L D U^2$$</div>
+    <div class="equation-desc">Hydrodynamic lift force per unit length</div>
+    <span class="eq-number">(eq2)</span>
+    
+  </div>
+  <div class="equation-block">
+    <div class="equation-name">Equation eq3: Inertia force</div>
+    <div class="katex-display">$$F_I = \rho C_M \frac{\pi}{4} D^2 a$$</div>
+    <div class="equation-desc">Hydrodynamic inertia force per unit length</div>
+    <span class="eq-number">(eq3)</span>
+    
+  </div>
+  <div class="equation-block">
+    <div class="equation-name">Equation eq4: Lateral stability</div>
+    <div class="katex-display">$$\gamma F_H \leq \mu (W_s - F_L)$$</div>
+    <div class="equation-desc">Pipeline stable when factored horizontal load does not exceed frictional resistance</div>
+    <span class="eq-number">(eq4)</span>
+    
+  </div>
+  <div class="equation-block">
+    <div class="equation-name">Equation eq5: Vertical stability</div>
+    <div class="katex-display">$$W_s \geq \gamma F_L$$</div>
+    <div class="equation-desc">Pipeline stable when submerged weight exceeds factored lift</div>
+    <span class="eq-number">(eq5)</span>
+    
+  </div>
+</div>
+
+<div class="card">
+  <h2>Outputs</h2>
+  <table>
+    <thead><tr><th>Name</th><th>Symbol</th><th>Value</th><th>Unit</th><th>Pass/Fail</th><th>Limit</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>Drag force</strong></td>
+        <td class="katex-inline">$F_D$</td>
+        <td>179.375</td>
+        <td>N/m</td>
+        <td>—</td>
+        <td>—</td>
+      </tr>
+      <tr>
+        <td><strong>Lift force</strong></td>
+        <td class="katex-inline">$F_L$</td>
+        <td>230.625</td>
+        <td>N/m</td>
+        <td>—</td>
+        <td>—</td>
+      </tr>
+      <tr>
+        <td><strong>Inertia force</strong></td>
+        <td class="katex-inline">$F_I$</td>
+        <td>331.56</td>
+        <td>N/m</td>
+        <td>—</td>
+        <td>—</td>
+      </tr>
+      <tr>
+        <td><strong>Lateral utilization</strong></td>
+        <td class="katex-inline">$\eta_{lat}$</td>
+        <td>0.5392</td>
+        <td>-</td>
+        <td>—</td>
+        <td>—</td>
+      </tr>
+      <tr>
+        <td><strong>Vertical utilization</strong></td>
+        <td class="katex-inline">$\eta_{vert}$</td>
+        <td>0.275</td>
+        <td>-</td>
+        <td>—</td>
+        <td>—</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+
+
+
+
+<div class="card">
+  <details open>
+    <summary>Assumptions</summary>
+    <ol>
+    <li>Steady-state current (no wave-current interaction correction)</li>
+    <li>Pipe on flat seabed, no embedment</li>
+    <li>Sand seabed — friction coefficient 0.6</li>
+    <li>No concrete coating weight included in this example</li>
+    </ol>
+  </details>
+</div>
+<div class="card">
+  <details open>
+    <summary>References</summary>
+    <ol>
+    <li>DNV-RP-F109, On-Bottom Stability Design of Submarine Pipelines, October 2010</li>
+    </ol>
+  </details>
+</div>
+
+
+
+<div class="report-footer">
+  Generated by calculation-report skill &middot; CALC-OBS-001 Rev A
+</div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  renderMathInElement(document.body, {
+    delimiters: [
+      {left: "$$", right: "$$", display: true},
+      {left: "$", right: "$", display: false}
+    ],
+    throwOnError: false
+  });
+});
+</script>
+
+</body>
+</html>

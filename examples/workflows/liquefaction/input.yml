@@ -1,0 +1,26 @@
+basename: liquefaction
+
+default:
+  log_level: INFO
+  config:
+    generate_plots: false
+    overwrite:
+      output: true
+
+liquefaction:
+  case:
+    id: registry_liquefaction
+    description: Seed-Idriss simplified liquefaction-triggering screen of a saturated sand profile
+  seismic:
+    pga_g: 0.25            # design peak ground acceleration / g
+    magnitude: 7.0         # moment magnitude Mw
+  design:
+    required_factor_of_safety: 1.2
+  layers:
+    # saturated sands below the water table; sigma_v total, sigma_v' effective
+    - {depth_m: 3.0, sigma_v_kpa: 54.0,  sigma_v_eff_kpa: 34.0, N1_60cs: 8.0}
+    - {depth_m: 6.0, sigma_v_kpa: 108.0, sigma_v_eff_kpa: 59.0, N1_60cs: 14.0}
+    - {depth_m: 9.0, sigma_v_kpa: 162.0, sigma_v_eff_kpa: 83.5, N1_60cs: 28.0}
+  outputs:
+    directory: results/liquefaction
+    summary_json: liquefaction_summary.json

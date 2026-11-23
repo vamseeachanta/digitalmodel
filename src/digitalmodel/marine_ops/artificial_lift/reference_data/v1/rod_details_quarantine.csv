@@ -1,0 +1,174 @@
+# provenance: previous project reference
+# extraction_date: 2026-07-29
+# schema: source_row,raw_label,raw_area,raw_unit_weight,raw_modulus,raw_sonic_velocity,raw_tensile_strength,reason
+# units: explicit in unit-suffixed fields; surface values unverified_source_unit
+source_row,raw_label,raw_area,raw_unit_weight,raw_modulus,raw_sonic_velocity,raw_tensile_strength,reason
+88,C   - 0.8125,0.785,2.2,30.5,16,90000,non-keyable label
+90,C   - 0.9375,0.69,2.35,30.5,16,90000,non-keyable label
+95,C   - Corod/2,0.441,1.5,30,16,90000,non-keyable label
+96,C   - Corod/3,0.518,1.76,30,16,90000,non-keyable label
+97,C   - Corod/4,0.601,2.04,30,16,90000,non-keyable label
+98,C   - Corod/5,0.69,2.35,30,16,90000,non-keyable label
+99,C   - Corod/6,0.785,2.67,30,16,90000,non-keyable label
+100,C   - Corod/7,0.886,3.01,30,16,90000,non-keyable label
+101,C   - Corod/8,0.994,3.68,30,16,90000,non-keyable label
+105,C  - 0.8125,0.785,2.2,30.5,16,90000,non-keyable label
+107,C  - 0.9375,0.69,2.35,30.5,16,90000,non-keyable label
+112,C  - Corod/2,0.441,1.5,30,16,90000,non-keyable label
+113,C  - Corod/3,0.518,1.76,30,16,90000,non-keyable label
+114,C  - Corod/4,0.601,2.04,30,16,90000,non-keyable label
+115,C  - Corod/5,0.69,2.35,30,16,90000,non-keyable label
+116,C  - Corod/6,0.785,2.67,30,16,90000,non-keyable label
+117,C  - Corod/7,0.886,3.01,30,16,90000,non-keyable label
+118,C  - Corod/8,0.994,3.38,30,16,90000,non-keyable label
+122,D   - 0.8125,0.785,2.9,30.5,16,115000,non-keyable label
+124,D   - 0.9375,0.69,2.35,30.5,16,115000,non-keyable label
+130,D   - Corod/2,0.441,1.5,30,16,115000,non-keyable label
+131,D   - Corod/3,0.518,1.76,30,16,115000,non-keyable label
+132,D   - Corod/4,0.601,2.04,30,16,115000,non-keyable label
+133,D   - Corod/5,0.69,2.35,30,16,115000,non-keyable label
+134,D   - Corod/6,0.785,2.67,30,16,115000,non-keyable label
+135,D   - Corod/7,0.886,3.01,30,16,115000,non-keyable label
+136,D   - Corod/8,0.994,3.68,30,16,115000,non-keyable label
+140,D  - 0.8125,0.785,2.9,30.5,16,115000,non-keyable label
+143,D  - 0.9375,0.69,2.35,30.5,16,115000,non-keyable label
+148,D  - Corod/2,0.441,1.5,30,16,115000,non-keyable label
+149,D  - Corod/3,0.518,1.76,30,16,115000,non-keyable label
+150,D  - Corod/4,0.601,2.04,30,16,115000,non-keyable label
+151,D  - Corod/5,0.69,2.35,30,16,115000,non-keyable label
+152,D  - Corod/6,0.785,2.67,30,16,115000,non-keyable label
+153,D  - Corod/7,0.886,3.01,30,16,115000,non-keyable label
+154,D  - Corod/8,0.994,3.38,30,16,115000,non-keyable label
+155,DE  - Corod/2,0.441,1.5,30,16,115000,non-keyable label
+156,DE  - Corod/3,0.518,1.76,30,16,115000,non-keyable label
+157,DE  - Corod/4,0.601,2.04,30,16,115000,non-keyable label
+158,DE  - Corod/5,0.69,2.35,30,16,115000,non-keyable label
+159,DE  - Corod/6,0.785,2.67,30,16,115000,non-keyable label
+160,DE  - Corod/7,0.886,3.01,30,16,115000,non-keyable label
+161,DE  - Corod/8,0.994,3.38,30,16,115000,non-keyable label
+162,DER  - Corod/2,0.441,1.5,30,16,115000,non-keyable label
+163,DER  - Corod/3,0.518,1.76,30,16,115000,non-keyable label
+164,DER  - Corod/4,0.601,2.04,30,16,115000,non-keyable label
+165,DER  - Corod/6,0.785,2.67,30,16,115000,non-keyable label
+166,DER  - Corod/7,0.886,3.01,30,16,115000,non-keyable label
+167,DER  - Corod/8,0.994,3.68,30,16,115000,non-keyable label
+168,DER  - Corod/8.5R,1.05,3.57,30,16,115000,non-keyable label
+169,DER - Corod/8.5R,1.05,3.57,30,16,115000,non-keyable label
+170,DR  - Corod/2,0.441,1.5,30,16,115000,non-keyable label
+171,DR  - Corod/3,0.518,1.76,30,16,115000,non-keyable label
+172,DR  - Corod/3R,0.518,1.76,30,16,115000,non-keyable label
+173,DR  - Corod/4,0.601,2.04,30,16,115000,non-keyable label
+174,DR  - Corod/4R,0.601,2.04,30,16,115000,non-keyable label
+175,DR  - Corod/6,0.785,2.67,30,16,115000,non-keyable label
+176,DR  - Corod/6R,0.785,2.67,30,16,115000,non-keyable label
+177,DR  - Corod/7,0.886,3.01,30,16,115000,non-keyable label
+178,DR  - Corod/8,0.994,3.68,30,16,115000,non-keyable label
+179,DR  - Corod/8.5R,1.05,3.57,30,16,115000,non-keyable label
+180,DR - Corod/3R,0.518,1.76,30,16,115000,non-keyable label
+181,DR - Corod/4R,0.601,2.04,30,16,115000,non-keyable label
+182,DR - Corod/6R,0.785,2.67,30,16,115000,non-keyable label
+183,DR - Corod/8.5R,1.05,3.57,30,16,115000,non-keyable label
+184,DW  - Corod/2,0.441,1.5,30,16,115000,non-keyable label
+185,DW  - Corod/3,0.518,1.76,30,16,115000,non-keyable label
+186,DW  - Corod/4,0.601,2.04,30,16,115000,non-keyable label
+187,DW  - Corod/5,0.69,2.35,30,16,115000,non-keyable label
+188,DW  - Corod/7,0.886,3.01,30,16,115000,non-keyable label
+189,DW  - Corod/8,0.994,3.38,30,16,115000,non-keyable label
+190,DW - Corod/2,0.441,1.5,30,16,115000,non-keyable label
+191,DW - Corod/3,0.518,1.76,30,16,115000,non-keyable label
+192,DW - Corod/4,0.601,2.04,30,16,115000,non-keyable label
+193,DW - Corod/5,0.69,2.35,30,16,115000,non-keyable label
+194,DW - Corod/7,0.886,3.01,30,16,115000,non-keyable label
+195,DW - Corod/8,0.994,3.38,30,16,115000,non-keyable label
+196,DWR  - Corod/6R,0.785,2.67,30,16,115000,non-keyable label
+197,DWR  - Corod/8.5R,1.05,3.57,30,16,115000,non-keyable label
+198,DWR - Corod/6R,0.785,2.67,30,16,115000,non-keyable label
+199,DWR - Corod/8.5R,1.05,3.57,30,16,115000,non-keyable label
+223,F   - 1.250 300 Seri,1.17,1.29,8.2,15,50000,non-keyable label
+229,F  - 1.000 300 Serie,0.75,0.82,8.2,15,50000,non-keyable label
+243,K   - 0.8125,0.518,1.76,29,15.8,85000,non-keyable label
+245,K   - 0.9375,0.69,2.35,29,15.8,85000,non-keyable label
+253,K  - 0.8125,0.518,1.76,29,15.8,85000,non-keyable label
+255,K  - 0.9375,0.69,2.35,29,15.8,85000,non-keyable label
+339,PCP Tn  900 HS,0.994,4.77,29.85,16.73,160000,non-keyable label
+340,PCP Tn 1000 HS,0.994,4.77,29.85,16.73,160000,non-keyable label
+341,PCP Tn 1500 HS,0.994,3.16,29.85,16.73,160000,non-keyable label
+342,PCP Tn 2500 HS,0.994,4.84,29.85,16.73,160000,non-keyable label
+372,PCP-Tn-1000-HS,0.994,4.77,29.85,16.73,160000,non-keyable label
+373,PCP-Tn-1500-HS,0.994,3.16,29.85,16.73,160000,non-keyable label
+374,PCP-Tn-2500-HS,0.994,4.84,29.85,16.73,160000,non-keyable label
+375,PCP-Tn-900-HS,0.994,4.77,29.85,16.73,160000,non-keyable label
+452,SE  - Corod/2,0.441,1.5,30,16,130000,non-keyable label
+453,SE  - Corod/3,0.518,1.76,30,16,130000,non-keyable label
+454,SE  - Corod/4,0.601,2.04,30,16,130000,non-keyable label
+455,SE  - Corod/5,0.69,2.35,30,16,130000,non-keyable label
+456,SE  - Corod/6,0.785,2.67,30,16,130000,non-keyable label
+457,SE  - Corod/7,0.886,3.01,30,16,130000,non-keyable label
+458,SE  - Corod/8,0.994,3.38,30,16,130000,non-keyable label
+459,SER  - Corod/2,0.441,1.5,30,16,140000,non-keyable label
+460,SER  - Corod/3,0.518,1.76,30,16,130000,non-keyable label
+461,SER  - Corod/3R,0.518,1.76,30,16,140000,non-keyable label
+462,SER  - Corod/4,0.601,2.04,30,16,130000,non-keyable label
+463,SER  - Corod/4R,0.601,2.04,30,16,140000,non-keyable label
+464,SER  - Corod/5,0.69,2.35,30,16,140000,non-keyable label
+465,SER  - Corod/6,0.785,2.67,30,16,130000,non-keyable label
+466,SER  - Corod/6R,0.785,2.67,30,16,140000,non-keyable label
+467,SER  - Corod/7,0.886,3.01,30,16,140000,non-keyable label
+468,SER  - Corod/8,0.994,3.68,30,16,140000,non-keyable label
+469,SER  - Corod/8.5R,1.05,3.57,30,16,140000,non-keyable label
+470,SER - Corod/3R,0.518,1.76,30,16,140000,non-keyable label
+471,SER - Corod/4R,0.601,2.04,30,16,140000,non-keyable label
+472,SER - Corod/6R,0.785,2.67,30,16,140000,non-keyable label
+473,SER - Corod/8.5R,1.05,3.57,30,16,140000,non-keyable label
+479,SM  - Corod/2,0.441,1.5,30,16,130000,non-keyable label
+480,SM  - Corod/3,0.518,1.76,30,16,130000,non-keyable label
+481,SM  - Corod/4,0.601,2.04,30,16,130000,non-keyable label
+482,SM  - Corod/5,0.69,2.35,30,16,130000,non-keyable label
+483,SM  - Corod/6,0.785,2.67,30,16,130000,non-keyable label
+484,SM  - Corod/7,0.886,3.01,30,16,130000,non-keyable label
+485,SM  - Corod/8,0.994,3.38,30,16,130000,non-keyable label
+486,SU  - Corod/2,0.441,1.5,30,16,150000,non-keyable label
+487,SU  - Corod/3,0.518,1.76,30,16,150000,non-keyable label
+488,SU  - Corod/4,0.601,2.04,30,16,150000,non-keyable label
+489,SU  - Corod/5,0.69,2.35,30,16,150000,non-keyable label
+490,SU  - Corod/6,0.785,2.67,30,16,150000,non-keyable label
+491,SU  - Corod/7,0.886,3.01,30,16,150000,non-keyable label
+492,SU  - Corod/8,0.994,3.38,30,16,150000,non-keyable label
+493,SW  - Corod/2,0.441,1.5,30,16,145000,non-keyable label
+494,SW  - Corod/3,0.518,1.76,30,16,145000,non-keyable label
+495,SW  - Corod/4,0.601,2.04,30,16,145000,non-keyable label
+496,SW  - Corod/5,0.69,2.35,30,16,145000,non-keyable label
+497,SW  - Corod/6,0.785,2.67,30,16,145000,non-keyable label
+498,SW  - Corod/7,0.886,3.01,30,16,145000,non-keyable label
+499,SW  - Corod/8,0.994,3.38,30,16,145000,non-keyable label
+500,SW - Corod/2,0.441,1.5,30,16,145000,non-keyable label
+501,SW - Corod/3,0.518,1.76,30,16,145000,non-keyable label
+502,SW - Corod/4,0.601,2.04,30,16,145000,non-keyable label
+503,SW - Corod/5,0.69,2.35,30,16,145000,non-keyable label
+504,SW - Corod/6,0.785,2.67,30,16,145000,non-keyable label
+505,SW - Corod/7,0.886,3.01,30,16,145000,non-keyable label
+506,SW - Corod/8,0.994,3.38,30,16,145000,non-keyable label
+507,SWR  - Corod/3R,0.518,1.76,30,16,145000,non-keyable label
+508,SWR  - Corod/4R,0.601,2.04,30,16,145000,non-keyable label
+509,SWR  - Corod/6R,0.785,2.67,30,16,145000,non-keyable label
+510,SWR  - Corod/8.5R,1.05,3.57,30,16,145000,non-keyable label
+511,SWR - Corod/3R,0.518,1.76,30,16,145000,non-keyable label
+512,SWR - Corod/4R,0.601,2.04,30,16,145000,non-keyable label
+513,SWR - Corod/6R,0.785,2.67,30,16,145000,non-keyable label
+514,SWR - Corod/8.5R,1.05,3.57,30,16,145000,non-keyable label
+80,Axlsn S-88  - 0.625,0.307,1.13,30.5,16,140000,conflicting normalized key
+85,Axlsn S-88 - 0.625,0.307,1.13,30.5,16,108000,conflicting normalized key
+89,C   - 0.875,0.601,2.2,30.5,16,90000,conflicting normalized key
+106,C  - 0.875,0.601,2.22,30.5,16,90000,conflicting normalized key
+92,C   - 1.065,0.891,3.01,30.5,16,115000,conflicting normalized key
+109,C  - 1.065,0.891,3.01,30.5,16,90000,conflicting normalized key
+94,C   - 1.250,0.994,3.67,30.5,16,90000,conflicting normalized key
+111,C  - 1.250,1.227,4.53,30.5,16,90000,conflicting normalized key
+123,D   - 0.875,0.601,2.2,30,16,115000,conflicting normalized key
+142,D  - 0.875,0.601,2.22,30,16,115000,conflicting normalized key
+244,K   - 0.875,0.601,2.2,30.5,16,85000,conflicting normalized key
+254,K  - 0.875,0.601,2.22,30.5,16,85000,conflicting normalized key
+298,N78  - 0.875,0.601,2.2,31,16,120000,conflicting normalized key
+300,N78 - 0.875,0.601,2.2,30,16,115000,conflicting normalized key
+896,W - S-88  - 1.125,0.994,3.68,30.5,16.73,145000,conflicting normalized key
+897,W - S-88  - 1.1250,0.994,3.68,30.5,16,145000,conflicting normalized key

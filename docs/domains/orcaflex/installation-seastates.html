@@ -1,0 +1,25 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><title>Installation sea-state workflow</title>
+<style>body{font:16px system-ui;max-width:1050px;margin:3em auto;line-height:1.5}pre{background:#eef2f5;padding:1em;overflow:auto}</style>
+<h1>Installation sea-state workflow</h1>
+<p>Tracking: <a href="https://github.com/vamseeachanta/digitalmodel/issues/1836">installation analysis workflow</a>. Digitalmodel owns reusable code; private digitalmodel-data owns retained reusable inputs, simulations, extracted datasets and engineering reports.</p>
+<h2>Input architecture</h2><p>The installation_seastates module writes one byte-identical master, small per-case BaseFile change files and a hashed matrix manifest. The default matrix contains 156 cells: Hs 0.25–3.0 m at 0.25 m increments and Tp 4–16 s at 1 s increments. Only a selected case is resolved into a standalone execution snapshot. The existing reproduction runner retains its rejection of unresolved file dependencies.</p>
+<pre>from digitalmodel.workflows.installation_seastates import prepare_matrix
+prepare_matrix(source, source_sha256, study_dir, seed=20260915)
+# Sensitivity settings are explicit:
+# buildup=160, duration=1200, sample_interval=.05, max_time_step=.05</pre>
+<p>JONSWAP settings, full stage vector, logging, integration maximum step and structural preservation are checked by API readback. The peak-enhancement factor is set before Tp because setting the factor may change the resolved period.</p>
+<h2>Execute selected cases</h2><pre>python -m digitalmodel.workflows.installation_campaign STUDY_DIR CAMPAIGN_DIR \
+  --case-indices 95 --extraction-config EXTRACTION.yml
+python -m digitalmodel.workflows.installation_trace_extract COMPLETED_RUN_DIR</pre>
+<p>The extraction configuration supplies the existing reproduction runner's time_histories, range_graphs, title and period. Case selection is explicit and serial. Existing evidence is reused only after dependency, model, request and saved-simulation checks. Failed evidence is preserved and stops the sequence. The campaign JSON lists every planned cell, including missing and running cases. Optional pilot reuse requires both its completed run and generation record.</p>
+<h2>Reports</h2><pre>python -m digitalmodel.workflows.installation_forecast_report \
+  --run-dir COMPLETED_RUN_DIR --output FORECAST_REPORT.html
+
+from digitalmodel.workflows.installation_seastate_report import generate_report
+generate_report(matrix_path, {95: {
+    "run_dir": pilot_run, "generation_file": pilot_generation}}, report_html)</pre>
+<p>Signed tension, interpolated zero crossings, post-exit peaks, fixed midpoint bending and full-record governing arcs are retained separately. End-to-end chord deficit includes sag and extension effects; it is not a measured slack length. Whole-record governing arcs are diagnostic and are excluded from causal forecast benchmarking.</p>
+<p>The forecast benchmark fits fixed autoregression using history only and compares withheld response with persistence and history-mean baselines. Fixed origins are 240, 360 and 480 seconds when coverage permits. Forecast errors are reported through 30, 60 and 120 seconds. A fallback or inferior forecast is shown as such; no model advantage is assumed.</p>
+<h2>Acceptance boundary</h2><p>No equipment capacities or standard-derived limits are embedded. Unknown criteria remain NOT EVALUATED. Missing and failed cases remain distinct. A passed upper grid edge is censored; nonlinear disconnected passing regions are not collapsed into a single operating height. Final limits require qualified component capacities, applicable standards, geometry/interference checks, snap-load fidelity, and seed/duration/heading sensitivity.</p>
+<h2>Verification</h2><p>Focused tests cover input preservation and hash tampering, change-file architecture, complete stage replacement, campaign reuse and stop behavior, event interpolation, grid censoring, forecast leakage, fixed-origin report selection and result readback. Native solver execution remains an integration check separate from unit tests.</p>
+</html>

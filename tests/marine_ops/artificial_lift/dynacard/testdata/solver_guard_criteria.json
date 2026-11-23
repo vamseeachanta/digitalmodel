@@ -1,0 +1,29 @@
+{
+  "revision": "1",
+  "basis": "test_solver_parity.py maximum load nRMSE bound; comparison envelope is twice that bound",
+  "comparison_load_nrmse_pct": 4.4,
+  "parity_median_load_nrmse_pct": 0.95,
+  "parity_maximum_load_nrmse_pct": 2.2,
+  "deviation_reporting_limit_deg": 0.0,
+  "analytical_position_relative_tolerance": 0.002,
+  "analytical_load_relative_tolerance": 0.01,
+  "static_load_relative_tolerance": 0.002,
+  "inputs": {
+    "diameter_m": 0.0222,
+    "length_m": 1500.0,
+    "density_kg_m3": 7850.0,
+    "modulus_pa": 205000000000.0,
+    "fluid_density_kg_m3": 1000.0,
+    "gravity_m_s2": 9.80665,
+    "surface_stroke_m": 2.0,
+    "load_range_n": 6000.0,
+    "pump_diameter_m": 0.0445,
+    "tubing_id_m": 0.062,
+    "harmonic_speed_spm": 6.0,
+    "static_speed_fraction": 0.0001,
+    "samples": 200,
+    "nodes": 150
+  },
+  "input_basis": "Uniform string and SI properties from test_deviation_survey.py; static speed is harmonic speed multiplied by the stated fraction. Synthetic boundary conditions are defined in test_solver_analytical.py.",
+  "tolerance_basis": "Position uses the existing 0.2% parity position bound. Static load uses the same relative bound. Harmonic load allows 1% for the first-order pump strain on a 149-interval spatial grid; no tolerance will be fitted to an observed result."
+}

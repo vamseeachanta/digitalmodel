@@ -1,0 +1,134 @@
+{
+  "verdict": "MAJOR",
+  "reviewed_revision": "076b5ee49c94e545eea69a8b7903873591a4b1f7",
+  "reviewed_files": [
+    {
+      "path": ".gitignore",
+      "sha256": "73655bd1abba6145ab01942b0810df805dded8c1edd5d2fb91898aa3fdf648bc"
+    },
+    {
+      "path": "docs/domains/ansys/analysis-workflow.html",
+      "sha256": "76fea4ffc98310d6a3833c558ac2030818403606dfa7880e4e55f20513e5d087"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-13-issue-2119-claude-r1.json",
+      "sha256": "18ff100b73a61a604a078a6b040c8e1d6dec8507f42fc78b458542f2f8ed45a6"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-13-issue-2119-implementation-review.md",
+      "sha256": "e2de375093a47db147ec93a4822d16be6f3c6fc99dfddcae0692a7406e92b260"
+    },
+    {
+      "path": "docs/reports/2026-09-13-ansys-evidence-stage-a.html",
+      "sha256": "78aa0355bcf060517e11c100be39441233053fb227d268030a815fe5197381d5"
+    },
+    {
+      "path": "examples/ansys/analysis-evidence/README.md",
+      "sha256": "1b31e17866889afede6cd022248d0e1a9d3fb51cd93644dbc68d98c33f4d8551"
+    },
+    {
+      "path": "examples/ansys/analysis-evidence/intake.json",
+      "sha256": "1ad1ac1e784963caab33bfb5349823b94ac2a1145ce3786084273c8df985ad51"
+    },
+    {
+      "path": "examples/ansys/analysis-evidence/manifest.json",
+      "sha256": "5f1e3d5a74115139338ac61fa10422bb73c3d019742996855eb4d6699129951f"
+    },
+    {
+      "path": "examples/ansys/analysis-evidence/responses.csv",
+      "sha256": "c356376b332e2ea6331df3ba4acde7cf3f12efaf2b04c4a34750104878d125b6"
+    },
+    {
+      "path": "src/digitalmodel/ansys/analysis_evidence.py",
+      "sha256": "2bbd2e9a261faa519e50a577cec431b424f574bb2e90217618efaf0c991953e1"
+    },
+    {
+      "path": "src/digitalmodel/ansys/analysis_intake.py",
+      "sha256": "02b31b6dda4634adb3f39467852d807bf43762ec4a4afa58c54748959402e4c9"
+    },
+    {
+      "path": "src/digitalmodel/ansys/analysis_lookup.py",
+      "sha256": "1bd4c6eca0a1ba173d7be6e3ec36c303028c7082fe9477b2bdcd4dfae8d35363"
+    },
+    {
+      "path": "src/digitalmodel/ansys/analysis_records.py",
+      "sha256": "f51b3b488aeb7a07275586fc241995022613df1947f04412cba31cbae787e132"
+    },
+    {
+      "path": "tests/ansys/test_analysis_evidence.py",
+      "sha256": "43dcfa6447bb2632dce9c0dfed5213a88cbdba7b8a27c4e03fe47f8e7b00f561"
+    },
+    {
+      "path": "tests/ansys/test_analysis_intake.py",
+      "sha256": "7702ac71120486b417446bd62402c5ea96e6b7d2ec880c5e401be7bcfbb6b427"
+    },
+    {
+      "path": "tests/ansys/test_analysis_lookup.py",
+      "sha256": "2085b3e5ec8c3fb090693fd0e5119fbbea7bcd2218a9ca66f801e027ee54ff19"
+    },
+    {
+      "path": "tests/ansys/test_analysis_qualification.py",
+      "sha256": "3fc146985d8aefc777d120f49e68b85cfc513befbc6160043f32dadf8b690dc6"
+    },
+    {
+      "path": "tests/ansys/test_analysis_review_regressions.py",
+      "sha256": "40529ffba23b3b728cc1caf05ff959b482af6224b018e0569bcedc62d2579bc9"
+    }
+  ],
+  "findings": [
+    {
+      "id": "R2-1",
+      "severity": "MAJOR",
+      "defect": "The supersession and inherited-finding gates depend on fields the validated boundary does not require, so their absence is read as absence of constraint rather than as refusal. analysis_records.validate_case omits `superseded_by` and `capture_role` from its required set; validate_response omits `inherited_findings`; analysis_evidence._validate_study omits `finding_ledger`, `intake_reference` and `verification_reference`. analysis_lookup._check_provenance then reads `case.get(\"superseded_by\")`, `response.get(\"inherited_findings\", [])` and `package.get(\"finding_ledger\", [])`, and _check_authority verifies the intake only `if \"intake_reference\" in package`. A package omitting these keys passes validate_package and load_package and qualifies with no supersession check and zero required finding dispositions. The delivered evidence for this is the implementation's own positive test: tests/ansys/test_analysis_qualification.py::test_positive_protocol_branch_and_withdrawal reaches `qualified is True` on a package whose case carries no `superseded_by`, whose response carries no `inherited_findings`, whose study carries no `finding_ledger`, and whose authority carries no `finding_dispositions`. Every element of the R1 F3 correction is therefore inert on the only passing path, and no test qualifies a response that actually carries an inherited finding against a `resolved` disposition, so the satisfiable direction of that machinery is unverified. The stated contract that malformed trusted input must fail closed is not met for the package record itself.",
+      "correction": "Add `superseded_by`, `capture_role` to validate_case and `inherited_findings` to validate_response, with list-type and element-nonempty validation; add `finding_ledger`, `criteria_reference`, `intake_reference` and `review_sources` to _validate_study's required set. Make _check_provenance and _check_authority index these fields directly rather than through `.get` defaults, so absence raises. Add regressions that delete each field in turn from an otherwise-qualifying package and assert refusal, and add one positive case in which a response carries an inherited finding with a matching `resolved` disposition, justification and live evidence."
+    },
+    {
+      "id": "R2-2",
+      "severity": "MAJOR",
+      "defect": "The recorded provenance of the independent verdicts does not match the current bytes, and two delivered documents assert that it does. Comparing the committed docs/plans/evidence/2026-09-13-issue-2119-claude-r1.json `reviewed_files` digests against this bundle, 11 of the 13 files reviewed at 43ee0ab92426671d0f1ed5bba8532e4cc43a20d2 differ; only tests/ansys/test_analysis_intake.py (7702ac71...) and tests/ansys/test_analysis_qualification.py (3fc14698...) are byte-identical. All four adapter modules, intake.json, manifest.json, responses.csv, README.md, analysis-workflow.html and two test modules changed after that tree. The implementation review nonetheless scopes the post-APPROVE delta as \"The subsequently added report, ignore exception and lookup-test fixture adjustment require supplemental coverage\", which understates the delta by the whole adapter and dataset, and it attributes \"163 passed, 2 skipped\" to no revision at all. docs/reports/2026-09-13-ansys-evidence-stage-a.html states \"Exact code and artifact revisions, independent provider verdicts, findings, test counts and legal-scan evidence are recorded in the implementation review record\", and docs/domains/ansys/analysis-workflow.html states \"Its tests and exact-current reviews are recorded in the implementation report\"; the record names only 43ee0ab9 and elsewhere declares exact-current R2 pending. No independent provider verdict currently covers 076b5ee4.",
+      "correction": "Name 076b5ee49c94e545eea69a8b7903873591a4b1f7 in the review record, state that the Codex APPROVE covers 43ee0ab9 only, and enumerate that the four adapter modules, the intake, manifest and CSV, both go-by and workflow documents, and two of the three pre-existing test modules changed after it. Attribute the 163/2 result to a named revision and command. Amend the report sentence to say which revisions are recorded, and change the workflow sentence from \"exact-current reviews are recorded\" to the state the record actually supports."
+    },
+    {
+      "id": "R2-3",
+      "severity": "MINOR",
+      "defect": ".gitignore now carries a single-file allowlist for a directory that is otherwise fully ignored: `reports/`, `!docs/reports/`, `docs/reports/*`, `!docs/reports/2026-09-13-ansys-evidence-stage-a.html`. The mechanism works for this file, because `!docs/reports/` re-includes the directory before `docs/reports/*` excludes its contents. The consequence is repo-wide and outstanding: every future file placed under docs/reports/ is silently excluded from `git add -A` and requires a further .gitignore edit, and any file placed in a subdirectory of docs/reports/ cannot be re-included at all, because its parent is excluded by `docs/reports/*`. This is a shared-configuration change with a silent-drop failure mode, beyond the bounded Stage A adapter scope.",
+      "correction": "Replace the per-file allowlist with a rule that keeps engineering reports trackable, for example `!docs/reports/**/*.html` in place of the single filename, or drop `docs/reports/*` entirely if `!docs/reports/` alone already permits the file to be committed. Verify the resulting behaviour with `git check-ignore -v` against both the delivered report and a hypothetical future report path before committing."
+    },
+    {
+      "id": "R2-4",
+      "severity": "MINOR",
+      "defect": "Declared input-identity digests are recorded but never compared against verified bytes, and one evidence reference is self-certifying. In analysis_intake._collect, the basis/model-source blob is read and its reference is built as `{\"id\": identity, \"sha256\": digest}` where `digest` is computed from the bytes just read, so the later verify_reference check is a tautology; by contrast the repository-response branch compares against `candidate[\"sha256\"]` and _intake_references compares against the frozen criteria and source-record digests. Separately, `physical_input_sha256` is taken from `candidate[\"input_sha256\"]` or `model_basis.baseline_input_sha256` and is never compared with the digest of the input evidence reference, and `model_basis_input_matches_capture` (true on the mudmat and pressure-vessel canary candidates) asserts a cross-check no code performs. The two repository golden cases are the concrete exposure: their model source examples/ansys/mudmat/mudmat.inp and examples/ansys/pressure-vessel/pv.inp are not in `source_records`, so their declared baseline digests 9936d931... and 8d94ee1a... are accepted without comparison. The values agree at these bytes; the binding is not enforced.",
+      "correction": "Compare the basis/model-source blob digest against the candidate's declared `baseline_input_sha256` or `input_sha256` and refuse on mismatch, on the same footing as the repository-response branch. Either enforce `model_basis_input_matches_capture` by recomputing it from the verified digests, or delete the field so the intake does not record an unverified cross-check as a fact."
+    },
+    {
+      "id": "R2-5",
+      "severity": "MINOR",
+      "defect": "analysis_records.decimal_text inherits CPython's permissive decimal-string syntax. Decimal(value) strips leading and trailing whitespace and removes underscores throughout before parsing, so ` 12.5 `, `1_0` and `+12.5` are accepted at the retained-CSV boundary and silently renormalised to `12.5`, `10` and `12.5`. parse_digest applies decimal_text to every value read from a retained capture, so a malformed source token does not fail closed; it becomes a different, well-formed number. The governing statement in docs/domains/ansys/analysis-workflow.html is that malformed and nonfinite values are rejected at the validated boundary. Nonfinite input is rejected by the is_finite check; malformed separator and whitespace input is not.",
+      "correction": "Pre-validate the literal with an explicit pattern such as `[+-]?(?:[0-9]+(?:\\.[0-9]*)?|\\.[0-9]+)(?:[eE][+-]?[0-9]+)?` before constructing Decimal, and raise ValueError naming the rejected token otherwise. Add parse_digest cases for `1_0`, a leading-space value and a trailing-space value asserting refusal."
+    },
+    {
+      "id": "R2-6",
+      "severity": "MINOR",
+      "defect": "The authorship gate is a three-entry denylist and the checker-independence test is an exact string comparison. analysis_lookup._check_provenance refuses only `unknown`, `unverified` and `historical-neutral-capture` after strip and casefold, so any other placeholder, such as `n/a`, `not recorded` or `TBD`, passes the gate and is then treated as a recorded author. _verification refuses only when `entry[\"checker\"] == case[\"author\"]` exactly, so a case or whitespace variant of the same name satisfies the independence test. examples/ansys/analysis-evidence/README.md states \"The checker must be a different recorded author; unknown authorship refuses qualification\", which is stronger than a denylist plus exact compare establishes.",
+      "correction": "Invert the gate to an allowlist: require the case author to match a recorded-identity pattern and refuse any value carrying a placeholder marker, or require an explicit `author_status` field with a closed vocabulary in which only `recorded` permits qualification. Normalise both sides with strip and casefold before the checker-versus-author comparison. Amend the README sentence to state what the implemented check establishes."
+    },
+    {
+      "id": "R2-7",
+      "severity": "MINOR",
+      "defect": "The go-by does not execute as written and does not connect the reproduced artifact to the committed one. In examples/ansys/analysis-evidence/README.md the CSV block uses `Path(\"responses.csv\").write_text(...)` and the name `package`, both of which are only introduced in the following section, so a reader executing the document in order raises NameError twice. Separately, analysis_intake.main publishes to `<output-root>/ansys-retained-evidence/r1.json`, while the README designates examples/ansys/analysis-evidence/manifest.json as \"the authoritative typed dataset\"; no text states that the committed manifest is a copy of the published revision, and no expected `package_hash` is given, so a reproducer cannot check the published bytes against the committed artifact even though the CLI prints that hash.",
+      "correction": "Move the `from pathlib import Path` and the `load_package` call above the CSV block, or make the CSV block self-contained. Record in the reproduction section that the committed manifest.json is the published `ansys-retained-evidence/r1.json`, and state the expected `package_hash` b276f693e13a3feefd41ac6bfeb2a7e896d60b118e5b5e12ba7f94dcbfab87b1 so the printed summary can be compared."
+    },
+    {
+      "id": "R2-8",
+      "severity": "MINOR",
+      "defect": "examples/ansys/analysis-evidence/intake.json misquotes the retained padeye deck header. All four padeye candidates record `model_basis.generator_header` as \"! Padeye (lifting-lug) screening FE \u00e2\u20ac\u201d generated by digitalmodel.ansys.padeye\", which is the cp1252 double-encoding of U+2014, while the mudmat candidates record the same dash correctly as \u2014 and the pressure-vessel candidate contains no dash. The intake's `author_source_evidence.basis` cites the generated-by header in the retained deck as part of the authorship basis, so a corrupted transcription weakens the record it is offered as evidence for. The defect is confined to intake.json; no manifest, CSV or report field carries the string, and no comparison depends on it.",
+      "correction": "Re-read the four retained padeye.inp headers as UTF-8 and correct the four `generator_header` values, then regenerate intake.json and the dependent `intake_digest`, `intake_reference` and `package_hash`. If the retained deck bytes themselves contain the mojibake, record that explicitly rather than silently, since the field is then a faithful quotation of a corrupted source."
+    },
+    {
+      "id": "R2-9",
+      "severity": "MINOR",
+      "defect": "Optional improvement. Several refusal paths at the validated boundary raise exception types other than ValueError, breaking the caller error contract that the R1 F14 correction established for that boundary. analysis_intake._git_evidence propagates subprocess.CalledProcessError when the pinned blob is absent; _make_case calls `.decode(\"utf-8\")` on retained capture bytes and propagates UnicodeDecodeError for a non-UTF-8 CSV; _collect indexes `item[\"response_units\"]` and raises KeyError if a second .csv artifact lacks declared units; analysis_lookup._verification and _check_authority use `register.get(\"entries\", {})`, `entry[\"checks\"].get(...)` and `authority.get(\"revisions\", {}).get(...)`, each raising AttributeError when the corresponding value is a list rather than a mapping. All fail closed, so none permits an unqualified answer.",
+      "correction": "Wrap the git invocation and the decode in try blocks that re-raise ValueError naming the reference, require `response_units` explicitly on every artifact classified as an eligible CSV, and type-check `entries`, `checks` and `revisions` as mappings with require_fields before indexing."
+    }
+  ]
+}

@@ -1,0 +1,61 @@
+atlas_id: e70b23544de6
+basename: diffraction_library
+physics: linear
+response: heave_rao_m_per_m
+axes:
+- name: case
+  values:
+  - fpso-design-draft
+  - fpso-ballast-draft
+  - semisub-operating
+- name: frequency_rad_s
+  scale: linear
+  grid:
+  - 0.2
+  - 0.3
+  - 0.4
+  - 0.5
+  - 0.6
+  - 0.8
+  - 1.0
+  - 1.2
+- name: heading_deg
+  scale: linear
+  grid:
+  - 0.0
+  - 45.0
+  - 90.0
+  - 135.0
+  - 180.0
+validation:
+  metric: null
+  max_rel_error: 0.0
+  threshold: null
+  passes: null
+provenance:
+  basename: diffraction_library
+  kind: library
+  solver:
+    name: OrcaWave/AQWA
+    version: STUB
+    licensed: false
+    run_date: STUB
+    note: "synthetic placeholder heave RAO \u2014 replace with a licensed diffraction\
+      \ run per case (operator, dev-secondary)."
+  coverage:
+    key_axis: case
+    covered_cases:
+    - fpso-design-draft
+    - fpso-ballast-draft
+    - semisub-operating
+    continuous_axes:
+      frequency_rad_s:
+        scale: linear
+        min: 0.2
+        max: 1.2
+      heading_deg:
+        scale: linear
+        min: 0.0
+        max: 180.0
+    note: STUB diffraction heave-RAO library, 3 canonical vessel cases. Queries outside
+      these cases escalate to a licensed run.

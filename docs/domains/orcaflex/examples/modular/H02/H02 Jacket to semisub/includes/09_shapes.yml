@@ -1,0 +1,47 @@
+# Shapes Configuration
+# Generated from: H02 Jacket to semisub.yml
+# Date: 2026-01-18 22:18:21
+Shapes:
+- Name: Pontoon Contact Shape
+  ShapeType: Elastic solid
+  Shape: Block
+  Connection: Semisub
+  Origin:
+  - -35
+  - 31
+  - -22
+  Size:
+  - 16.5
+  - 70
+  - 6
+  Orientation:
+  - 0
+  - 0
+  - -90
+  NormalStiffness: 1000
+  ShearStiffness: 100
+  OutsidePen:
+  - 1
+  - Solid
+  - Blue
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: Structure Shape
+  ShapeType: Elastic solid
+  Shape: Cylinder
+  Connection: Platform
+  Origin:
+  - 27
+  - -27
+  - -27.5
+  Azimuth: 90
+  Declination: 90
+  Length: 54
+  OuterDiameter: 5
+  InnerDiameter: 0
+  NormalStiffness: 1000
+  ShearStiffness: 100
+  OutsidePen:
+  - 1
+  - Solid
+  - Blue
+  ShadedDrawingCullingMode: Anticlockwise

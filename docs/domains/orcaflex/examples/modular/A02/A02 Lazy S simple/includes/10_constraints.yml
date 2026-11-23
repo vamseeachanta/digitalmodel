@@ -1,0 +1,112 @@
+# Constraints Configuration
+# Generated from: A02 Lazy S simple.yml
+# Date: 2026-01-18 22:17:58
+Constraints:
+- Name: 10" riser S clamp
+  InFrameConnection: Arch
+  InFrameInitialPosition:
+  - 0
+  - 3
+  - 0.19
+  InFrameInitialAttitude:
+  - 0
+  - 0
+  - -180
+  ConstraintType: Calculated DOFs
+  SolutionMethod: Direct
+  CalculatedModelType: Cartesian
+  OutFrameReleaseStage: ~
+  DOFFree, DOFInitialValue:
+  - - No
+  - - No
+  - - No
+  - - No
+  - - No
+  - - No
+  TranslationalStiffness: 0
+  RotationalStiffness: 0
+  TranslationalDamping: 0
+  RotationalDamping: 0
+  Hidden: Yes
+  HideAfterOutFrameRelease: No
+- Name: 8" riser clamp
+  InFrameConnection: Arch
+  InFrameInitialPosition:
+  - 0
+  - 1
+  - 0.125
+  InFrameInitialAttitude:
+  - 0
+  - 0
+  - -180
+  ConstraintType: Calculated DOFs
+  SolutionMethod: Direct
+  CalculatedModelType: Cartesian
+  OutFrameReleaseStage: ~
+  DOFFree, DOFInitialValue:
+  - - No
+  - - No
+  - - No
+  - - No
+  - - No
+  - - No
+  TranslationalStiffness: 0
+  RotationalStiffness: 0
+  TranslationalDamping: 0
+  RotationalDamping: 0
+  Hidden: Yes
+  HideAfterOutFrameRelease: No
+- Name: Umbilical clamp
+  InFrameConnection: Arch
+  InFrameInitialPosition:
+  - 0
+  - -1
+  - 0.152
+  InFrameInitialAttitude:
+  - 0
+  - 0
+  - -180
+  ConstraintType: Calculated DOFs
+  SolutionMethod: Direct
+  CalculatedModelType: Cartesian
+  OutFrameReleaseStage: ~
+  DOFFree, DOFInitialValue:
+  - - No
+  - - No
+  - - No
+  - - No
+  - - No
+  - - No
+  TranslationalStiffness: 0
+  RotationalStiffness: 0
+  TranslationalDamping: 0
+  RotationalDamping: 0
+  Hidden: Yes
+  HideAfterOutFrameRelease: No
+- Name: 10" riser N clamp
+  InFrameConnection: Arch
+  InFrameInitialPosition:
+  - 0
+  - -3
+  - 0.19
+  InFrameInitialAttitude:
+  - 0
+  - 0
+  - -180
+  ConstraintType: Calculated DOFs
+  SolutionMethod: Direct
+  CalculatedModelType: Cartesian
+  OutFrameReleaseStage: ~
+  DOFFree, DOFInitialValue:
+  - - No
+  - - No
+  - - No
+  - - No
+  - - No
+  - - No
+  TranslationalStiffness: 0
+  RotationalStiffness: 0
+  TranslationalDamping: 0
+  RotationalDamping: 0
+  Hidden: Yes
+  HideAfterOutFrameRelease: No

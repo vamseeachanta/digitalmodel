@@ -1,0 +1,17 @@
+_metadata:
+  last_updated: '2025-08-01T13:24:19.990736'
+  managed_by: enhanced_create_specs_deployer
+  repository: digitalmodel
+architecture_patterns:
+  package_structure: src_based
+  primary_language: python
+  type: python_application
+code_patterns:
+  documentation: docstring_based
+  formatting: ruff
+  linting: ruff
+  testing_framework: pytest
+workflow_patterns:
+  branching_strategy: main_branch
+  development_approach: feature_driven
+  versioning: semantic_versioning

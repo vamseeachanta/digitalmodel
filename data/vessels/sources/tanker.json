@@ -1,0 +1,175 @@
+{
+  "scope": "tanker",
+  "sources": [
+    {
+      "name": "MOERI KVLCC2 reference hull (SIMMAN / simman2014.dk / simman2008.dk / SIMMAN2020)",
+      "url": "https://simman2014.dk/ship-data/moeri-kvlcc2-tanker/geometry-and-conditions-moeri-kvlcc2-tanker/",
+      "layers_covered": [
+        "principal particulars",
+        "mass properties",
+        "motion RAOs"
+      ],
+      "access": "public",
+      "format": "Web tables + downloadable IGES hull/rudder/propeller geometry, offset files, condition sheets (PDF/zip)",
+      "freshness": "Geometry stable since 2008; refreshed each workshop cycle (2008/2014/2019/2020). Reference hull, not a live-fleet feed.",
+      "reliability": "high",
+      "notes": "Best single fully-defined public VLCC: gives L/B/T, block coeff, displacement, KG, and roll radius of gyration (~0.4B in air), bilge keels, rudder/propeller geometry. Motion/seakeeping + maneuvering validation data from MARIN/MOERI. Ideal seed record for a class-particulars + mass-properties + RAO schema. KCS (container) and KVLCC2 are the canonical open benchmark hulls."
+    },
+    {
+      "name": "Wikipedia ship-class articles (Oil tanker, Aframax, Suezmax, VLCC/ULCC, LNG carrier, Q-Max/Q-Flex, LPG carrier)",
+      "url": "https://en.wikipedia.org/wiki/Oil_tanker",
+      "layers_covered": [
+        "principal particulars"
+      ],
+      "access": "public",
+      "format": "HTML tables, cited",
+      "freshness": "Continuously edited; class DWT/dimension bands current",
+      "reliability": "medium",
+      "notes": "Good for class-band definitions (DWT ranges, typical LOA/beam/draft, Q-Max 266,000 m3 etc.). Use as orientation, not authoritative per-ship values; chase the cited primary sources for a database."
+    },
+    {
+      "name": "Clarksons \u2014 'A guide to bulk/tanker vessel sizes' (free glossary)",
+      "url": "https://www.clarksons.com/home/glossary/v/a-guide-to-bulk-vessel-sizes/",
+      "layers_covered": [
+        "principal particulars"
+      ],
+      "access": "public",
+      "format": "HTML glossary",
+      "freshness": "Current",
+      "reliability": "high",
+      "notes": "Authoritative size-band definitions from the leading broker. Note: this free glossary is the only open part; Clarksons SIN/Registers fleet data with per-ship particulars is paywalled (see paywalled_gaps)."
+    },
+    {
+      "name": "MarineInsight \u2014 Guide to Ship Sizes / Gas Carrier design articles",
+      "url": "https://www.marineinsight.com/types-of-ships/the-ultimate-guide-to-ship-sizes/",
+      "layers_covered": [
+        "principal particulars"
+      ],
+      "access": "public",
+      "format": "HTML articles",
+      "freshness": "Current, periodically updated",
+      "reliability": "medium",
+      "notes": "Useful narrative + typical-dimension tables across MR/LR1/Aframax/Suezmax/VLCC/ULCC and LNG/LPG segments. Secondary source; cross-check numbers."
+    },
+    {
+      "name": "Shipbuilder product pages \u2014 Japan Marine United, Hyundai/HD KSOE, Samsung Heavy, Hanwha Ocean (ex-DSME)",
+      "url": "https://www.jmuc.co.jp/en/products/ocean-gas/",
+      "layers_covered": [
+        "principal particulars"
+      ],
+      "access": "brochure-pdf",
+      "format": "Product brochures (HTML + PDF spec sheets)",
+      "freshness": "Reflects current standard designs (e.g., 174,000 m3 membrane LNGC; 82k/70k/39k/18k m3 LPGC)",
+      "reliability": "high",
+      "notes": "Builder-stated standard-class particulars (LOA, beam, draft, cargo capacity, containment type, BOR). Authoritative for as-designed standard newbuilds but coverage is per-builder and marketing-oriented; mass properties and RAOs not published."
+    },
+    {
+      "name": "OCIMF publications \u2014 Recommendations for Oil Tanker Manifolds & Associated Equipment; Mooring Equipment Guidelines (MEG4)",
+      "url": "https://www.ocimf.org/publications/books",
+      "layers_covered": [
+        "crane capacity curves & deck data"
+      ],
+      "access": "paywalled",
+      "format": "Purchased PDF/print standards; catalogue is public",
+      "freshness": "Current editions",
+      "reliability": "high",
+      "notes": "Closest 'deck data' analogue for tankers: standardized manifold spacing/height/strength and deck-arrangement geometry. The standards themselves are paid; the catalogue and many summaries are public. Trading tankers have no significant deck cranes (only hose-handling/provision cranes), so true crane capacity curves are largely N/A for this scope."
+    },
+    {
+      "name": "SIGTTO / ICS-OCIMF-SIGTTO-CDI Ship-to-Ship Transfer Guide (2nd ed. 2025) and gas-carrier manifold guidance",
+      "url": "https://www.sigtto.org/publications/ship-to-ship-transfer-guide-for-petroleum-chemicals-and-liquefied-gases/",
+      "layers_covered": [
+        "crane capacity curves & deck data"
+      ],
+      "access": "mixed",
+      "format": "Publication (paid) + freely circulated IMO INF papers/summaries (PDF)",
+      "freshness": "2025 second edition",
+      "reliability": "high",
+      "notes": "Gas-carrier manifold layout/strength/fittings and hose-handling crane practice for LNG/LPG. An IMO PPR INF paper summarizing the 2025 edition is publicly downloadable via ICS; the full guide is paid."
+    },
+    {
+      "name": "DNV-RP-C205 'Environmental conditions and environmental loads'",
+      "url": "https://www.dnv.com/energy/standards-guidelines/dnv-rp-c205-environmental-conditions-and-environmental-loads/",
+      "layers_covered": [
+        "metocean criteria"
+      ],
+      "access": "registration",
+      "format": "PDF standard (free download after DNV account registration)",
+      "freshness": "Current edition (latest revision), periodically updated",
+      "reliability": "high",
+      "notes": "The authoritative reference for wave/wind/current/tide modelling and environmental loads used to set metocean design criteria. DNV RPs are downloadable at no charge after registering a free DNV account; copies also circulate on third-party sites (unofficial)."
+    },
+    {
+      "name": "BOEM Metocean Characterization Recommended Practices (DNV GL doc 10039663-HOU-01)",
+      "url": "https://www.boem.gov/sites/default/files/environmental-stewardship/Environmental-Studies/Renewable-Energy/Metocean-Recommended-Practices.pdf",
+      "layers_covered": [
+        "metocean criteria"
+      ],
+      "access": "public",
+      "format": "PDF report",
+      "freshness": "Published report (US offshore wind focus, methods transferable)",
+      "reliability": "high",
+      "notes": "Fully open government PDF on metocean characterization methodology (extremes, hindcast, contours). Useful free companion to DNV-RP-C205 for criteria methodology, though oriented to US offshore wind sites."
+    },
+    {
+      "name": "Equasis (Electronic Quality Shipping Information System)",
+      "url": "https://www.equasis.org/",
+      "layers_covered": [
+        "principal particulars"
+      ],
+      "access": "registration",
+      "format": "Web lookup (free account)",
+      "freshness": "Live; >85,000 ships >100 GT",
+      "reliability": "high",
+      "notes": "Free-after-registration per-ship lookup: IMO no., type, GT, year, flag, MMSI/callsign. Carries identity/class/safety particulars, NOT full naval-arch dimensions (limited LOA/beam) and no mass properties or RAOs. Good identity backbone to key a vessel database."
+    },
+    {
+      "name": "EMSA THETIS (Paris MoU PSC public search)",
+      "url": "https://portal.emsa.europa.eu/web/thetis/inspections",
+      "layers_covered": [
+        "principal particulars"
+      ],
+      "access": "public",
+      "format": "Web search engine",
+      "freshness": "Live PSC data",
+      "reliability": "high",
+      "notes": "Public lookup of ship name/IMO/type/GT/year/flag/company. Same caveat as Equasis: identity + tonnage, not detailed hull dimensions, mass properties, or motions."
+    },
+    {
+      "name": "Maritime academic / open hydrodynamics literature (ResearchGate, ScienceDirect topic pages, arXiv NEMOH/Capytaine studies, J. Marine Sci. Eng. open-access papers on S-VLCC seakeeping)",
+      "url": "https://arxiv.org/pdf/2506.20186",
+      "layers_covered": [
+        "motion RAOs",
+        "mass properties"
+      ],
+      "access": "mixed",
+      "format": "PDFs, plots, sometimes tabulated coefficients",
+      "freshness": "Ongoing publications (2020s)",
+      "reliability": "medium",
+      "notes": "Many open-access papers give VLCC/tanker heave/roll/pitch RAOs and the input mass properties (radii of gyration, KG) for KVLCC2-class hulls; figures often need digitizing. Good for filling the RAO layer where commercial seakeeping reports are unavailable. Open BEM tools (NEMOH/Capytaine) let you regenerate RAOs from KVLCC2 geometry."
+    }
+  ],
+  "paywalled_gaps": [
+    "Clarksons Shipping Intelligence Network (SIN) / Clarksons Research World Fleet Register \u2014 detailed per-ship and per-class particulars (LOA, beam, depth, draft, DWT, cargo capacity, builder, engine). Paid subscription; only the free size-band glossary is public.",
+    "IHS Markit / S&P Global Maritime (Sea-web, World Register of Ships, ex-Lloyd's Register Fairplay) \u2014 the most complete authoritative per-ship dimensions and characteristics database. Paywalled.",
+    "S&P Global Commodity Insights / Petrodata (offshore & tanker fleet/positions) \u2014 paywalled.",
+    "Enverus (offshore/energy asset intelligence) \u2014 paywalled.",
+    "Classification society ship registers with full naval-arch detail (e.g., ABS Record, DNV/LR vessel registers) \u2014 basic identity is free, but full hydrostatic/structural particulars are restricted to owners/class.",
+    "OCIMF standards (Manifold Recommendations, MEG4) and SIGTTO full publications \u2014 the standards documents themselves must be purchased (catalogue + IMO summaries are public).",
+    "Mass properties (lightship weight, vertical/longitudinal CoG, full radii of gyration in all axes) and as-built motion RAOs for specific commercial hulls \u2014 these are owner/yard-proprietary and effectively never public except for reference hulls like KVLCC2 or in academic studies; this is the largest genuine data gap for a real-fleet database."
+  ],
+  "recommended_priority": [
+    "MOERI KVLCC2 reference hull (SIMMAN / simman2014.dk / simman2008.dk / SIMMAN2020)",
+    "Clarksons \u2014 'A guide to bulk/tanker vessel sizes' (free glossary)",
+    "Shipbuilder product pages \u2014 Japan Marine United, Hyundai/HD KSOE, Samsung Heavy, Hanwha Ocean (ex-DSME)",
+    "Equasis (Electronic Quality Shipping Information System)",
+    "EMSA THETIS (Paris MoU PSC public search)",
+    "DNV-RP-C205 'Environmental conditions and environmental loads'",
+    "BOEM Metocean Characterization Recommended Practices (DNV GL doc 10039663-HOU-01)",
+    "Maritime academic / open hydrodynamics literature (KVLCC2 seakeeping RAOs, NEMOH/Capytaine)",
+    "OCIMF publications \u2014 Manifold Recommendations / MEG4",
+    "SIGTTO / ICS-OCIMF-SIGTTO-CDI Ship-to-Ship Transfer Guide",
+    "Wikipedia ship-class articles",
+    "MarineInsight \u2014 Guide to Ship Sizes / Gas Carrier design articles"
+  ]
+}

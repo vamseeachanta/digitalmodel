@@ -1,0 +1,17 @@
+basename: plate_buckling
+
+calculation_type: DNV_rp_C201
+
+groups:
+  - name: deck_panel_service_check
+    length: 2.4
+    breadth: 1.2
+    thickness: 0.018
+    yield_strength: 50000
+    young_modulus: 29000000
+    poisson_ratio: 0.30
+    water_depth: 100.0
+    longtudinal_stress: 4000
+    transverse_stress: 1200
+    shear_stress: 600
+    buckling_coefficient: 4.0

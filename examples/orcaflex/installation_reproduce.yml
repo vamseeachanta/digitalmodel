@@ -1,0 +1,26 @@
+# One unchanged diagnostic case; no environmental or duration overrides.
+model: ../../docs/domains/orcaflex/jumper/manifold_to_plet/monolithic/DZ_AHCoff.yml
+model_sha256: c338974b24512ee893311c6d12353b0584e1b11afbff94d655d5f7bf26f439e3
+timeout_seconds: 900
+solver_version: '11.6'
+limitations:
+  - Diagnostic reproduction only; 11 seconds after build-up will not establish an operating envelope.
+  - The regular wave height is 2 m; it is not significant wave height.
+  - AHC is off and payout is zero; active compensation and lowering performance are not evaluated.
+  - Allowable rigging loads and stress limits are not established; engineering acceptance is NOT EVALUATED.
+  - Live measurements, clock synchronization, data latency and field validation are not established.
+extraction:
+  title: Jumper installation diagnostic reproduction
+  period: [0.0, 11.0]
+  time_histories:
+    - {object: 'Cranewire#1', variable: Effective tension, position: End A, units: kN}
+    - {object: 'Cranewire#2', variable: Effective tension, position: End A, units: kN}
+    - {object: 'Sling#1', variable: Effective tension, position: End A, units: kN}
+    - {object: 'Sling#2', variable: Effective tension, position: End A, units: kN}
+    - {object: 'Sling#3', variable: Effective tension, position: End A, units: kN}
+    - {object: 'Sling#4', variable: Effective tension, position: End A, units: kN}
+    - {object: 'Sling#5', variable: Effective tension, position: End A, units: kN}
+    - {object: 'Sling#6', variable: Effective tension, position: End A, units: kN}
+  range_graphs:
+    - {object: JumperLine, variable: Bend moment, units: kN.m}
+    - {object: JumperLine, variable: Curvature, units: 'rad/m'}

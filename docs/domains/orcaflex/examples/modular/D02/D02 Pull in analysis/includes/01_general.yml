@@ -1,0 +1,61 @@
+# General Configuration
+# Generated from: D02 Pull in analysis.yml
+# Date: 2026-01-18 22:18:08
+General:
+  UnitsSystem: SI
+  JacobianBufferingPolicy: 1
+  JacobianPerturbationFactor: 0
+  BuoysIncludedInStatics: Individually specified
+  LineStaticsStep1Policy: All lines included
+  LineStaticsStep2Policy: Solve coupled systems
+  WholeSystemStaticsEnabled: Yes
+  StaticsMaxIterations: 2400
+  StaticsMinDamping: 2
+  DynamicsSolutionMethod: Implicit time domain
+  ImplicitUseVariableTimeStep: No
+  ImplicitConstantTimeStep: 0.05
+  LogPrecision: Single
+  TargetLogSampleInterval: 0.1
+  LogStartTime: ~
+  StartTime: ~
+  FirstStage: ~
+  RampStartTime: ~
+  RampFinishTime: ~
+  TimeHistoryImportFrom: ~
+  TimeHistoryImportTo: ~
+  StageDuration:
+  - 1
+  - 46
+  - 40
+  - 5
+  RestartStateRecordingPeriodicCount: 0
+  RestartStateRecordingTest: ~
+  DefaultViewMode: Wire frame
+  DefaultViewSize: 563.3995550746948
+  DefaultViewCentre:
+  - 152.48182650354414
+  - 702.2754512462228
+  - -133.507155305292
+  DefaultViewAzimuth: 315
+  DefaultViewElevation: 90
+FrictionCoefficients:
+  ? FrictionCoefficientLineTypeName, LineTypeFrictionCoefficientShapeName, LineTypeLateralCoefficient, LineTypeAxialCoefficient
+  : - - Pullhead
+      - Funnel
+      - 0.5
+      - ~
+Groups:
+  Structure:
+    Pipe: Model
+    Wellhead Structure: Model
+    Wellhead: Wellhead Structure
+    Funnel: Wellhead Structure
+    To Hub: Wellhead Structure
+    Gateway Structure: Model
+    To Gate: Gateway Structure
+    Gateway 1: Gateway Structure
+    Gateway 2: Gateway Structure
+    Pullhead camera: Model
+  State:
+    Collapsed:
+    - Variable data

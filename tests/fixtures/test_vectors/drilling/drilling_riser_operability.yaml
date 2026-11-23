@@ -1,0 +1,75 @@
+source_type: python
+source_description: "Extracted from digitalmodel/tests/drilling_riser/test_operability_doc_verified.py"
+extracted_date: "2026-03-16"
+legal_scan_passed: true
+category: "drilling"
+subcategory: "drilling_riser_operability"
+equations:
+  - name: "Significant wave height limit"
+    latex: "H_{s,limit} = \\frac{x_{allow}}{RAO}"
+    description: "Maximum significant wave height from RAO amplitude and allowable motion"
+  - name: "Operability fraction"
+    latex: "f_{op} = \\frac{N(H_s \\leq H_{s,limit})}{N_{total}}"
+    description: "Fraction of sea states within Hs limit from wave scatter diagram"
+  - name: "Watch circle radius"
+    latex: "r = \\frac{\\delta\\%}{100} \\times d_w"
+    description: "Allowable watch circle radius as percentage of water depth"
+inputs:
+  - name: "RAO amplitude"
+    symbol: "RAO"
+    unit: "m/m"
+    test_value: 1.2
+  - name: "Allowable motion"
+    symbol: "x_allow"
+    unit: "m"
+    test_value: 3.0
+outputs:
+  - name: "Hs limit"
+    symbol: "H_s_limit"
+    unit: "m"
+    test_expected: 2.5
+    tolerance: 0.01
+worked_examples:
+  - description: "Hs limit from RAO: RAO=1.2 m/m, allowable=3.0 m"
+    inputs:
+      rao_amplitude: 1.2
+      allowable_motion_m: 3.0
+    outputs:
+      hs_limit_m: 2.5
+    use_as_test: true
+  - description: "Full operability: all sea states below limit"
+    inputs:
+      hs_scatter: [1.0, 1.5, 2.0, 2.5]
+      hs_limit: 3.0
+    outputs:
+      operability_fraction: 1.0
+    use_as_test: true
+  - description: "Zero operability: all sea states above limit"
+    inputs:
+      hs_scatter: [4.0, 5.0, 6.0]
+      hs_limit: 3.0
+    outputs:
+      operability_fraction: 0.0
+    use_as_test: true
+  - description: "Partial operability: half sea states below limit"
+    inputs:
+      hs_scatter: [1.0, 2.0, 4.0, 5.0]
+      hs_limit: 3.0
+    outputs:
+      operability_fraction: 0.5
+    use_as_test: true
+  - description: "Watch circle radius: 5% offset at 1500m depth"
+    inputs:
+      offset_pct: 5.0
+      water_depth_m: 1500.0
+    outputs:
+      watch_circle_radius_m: 75.0
+    use_as_test: true
+assumptions:
+  - "Linear RAO-based motion response (small amplitude assumption)"
+  - "Scatter diagram entries are equally weighted"
+  - "Watch circle is circular (isotropic vessel offset capability)"
+references:
+  - "2H-TNE-0050-03 section 5.2 — Operating Envelope Analysis"
+  - "RAO-based operability envelope analysis"
+  - "Wave scatter diagram analysis for operability fraction"

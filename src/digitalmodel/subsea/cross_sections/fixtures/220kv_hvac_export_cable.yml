@@ -1,0 +1,47 @@
+id: 220kv-hvac-export-cable
+name: Representative 220 kV HVAC export cable cross-section
+family: offshore_wind_hvac_export_cable
+duty: static
+description: Source-backed schema fixture for an offshore wind HVAC export cable.
+design_metadata:
+  voltage_class: {value: 220, unit: kV}
+  notes: Representative dimensions for schema validation only.
+provenance:
+  - source_id: wiki-cross-section-recon-2026-04-26
+    source_type: wiki
+    citation: Offshore cable/umbilical cross-section reconnaissance, 2026-04-26
+    url_or_path: knowledge/wikis/marine-engineering/wiki/sources/offshore-cable-umbilical-cross-section-recon-2026-04-26.md
+  - source_id: project-assumption-2514
+    source_type: project_assumption
+    citation: Issue #2514 representative fixture assumptions
+    note: Representative layer dimensions are examples for schema validation, not design defaults.
+  - source_id: guide-floating-offshore-wind-220kv
+    source_type: wiki
+    citation: Guide to Floating Offshore Wind 220 kV export cable values noted in recon page
+    url_or_path: knowledge/wikis/marine-engineering/wiki/sources/offshore-cable-umbilical-cross-section-recon-2026-04-26.md
+radial_layers:
+  - name: conductor core
+    role: conductor
+    material: copper
+    inner_diameter: {value: 0, unit: mm}
+    outer_diameter: {value: 58, unit: mm}
+    provenance: {source_id: guide-floating-offshore-wind-220kv, source_type: wiki}
+  - name: xlpe insulation
+    role: insulation
+    material: XLPE
+    inner_diameter: {value: 58, unit: mm}
+    outer_diameter: {value: 128, unit: mm}
+    provenance: {source_id: guide-floating-offshore-wind-220kv, source_type: wiki}
+  - name: metallic screen and water barrier
+    role: water_barrier
+    material: lead alloy and copper wire
+    inner_diameter: {value: 128, unit: mm}
+    outer_diameter: {value: 156, unit: mm}
+    provenance: {source_id: project-assumption-2514, source_type: project_assumption, note: Representative barrier envelope.}
+  - name: armour and jacket
+    role: jacket
+    material: steel armour and polyethylene
+    inner_diameter: {value: 156, unit: mm}
+    outer_diameter: {value: 205, unit: mm}
+    provenance: {source_id: project-assumption-2514, source_type: project_assumption, note: Representative outer protection envelope.}
+packed_components: []

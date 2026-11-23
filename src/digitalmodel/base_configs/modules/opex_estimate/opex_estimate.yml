@@ -1,0 +1,10 @@
+basename: opex_estimate
+
+default:
+  log_level: INFO
+  config:
+    generate_plots: false
+    overwrite:
+      output: true
+
+opex_estimate: {}

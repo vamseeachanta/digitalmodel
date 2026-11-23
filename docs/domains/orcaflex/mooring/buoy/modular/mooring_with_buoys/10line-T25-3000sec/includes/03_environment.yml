@@ -1,0 +1,85 @@
+# Environment Configuration
+# Generated from: 10line-T25-3000sec.yml
+# Date: 2026-01-18 22:19:53
+Environment:
+  WaterSurfaceZ: 0
+  KinematicViscosity: 3.5% Salinity
+  SeaTemperature: 59
+  ReynoldsNumberCalculation: Cross flow
+  HorizontalWaterDensityFactor: ~
+  VerticalDensityVariation: Constant
+  Density: 0.06398865959054845
+  SeabedType: Flat
+  SeabedOrigin:
+  - 0
+  - 0
+  WaterDepth: 350
+  SeabedSlopeDirection: 0
+  SeabedSlope: 0
+  SeabedModel: Elastic
+  SeabedNormalStiffness: 0.6365880354264178
+  SeabedShearStiffness: 0.6365880354264162
+  SeabedDamping: 100
+  KinematicStretchingMethod: Vertical stretching
+  UserSpecifiedRandomWaveSeeds: Yes
+  WaveFrequencySpectrumDiscretisationMethod: Equal energy, legacy, deprecated
+  WaveTrains:
+  - Name: Wave T25
+    WaveType: JONSWAP
+    WaveDirection: 80
+    WaveOrigin:
+    - 0
+    - 0
+    WaveTimeOrigin: -27.6e3
+    WaveNumberOfSpectralDirections: 1
+    WaveJONSWAPParameters: Partially specified
+    WaveHs: 13.776
+    WaveTz: 7.53
+    WaveGamma: 1
+    WaveSeed: 12345
+    WaveNumberOfComponents: 100
+  WaveKinematicsCutoffDepth: Infinity
+  WaveCalculationMethod: Instantaneous position (exact)
+  WaveCalculationTimeInterval: 0
+  WaveCalculationSpatialInterval: 0
+  MultipleCurrentDataCanBeDefined: No
+  CurrentModel: Variation scheme
+  CurrentRamped: No
+  CurrentApplyVerticalStretching: No
+  HorizontalCurrentFactor: ~
+  VerticalCurrentVariationMethod: Interpolated
+  RefCurrentSpeed: 1.9679999999999997
+  RefCurrentDirection: 130
+  CurrentDepth, CurrentFactor, CurrentRotation:
+  - - 0
+    - 1
+    - 0
+  - - 13.123359580052488
+    - 0.995
+    - 0
+  - - 26.246719160104977
+    - 0.99
+    - 0
+  - - 39.37007874015747
+    - 0.985
+    - 0
+  - - 49.21259842519683
+    - 0.98
+    - 0
+  IncludeVesselWindLoads: Yes
+  IncludeLineWindLoads: No
+  IncludeBuoyWindLoads: No
+  IncludeBuoyWingWindLoads: No
+  WindRamping: From mean
+  WindType: NPD spectrum
+  AirDensity: 7.990778953746533e-05
+  AirSpeedOfSound: 1125.3280839895012
+  WindSpectrumElevation: ~
+  WindSpectrumFMin: 0
+  WindSpectrumFMax: Infinity
+  WindTimeOrigin: -27.6e3
+  WindSeed: 12345
+  NumberOfWindComponents: 100
+  WindSpeed: 53.464
+  WindDirection: 80
+  VerticalWindVariationFactor: ~

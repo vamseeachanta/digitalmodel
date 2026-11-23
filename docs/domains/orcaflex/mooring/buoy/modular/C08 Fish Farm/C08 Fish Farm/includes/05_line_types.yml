@@ -1,0 +1,139 @@
+# LineTypes Configuration
+# Generated from: C08 Fish Farm.yml
+# Date: 2026-01-18 22:19:51
+LineTypes:
+- Name: Plastic Ring
+  Category: Homogeneous pipe
+  OD: 0.3
+  ID: 0.21999999999999997
+  MaterialDensity: 1
+  E: 1e6
+  PoissonRatio: 0.5
+  ExpansionTable: None
+  Cdn: 1.2
+  Cdz: 0.008
+  Cl: 0
+  Can: 1
+  Caz: 0
+  Cs: 0
+  Ce: 0
+  SeabedLateralFrictionCoefficient: 0.5
+  SeabedAxialFrictionCoefficient: ~
+  ClashStiffness: 0
+  AllowableStress: ~
+  RayleighDampingCoefficients: (no damping)
+  CoatingThickness: 0
+  LiningThickness: 0
+  AdditionalEI: 0
+  Pen:
+  - 3
+  - Solid
+  - Blue
+- Name: Mesh type
+  Category: General
+  OD: 0.0085
+  ID: 0
+  CentreOfMass:
+  - 0
+  - 0
+  BulkModulus: Infinity
+  MassPerUnitLength: 6.476e-05
+  CompressionIsLimited: Yes
+  AllowableTension: ~
+  MinRadius:
+  - ~
+  - ~
+  EI:
+  - 0
+  - ~
+  EA: 11.8
+  PoissonRatio: 0.5
+  ExpansionTable: None
+  GJ: 10
+  TensionTorqueCoupling: 0
+  OuterContactDiameter: ~
+  InnerContactDiameter: ~
+  ClashStiffness: 0
+  Ca:
+  - 1
+  - ~
+  - 0
+  Cm:
+  - ~
+  - ~
+  - ~
+  Cs: 0
+  Ce: 0
+  Cd:
+  - 1.2
+  - ~
+  - 0.008
+  Cl: 0
+  NormalDragLiftDiameter: ~
+  AxialDragLiftDiameter: ~
+  StressOD: ~
+  StressID: ~
+  AllowableStress: ~
+  TensileStressLoadingFactor: 1
+  BendingStressLoadingFactor: 1
+  ShearStressLoadingFactor: 1
+  TorsionalStressLoadingFactor: 1
+  SeabedLateralFrictionCoefficient: 0.5
+  SeabedAxialFrictionCoefficient: ~
+  RayleighDampingCoefficients: (no damping)
+- Name: Mooring line type
+  Category: General
+  OD: 0.0425
+  ID: 0
+  CentreOfMass:
+  - 0
+  - 0
+  BulkModulus: Infinity
+  MassPerUnitLength: 0.0016190000000000002
+  CompressionIsLimited: Yes
+  AllowableTension: ~
+  MinRadius:
+  - ~
+  - ~
+  EI:
+  - 0
+  - ~
+  EA: 295.00000000000006
+  PoissonRatio: 0.5
+  ExpansionTable: None
+  GJ: 10
+  TensionTorqueCoupling: 0
+  OuterContactDiameter: ~
+  InnerContactDiameter: ~
+  ClashStiffness: 0
+  Ca:
+  - 1
+  - ~
+  - 0
+  Cm:
+  - ~
+  - ~
+  - ~
+  Cs: 0
+  Ce: 0
+  Cd:
+  - 1.2
+  - ~
+  - 0.008
+  Cl: 0
+  NormalDragLiftDiameter: ~
+  AxialDragLiftDiameter: ~
+  StressOD: ~
+  StressID: ~
+  AllowableStress: ~
+  TensileStressLoadingFactor: 1
+  BendingStressLoadingFactor: 1
+  ShearStressLoadingFactor: 1
+  TorsionalStressLoadingFactor: 1
+  SeabedLateralFrictionCoefficient: 0.5
+  SeabedAxialFrictionCoefficient: ~
+  RayleighDampingCoefficients: (no damping)
+  Pen:
+  - 1
+  - Solid
+  - Fuchsia

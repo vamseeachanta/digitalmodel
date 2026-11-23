@@ -1,0 +1,1 @@
+# Fatigue module tests

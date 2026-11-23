@@ -1,0 +1,64 @@
+---
+parameters:
+  file_io_01: &file_io_01 tests\data\compare_tool_2500ft_WT1000_064pcf_inline.mds
+  label_01: &label_01 8.6 ppg Density
+  file_io_02: &file_io_02 tests\data\compare_tool_2500ft_WT1000_120pcf_inline.mds
+  label_02: &label_02 16 ppg Density
+  ascii_data_columns_parameter: &ascii_data_columns_parameter [Mode Number, Natural Frequency]
+
+default:
+  log_level: DEBUG
+  config:
+    overwrite:
+      output: True
+
+files:
+  -
+    file_type: ascii
+    io: *file_io_01
+    label: *label_01
+    data_type: DataFrame
+    ascii_data_columns: *ascii_data_columns_parameter
+    delimiter: space
+    lines:
+      start: 3
+      end: 110
+    columns:
+      - Mode Number
+      - Natural Frequency
+  -
+    file_type: ascii
+    io: *file_io_02
+    label: *label_02
+    data_type: DataFrame
+    ascii_data_columns: *ascii_data_columns_parameter
+    delimiter: space
+    lines:
+      start: 3
+      end: 110
+    columns:
+      - Mode Number
+      - Natural Frequency
+
+plot:
+  -
+    file_suffix: modal_analysis
+    suptitle: Natural Frequency Comparison
+    size: default
+    orientation: portrait
+    plt_kind: line
+    title: " "
+    grid: True
+    legend: True
+    legend_location: best
+    marker: NULL
+    ylim: NULL
+    xlabel: Mode Number (#)
+    ylabel: Natural Frequency (rad/s)
+    x_reverse: False
+    y_reverse: False
+    text_fields:
+      -
+        x : 2000
+        y: 11400
+        text: more records obtained by engine with query of bit_on_bottom = 1

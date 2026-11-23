@@ -1,0 +1,45 @@
+# Shapes Configuration
+# Generated from: A01 Steep wave riser.yml
+# Date: 2026-01-18 22:17:57
+Shapes:
+- Name: 'Steep Wave Base #1'
+  ShapeType: Drawing
+  Shape: Block
+  Connection: Anchored
+  Origin:
+  - 64.5
+  - -5
+  - 0
+  Size:
+  - 5
+  - 10
+  - 3
+  Orientation:
+  - 0
+  - 0
+  - 0
+  OutsidePen:
+  - 1
+  - Solid
+  - Blue
+  NumberOfLines: 2
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: 'Steep Wave Base #2'
+  ShapeType: Drawing
+  Shape: Cylinder
+  Connection: Anchored
+  Origin:
+  - 67
+  - 0
+  - 3
+  Azimuth: 0
+  Declination: 0
+  Length: 1.5
+  OuterDiameter: 1
+  InnerDiameter: 0
+  OutsidePen:
+  - 1
+  - Solid
+  - Blue
+  NumberOfLines: 2
+  ShadedDrawingCullingMode: Anticlockwise

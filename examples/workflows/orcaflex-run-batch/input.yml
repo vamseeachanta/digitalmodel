@@ -1,0 +1,38 @@
+# OrcaFlex dynamic time-domain BATCH — REQUIRES-LICENSE workflow (issue #1554).
+#
+# One input.yml -> N OrcaFlex simulations run CONCURRENTLY through a process
+# pool sized to ~90% of host cores by default (run_batch.workers overrides;
+# owner resource policy dm#1553). Case generation reuses parametric_run's
+# variants schema (factorial/range/csv/yaml_matrix + dotted-path mapping).
+#
+# This example is a tiny 3-case wave-heading sweep in MOCK mode so it runs
+# license-free (CI). On a licensed host set run_batch.mock: false to execute
+# real statics + dynamics and save .sim files. Small conclusions land under
+# results/ (cases.csv + batch_summary.json) for the licensed-run queue's
+# return allowlist; .sim files stay on the host under batch_runs/sims/.
+basename: orcaflex_run_batch
+
+orcaflex_run_batch:
+  models:
+    files:
+      - base_model.yml
+  variants:
+    source: factorial
+    parameters:
+      - name: wave_heading_deg
+        values: [0.0, 45.0, 90.0]
+    mapping:
+      wave_heading_deg: Environment.WaveDirection
+  analysis:
+    type: both
+    duration: 20.0
+  run_batch:
+    workers: 2
+    mock: true
+    save_sim: true
+
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: true

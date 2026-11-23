@@ -1,0 +1,49 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  v2312                                 |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volScalarField;
+    object      p;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+// `p`, not `p_rgh`. p_rgh is pressure minus the hydrostatic head and exists
+// only because a variable-density field needs the buoyant part separated out.
+// With one phase and no gravity there is no hydrostatic head to remove, and
+// the dimensions below say so: m^2/s^2, KINEMATIC pressure. Every force this
+// case reports is therefore kinematic until `rhoInf` multiplies it.
+
+dimensions      [0 2 -2 0 0 0 0];
+
+internalField   uniform 0;
+
+boundaryField
+{
+    #includeEtc "caseDicts/setConstraintTypes"
+
+    inlet
+    {
+        type            zeroGradient;
+    }
+
+    outlet
+    {
+        type            fixedValue;
+        value           $internalField;
+    }
+
+    hull
+    {
+        type            zeroGradient;
+    }
+}
+
+
+// ************************************************************************* //

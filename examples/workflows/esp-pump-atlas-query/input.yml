@@ -1,0 +1,21 @@
+basename: parametric_query
+
+# Instant interpolated ESP screening governing utilisation from the pre-computed
+# atlas (atlases/esp_pump_hydraulics). Offline, no licence:
+#   uv run python -m digitalmodel examples/workflows/esp-pump-atlas-query/input.yml
+# Out-of-range points (outside the atlas grid box) escalate to a real run.
+parametric_query:
+  atlas: esp_pump_hydraulics
+  point:
+    flow_rate_m3_per_day: 1000.0
+    dynamic_fluid_level_m: 1400.0
+  policy:
+    on_out_of_range: escalate
+    confidence: required
+  output_dir: results
+
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: true

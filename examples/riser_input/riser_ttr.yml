@@ -1,0 +1,15 @@
+# Unified riser input schema (#809) - Top-Tensioned Riser example
+riser_type: TTR
+name: ttr_1500m_example
+geometry:
+  water_depth: 1500.0
+material:
+  outer_diameter: 0.2731
+  wall_thickness: 0.0254
+  grade: X70
+analysis:
+  run_statics: true
+vessel_heave_amplitude: 3.0
+vessel_pitch_amplitude_deg: 5.0
+tensioner_offset: 20.0
+overpull_pct: 50.0

@@ -1,0 +1,46 @@
+{
+  "schema": "review-packet/1",
+  "created": "2026-10-16T15:41:24+00:00",
+  "git_head": "c5e4ac3390942e326243093a9a6175716f0e7459",
+  "digest_domain": "raw-bytes",
+  "packet_path": "scripts/review/results/2617/plan-r2-code-r1.packet.md",
+  "packet_bytes": 64461,
+  "packet_sha256": "b4866c13bd93f94aa927c38887ddeaf714233079c6f841e5cc005c22f80d5947",
+  "files": [
+    {
+      "path": "docs/plans/issue-2617-qtf-variance.html",
+      "sha256": "212b79019cd516d7b3d3790694c1f46260f231fddb84ad83417aa97c7a6d2b20",
+      "bytes": 7448
+    },
+    {
+      "path": "docs/plans/README.md",
+      "sha256": "6fcf939bb576c11b88e83aff601681a3698828ad9287a56ca99198194e645b9f",
+      "bytes": 15663
+    },
+    {
+      "path": "src/digitalmodel/orcawave/drift_forces.py",
+      "sha256": "d30b17b9d7071d252dd037de1a4d9b412736025ca190a68d130c7f81328858c6",
+      "bytes": 11354
+    },
+    {
+      "path": "tests/orcawave/test_drift_forces.py",
+      "sha256": "6d1e8db422b4dab0aa9ee6d7e4c3a0c077577cdaa8dd33c314b9e257c8c96352",
+      "bytes": 4881
+    },
+    {
+      "path": "tests/orcawave/test_drift_force_variance.py",
+      "sha256": "3f120a1b2f0b063b6d646bd64e3b3e319fbe14d64de1c29000606996765b4744",
+      "bytes": 7493
+    },
+    {
+      "path": "docs/verification/issue-2617-qtf-variance.html",
+      "sha256": "efa075cce2846e9955145be817df68433761ee740f0c6ae3851b20951eb2b313",
+      "bytes": 8786
+    },
+    {
+      "path": "docs/verification/issue-2617-metrics.json",
+      "sha256": "c37784e0766d4c20f274df6f813f1698fc3a1aeca9dd195393c40f990948c9ed",
+      "bytes": 1299
+    }
+  ]
+}

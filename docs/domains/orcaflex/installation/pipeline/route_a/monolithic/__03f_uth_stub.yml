@@ -1,0 +1,82 @@
+﻿BaseFile: __03e_uth_shapes.yml
+
+6DBuoys:
+  New: UTA-Stub
+  UTA-Stub:
+    Locked: No
+    BuoyType: Lumped buoy
+    Connection: UTA
+    DampingRelativeTo: Earth
+    DisturbanceVessel: (none)
+    WaveCalculationMethod: Specified by environment
+    CharacteristicLength: ~
+    CharacteristicForce: ~
+    InitialPosition: [0.403, 0, 0.11599999999999966]
+    InitialAttitude: [0, 25, 0]
+    Mass: 0
+    MomentsOfInertia: [0, 0, 0]
+    CentreOfMass: [0, 0, 0]
+    LumpedBuoyAddedMassMethod: Diagonal values
+    Volume: 0
+    Height: 1.13
+    CentreOfVolume: [0, 0, 0]
+    UnitDampingForce: [0, 0, 0]
+    UnitDampingMoment: [0, 0, 0]
+    DragArea: [0, 0, 0]
+    DragAreaMoment: [0, 0, 0]
+    DragForceCoefficient: [0, 0, 0]
+    DragMomentCoefficient: [0, 0, 0]
+    HydrodynamicMass: [0, 0, 0]
+    HydrodynamicInertia: [0, 0, 0]
+    AddedMassCoefficient: [0, 0, 0]
+    AddedInertiaCoefficient: [0, 0, 0]
+    FluidAccelerationForceCoefficient: [0, 0, 0]
+    LumpedBuoySlamArea: 0
+    LumpedBuoySlamForceDataEntry: 0
+    LumpedBuoySlamForceDataExit: 0
+    SupportGeometrySpecification: Explicit
+    SupportReleaseStage: ~
+    SupportCoordinateSystems: []
+    SupportedLine: []
+    Supports: []
+    MorisonElements: []
+    GlobalAppliedLoads: []
+    LocalAppliedLoads: []
+    SeabedFrictionCoefficient: 0
+    TotalContactArea: 0
+    Wings: []
+    Hidden: No
+    Pen: [1, Solid, Fuchsia]
+    CentreOfMassOriginColour: Red
+    CentreOfVolumeOriginColour: Aqua
+    WireFrameOrigin: [0, 0, 0]
+    WireFrameSymmetry: None
+    WireFrameType: Edges
+    VertexX, VertexY, VertexZ:
+      - [0.11, 0.11, 1.13]
+      - [-0.11, 0.11, 1.13]
+      - [-0.11, -0.11, 1.13]
+      - [0.11, -0.11, 1.13]
+      - [0.11, 0.11, 0]
+      - [-0.11, 0.11, 0]
+      - [-0.11, -0.11, 0]
+      - [0.11, -0.11, 0]
+    EdgeFrom, EdgeTo, EdgeDiameter:
+      - [1, 2, ~]
+      - [2, 3, ~]
+      - [3, 4, ~]
+      - [4, 1, ~]
+      - [5, 6, ~]
+      - [6, 7, ~]
+      - [7, 8, ~]
+      - [8, 5, ~]
+      - [1, 5, ~]
+      - [2, 6, ~]
+      - [3, 7, ~]
+      - [4, 8, ~]
+    ShadedDrawingFileName: 
+    ShadedDrawingDrawSize: ~
+    ShadedDrawingCullingMode: No culling
+    ShadedDrawingMirrorInPlane: Not mirrored
+    ShadedDrawingOrigin: [0, 0, 0]
+    ShadedDrawingOrientation: [0, 0, 0]

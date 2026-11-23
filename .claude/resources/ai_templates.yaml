@@ -1,0 +1,150 @@
+# AI Development Templates and Resources
+# These resources provide best practices and templates for AI-assisted development
+
+claude_code_templates:
+  url: https://github.com/davila7/claude-code-templates
+  description: "Collection of Claude Code templates for various development scenarios"
+  categories:
+    - name: "Web Development"
+      templates:
+        - react_component
+        - nextjs_app
+        - api_endpoint
+        - database_schema
+    - name: "Python Development"
+      templates:
+        - data_analysis
+        - fastapi_service
+        - cli_tool
+        - test_suite
+    - name: "DevOps"
+      templates:
+        - dockerfile
+        - ci_cd_pipeline
+        - kubernetes_config
+        - terraform_module
+    - name: "Documentation"
+      templates:
+        - readme
+        - api_docs
+        - architecture_diagram
+        - user_guide
+  usage_in_specs:
+    - "Use for generating boilerplate code"
+    - "Reference for best practices"
+    - "Starting point for new modules"
+    - "Consistency across projects"
+
+aitmpl:
+  url: https://www.aitmpl.com/
+  description: "AI-optimized templates and prompts for development tasks"
+  features:
+    - name: "Smart Templates"
+      description: "Pre-built templates optimized for AI comprehension"
+      use_cases:
+        - "Complex system design"
+        - "API specifications"
+        - "Database modeling"
+        - "Testing strategies"
+    - name: "Prompt Library"
+      description: "Curated prompts for common development tasks"
+      categories:
+        - "Code generation"
+        - "Code review"
+        - "Debugging"
+        - "Refactoring"
+        - "Documentation"
+    - name: "Best Practices"
+      description: "Guidelines for AI-assisted development"
+      topics:
+        - "Context management"
+        - "Incremental development"
+        - "Test-driven development with AI"
+        - "Code quality standards"
+  integration_points:
+    - "Template selection during spec creation"
+    - "Prompt optimization for task execution"
+    - "Quality checks during verification"
+    - "Documentation generation"
+
+template_selection_strategy:
+  for_spec_creation:
+    1_analyze_requirements:
+      - "Identify project type (web, API, CLI, data)"
+      - "Determine tech stack requirements"
+      - "Assess complexity level"
+    2_select_templates:
+      - "Match requirements to available templates"
+      - "Combine multiple templates if needed"
+      - "Customize for specific needs"
+    3_apply_best_practices:
+      - "Use AITmpl prompts for clarity"
+      - "Follow Claude Code Templates structure"
+      - "Ensure consistency with existing code"
+  
+  for_task_execution:
+    1_reference_templates:
+      - "Use as starting point for implementation"
+      - "Adapt to project conventions"
+      - "Maintain consistency across modules"
+    2_quality_assurance:
+      - "Compare output with template standards"
+      - "Validate against best practices"
+      - "Ensure completeness"
+
+recommended_workflows:
+  new_feature:
+    - step: "Browse AITmpl for similar features"
+    - step: "Select appropriate Claude Code Template"
+    - step: "Customize template for project needs"
+    - step: "Generate spec with template reference"
+    - step: "Execute tasks using template as guide"
+  
+  refactoring:
+    - step: "Analyze current implementation"
+    - step: "Find best practice template"
+    - step: "Create migration spec"
+    - step: "Apply template patterns incrementally"
+  
+  testing:
+    - step: "Use test suite templates"
+    - step: "Apply AITmpl testing prompts"
+    - step: "Generate comprehensive test cases"
+    - step: "Validate coverage against template"
+
+mcp_tools_integration:
+  filesystem:
+    - "Use for template file management"
+    - "Store customized templates locally"
+  
+  search:
+    - "Find relevant templates quickly"
+    - "Search template documentation"
+  
+  github:
+    - "Access Claude Code Templates repo"
+    - "Pull latest template updates"
+    - "Contribute improvements back"
+
+usage_guidelines:
+  dos:
+    - "Always check for existing templates before creating from scratch"
+    - "Customize templates to match project conventions"
+    - "Document which templates were used in specs"
+    - "Keep local copies of frequently used templates"
+    - "Contribute improvements back to template repos"
+  
+  donts:
+    - "Don't use templates blindly without customization"
+    - "Don't ignore project-specific requirements"
+    - "Don't mix incompatible template styles"
+    - "Don't forget to update templates as standards evolve"
+
+template_metadata:
+  version: "1.0.0"
+  last_updated: "2024-01-13"
+  maintainer: "Agent OS"
+  sources:
+    - "https://github.com/davila7/claude-code-templates"
+    - "https://www.aitmpl.com/"
+  license: "Check individual template licenses"

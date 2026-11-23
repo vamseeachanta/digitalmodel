@@ -1,0 +1,35 @@
+basename: rao_spectral_fatigue
+
+rao_spectral_fatigue:
+  design_life_years: 25.0
+  dff: 3.0
+  method: dirlik                 # dirlik | narrow_band | wirsching_light | benasciutti_tovo
+  sn_curve:                      # DNV-RP-C203 D-curve in air
+    slope: 3.0
+    log_intercept: 12.164
+  output_dir: results
+  locations:
+    # Illustrative stress transfer functions (RAOs). H(f) is the hot-spot stress
+    # range per metre of wave amplitude (MPa/m); a real project supplies its own
+    # from a hydrodynamic + structural model. Sea states are JONSWAP spectra
+    # weighted by long-term occurrence.
+    - id: riser-splash-zone
+      rao_frequency_Hz:      [0.04, 0.06, 0.08, 0.10, 0.12, 0.16, 0.24, 0.40]
+      rao_stress_MPa_per_m:  [1.2,  3.3,  7.4,  9.0,  6.7,  2.9,  0.8,  0.2]
+      sea_states:
+        - occurrence_fraction: 0.85
+          wave_spectrum: {type: jonswap, Hs: 2.5, Tp: 9.0, gamma: 3.3}
+        - occurrence_fraction: 0.15
+          wave_spectrum: {type: jonswap, Hs: 6.0, Tp: 12.0, gamma: 2.0}
+    - id: riser-keel-joint
+      rao_frequency_Hz:      [0.04, 0.06, 0.08, 0.10, 0.12, 0.16, 0.24, 0.40]
+      rao_stress_MPa_per_m:  [0.9,  2.2,  4.0,  4.9,  3.6,  1.6,  0.4,  0.1]
+      sea_states:
+        - occurrence_fraction: 1.0
+          wave_spectrum: {type: jonswap, Hs: 3.0, Tp: 10.0, gamma: 3.3}
+
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: true

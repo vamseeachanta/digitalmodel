@@ -1,0 +1,44 @@
+@startwbs software_options
+
+scale 2
+skinparam titleBorderRoundCorner 15
+skinparam titleBorderThickness 2
+skinparam titleBorderColor red
+skinparam titleBackgroundColor Tomato
+
+title Naval Architecture \n Software Options
+
+* Ship Design
+
+** Document Control
+*** Vault (Native Drawing Files)
+*** Reports (?)
+
+** Design
+*** Rhino
+*** AutoCAD inventor
+*** FreeCAD
+
+** Stability
+*** GHS
+
+** Weight
+*** Ad Hoc Excel Workbooks
+
+** Global System Analysis \nLocal Hull Analysis
+*** ANSYS/AQWA
+*** DNV SESAM Genie
+*** ABS SafeHull \n(Nastran Engine)
+
+** Foundations
+*** Nastran \n(Autodesk/Solidworks etc)
+*** ANSYS
+*** CADRE \n(Beam Elements program)
+*** Beam Sec. Mod. Calcs \n(Excel Workbooks)
+
+footer
+%date("yyyy.MM.dd' at 'HH:mm")
+%filename()
+end footer
+
+@endwbs

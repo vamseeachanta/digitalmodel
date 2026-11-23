@@ -1,0 +1,2 @@
+case,backend,reference_length,I_D,I_D_plus,I_D_minus,a_C_flat,a_C_single,a_C_elliptic,a_C_saddle,developability_status,curvature_class_status,valid_area_fraction
+client_drillship_a,mesh_rusinkiewicz,219.48001376359352,67.2881701888773,38.139672763071,29.148497425806305,0.5218885878252547,0.04443518643306867,0.22733474123097352,0.20634148451070303,mesh_representation_sensitive,mesh_representation_sensitive,0.9750293984938606

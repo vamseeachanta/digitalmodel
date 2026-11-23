@@ -1,0 +1,33 @@
+# FLEX_8inch - Library Component
+# Category: line_types
+# Description: 8-inch flexible riser pipe
+# NOTE: No section header - properties only for IncludeFile
+#
+# Flexible pipe characteristics:
+# - Unbonded construction (multiple layer)
+# - Lower bending stiffness than steel
+# - CompressionIsLimited due to flexible nature
+# - Higher damping (GJ)
+#
+# Dimensions: 8-inch ID (0.2032m), typical 12-inch OD with layers
+OD: 0.3048
+ID: 0.2032
+MassPerUnitLength: 85.0
+EA: 450000000.0
+CompressionIsLimited: Yes
+EI:
+- 850000.0
+- ~
+GJ: 5000
+PoissonRatio: 0.35
+Cd:
+- 1.2
+- ~
+- 0.4
+Ca:
+- 1.0
+- ~
+- 0.5
+NormalDragLiftDiameter: 0.3048
+AxialDragLiftDiameter: 0.3048
+SeabedLateralFrictionCoefficient: 0.5

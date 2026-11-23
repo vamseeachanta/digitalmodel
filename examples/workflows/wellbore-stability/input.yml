@@ -1,0 +1,37 @@
+# Synthetic screening profile; pressures in psi, TVD ft, angles degrees.
+defaults:
+  sv_psi: 7000
+  shmax_psi: 6300
+  shmin_psi: 4300
+  shmax_azimuth_deg: 0
+  pore_pressure_psi: 3080
+  ucs_psi: 3500
+  friction_angle_deg: 30.9637565321
+  poisson_ratio: 0.25
+  tensile_strength_psi: 800
+  inclination_deg: 0
+  azimuth_deg: 0
+profile:
+  - tvd_ft: 7000
+  - tvd_ft: 8000
+    sv_psi: 8000
+    shmax_psi: 7200
+    shmin_psi: 4914
+    pore_pressure_psi: 3520
+    ucs_psi: 4000
+    tensile_strength_psi: 915
+screening:
+  criterion: mohr_coulomb
+  allowed_breakout_width_deg: 0
+  angular_samples: 360
+  pressure_samples: 129
+ensemble:
+  samples: 128
+  seed: 2669
+  sigma:
+    pore_pressure_psi: 2
+    ucs_psi: 5
+polar:
+  profile_index: 0
+  inclinations_deg: [0, 30, 60, 90]
+  azimuths_deg: [0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330]

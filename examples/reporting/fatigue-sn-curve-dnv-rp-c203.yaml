@@ -1,0 +1,185 @@
+metadata:
+  title: "S-N Curve Fatigue Assessment — DNV-RP-C203 (2011)"
+  doc_id: CALC-FAT-002
+  revision: "0"
+  date: "2026-03-15"
+  author: "workspace-hub/digitalmodel"
+  status: draft
+
+inputs:
+  # S-N curve parameters (from extracted Table 2-1)
+  - name: S-N curve class
+    symbol: class
+    value: "D"
+    unit: "-"
+    source: "DNV-RP-C203 Table 2-1, butt weld detail"
+  - name: Slope m1 (N ≤ 10⁷)
+    symbol: m_1
+    value: 3.0
+    unit: "-"
+    source: "DNV-RP-C203 Table 2-1, Class D, in air"
+  - name: Intercept log(a1) (N ≤ 10⁷)
+    symbol: loga_1
+    value: 12.164
+    unit: "-"
+    source: "DNV-RP-C203 Table 2-1, Class D, in air"
+  - name: Slope m2 (N > 10⁷)
+    symbol: m_2
+    value: 5.0
+    unit: "-"
+    source: "DNV-RP-C203 Table 2-1, Class D, in air"
+  - name: Intercept log(a2) (N > 10⁷)
+    symbol: loga_2
+    value: 15.606
+    unit: "-"
+    source: "DNV-RP-C203 Table 2-1, Class D, in air"
+  - name: Fatigue limit at 10⁷ cycles
+    symbol: sigma_fl
+    value: 52.63
+    unit: MPa
+    source: "DNV-RP-C203 Table 2-1, Class D"
+  - name: Thickness exponent
+    symbol: k
+    value: 0.20
+    unit: "-"
+    source: "DNV-RP-C203 Table 2-1, Class D"
+  # Design parameters
+  - name: Design fatigue factor
+    symbol: DFF
+    value: 3.0
+    unit: "-"
+    source: "DNV-RP-C203 §2.1, critical structural detail"
+  - name: Reference thickness
+    symbol: t_ref
+    value: 25
+    unit: mm
+    source: "DNV-RP-C203 §2.4"
+  - name: Actual thickness
+    symbol: t
+    value: 25
+    unit: mm
+    source: "Equal to reference — no thickness correction"
+  # Load case: constant amplitude stress range
+  - name: Stress range
+    symbol: delta_sigma
+    value: 80
+    unit: MPa
+    source: "Example constant amplitude loading"
+  - name: Number of applied cycles
+    symbol: n
+    value: 5000000
+    unit: cycles
+    source: "Design life loading (5 × 10⁶ cycles)"
+
+methodology:
+  description: >
+    Fatigue damage assessment using S-N curves per DNV-RP-C203. Determines
+    allowable cycles N from the bi-linear S-N curve for a given stress range,
+    then computes Miner's rule damage accumulation. The assessment includes
+    thickness correction for plate thicknesses exceeding the reference.
+  standard: "DNV-RP-C203 (2011) Fatigue Design of Offshore Steel Structures"
+  equations:
+    - id: eq1
+      name: "S-N curve (basic)"
+      latex: "\\log N = \\log a - m \\cdot \\log \\Delta\\sigma"
+      description: "Bi-linear S-N relationship (§2.2)"
+    - id: eq2
+      name: "Thickness correction"
+      latex: "\\Delta\\sigma_{corr} = \\Delta\\sigma \\cdot \\left(\\frac{t}{t_{ref}}\\right)^k"
+      description: "Thickness correction factor (§2.4)"
+    - id: eq3
+      name: "Miner's damage"
+      latex: "D = \\sum \\frac{n_i}{N_i}"
+      description: "Palmgren-Miner linear damage accumulation (§2.5)"
+    - id: eq4
+      name: "Fatigue criterion"
+      latex: "D \\cdot DFF \\leq 1.0"
+      description: "Factored damage must not exceed unity"
+
+outputs:
+  - name: Thickness correction factor
+    symbol: f_thick
+    value: 1.00
+    unit: "-"
+    notes: "(25/25)^0.20 = 1.00 (no correction, t = t_ref)"
+  - name: Corrected stress range
+    symbol: delta_sigma_corr
+    value: 80.0
+    unit: MPa
+    notes: "80 × 1.00 = 80 MPa"
+  - name: S-N curve region
+    symbol: region
+    value: "N ≤ 10⁷ (m=3.0)"
+    unit: "-"
+    notes: "80 MPa > fatigue limit 52.63 MPa → use m1=3.0, loga1=12.164"
+  - name: Allowable cycles
+    symbol: N
+    value: 2849247
+    unit: cycles
+    notes: "log N = 12.164 − 3.0 × log(80) = 12.164 − 5.709 = 6.455 → N = 2,849,247"
+  - name: Unfactored damage
+    symbol: D
+    value: 1.755
+    unit: "-"
+    notes: "n/N = 5,000,000 / 2,849,247 = 1.755"
+  - name: Factored damage
+    symbol: D_factored
+    value: 5.265
+    unit: "-"
+    pass_fail: FAIL
+    limit: 1.0
+    notes: "D × DFF = 1.755 × 3.0 = 5.265 > 1.0 → FAIL"
+  - name: Allowable stress range for n=5×10⁶
+    symbol: delta_sigma_allow
+    value: 46.0
+    unit: MPa
+    notes: "For D×DFF=1.0: N_req = 5e6 × 3 = 1.5e7 → Δσ = 10^((12.164−7.176)/3) = 46.0 MPa"
+
+assumptions:
+  - "Constant amplitude loading (single stress range bin)"
+  - "S-N curve Class D (butt weld, in air)"
+  - "No mean stress correction"
+  - "Plate thickness equal to reference (25 mm) — no thickness penalty"
+  - "DFF = 3.0 for critical structural detail (safety class high)"
+  - "No stress concentration factor (SCF = 1.0, nominal stress approach)"
+  - "No environmental reduction (in-air curve; use Table 2-2 for seawater with CP)"
+
+data_tables:
+  - title: "DNV-RP-C203 Table 2-1: S-N Curves in Air (extracted)"
+    columns:
+      - name: "S-N Curve"
+        unit: "-"
+      - name: "m1"
+        unit: "-"
+      - name: "log(a1)"
+        unit: "-"
+      - name: "log(a2)"
+        unit: "-"
+      - name: "Fatigue Limit"
+        unit: "MPa"
+      - name: "k"
+        unit: "-"
+    rows:
+      - ["B1", 4.0, 15.117, 17.146, 106.97, 0]
+      - ["B2", 4.0, 14.885, 16.856, 93.59, 0]
+      - ["C", 3.0, 12.592, 16.320, 73.10, 0.15]
+      - ["C1", 3.0, 12.449, 16.081, 65.50, 0.15]
+      - ["C2", 3.0, 12.301, 15.835, 58.48, 0.15]
+      - ["D", 3.0, 12.164, 15.606, 52.63, 0.20]
+      - ["E", 3.0, 12.010, 15.350, 46.78, 0.20]
+      - ["F", 3.0, 11.855, 15.091, 41.52, 0.25]
+      - ["F1", 3.0, 11.699, 14.832, 36.84, 0.25]
+      - ["F3", 3.0, 11.546, 14.576, 32.75, 0.25]
+      - ["G", 3.0, 11.398, 14.330, 29.24, 0.25]
+      - ["W1", 3.0, 11.261, 14.101, 26.32, 0.25]
+      - ["W2", 3.0, 11.107, 13.845, 23.39, 0.25]
+      - ["W3", 3.0, 10.970, 13.617, 21.05, 0.25]
+      - ["T", 3.0, 12.164, 15.606, 52.63, 0.25]
+
+references:
+  - "DNV-RP-C203 (2011) Fatigue Design of Offshore Steel Structures"
+  - "DNV-RP-C203 Table 2-1: S-N curves in air"
+  - "DNV-RP-C203 Table 2-2: S-N curves in seawater with cathodic protection"
+  - "DNV-RP-C203 §2.2: S-N curve formulation"
+  - "DNV-RP-C203 §2.4: Thickness correction"
+  - "DNV-RP-C203 §2.5: Miner's damage summation"

@@ -1,0 +1,27 @@
+# Variation: Deep Water 1500m
+# IMPORTANT: When overriding Lines, must include ALL properties
+
+Environment:
+  WaterDepth: 1500
+  CurrentDepth, CurrentFactor, CurrentRotation:
+    - [0, 1.0, 0]
+    - [375, 0.7, 0]
+    - [750, 0.4, 0]
+    - [1125, 0.2, 0]
+    - [1500, 0.1, 0]
+
+Lines:
+  # SWR scaled for 1500m water depth
+  - Name: SWR_Main
+    EndAConnection: FPSO
+    EndAX: -140
+    EndAY: 0
+    EndAZ: -20
+    EndBConnection: Anchored
+    EndBX: -500
+    EndBY: 0
+    EndBZ: -1500
+    IncludedInStatics: Yes
+    StaticsStep1: Catenary
+    LineType, Length, TargetSegmentLength:
+      - [SWR_10inch, 1800, 12]

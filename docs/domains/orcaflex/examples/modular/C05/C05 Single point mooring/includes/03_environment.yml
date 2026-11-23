@@ -1,0 +1,74 @@
+Environment:
+  WaterSurfaceZ: 0
+  KinematicViscosity: 1.35e-06
+  SeaTemperature: 10
+  ReynoldsNumberCalculation: Flow direction
+  HorizontalWaterDensityFactor: ~
+  VerticalDensityVariation: Constant
+  SeabedType: Flat
+  SeabedOrigin:
+  - 0
+  - 0
+  SeabedSlopeDirection: 0
+  SeabedModel: Elastic
+  WaveKinematicsCutoffDepth: Infinity
+  WaveCalculationMethod: Instantaneous position (exact)
+  WaveCalculationTimeInterval: 0
+  WaveCalculationSpatialInterval: 0
+  MultipleCurrentDataCanBeDefined: false
+  CurrentModel: Variation scheme
+  CurrentRamped: false
+  CurrentApplyVerticalStretching: false
+  HorizontalCurrentFactor: ~
+  VerticalCurrentVariationMethod: Interpolated
+  IncludeVesselWindLoads: true
+  IncludeLineWindLoads: true
+  IncludeBuoyWindLoads: true
+  IncludeBuoyWingWindLoads: true
+  WindRamping: From mean
+  WindType: API spectrum
+  AirDensity: 0.00128
+  AirSpeedOfSound: 343
+  VerticalWindVariationFactor: ~
+  KinematicStretchingMethod: Vertical stretching
+  SeabedNormalStiffness: 100.0
+  SeabedSlope: 0.0
+  SeabedShearStiffness: 100.0
+  UserSpecifiedRandomWaveSeeds: false
+  WaveFrequencySpectrumDiscretisationMethod: Equal energy
+  WaterDepth: 220.0
+  NumberOfWindComponents: 1000
+  WindSeed: 436212347
+  WindSpectrumFMax: Infinity
+  WindTimeOrigin: 0
+  WindSpectrumElevation: ~
+  WindSpectrumFMin: 0
+  Density: 1.025
+  WaveTrains:
+  - Name: Wave1
+    WaveType: JONSWAP
+    WaveDirection: 180.0
+    WaveOrigin:
+    - 0
+    - 0
+    WaveTimeOrigin: 0
+    WaveNumberOfSpectralDirections: 1
+    WaveJONSWAPParameters: Partially specified
+    WaveHs: 10.0
+    WaveTz: 13.0
+    WaveGamma: 3.3
+    WaveNumberOfComponents: 100
+    WaveSpectrumMinRelFrequency: 0.5
+    WaveSpectrumMaxRelFrequency: 10
+    WaveSpectrumMaxComponentFrequencyRange: 0.05
+  RefCurrentSpeed: 1.0
+  RefCurrentDirection: 150.0
+  CurrentDepth, CurrentFactor, CurrentRotation:
+  - - 0.0
+    - 1.0
+    - 0
+  - - 220.0
+    - 0.45
+    - 0
+  WindSpeed: 35.0
+  WindDirection: 210.0

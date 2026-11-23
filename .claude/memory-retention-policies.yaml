@@ -1,0 +1,105 @@
+# Memory Retention Policies Configuration
+#
+# This file defines TTL-based retention policies for different memory namespaces
+# used in claude-flow agent coordination.
+#
+# Namespace patterns support wildcards (*)
+# TTL is in seconds (0 = permanent)
+#
+# Cleanup strategies:
+#   - lazy: Clean up expired entries when accessed
+#   - scheduled: Clean up during periodic maintenance
+#   - manual: Only clean up when explicitly triggered
+#
+# Conflict strategies (CRDT):
+#   - lww: Last-Write-Wins (timestamp-based)
+#   - multi_value: Keep all conflicting values
+#   - counter: Merge by addition (for numeric counters)
+
+namespaces:
+  # Short-lived: Coordination data (1 hour)
+  - namespace: "coordination/*"
+    ttl_seconds: 3600  # 1 hour
+    cleanup_strategy: lazy
+    conflict_strategy: lww
+    compression_enabled: true
+    compression_threshold_bytes: 1024
+
+  # Short-lived: Session data (1 hour)
+  - namespace: "session/*"
+    ttl_seconds: 3600  # 1 hour
+    cleanup_strategy: lazy
+    conflict_strategy: lww
+    compression_enabled: true
+    compression_threshold_bytes: 1024
+
+  # Medium-lived: Shared swarm state (24 hours)
+  - namespace: "swarm/shared/*"
+    ttl_seconds: 86400  # 24 hours
+    cleanup_strategy: scheduled
+    conflict_strategy: multi_value
+    compression_enabled: true
+    compression_threshold_bytes: 1024
+
+  # Medium-lived: Task status (24 hours)
+  - namespace: "task/*/status"
+    ttl_seconds: 86400  # 24 hours
+    cleanup_strategy: scheduled
+    conflict_strategy: lww
+    compression_enabled: false
+
+  # Medium-lived: Agent progress (24 hours)
+  - namespace: "agent/*/progress"
+    ttl_seconds: 86400  # 24 hours
+    cleanup_strategy: scheduled
+    conflict_strategy: lww
+    compression_enabled: false
+
+  # Long-lived: Agent state (7 days)
+  - namespace: "swarm/agent/state/*"
+    ttl_seconds: 604800  # 7 days
+    cleanup_strategy: scheduled
+    conflict_strategy: lww
+    compression_enabled: true
+    compression_threshold_bytes: 1024
+
+  # Long-lived: Shared decisions (7 days)
+  - namespace: "swarm/shared/decisions"
+    ttl_seconds: 604800  # 7 days
+    cleanup_strategy: scheduled
+    conflict_strategy: multi_value
+    compression_enabled: true
+    compression_threshold_bytes: 512
+
+  # Long-lived: Metrics counters (7 days)
+  - namespace: "metrics/*/count"
+    ttl_seconds: 604800  # 7 days
+    cleanup_strategy: scheduled
+    conflict_strategy: counter
+    compression_enabled: false
+
+  # Permanent: Knowledge base
+  - namespace: "knowledge/*"
+    ttl_seconds: 0  # Permanent
+    cleanup_strategy: manual
+    conflict_strategy: multi_value
+    compression_enabled: true
+    compression_threshold_bytes: 512
+
+# Scheduled cleanup configuration
+cleanup_schedule:
+  enabled: true
+  interval_hours: 24  # Run daily
+  time_of_day: "02:00"  # 2 AM local time
+
+# Compression settings
+compression:
+  default_threshold_bytes: 1024  # 1KB
+  algorithm: gzip
+  level: 6  # Compression level (1-9)
+
+# Logging
+logging:
+  level: INFO
+  log_cleanup_operations: true
+  log_compression_stats: true

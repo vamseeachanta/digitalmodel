@@ -1,0 +1,26 @@
+basename: pile_capacity
+
+default:
+  log_level: INFO
+  config:
+    generate_plots: false
+    overwrite:
+      output: true
+
+pile_capacity:
+  case:
+    id: registry_pile_capacity
+    description: API RP 2GEO alpha-method pile axial capacity in firm clay
+  pile:
+    diameter_m: 1.0
+    embedded_length_m: 30.0
+    Nc: 9.0
+  soil:
+    Su_kpa: 60.0
+    sigma_v_kpa: 150.0
+  design:
+    factor_of_safety: 2.0
+    applied_load_kn: 2000.0
+  outputs:
+    directory: results/pile_capacity
+    summary_json: pile_capacity_summary.json

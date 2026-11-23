@@ -1,0 +1,29 @@
+schema_version: 1
+metadata:
+  name: synthetic_l_tank
+  purpose: methodology_bridge_validation_only
+  engineering_claim: none
+length_unit: m
+frame:
+  x: transverse_breadth
+  y: vertical_up
+  z: longitudinal_span_roll_axis
+tank:
+  breadth: 1.2
+  height: 0.8
+  length: 1.6
+  longitudinal_leg_width: 0.6
+  transverse_leg_length: 0.6
+members:
+  height: 0.5
+  thickness: 0.06
+  edge_clearance: 0.08
+openings:
+  longitudinal:
+    vertical_radius: 0.18
+    span_radius: 0.32
+  transverse:
+    transverse_radius: 0.18
+    vertical_radius: 0.18
+mesh:
+  element_size: 0.16

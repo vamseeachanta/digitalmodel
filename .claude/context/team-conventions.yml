@@ -1,0 +1,10 @@
+_metadata:
+  last_updated: '2025-08-01T13:24:19.992517'
+  repository: digitalmodel
+development_practices:
+  documentation:
+    api_docs: docstring_based
+    style: comprehensive
+  testing:
+    approach: test_driven_development
+    coverage_required: true

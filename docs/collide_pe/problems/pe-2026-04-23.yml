@@ -1,0 +1,23 @@
+id: pe-2026-04-23
+date: "2026-04-23"
+slug: pe-problem-of-the-day-4-23-2026
+source_url: https://app.collide.io/posts/pe-problem-of-the-day-4-23-2026
+title: "PE Problem of the Day 4/23/2026 — metal degradation"
+posted_by: Yogashri Pradhan
+tags: [production, upstream, integrity]
+type: conceptual
+
+statement: >
+  What is the destructive electrochemical or chemical alteration of metal infrastructure (pipelines, tanks, downhole equipment) by aggressive fluids and harsh environments?
+
+find:
+  - "Name the process"
+
+solution:
+  method: "Petroleum-engineering concept recall (no calculation)."
+  answer: "Corrosion."
+  confidence: high
+  solved_by: "petroleum-engineering domain knowledge (Deckhand wells-subsurface pack / Claude API solver)"
+
+# Knowledge dot: the concept lives in llm-wiki (Deckhand wells-subsurface pack source).
+wiki_concept: wikis/production-engineering/wiki/concepts/corrosion-management.md

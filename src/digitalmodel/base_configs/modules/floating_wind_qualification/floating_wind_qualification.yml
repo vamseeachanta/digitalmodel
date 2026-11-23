@@ -1,0 +1,25 @@
+# Floating-wind technology-qualification criteria (DNV-RP-A203 style).
+#
+# Multi-criteria maturity gate for concept selection (Wood/Whooley slide 11:
+# 40+ concepts assessed, 4-5 emerge). Weights are normalised on use; scores are
+# on a 0..1 maturity scale (a DNV-RP-A203 TRL 0..7 maps via trl_to_maturity).
+# Thresholds split the score into qualified / conditional / not_qualified.
+# All values are inputs — override per assessment.
+basename: floating_wind_qualification
+
+floating_wind_qualification:
+  qualified_threshold: 0.70
+  conditional_threshold: 0.50
+  criteria:
+    - key: technology_readiness
+      weight: 0.35
+      description: DNV-RP-A203 TRL — maturity of the floater/mooring/cable technology
+    - key: track_record
+      weight: 0.25
+      description: Demonstrated operating experience at or near full scale
+    - key: supply_chain_readiness
+      weight: 0.20
+      description: Availability of fabrication yards, vessels and components at scale
+    - key: cost_confidence
+      weight: 0.20
+      description: Confidence in the cost basis (informs the LCOE engine, #1221)

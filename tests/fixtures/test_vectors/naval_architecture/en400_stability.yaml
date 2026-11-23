@@ -1,0 +1,138 @@
+source_type: textbook
+source_description: "USNA EN400 Principles of Ship Performance (Summer 2020), Chapter 4"
+extracted_date: "2026-03-16"
+legal_scan_passed: true
+category: "naval_architecture"
+subcategory: "stability"
+equations:
+  - name: "Righting Arm from Cross Curves"
+    latex: "GZ = KN - KG \\cdot \\sin(\\phi)"
+    description: "Corrected righting arm using cross curves of stability and KG"
+  - name: "GZ with TCG Cosine Correction"
+    latex: "GZ_{corr} = GZ - TCG \\cdot \\cos(\\phi)"
+    description: "Righting arm correction for transverse center of gravity offset"
+  - name: "Free Surface Correction"
+    latex: "FSC = \\frac{\\rho \\cdot g \\cdot i}{\\Delta_{lb}}, \\quad i = \\frac{L \\cdot B^3}{12}"
+    description: "Free surface effect on metacentric height for rectangular tank"
+inputs:
+  - name: "KG (vertical center of gravity)"
+    symbol: "KG"
+    unit: "ft"
+    test_value: 23.84
+  - name: "Displacement"
+    symbol: "Delta"
+    unit: "LT"
+    test_value: 8600.0
+  - name: "Tank length"
+    symbol: "L_tank"
+    unit: "ft"
+    test_value: 40.0
+  - name: "Tank breadth"
+    symbol: "B_tank"
+    unit: "ft"
+    test_value: 30.0
+outputs:
+  - name: "GZ at 0 deg heel"
+    symbol: "GZ"
+    unit: "ft"
+    test_expected: 0.0
+    tolerance: 0.15
+  - name: "GZ at 10 deg heel"
+    symbol: "GZ"
+    unit: "ft"
+    test_expected: 0.94
+    tolerance: 0.15
+  - name: "GZ at 20 deg heel"
+    symbol: "GZ"
+    unit: "ft"
+    test_expected: 1.95
+    tolerance: 0.15
+  - name: "GZ at 30 deg heel"
+    symbol: "GZ"
+    unit: "ft"
+    test_expected: 3.10
+    tolerance: 0.15
+  - name: "GZ at 40 deg heel"
+    symbol: "GZ"
+    unit: "ft"
+    test_expected: 4.35
+    tolerance: 0.15
+  - name: "Free surface correction"
+    symbol: "FSC"
+    unit: "ft"
+    test_expected: 0.555
+    tolerance: 0.05
+  - name: "Effective GM"
+    symbol: "GM_eff"
+    unit: "ft"
+    test_expected: 3.035
+    tolerance: 0.1
+worked_examples:
+  - description: "Example 4.1 (p.153): DDG51 righting arm at 0 deg heel, KN=0.0, KG=23.84"
+    inputs:
+      heel_deg: 0
+      kn_ft: 0.0
+      kg_ft: 23.84
+    outputs:
+      gz_ft: 0.0
+    use_as_test: true
+  - description: "Example 4.1 (p.153): DDG51 righting arm at 10 deg heel, KN=5.08"
+    inputs:
+      heel_deg: 10
+      kn_ft: 5.08
+      kg_ft: 23.84
+    outputs:
+      gz_ft: 0.94
+    use_as_test: true
+  - description: "Example 4.1 (p.153): DDG51 righting arm at 20 deg heel, KN=10.10"
+    inputs:
+      heel_deg: 20
+      kn_ft: 10.10
+      kg_ft: 23.84
+    outputs:
+      gz_ft: 1.95
+    use_as_test: true
+  - description: "Example 4.1 (p.153): DDG51 righting arm at 30 deg heel, KN=15.02"
+    inputs:
+      heel_deg: 30
+      kn_ft: 15.02
+      kg_ft: 23.84
+    outputs:
+      gz_ft: 3.10
+    use_as_test: true
+  - description: "Example 4.1 (p.153): DDG51 righting arm at 40 deg heel, KN=19.67"
+    inputs:
+      heel_deg: 40
+      kn_ft: 19.67
+      kg_ft: 23.84
+    outputs:
+      gz_ft: 4.35
+    use_as_test: true
+  - description: "Example 4.2 (p.157): GZ with TCG offset cosine correction at 20 deg heel"
+    inputs:
+      gz_ft: 1.95
+      tcg_ft: 0.4
+      heel_deg: 20.0
+    outputs:
+      gz_corrected_ft: 1.574
+    use_as_test: true
+  - description: "Example 4.4 (p.170): Free surface effect on GM for rectangular tank"
+    inputs:
+      displacement_lt: 4092.0
+      kg_ft: 18.9
+      km_ft: 22.49
+      tank_length_ft: 40.0
+      tank_breadth_ft: 30.0
+      rho_fluid: 1.756
+    outputs:
+      free_surface_correction_ft: 0.555
+      effective_gm_ft: 3.035
+    use_as_test: true
+assumptions:
+  - "DDG51 at displacement 8600 LT for cross curves examples"
+  - "KN values from DDG51 cross curves of stability"
+  - "Rectangular tank geometry for free surface calculation (i = L*B^3/12)"
+  - "g = 32.17 ft/s^2"
+  - "1 LT = 2240 lb"
+references:
+  - "USNA EN400 Principles of Ship Performance, Summer 2020, Chapter 4"

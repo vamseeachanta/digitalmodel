@@ -1,0 +1,22 @@
+codeParameter:
+  AllowableStressFac: 0.666
+  DesignCaseFac: 1
+pipe:
+  NominalOD: 0.24765
+  NominalWT: 0.034925
+  MinimumWT: 0.034925
+  NominalID: 0.1778
+load:
+  ExternalPressure: 0
+  InternalPressure: 0
+  EffectiveTension: 0
+  BendingMoment: -460000
+MaterialProperties:
+  YieldStrength = 5.52E+08
+units: 
+  codeParameterInput: #
+  pipeInput: m
+  loadingData: kNm
+  TensionEffective: N
+  Moment: Nm 
+  YieldStength : pa

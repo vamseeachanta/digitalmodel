@@ -1,0 +1,180 @@
+"""Citation schema + fail-closed validator.
+
+Per #2481 decisions:
+- D2: fail-closed at calc time; CitationResolutionError carries code_id
+- D3: direct file read for v1; migrate to MCP #2400 later without schema change
+
+Contract: docs/standards/calc-output-citation.md (workspace-hub).
+"""
+from __future__ import annotations
+
+import re
+from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Any, Mapping, Optional
+
+_WIKI_PATH_PREFIX = "wikis/"
+_FORBIDDEN_SEGMENTS = ("..", "")
+
+
+class CitationResolutionError(RuntimeError):
+    """Raised when a citation cannot be resolved against the live wiki.
+
+    Message always carries code_id so operators can retarget a cited constant
+    rather than disabling the citation when a wiki page is moved or archived.
+    """
+
+    def __init__(self, *, code_id: str, wiki_path: str, reason: str) -> None:
+        self.code_id = code_id
+        self.wiki_path = wiki_path
+        self.reason = reason
+        super().__init__(
+            f"CitationResolutionError: code_id={code_id!r} wiki_path={wiki_path!r} reason={reason}"
+        )
+
+
+class CitationValidationError(ValueError):
+    """Raised at schema-construction time for structurally invalid citations."""
+
+
+@dataclass(frozen=True)
+class Citation:
+    code_id: str
+    publisher: str
+    revision: str
+    section: str
+    wiki_path: str
+    note: str = ""
+    # Wiki sibling routing fields (workspace-hub#2778, calc-citation-contract.md Rule 8).
+    # source_sibling: required — "generic" (sourced from vamseeachanta/llm-wiki) or a
+    #                 client slug (e.g., "acma" when sourced from llm-wiki-acma).
+    #                 Default "generic" preserves backcompat for existing call sites
+    #                 during the rollout; new code should set explicitly.
+    # source_project: optional — populated when the citation is project-scoped
+    #                 (e.g., "example-project" for content under llm-wiki-acma/projects/example-project/);
+    #                 None for client-level or generic citations.
+    source_sibling: str = "generic"
+    source_project: Optional[str] = None
+
+    def __post_init__(self) -> None:
+        for f in ("code_id", "publisher", "revision", "section", "wiki_path"):
+            v = getattr(self, f)
+            if not isinstance(v, str) or not v.strip():
+                raise CitationValidationError(f"Citation.{f} must be a non-empty string")
+        # source_sibling: must be non-empty string (live registry validation is
+        # the resolver's job at calc time, per workspace-hub#2778 Layer 4).
+        if not isinstance(self.source_sibling, str) or not self.source_sibling.strip():
+            raise CitationValidationError(
+                "Citation.source_sibling must be a non-empty string "
+                "('generic' or a client slug per .claude/rules/wiki-sibling-routing.md)"
+            )
+        # source_project: optional, but when set must be non-empty string.
+        if self.source_project is not None:
+            if not isinstance(self.source_project, str) or not self.source_project.strip():
+                raise CitationValidationError(
+                    "Citation.source_project, when set, must be a non-empty string"
+                )
+        _validate_wiki_path(self.wiki_path)
+
+
+@dataclass(frozen=True)
+class CitedValue:
+    value: float
+    citation: Citation
+    units: str = ""
+
+
+def _validate_wiki_path(wiki_path: str) -> None:
+    if not wiki_path.startswith(_WIKI_PATH_PREFIX):
+        raise CitationValidationError(
+            f"wiki_path must be under {_WIKI_PATH_PREFIX!r}: got {wiki_path!r}"
+        )
+    if any(seg in _FORBIDDEN_SEGMENTS for seg in wiki_path.split("/")):
+        raise CitationValidationError(
+            f"wiki_path may not contain empty or '..' segments: got {wiki_path!r}"
+        )
+    if "\\" in wiki_path:
+        raise CitationValidationError(
+            f"wiki_path must use forward slashes: got {wiki_path!r}"
+        )
+
+
+_FRONTMATTER_RE = re.compile(r"^---\s*\n(.*?)\n---\s*\n", re.DOTALL)
+
+
+def _read_frontmatter(path: Path) -> Mapping[str, Any]:
+    text = path.read_text(encoding="utf-8")
+    m = _FRONTMATTER_RE.match(text)
+    if not m:
+        return {}
+    # Minimal YAML-frontmatter parser covering the fields this validator needs.
+    # Avoids adding a yaml dependency for the pilot; the three fields are flat scalars.
+    fm: dict[str, str] = {}
+    for line in m.group(1).splitlines():
+        if ":" not in line or line.lstrip().startswith("#"):
+            continue
+        key, _, rest = line.partition(":")
+        key = key.strip()
+        value = rest.strip()
+        if value.startswith('"') and value.endswith('"'):
+            value = value[1:-1]
+        fm[key] = value
+    return fm
+
+
+def _join_with_layout_detection(base: Path, wiki_path: str) -> Path:
+    """Join base + wiki_path handling both standalone and workspace-hub layouts.
+
+    Canonical wiki_path form is `wikis/<domain>/...` (no knowledge/ prefix).
+    Tries the standalone layout first, then the workspace-hub overlay layout.
+    Returns the standalone-form path (for error reporting) when neither hits.
+    """
+    standalone = base / wiki_path
+    if standalone.is_file():
+        return standalone
+    overlay = base / "knowledge" / wiki_path
+    if overlay.is_file():
+        return overlay
+    return standalone
+
+
+def validate_citation(citation: Citation, *, repo_root: Optional[Path] = None) -> None:
+    """Fail-closed resolution check.
+
+    Raises CitationResolutionError if:
+    - the cited wiki page does not exist
+    - the page frontmatter lacks code_id / publisher / revision
+    - any of the three fields disagree with the citation
+
+    When repo_root is None, defers to the resolver (LLM_WIKI_PATH precedence chain).
+    When repo_root is provided, joins directly but tries both standalone and
+    workspace-hub-overlay layouts to find the file.
+
+    Does NOT validate the `section` locator — that's a human-readable field.
+    """
+    if repo_root is None:
+        # Defer to resolver for path resolution
+        from digitalmodel.citations.resolver import resolve_wiki_path
+        path = resolve_wiki_path(citation.wiki_path)
+    else:
+        path = _join_with_layout_detection(Path(repo_root), citation.wiki_path)
+    if not path.is_file():
+        raise CitationResolutionError(
+            code_id=citation.code_id, wiki_path=citation.wiki_path, reason="page_missing"
+        )
+    fm = _read_frontmatter(path)
+    for field_name in ("code_id", "publisher", "revision"):
+        expected = getattr(citation, field_name)
+        actual = fm.get(field_name)
+        if actual is None:
+            raise CitationResolutionError(
+                code_id=citation.code_id,
+                wiki_path=citation.wiki_path,
+                reason=f"frontmatter_missing:{field_name}",
+            )
+        if actual != expected:
+            raise CitationResolutionError(
+                code_id=citation.code_id,
+                wiki_path=citation.wiki_path,
+                reason=f"frontmatter_mismatch:{field_name}:{actual!r}!={expected!r}",
+            )

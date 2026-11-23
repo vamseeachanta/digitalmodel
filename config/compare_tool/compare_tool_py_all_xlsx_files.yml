@@ -1,0 +1,55 @@
+---
+parameters:
+  file_io_01: &file_io_01 tests\data\compare_tool_2500ft_WT0750_064pcf_combined_histograms.xlsx
+  label_01: &label_01 8.6 ppg Density
+  file_io_02: &file_io_02 tests\data\compare_tool_2500ft_WT0750_120pcf_combined_histograms.xlsx
+  label_02: &label_02 16 ppg Density
+
+default:
+  log_level: DEBUG
+  config:
+    overwrite:
+      output: True
+
+files:
+  -
+    file_type: xlsx
+    io: *file_io_01
+    label: *label_01
+    sheet_name: combined_fatigue
+    data_type: DataFrame
+    columns:
+      - bins
+      - 40ft Pup Jt., OuterDia, max_dam, @avg elev 752.2
+  -
+    file_type: xlsx
+    io: *file_io_02
+    label: *label_02
+    sheet_name: combined_fatigue
+    data_type: DataFrame
+    columns:
+      - bins
+      - 40ft Pup Jt., OuterDia, max_dam, @avg elev 752.2
+
+plot:
+  -
+    file_suffix: total_stress_histograms
+    suptitle: Stress Histogram Comparison
+    size: default
+    orientation: portrait
+    plt_kind: line
+    title: " "
+    grid: True
+    legend: True
+    legend_location: best
+    marker: NULL
+    ylim: NULL
+    xlabel: Stress Amplitude (half Range) (kN)
+    ylabel: Number of Cycles (#)
+    x_reverse: False
+    y_reverse: False
+    text_fields:
+      -
+        x : 2000
+        y: 11400
+        text: more records obtained by engine with query of bit_on_bottom = 1

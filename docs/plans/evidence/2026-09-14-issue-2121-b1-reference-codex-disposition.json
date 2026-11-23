@@ -1,0 +1,86 @@
+{
+  "provider": "Codex",
+  "scope": "Read-only independent disposition of Claude reference-slice F1-F6 corrections before one-shot input freeze; not full code review or engineering adjudication",
+  "verdict": "CORRECTIONS_VERIFIED_NO_BLOCKER_TO_INPUT_FREEZE",
+  "reviewed_head": "ba2ac7f458bdbd2b72ec0fd01f6abee596d1d840",
+  "reviewed_files": [
+    {
+      "path": "src/digitalmodel/ansys/cylinder_reference.py",
+      "sha256": "55a9874f21b633e7e15f232035bd71a15dad82325041e44cc7f73a41955bb641"
+    },
+    {
+      "path": "src/digitalmodel/ansys/cylinder_expression.py",
+      "sha256": "28a3c4742595ed2f8bef62fe2fc0a2ef8bdf3b4034742b0650b4d91f7d467cae"
+    },
+    {
+      "path": "src/digitalmodel/ansys/cylinder_agreement.py",
+      "sha256": "49619d08d43b1cf541139c47fdce8a32a47dcf47d3dce5db92b4b453399856a0"
+    },
+    {
+      "path": "tests/ansys/test_cylinder_reference.py",
+      "sha256": "e52f8e1d6b4788a1b5a2dd2ae78fd39616e19406d39c03179662a33926243a09"
+    },
+    {
+      "path": "tests/ansys/test_cylinder_expression.py",
+      "sha256": "482e9aac2e513889434256384458f8ad70740a450cc90c49c772b24fb0df9faa"
+    },
+    {
+      "path": "tests/ansys/test_cylinder_agreement.py",
+      "sha256": "841eb7717eaecb649dab4abd1fca496c8b2d271dbf7e19f039d9700d3e425d2f"
+    },
+    {
+      "path": "examples/ansys/cylinder-benchmark/checker_contract.json",
+      "sha256": "9d5ef42906b3241f2914e1f3fd0116ced507488888dd3d07fd75006062a507c4"
+    },
+    {
+      "path": "examples/ansys/cylinder-benchmark/checker_brief.txt",
+      "sha256": "fb162ba81e078d43322215a29dfb8e79aa74f0388c1133ae68bad1a3a303bec9"
+    },
+    {
+      "path": "examples/ansys/cylinder-benchmark/producer_derivation.json",
+      "sha256": "c2e06813787c78066684add76cfd550ec2ae2e63aaa2a6b09d9ba48ead716e3b"
+    }
+  ],
+  "findings": [
+    {
+      "id": "F1",
+      "disposition": "Corrected: directive selecting open-end versus other branches removed; physical end conditions retained and requested derivation does not supply producer equations."
+    },
+    {
+      "id": "F2",
+      "disposition": "Corrected: length, external pressure and two internal-pressure values have explicit spacing; appended brief contract equals standalone contract JSON."
+    },
+    {
+      "id": "F3",
+      "disposition": "Corrected: all three numeric contexts explicitly set precision, rounding, Emin/Emax, capitals, clamp, flags and traps; all five computation contexts use them. DefaultContext rounding/trap mutation regression passes through comparison and therefore reference/evaluator."
+    },
+    {
+      "id": "F4",
+      "disposition": "Corrected: bounded exponent magnitude parsed from digits without short character caps; declared128-character literal bound remains. Leading-zero decimal and integer powers tested."
+    },
+    {
+      "id": "F5",
+      "disposition": "Corrected: branch tests directly assert reference sigma_z zero, distinguish closed-end/plane-strain predictions, and assert signed Hooke-law axial displacement identity."
+    },
+    {
+      "id": "F6",
+      "disposition": "Corrected: comparison propagates fenced-envelope refusal; Fraction/Decimal exact inputs and Decimal NaN/Infinity refusal tested."
+    }
+  ],
+  "verification": {
+    "focused_tests": "96 passed in2.40s",
+    "test_paths": [
+      "tests/ansys/test_cylinder_reference.py",
+      "tests/ansys/test_cylinder_expression.py",
+      "tests/ansys/test_cylinder_agreement.py"
+    ],
+    "brief_contract_equality": true
+  },
+  "limitations": [
+    "Exactly one independent checker invocation remains unperformed by this review; no provider launched.",
+    "Main must commit/hash all inputs before the invocation, register that invocation, and retain/commit original output before comparison.",
+    "Full exact-current Claude code review and owner-appointed competent engineering adjudication remain separate gates."
+  ],
+  "repository_mutations": false,
+  "expected_residue": "This requested private disposition receipt; no source/test changes"
+}

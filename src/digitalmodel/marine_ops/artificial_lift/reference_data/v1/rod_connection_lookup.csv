@@ -1,0 +1,8 @@
+# provenance: previous project reference
+# extraction_date: 2026-07-29
+# schema: source_row,raw_rod_od,raw_coupling_od,rod_od_in,coupling_od_in,disposition,reason
+# units: explicit in unit-suffixed fields; surface values unverified_source_unit
+source_row,raw_rod_od,raw_coupling_od,rod_od_in,coupling_od_in,disposition,reason
+3,3.0/4.0,1 + 5/8.0,0.75,1.625,verified,
+4,7.0/8.0,1 + 13/16.0,0.875,1.8125,verified,
+5,1.5,1+5/8.0,1.5,1.625,quarantined,no exact coupling catalog match

@@ -1,0 +1,90 @@
+name: Workflow Automation Tests
+
+on:
+  # Issue #1958: exercise dependency drift daily even without matching changes.
+  # UTC cron syntax: GitHub Actions workflow syntax, on.schedule (2026-10-19).
+  # The off-hour minute is an operational choice, not an acceptance limit.
+  schedule:
+    - cron: '43 6 * * *'
+  workflow_dispatch:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'src/digitalmodel/workflows/workflow_automation/**'
+      - 'tests/workflows/workflow_automation/**'
+      - '.github/workflows/workflow-automation-tests.yml'
+      - 'pyproject.toml'
+      - '.coveragerc'
+      - 'uv.lock'
+      - 'pytest.ini'
+  pull_request:
+    paths:
+      - 'src/digitalmodel/workflows/workflow_automation/**'
+      - 'tests/workflows/workflow_automation/**'
+      - '.github/workflows/workflow-automation-tests.yml'
+      - 'pyproject.toml'
+      - '.coveragerc'
+      - 'uv.lock'
+      - 'pytest.ini'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || format('run-{0}', github.run_id) }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        python-version: ['3.11', '3.12']
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install uv
+      uses: astral-sh/setup-uv@v5
+      with:
+        enable-cache: true
+
+    - name: Create virtual environment
+      run: |
+        uv venv --python "${{ matrix.python-version }}"
+
+    - name: Install dependencies
+      run: |
+        # pytest-cov and the benchmark fixture are declared in the test extra.
+        uv pip install --no-sources -e ".[dev,test]"
+
+    - name: Run workflow automation tests
+      run: |
+        uv run --no-sync pytest tests/workflows/workflow_automation/ -v --cov=digitalmodel.workflows.workflow_automation --cov-config=pyproject.toml --cov-fail-under=0 --cov-report=xml --cov-report=term
+
+    - name: Upload coverage
+      uses: codecov/codecov-action@v4
+      if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
+      with:
+        file: ./coverage.xml
+        flags: workflow-automation
+        name: workflow-automation-coverage
+
+    - name: Test CLI commands
+      if: ${{ !cancelled() }}
+      run: |
+        uv run --no-sync workflow-automation list
+
+    - name: Verify package installation
+      if: ${{ !cancelled() }}
+      run: |
+        uv run --no-sync python -c "from digitalmodel.workflows.workflow_automation import WorkflowOrchestrator, CompleteRiserAnalysisWorkflow; print('Workflow automation module installed')"
+
+    - name: Enforce coverage threshold
+      if: ${{ !cancelled() }}
+      run: |
+        uv run --no-sync coverage report --rcfile=pyproject.toml

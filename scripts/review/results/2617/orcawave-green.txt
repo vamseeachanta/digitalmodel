@@ -1,0 +1,32 @@
+============================= test session starts ==============================
+platform linux -- Python 3.11.15, pytest-9.1.1, pluggy-1.7.0
+rootdir: /home/vamsee/ws/_pm/pm-jobs/dm2617/worktree
+configfile: pytest.ini (WARNING: ignoring pytest config in pyproject.toml!)
+plugins: asyncio-1.4.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collected 357 items
+
+tests/orcawave/test_builder_orchestration.py ..................          [  5%]
+tests/orcawave/test_config_errors.py ...................                 [ 10%]
+tests/orcawave/test_config_models.py ...............................     [ 19%]
+tests/orcawave/test_drift_force_variance.py ..........                   [ 21%]
+tests/orcawave/test_drift_forces.py ...........                          [ 24%]
+tests/orcawave/test_hydro_coefficients.py ..........                     [ 27%]
+tests/orcawave/test_motion_statistics.py .............                   [ 31%]
+tests/orcawave/test_panel_mesh.py ...........                            [ 34%]
+tests/orcawave/test_rao_processing.py ............                       [ 37%]
+tests/orcawave/test_report_builder.py ..............                     [ 41%]
+tests/orcawave/test_section_hydro_matrices.py ..........                 [ 44%]
+tests/orcawave/test_section_mean_drift.py .............                  [ 48%]
+tests/orcawave/test_section_model_summary.py ..........................  [ 55%]
+tests/orcawave/test_section_multi_body.py .............                  [ 59%]
+tests/orcawave/test_section_panel_pressures.py ..............            [ 63%]
+tests/orcawave/test_section_qa_summary.py ...................            [ 68%]
+tests/orcawave/test_section_qtf_heatmap.py ................              [ 72%]
+tests/orcawave/test_section_rao_plots.py ..................              [ 77%]
+tests/orcawave/test_spec_validation.py ................................. [ 87%]
+..................                                                       [ 92%]
+tests/orcawave/test_vessel_database.py ..............                    [ 96%]
+tests/orcawave/test_wave_spectrum.py ..............                      [100%]
+
+============================= 357 passed in 19.61s =============================

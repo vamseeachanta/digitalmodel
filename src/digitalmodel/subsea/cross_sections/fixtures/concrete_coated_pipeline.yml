@@ -1,0 +1,56 @@
+id: concrete-coated-pipeline
+name: Representative concrete-coated rigid pipeline
+family: rigid_pipeline_flowline
+duty: static
+description: Rigid pipeline radial-layer fixture with line pipe and coatings.
+design_metadata:
+  design_pressure: {value: 15, unit: MPa}
+  notes: Representative flowline stack for schema validation.
+provenance:
+  - source_id: wiki-cross-section-recon-2026-04-26
+    source_type: wiki
+    citation: Offshore cable/umbilical cross-section reconnaissance, 2026-04-26
+    url_or_path: knowledge/wikis/marine-engineering/wiki/sources/offshore-cable-umbilical-cross-section-recon-2026-04-26.md
+  - source_id: project-assumption-2514
+    source_type: project_assumption
+    citation: Issue #2514 representative fixture assumptions
+    note: Representative layer dimensions are examples for schema validation, not design defaults.
+  - source_id: dnv-st-f101-registry
+    source_type: standard
+    citation: DNV-ST-F101 Submarine Pipeline Systems registry entry
+    url_or_path: data/design-codes/code-registry.yaml
+  - source_id: vallourec-coating-reference
+    source_type: vendor_catalogue
+    citation: Vallourec coating source noted in recon page
+    url_or_path: knowledge/wikis/marine-engineering/wiki/sources/offshore-cable-umbilical-cross-section-recon-2026-04-26.md
+  - source_id: octal-concrete-weight-coating-reference
+    source_type: vendor_catalogue
+    citation: Octal concrete weight coating source noted in recon page
+    url_or_path: knowledge/wikis/marine-engineering/wiki/sources/offshore-cable-umbilical-cross-section-recon-2026-04-26.md
+radial_layers:
+  - name: bore
+    role: bore
+    material: produced fluid envelope
+    inner_diameter: {value: 0, unit: mm}
+    outer_diameter: {value: 300, unit: mm}
+    provenance: {source_id: dnv-st-f101-registry, source_type: standard}
+  - name: line pipe wall
+    role: line_pipe
+    material: API 5L steel
+    inner_diameter: {value: 300, unit: mm}
+    outer_diameter: {value: 324, unit: mm}
+    provenance: {source_id: dnv-st-f101-registry, source_type: standard}
+  - name: corrosion coating
+    role: corrosion_coating
+    material: fusion bonded epoxy
+    inner_diameter: {value: 324, unit: mm}
+    outer_diameter: {value: 330, unit: mm}
+    provenance: {source_id: vallourec-coating-reference, source_type: vendor_catalogue}
+  - name: concrete weight coating
+    role: concrete_weight_coating
+    material: reinforced concrete
+    inner_diameter: {value: 330, unit: mm}
+    outer_diameter: {value: 430, unit: mm}
+    density: {value: 3040, unit: kg/m^3}
+    provenance: {source_id: octal-concrete-weight-coating-reference, source_type: vendor_catalogue}
+packed_components: []

@@ -1,0 +1,71 @@
+@startuml epic_seo_theory_keywords
+skinparam titleBorderRoundCorner 15
+skinparam titleBorderThickness 2
+skinparam titleBorderColor red
+skinparam titleBackgroundColor Tomato
+
+title SEO Theory \n Content
+
+@startwbs
+<style>
+wbsDiagram {
+  .greenyellow {
+      BackgroundColor GreenYellow
+  }
+}
+</style>
+* Functional Website <<greenyellow>>
+** Basic Checks
+*** Address
+*** Address
+**** Matches with Business Registration
+**** Matches with Google Maps
+**** Matches with ?
+
+** Local SEO
+*** Name, Address, Phone (NAP)
+**** Consistent with Business Registration
+**** Consistent with Google Maps
+*** Claim on Google Maps
+*** Directories (yelp, Urbanspoon etc.)
+*** Reviews and Citations
+**** Quality
+**** Quantity (typ. > 100)
+*** Inbound links
+*** Google Photos
+
+** Headings
+*** Single H1
+*** H2, H3, H4 usage
+
+** Images
+
+** Content
+*** No Keyword Stuffing
+*** No Cloaking (i.e. Doorway) Pages
+*** No Hidden text
+*** Content Duplication
+*** Repetitive anchor text
+*** A Page with single search objective
+
+** General Compatibility
+*** Mobile friendliness
+*** Page loading  time
+*** Robots.txt
+*** XML Sitemaps
+
+
+** Links
+*** Practical (context) outbound links
+*** Inbound links
+
+** Sanity Checks
+*** Hidden Pages
+*** Stuffing words into alt text
+
+@endwbs
+
+footer
+%date("yyyy.MM.dd' at 'HH:mm")
+%filename()
+end footer

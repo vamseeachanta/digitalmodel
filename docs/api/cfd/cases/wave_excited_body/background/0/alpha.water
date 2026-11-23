@@ -1,0 +1,16 @@
+FoamFile { version 2.0; format ascii; class volScalarField; object alpha.water; }
+
+dimensions      [0 0 0 0 0 0 0];
+internalField   uniform 0;
+boundaryField
+{
+    oversetPatch    { type overset; }
+    oversetBoundary { type overset; }
+    inlet  { type waveAlpha; value uniform 0; }
+    outlet { type zeroGradient; }
+    ground { type zeroGradient; }
+    top    { type inletOutlet; inletValue uniform 0; value uniform 0; }
+    sides  { type empty; }
+    bodyFrontBack { type empty; }
+    floatingObject { type zeroGradient; }
+}

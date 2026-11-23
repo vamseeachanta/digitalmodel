@@ -1,0 +1,141 @@
+@startuml pre_model_dynamics
+scale 3
+skinparam titleBorderRoundCorner 15
+skinparam titleBorderThickness 2
+skinparam titleBorderColor red
+skinparam titleBackgroundColor Tomato
+
+title General Model Architecture \n OrcaFlex Dynamic Analysis
+
+start
+
+    note right
+        Objective: Summarize YML Keys of OrcaFlex model
+        - Each Block is a YML key
+        - TBA
+    end note
+
+
+    partition "YML- General" {
+
+        :Analysis setting;
+            note right
+                static
+                dynamic
+            end note
+
+        :N-E Definition;
+            note right
+                For global earth orientation
+            end note
+
+    }
+
+    partition "YML- Environment" {
+
+        :Sea, seabed etc.;
+
+        :Wind, wave, current etc.;
+
+        :sea and seabed drawing etc.;
+
+    }
+
+    partition "UITab- FrictionCoefficients" {
+        : For 3D and 6D buoys;
+    }
+
+    partition "UITab- AllObjectData" {
+        : Software Calculated Initial Positions;
+    }
+
+    partition "YML- VariableData" {
+
+            note right
+                Shared by other Blocks
+            end note
+
+        :Constraints;
+            note right
+                6 DOF damping f(velocity)
+                6 DOF stiffness f(displacement)
+            end note
+
+        :Externally Calculated Data;
+            note right
+                dll or python functions
+            end note
+
+        :Hydrodynamics/Aerodynamics;
+            note right
+                Drag and lift customization etc
+                Environment load customization etc
+            end note
+
+        :Loads;
+            note right
+                External loads f(time)
+                Seabed resistance f(distance)
+            end note
+
+        :Structure;
+            note right
+                Geometry 
+                Material
+            end note
+
+
+    }
+
+    partition "UITab: Vessels" {
+
+        :YML: VesselTypes;
+            note right
+                Geometry
+                RAOs
+                QTF Functions
+            end note
+
+        :YML: Vessels;
+            note right
+                Vessel Position
+                Calculation Settings
+            end note
+
+        :YML: MultibodyGroups;
+            note right
+                TBA
+            end note
+
+    }
+
+    partition "UITab- Lines" {
+
+        :YML- LineTypes;
+            note right
+                stiffness properties
+            end note
+
+        :YML- Lines;
+            note right
+                Geometry
+                Calculation settings
+            end note
+
+    }
+
+    partition "YML- Constraints" {
+
+            note right
+                Between bodies
+            end note
+    }
+
+stop
+
+footer
+%date("yyyy.MM.dd' at 'HH:mm")
+%filename()
+end footer
+
+@enduml

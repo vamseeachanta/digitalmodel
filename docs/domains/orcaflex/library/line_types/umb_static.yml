@@ -1,0 +1,15 @@
+# UMB_STATIC - Library Component
+# Category: line_types
+# Generated: 2026-01-19 08:13:51
+# Description: Static umbilical for fixed connections
+# NOTE: No section header - properties only for IncludeFile
+OD: 0.1
+ID: 0.0
+MassPerUnitLength: 18.5
+EA: 285000000.0
+CompressionIsLimited: Yes
+EI:
+- 180000.0
+- ~
+GJ: 0
+PoissonRatio: 0.5

@@ -1,0 +1,15 @@
+# Input Parameters for Parametric Analysis
+# Source: F06 Spool piece manoeuvring.yml
+# Generated: 2026-01-18 22:18:19
+
+water_depth: 100
+current_speed: 0
+wind_speed: 0
+water_density: 1.025
+stage_durations:
+- 10
+- 55
+hs: 2
+tp: 7
+wave_direction: 180
+

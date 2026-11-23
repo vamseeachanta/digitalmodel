@@ -1,0 +1,46 @@
+# General Configuration
+# Generated from: CALMBuoy_Vessel_2Drafts.yml
+# Date: 2026-01-18 22:19:59
+General:
+  UnitsSystem: SI
+  LineResetRepresentation: Quick
+  JacobianBufferingPolicy: 1
+  JacobianPerturbationFactor: 0
+  BuoysIncludedInStatics: All
+  LineStaticsStep1Policy: Parent lines excluded
+  LineStaticsStep2Policy: Parent lines excluded
+  WholeSystemStaticsEnabled: Yes
+  StaticsMaxIterations: 800
+  DynamicsSolutionMethod: Implicit time domain
+  ImplicitUseVariableTimeStep: No
+  ImplicitConstantTimeStep: 0.1
+  LogPrecision: Single
+  TargetLogSampleInterval: 0.1
+  LogStartTime: ~
+  StartTime: ~
+  FirstStage: ~
+  RampStartTime: ~
+  RampFinishTime: ~
+  TimeHistoryImportFrom: ~
+  TimeHistoryImportTo: ~
+  StageDuration:
+  - 8
+  - 200
+  RestartStateRecordingPeriodicCount: 0
+  RestartStateRecordingTest: ~
+Groups:
+  Structure:
+    Vessel: Model
+    CALM Base: Model
+    CALM Top: Model
+    Mooring1: Model
+    Mooring2: Model
+    Mooring3: Model
+    Mooring 4: Model
+    Mooring 5: Model
+    Mooring 6: Model
+    Pivot1: Model
+    Pivot2: Model
+    Hawser1: Model
+  State:
+    Collapsed: []

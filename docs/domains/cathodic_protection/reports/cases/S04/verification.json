@@ -1,0 +1,20 @@
+{
+  "calculation_result": "PASS",
+  "children": [],
+  "engineering_review": "pending",
+  "fixture": "ships.yml",
+  "id": "S04",
+  "numerical_results": "historical_unchanged",
+  "pack_state": "blocked",
+  "report": "cases/S04/report.html",
+  "route": "ABS_gn_ships_2018",
+  "source_class": "client_derived_pending_release",
+  "source_revision": "bf638ed1",
+  "title": "Ship hull",
+  "use_status": "source qualification and release pending",
+  "verification": {
+    "passed": true,
+    "scope": "citation resolution, comment binding, child links and file checksums"
+  },
+  "visual_review": "deferred_by_owner"
+}

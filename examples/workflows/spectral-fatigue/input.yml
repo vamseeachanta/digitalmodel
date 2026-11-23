@@ -1,0 +1,32 @@
+basename: spectral_fatigue
+
+spectral_fatigue:
+  design_life_years: 25.0
+  dff: 3.0
+  method: dirlik                 # dirlik | narrow_band | wirsching_light | benasciutti_tovo
+  sn_curve:                      # DNV-RP-C203 D-curve in air
+    slope: 3.0
+    log_intercept: 12.164
+  output_dir: results
+  locations:
+    - id: riser-splash-zone
+      # wave-frequency stress PSD (MPa^2/Hz) at the splash-zone hot spot,
+      # split into a mild operating state and a severe storm state by occurrence.
+      sea_states:
+        - occurrence_fraction: 0.85
+          frequency_Hz:        [0.04, 0.06, 0.08, 0.10, 0.12, 0.16, 0.24, 0.40]
+          stress_psd_MPa2_Hz:  [50.0, 300.0, 1200.0, 2500.0, 1500.0, 400.0, 80.0, 10.0]
+        - occurrence_fraction: 0.15
+          frequency_Hz:        [0.04, 0.06, 0.08, 0.10, 0.12, 0.16, 0.24, 0.40]
+          stress_psd_MPa2_Hz:  [120.0, 800.0, 3500.0, 7000.0, 4200.0, 1100.0, 220.0, 30.0]
+    - id: riser-keel-joint
+      sea_states:
+        - occurrence_fraction: 1.0
+          frequency_Hz:        [0.04, 0.06, 0.08, 0.10, 0.12, 0.16, 0.24, 0.40]
+          stress_psd_MPa2_Hz:  [10.0, 60.0, 240.0, 500.0, 300.0, 80.0, 16.0, 2.0]
+
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: true

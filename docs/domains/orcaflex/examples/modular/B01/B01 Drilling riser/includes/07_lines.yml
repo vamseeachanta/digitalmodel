@@ -1,0 +1,814 @@
+# Lines Configuration
+# Generated from: B01 Drilling riser.yml
+# Date: 2026-01-18 22:18:02
+Lines:
+- Name: Riser
+  IncludeTorsion: Yes
+  TopEnd: End A
+  LengthAndEndOrientations: Explicit
+  Representation: Finite element
+  PyModel: (none)
+  PreBendSpecifiedBy: Curvature
+  DragFormulation: Standard
+  StaticsVIV: None
+  DynamicsVIV: None
+  WaveCalculationMethod: Specified by environment
+  ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+  : - - Tensioner Ring
+      - 0
+      - 0
+      - 0
+      - 0
+      - 180
+      - 180
+      - ~
+    - - Flex Joint
+      - 0
+      - 0
+      - 0
+      - 0
+      - 180
+      - 180
+      - ~
+  ConnectionxBendingStiffness, ConnectionyBendingStiffness, ConnectionTwistingStiffness, ConnectionDamping:
+  - - Infinity
+    - ~
+    - Infinity
+  - - Infinity
+    - ~
+    - Infinity
+  ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth
+  : - - ~
+      - 0
+      - 0.001
+    - - ~
+      - 0
+      - 0.001
+  LineType, Length, TargetSegmentLength:
+  - - 24" RISER
+    - 1020
+    - 5
+  DecoupleLateralAndAxialSeabedFriction: No
+  ApplySeabedContactLoadsAtCentreline: No
+  CoveredSectionsWarnIfLineLeavesCover: Yes
+  ContentsMethod: Uniform
+  IncludeAxialContentsInertia: Yes
+  ContentsDensity: 2.2
+  ContentsTemperature: ~
+  ContentsPressureRefZ: ~
+  ContentsPressure: 0
+  ContentsFlowRate: 0
+  IncludedInStatics: Yes
+  StaticsStep1: Catenary
+  StaticsStep2: Full statics
+  StaticsSeabedFrictionPolicy: None
+  NodePen:
+  - 2
+  - Solid
+  - $0080FF
+  ContactPen:
+  - 5
+  - Solid
+  - White
+- Name: Drill String
+  IncludeTorsion: Yes
+  TopEnd: End A
+  LengthAndEndOrientations: Explicit
+  Representation: Finite element
+  PyModel: (none)
+  PreBendSpecifiedBy: Curvature
+  DragFormulation: Standard
+  StaticsVIV: None
+  DynamicsVIV: None
+  WaveCalculationMethod: Specified by environment
+  ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+  : - - Free
+      - 0
+      - 0
+      - 34
+      - 0
+      - 180
+      - 0
+      - ~
+    - - Drill String Connection
+      - 0
+      - 0
+      - 0
+      - 0
+      - 180
+      - 0
+      - ~
+  ConnectionxBendingStiffness, ConnectionyBendingStiffness, ConnectionTwistingStiffness, ConnectionDamping:
+  - []
+  - - Infinity
+    - ~
+    - Infinity
+  ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth
+  : - - ~
+      - 0
+      - 0.001
+    - - ~
+      - 0
+      - 0.001
+  ? MidLineConnectionArclength, MidLineConnectionRelativeTo, MidLineConnection, MidLineConnectionX, MidLineConnectionY, MidLineConnectionZ, MidLineConnectionAzimuth, MidLineConnectionDeclination, MidLineConnectionGamma, MidLineConnectionReleaseStage, MidLineConnectionzRelativeTo
+  : - - 10
+      - End A
+      - Rotary Table
+      - 0
+      - 0
+      - -1
+      - 0
+      - 180
+      - 0
+      - ~
+  LineType, Length, TargetSegmentLength:
+  - - Drill Pipe
+    - 1035
+    - 5
+  DecoupleLateralAndAxialSeabedFriction: No
+  ApplySeabedContactLoadsAtCentreline: No
+  CoveredSectionsWarnIfLineLeavesCover: Yes
+  ContentsMethod: Uniform
+  IncludeAxialContentsInertia: Yes
+  ContentsDensity: 2.2
+  ContentsTemperature: ~
+  ContentsPressureRefZ: 35
+  ContentsPressure: 0
+  ContentsFlowRate: 0
+  IncludedInStatics: Yes
+  StaticsStep1: Catenary
+  StaticsStep2: Full statics
+  StaticsSeabedFrictionPolicy: As laid
+  LayAzimuth: 180
+  AsLaidTension: 0
+  NodePen:
+  - 1
+  - Solid
+  - Lime
+  DrawShadedNodesAsSpheres: Yes
+  DrawContact: No
+- Name: Riser Slip Joint
+  IncludeTorsion: Yes
+  TopEnd: End A
+  LengthAndEndOrientations: Explicit
+  Representation: Finite element
+  PyModel: (none)
+  PreBendSpecifiedBy: Curvature
+  DragFormulation: Standard
+  StaticsVIV: None
+  DynamicsVIV: None
+  WaveCalculationMethod: Specified by environment
+  ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+  : - - Semisub
+      - 0
+      - 0
+      - 25
+      - 0
+      - 180
+      - 0
+      - ~
+    - - Tensioner Ring
+      - 0
+      - 0
+      - 0
+      - 0
+      - 180
+      - 0
+      - ~
+  ConnectionxBendingStiffness, ConnectionyBendingStiffness, ConnectionTwistingStiffness, ConnectionDamping:
+  - - 30
+    - ~
+    - 100
+    - 0
+  - - Infinity
+    - ~
+    - Infinity
+  ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth
+  : - - ~
+      - 0
+      - 0.001
+    - - ~
+      - 0
+      - 0.001
+  Sections:
+  - LineType: Slip Joint
+    Length: 10
+    NumberOfSegments: 1
+    DisturbanceVessel: (none)
+  DecoupleLateralAndAxialSeabedFriction: No
+  ApplySeabedContactLoadsAtCentreline: No
+  CoveredSectionsWarnIfLineLeavesCover: Yes
+  ContentsMethod: Uniform
+  IncludeAxialContentsInertia: Yes
+  ContentsDensity: 2.2
+  ContentsTemperature: ~
+  ContentsPressureRefZ: ~
+  ContentsPressure: 0
+  ContentsFlowRate: 0
+  IncludedInStatics: Yes
+  StaticsStep1: Catenary
+  StaticsStep2: Full statics
+  StaticsSeabedFrictionPolicy: None
+  NodePen:
+  - 2
+  - Solid
+  - $0080FF
+  DrawShadedNodesAsSpheres: Yes
+  DrawContact: No
+  ContactPen:
+  - 5
+  - Solid
+  - White
+- Name: Choke
+  IncludeTorsion: Yes
+  TopEnd: End A
+  LengthAndEndOrientations: Explicit
+  Representation: Finite element
+  PyModel: (none)
+  PreBendSpecifiedBy: Curvature
+  DragFormulation: Standard
+  StaticsVIV: None
+  DynamicsVIV: None
+  WaveCalculationMethod: Specified by environment
+  ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+  : - - Tensioner Ring
+      - 0.7997588543679546
+      - 0
+      - 0.015648025252023245
+      - 0
+      - 180
+      - 0
+      - ~
+    - - Flex Joint
+      - 0.7997588543679546
+      - 0
+      - 0
+      - 0
+      - 180
+      - 0
+      - ~
+  ConnectionxBendingStiffness, ConnectionyBendingStiffness, ConnectionTwistingStiffness, ConnectionDamping:
+  - - Infinity
+    - ~
+    - Infinity
+  - - Infinity
+    - ~
+    - Infinity
+  ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth
+  : - - ~
+      - 0
+      - 0.001
+    - - ~
+      - 0
+      - 0.001
+  LineType, Length, TargetSegmentLength:
+  - - Choke and Kill
+    - 20
+    - 2.5
+  - - Choke and Kill
+    - 1000
+    - 50
+  DecoupleLateralAndAxialSeabedFriction: No
+  ApplySeabedContactLoadsAtCentreline: No
+  CoveredSectionsWarnIfLineLeavesCover: Yes
+  ContentsMethod: Uniform
+  IncludeAxialContentsInertia: Yes
+  ContentsDensity: 2.2
+  ContentsTemperature: ~
+  ContentsPressureRefZ: ~
+  ContentsPressure: 0
+  ContentsFlowRate: 0
+  IncludedInStatics: Yes
+  StaticsStep1: Catenary
+  StaticsStep2: Full statics
+  StaticsSeabedFrictionPolicy: None
+  NodePen:
+  - 2
+  - Solid
+  - Aqua
+  DrawShadedNodesAsSpheres: Yes
+  DrawContact: No
+  ContactPen:
+  - 5
+  - Solid
+  - White
+- Name: Kill
+  IncludeTorsion: Yes
+  TopEnd: End A
+  LengthAndEndOrientations: Explicit
+  Representation: Finite element
+  PyModel: (none)
+  PreBendSpecifiedBy: Curvature
+  DragFormulation: Standard
+  StaticsVIV: None
+  DynamicsVIV: None
+  WaveCalculationMethod: Specified by environment
+  ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+  : - - Tensioner Ring
+      - -0.8
+      - 0
+      - 0.015648025252023245
+      - 0
+      - 180
+      - 0
+      - ~
+    - - Flex Joint
+      - -0.8
+      - 0
+      - 0
+      - 0
+      - 180
+      - 0
+      - ~
+  ConnectionxBendingStiffness, ConnectionyBendingStiffness, ConnectionTwistingStiffness, ConnectionDamping:
+  - - Infinity
+    - ~
+    - Infinity
+  - - Infinity
+    - ~
+    - Infinity
+  ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth
+  : - - ~
+      - 0
+      - 0.001
+    - - ~
+      - 0
+      - 0.001
+  LineType, Length, TargetSegmentLength:
+  - - Choke and Kill
+    - 20
+    - 2.5
+  - - Choke and Kill
+    - 1000
+    - 50
+  DecoupleLateralAndAxialSeabedFriction: No
+  ApplySeabedContactLoadsAtCentreline: No
+  CoveredSectionsWarnIfLineLeavesCover: Yes
+  ContentsMethod: Uniform
+  IncludeAxialContentsInertia: Yes
+  ContentsDensity: 2.2
+  ContentsTemperature: ~
+  ContentsPressureRefZ: ~
+  ContentsPressure: 0
+  ContentsFlowRate: 0
+  IncludedInStatics: Yes
+  StaticsStep1: Catenary
+  StaticsStep2: Full statics
+  StaticsSeabedFrictionPolicy: None
+  NodePen:
+  - 2
+  - Solid
+  - Aqua
+  DrawShadedNodesAsSpheres: Yes
+  DrawContact: No
+  ContactPen:
+  - 5
+  - Solid
+  - White
+- Name: Flex Joint Rigid Piece
+  IncludeTorsion: No
+  TopEnd: End A
+  LengthAndEndOrientations: Explicit
+  Representation: Finite element
+  PyModel: (none)
+  PreBendSpecifiedBy: Curvature
+  DragFormulation: Standard
+  StaticsVIV: None
+  DynamicsVIV: None
+  WaveCalculationMethod: Specified by environment
+  ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+  : - - Flex Joint
+      - 0
+      - 0
+      - 0
+      - 0
+      - 180
+      - 0
+      - ~
+    - - Fixed
+      - 0
+      - 0
+      - -1000.25
+      - 0
+      - 180
+      - 0
+      - ~
+  ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+  - - Infinity
+    - ~
+  - - 120
+    - ~
+  ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth
+  : - - ~
+      - 0
+      - 0.001
+    - - ~
+      - 0
+      - 0.001
+  Sections:
+  - LineType: 24" RISER
+    Length: 0.25
+    NumberOfSegments: 1
+    DisturbanceVessel: (none)
+  DecoupleLateralAndAxialSeabedFriction: No
+  CoveredSectionsWarnIfLineLeavesCover: Yes
+  ContentsMethod: Uniform
+  IncludeAxialContentsInertia: Yes
+  ContentsDensity: 0
+  ContentsTemperature: ~
+  ContentsPressureRefZ: ~
+  ContentsPressure: 0
+  ContentsFlowRate: 0
+  IncludedInStatics: Yes
+  StaticsStep1: Catenary
+  StaticsStep2: Full statics
+  StaticsSeabedFrictionPolicy: As laid
+  LayAzimuth: 180
+  AsLaidTension: 0
+  DrawNodesAsDiscs: No
+  SegmentPenMode: Use segment pen
+  SegmentPen:
+  - 8
+  - Solid
+  - Red
+  DrawContact: No
+- Name: Drill String Below BOP
+  IncludeTorsion: No
+  TopEnd: End A
+  LengthAndEndOrientations: Explicit
+  Representation: Finite element
+  PyModel: (none)
+  PreBendSpecifiedBy: Curvature
+  DragFormulation: Standard
+  StaticsVIV: None
+  DynamicsVIV: None
+  WaveCalculationMethod: Specified by environment
+  ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+  : - - Drill String Connection
+      - 0
+      - 0
+      - 0
+      - 0
+      - 180
+      - 0
+      - ~
+    - - DHA
+      - 0
+      - 0
+      - 0
+      - 0
+      - 180
+      - 0
+      - ~
+  ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+  - - Infinity
+    - ~
+  - - Infinity
+    - ~
+  ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth
+  : - - ~
+      - 0
+      - 0.001
+    - - ~
+      - 0
+      - 0.001
+  LineType, Length, TargetSegmentLength:
+  - - Drill Pipe
+    - 465
+    - 5
+  DecoupleLateralAndAxialSeabedFriction: No
+  CoveredSectionsWarnIfLineLeavesCover: Yes
+  ContentsMethod: Uniform
+  IncludeAxialContentsInertia: Yes
+  ContentsDensity: 2.2
+  ContentsTemperature: ~
+  ContentsPressureRefZ: 35
+  ContentsPressure: 0
+  ContentsFlowRate: 0
+  IncludedInStatics: Yes
+  StaticsStep1: Quick
+  StaticsStep2: Full statics
+  StaticsSeabedFrictionPolicy: None
+  NodePen:
+  - 1
+  - Solid
+  - Lime
+  DrawShadedNodesAsSpheres: Yes
+  DrawContact: No
+- Name: Casing
+  IncludeTorsion: Yes
+  TopEnd: End A
+  LengthAndEndOrientations: Explicit
+  Representation: Finite element
+  PyModel: P-y Model1
+  PreBendSpecifiedBy: Curvature
+  DragFormulation: Standard
+  StaticsVIV: None
+  DynamicsVIV: None
+  WaveCalculationMethod: Specified by environment
+  ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+  : - - Fixed
+      - 0
+      - 0
+      - -1000
+      - 0
+      - 180
+      - 0
+      - ~
+    - - Fixed
+      - 0
+      - 0
+      - -2000
+      - 0
+      - 180
+      - 0
+      - ~
+  ConnectionxBendingStiffness, ConnectionyBendingStiffness, ConnectionTwistingStiffness, ConnectionDamping:
+  - - Infinity
+    - ~
+    - Infinity
+  - - Infinity
+    - ~
+    - Infinity
+  ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth
+  : - - ~
+      - 0
+      - 0.001
+    - - ~
+      - 0
+      - 0.001
+  LineType, Length, TargetSegmentLength:
+  - - 24" RISER
+    - 1000
+    - 10
+  DecoupleLateralAndAxialSeabedFriction: No
+  ApplySeabedContactLoadsAtCentreline: No
+  CoveredSectionsWarnIfLineLeavesCover: Yes
+  ContentsMethod: Uniform
+  IncludeAxialContentsInertia: Yes
+  ContentsDensity: 2.2
+  ContentsTemperature: ~
+  ContentsPressureRefZ: ~
+  ContentsPressure: 0
+  ContentsFlowRate: 0
+  IncludedInStatics: Yes
+  StaticsStep1: Catenary
+  StaticsStep2: Full statics
+  DrawNodesAsDiscs: No
+  DrawContact: No
+- Name: MP FWD
+  IncludeTorsion: No
+  TopEnd: End A
+  LengthAndEndOrientations: Explicit
+  Representation: Finite element
+  PyModel: (none)
+  PreBendSpecifiedBy: Curvature
+  DragFormulation: Standard
+  StaticsVIV: None
+  DynamicsVIV: None
+  WaveCalculationMethod: Specified by environment
+  ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+  : - - Semisub
+      - 5
+      - 5
+      - 15.62
+      - 270
+      - 90
+      - 0
+      - ~
+    - - Semisub
+      - 5
+      - -5
+      - 15.62
+      - 270
+      - 90
+      - 0
+      - ~
+  ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+  - - 0
+    - ~
+  - - 0
+    - ~
+  ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth
+  : - - ~
+      - 0
+      - 0.001
+    - - ~
+      - 0
+      - 0.001
+  Sections:
+  - LineType: Moonpool Edge
+    Length: 1
+    NumberOfSegments: 1
+    DisturbanceVessel: (none)
+  DecoupleLateralAndAxialSeabedFriction: No
+  CoveredSectionsWarnIfLineLeavesCover: Yes
+  ContentsMethod: Uniform
+  IncludeAxialContentsInertia: Yes
+  ContentsDensity: 0
+  ContentsTemperature: ~
+  ContentsPressureRefZ: ~
+  ContentsPressure: 0
+  ContentsFlowRate: 0
+  IncludedInStatics: Yes
+  StaticsStep1: Catenary
+  StaticsStep2: None
+  StaticsSeabedFrictionPolicy: None
+  DrawShadedNodesAsSpheres: Yes
+  DrawContact: No
+  ContactPen:
+  - 5
+  - Solid
+  - White
+- Name: MP PORT
+  IncludeTorsion: No
+  TopEnd: End A
+  LengthAndEndOrientations: Explicit
+  Representation: Finite element
+  PyModel: (none)
+  PreBendSpecifiedBy: Curvature
+  DragFormulation: Standard
+  StaticsVIV: None
+  DynamicsVIV: None
+  WaveCalculationMethod: Specified by environment
+  ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+  : - - Semisub
+      - 5
+      - 5
+      - 15.62
+      - 180
+      - 90
+      - 0
+      - ~
+    - - Semisub
+      - -5
+      - 5
+      - 15.62
+      - 180
+      - 90
+      - 0
+      - ~
+  ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+  - - 0
+    - ~
+  - - 0
+    - ~
+  ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth
+  : - - ~
+      - 0
+      - 0.001
+    - - ~
+      - 0
+      - 0.001
+  Sections:
+  - LineType: Moonpool Edge
+    Length: 1
+    NumberOfSegments: 1
+    DisturbanceVessel: (none)
+  DecoupleLateralAndAxialSeabedFriction: No
+  CoveredSectionsWarnIfLineLeavesCover: Yes
+  ContentsMethod: Uniform
+  IncludeAxialContentsInertia: Yes
+  ContentsDensity: 0
+  ContentsTemperature: ~
+  ContentsPressureRefZ: ~
+  ContentsPressure: 0
+  ContentsFlowRate: 0
+  IncludedInStatics: Yes
+  StaticsStep1: Catenary
+  StaticsStep2: None
+  StaticsSeabedFrictionPolicy: None
+  DrawShadedNodesAsSpheres: Yes
+  DrawContact: No
+  ContactPen:
+  - 5
+  - Solid
+  - White
+- Name: MP AFT
+  IncludeTorsion: No
+  TopEnd: End A
+  LengthAndEndOrientations: Explicit
+  Representation: Finite element
+  PyModel: (none)
+  PreBendSpecifiedBy: Curvature
+  DragFormulation: Standard
+  StaticsVIV: None
+  DynamicsVIV: None
+  WaveCalculationMethod: Specified by environment
+  ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+  : - - Semisub
+      - -5
+      - 5
+      - 15.62
+      - 270
+      - 90
+      - 0
+      - ~
+    - - Semisub
+      - -5
+      - -5
+      - 15.62
+      - 270
+      - 90
+      - 0
+      - ~
+  ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+  - - 0
+    - ~
+  - - 0
+    - ~
+  ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth
+  : - - ~
+      - 0
+      - 0.001
+    - - ~
+      - 0
+      - 0.001
+  Sections:
+  - LineType: Moonpool Edge
+    Length: 1
+    NumberOfSegments: 1
+    DisturbanceVessel: (none)
+  DecoupleLateralAndAxialSeabedFriction: No
+  CoveredSectionsWarnIfLineLeavesCover: Yes
+  ContentsMethod: Uniform
+  IncludeAxialContentsInertia: Yes
+  ContentsDensity: 0
+  ContentsTemperature: ~
+  ContentsPressureRefZ: ~
+  ContentsPressure: 0
+  ContentsFlowRate: 0
+  IncludedInStatics: Yes
+  StaticsStep1: Catenary
+  StaticsStep2: None
+  StaticsSeabedFrictionPolicy: None
+  DrawShadedNodesAsSpheres: Yes
+  DrawContact: No
+  ContactPen:
+  - 5
+  - Solid
+  - White
+- Name: MP STBD
+  IncludeTorsion: No
+  TopEnd: End A
+  LengthAndEndOrientations: Explicit
+  Representation: Finite element
+  PyModel: (none)
+  PreBendSpecifiedBy: Curvature
+  DragFormulation: Standard
+  StaticsVIV: None
+  DynamicsVIV: None
+  WaveCalculationMethod: Specified by environment
+  ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+  : - - Semisub
+      - -5
+      - -5
+      - 15.62
+      - 0
+      - 90
+      - 0
+      - ~
+    - - Semisub
+      - 5
+      - -5
+      - 15.62
+      - 0
+      - 90
+      - 0
+      - ~
+  ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+  - - 0
+    - ~
+  - - 0
+    - ~
+  ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth
+  : - - ~
+      - 0
+      - 0.001
+    - - ~
+      - 0
+      - 0.001
+  Sections:
+  - LineType: Moonpool Edge
+    Length: 1
+    NumberOfSegments: 1
+    DisturbanceVessel: (none)
+  DecoupleLateralAndAxialSeabedFriction: No
+  CoveredSectionsWarnIfLineLeavesCover: Yes
+  ContentsMethod: Uniform
+  IncludeAxialContentsInertia: Yes
+  ContentsDensity: 0
+  ContentsTemperature: ~
+  ContentsPressureRefZ: ~
+  ContentsPressure: 0
+  ContentsFlowRate: 0
+  IncludedInStatics: Yes
+  StaticsStep1: Catenary
+  StaticsStep2: None
+  StaticsSeabedFrictionPolicy: None
+  DrawShadedNodesAsSpheres: Yes
+  DrawContact: No
+  ContactPen:
+  - 5
+  - Solid
+  - White

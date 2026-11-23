@@ -1,0 +1,23 @@
+id: pe-2026-04-04
+date: "2026-04-04"
+slug: pe-problem-of-the-day-4-4-2026
+source_url: https://app.collide.io/posts/pe-problem-of-the-day-4-4-2026
+title: "PE Problem of the Day 4/4/2026 — mobile well-intervention unit"
+posted_by: Yogashri Pradhan
+tags: [production, upstream, field-service, equipment]
+type: conceptual
+
+statement: >
+  What is a mobile, specialized unit used to perform remedial, maintenance, or intervention operations on existing oil and gas wells? (one answer)
+
+find:
+  - "Name the unit"
+
+solution:
+  method: "Petroleum-engineering concept recall (no calculation)."
+  answer: "A workover rig (well-servicing / pulling unit). Coiled-tubing and hydraulic workover units also perform interventions, but the workover rig is the classic mobile servicing unit."
+  confidence: high
+  solved_by: "petroleum-engineering domain knowledge (Deckhand wells-subsurface pack / Claude API solver)"
+
+# Knowledge dot: the concept lives in llm-wiki (Deckhand wells-subsurface pack source).
+wiki_concept: wikis/drilling-engineering/wiki/concepts/well-intervention-methods.md

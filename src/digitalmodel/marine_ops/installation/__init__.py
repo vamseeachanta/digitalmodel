@@ -1,0 +1,113 @@
+"""Subsea structure installation analysis.
+
+Provides crane tip motion transfer, splash zone assessment, operability
+calculation, multi-vessel screening, and real-time feedback data models
+for subsea structure installation engineering.
+
+References:
+    DNV-RP-H103 (2011) -- Modelling and Analysis of Marine Operations
+    DNV-ST-N001 (2021) -- Marine Operations and Marine Warranty
+    DNV-RP-C205 (2021) -- Environmental Conditions and Environmental Loads
+"""
+
+from __future__ import annotations
+
+from digitalmodel.marine_ops.installation.crane_tip_motion import (
+    crane_tip_raos,
+    crane_tip_significant_motion,
+    crane_tip_significant_velocity,
+)
+from digitalmodel.marine_ops.installation.jumper_installation_schema import (
+    CraneSpec,
+    JumperEnvironmentSpec,
+    JumperGeometrySpec,
+    JumperInstallationSpec,
+    JumperMetadata,
+    PipeSpec,
+)
+from digitalmodel.marine_ops.installation.models import (
+    CraneCurve,
+    CraneTipConfig,
+    GoNoGoState,
+    InstallationCase,
+    InstallationCriteria,
+    InstallationPhase,
+    OperabilityResult,
+    SplashZoneResult,
+    Structure,
+    Vessel,
+)
+from digitalmodel.marine_ops.installation.operability import (
+    compute_operability,
+    hs_limit_for_criterion,
+    weather_window_operability,
+)
+from digitalmodel.marine_ops.installation.splash_zone import (
+    slamming_force,
+    splash_zone_assessment,
+    varying_buoyancy_force,
+)
+from digitalmodel.marine_ops.installation.suitability_report import (
+    SuitabilityReport,
+    build_report,
+    to_html,
+    to_markdown,
+)
+from digitalmodel.marine_ops.installation.vessel_screening import (
+    VesselScreeningResult,
+    screen_vessels,
+)
+from digitalmodel.marine_ops.installation.vessel_suitability import (
+    LiftRequirement,
+    SuitabilityResult,
+    assess_named,
+    assess_vessel,
+    rank_fleet,
+)
+
+__all__ = [
+    # Models
+    "CraneCurve",
+    "CraneTipConfig",
+    "GoNoGoState",
+    "InstallationCase",
+    "InstallationCriteria",
+    "InstallationPhase",
+    "OperabilityResult",
+    "SplashZoneResult",
+    "Structure",
+    "Vessel",
+    "VesselScreeningResult",
+    # Jumper installation spec schema (issue #506)
+    "JumperInstallationSpec",
+    "JumperMetadata",
+    "JumperEnvironmentSpec",
+    "JumperGeometrySpec",
+    "PipeSpec",
+    "CraneSpec",
+    # Crane tip motion
+    "crane_tip_raos",
+    "crane_tip_significant_motion",
+    "crane_tip_significant_velocity",
+    # Splash zone
+    "slamming_force",
+    "splash_zone_assessment",
+    "varying_buoyancy_force",
+    # Operability
+    "compute_operability",
+    "hs_limit_for_criterion",
+    "weather_window_operability",
+    # Vessel screening
+    "screen_vessels",
+    # Confidence-weighted suitability (over the vessel DB fleet)
+    "LiftRequirement",
+    "SuitabilityResult",
+    "rank_fleet",
+    "assess_vessel",
+    "assess_named",
+    # Suitability report
+    "SuitabilityReport",
+    "build_report",
+    "to_markdown",
+    "to_html",
+]

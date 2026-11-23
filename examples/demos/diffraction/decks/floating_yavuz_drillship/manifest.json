@@ -1,0 +1,47 @@
+{
+  "vessel": "Yavuz (drillship)",
+  "vessel_id": "floating_yavuz_drillship",
+  "vessel_type": "Drillship (GustoMSC P10000 design, ultra-deepwater)",
+  "form": "ship",
+  "mesh": {
+    "kind": "parametric",
+    "file": "hull.gdf",
+    "n_panels": 930,
+    "swap": "replace hull.gdf with a real mesh and re-run; no other change needed"
+  },
+  "particulars": {
+    "loa": 229.19,
+    "beam": 36.0,
+    "draft": 14.7,
+    "depth": 23.52
+  },
+  "mass_basis": "free_floating",
+  "water_depth": "infinite",
+  "periods_s": [
+    4.0,
+    5.0,
+    6.0,
+    7.0,
+    8.0,
+    10.0,
+    12.0,
+    14.0,
+    16.0,
+    18.0,
+    20.0,
+    25.0
+  ],
+  "headings_deg": [
+    0.0,
+    45.0,
+    90.0,
+    135.0,
+    180.0
+  ],
+  "deck": "Yavuz.yml",
+  "notes": [
+    "parametric wall-sided mesh (first-pass screening; swap in a faired hull for design)",
+    "displacement unknown -> free_floating mode (mass from mesh volume)"
+  ],
+  "provenance": "parametric prep from vessel_db; run on a licensed OrcaWave/AQWA machine"
+}

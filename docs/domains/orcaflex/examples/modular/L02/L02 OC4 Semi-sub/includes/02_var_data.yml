@@ -1,0 +1,30 @@
+# VariableData Configuration
+# Generated from: L02 OC4 Semi-sub.yml
+# Date: 2026-01-18 22:18:47
+VariableData:
+  Externalfunctions:
+  - Name: Blade Pitch
+    Source: External file
+    FileName: PythonController.py
+    FunctionName: PitchController
+    InitialValue: 0
+    TimeStep: Outer time step
+  - Name: Generator Torque
+    Source: External file
+    FileName: PythonController.py
+    FunctionName: TorqueController
+    InitialValue: 0
+    TimeStep: Outer time step
+  Linetypediameter:
+  - Name: ID profile
+    IndependentValue, DependentValue:
+    - - 0
+      - 3.8320000000000003
+    - - 77.60000000000001
+      - 6.446
+  - Name: OD profile
+    IndependentValue, DependentValue:
+    - - 0
+      - 3.87
+    - - 77.60000000000001
+      - 6.5

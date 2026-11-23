@@ -1,0 +1,30 @@
+{
+  "basename": "viv_analysis",
+  "atlas_id": "862a28080fc9",
+  "physics": "log_log",
+  "response": "safety_factor_inline",
+  "axes": [
+    {
+      "name": "span_length_ft",
+      "scale": "log",
+      "grid": [
+        40.0,
+        60.0,
+        80.0,
+        100.0,
+        120.0
+      ]
+    },
+    {
+      "name": "current_speed_in_s",
+      "scale": "log",
+      "grid": [
+        12.0,
+        24.0,
+        36.0,
+        48.0,
+        72.0
+      ]
+    }
+  ]
+}

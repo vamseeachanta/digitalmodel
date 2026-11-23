@@ -1,0 +1,19 @@
+{
+  "provenance": "Synthetic inputs; expected presentation captured from the existing simple command before extraction.",
+  "cases": [
+    {
+      "name": "span",
+      "inputs": {"diameter": 0.1, "thickness": 0.01, "length": 10.0, "water_depth": 3.0, "offset": 4.0, "material": "x65", "internal_fluid": "oil"},
+      "args": ["simple", "--diameter", "0.1", "--thickness", "0.01", "--length", "10.0", "--water-depth", "3.0", "--offset", "4.0", "--material", "x65", "--internal-fluid", "oil"],
+      "stdout": "\n=== Simple Catenary Riser Analysis ===\n\nEffective Weight:     180.68 N/m\nHorizontal Tension:   0.55 kN\nTop Tension:          1.10 kN\nTop Angle:            30.36° from vertical\nSuspended Length:     5.23 m\nGrounded Length:      4.77 m\n",
+      "output": {"configuration": {"diameter": 0.1, "thickness": 0.01, "length": 10.0, "water_depth": 3.0, "material": "x65", "internal_fluid": "oil"}, "results": {"converged": true, "horizontal_tension_N": 554.1, "top_tension_N": 1096.13, "touchdown_tension_N": 554.1, "top_angle_deg": 30.36, "arc_length_m": 5.23, "grounded_length_m": 4.77, "effective_weight_N_per_m": 180.68, "catenary_parameter_m": 3.07}}
+    },
+    {
+      "name": "tension",
+      "inputs": {"diameter": 0.1, "thickness": 0.01, "length": 10.0, "water_depth": 3.0, "offset": 4.0, "material": "x70", "internal_fluid": "water", "top_tension": 1000.0, "coating_thickness": 0.002, "coating_density": 700.0},
+      "args": ["simple", "--diameter", "0.1", "--thickness", "0.01", "--length", "10.0", "--water-depth", "3.0", "--offset", "4.0", "--material", "x70", "--internal-fluid", "water", "--top-tension", "1000.0", "--coating-thickness", "0.002", "--coating-density", "700.0"],
+      "stdout": "\n=== Simple Catenary Riser Analysis ===\n\nEffective Weight:     187.26 N/m\nHorizontal Tension:   0.44 kN\nTop Tension:          1.00 kN\nTop Angle:            25.99° from vertical\nSuspended Length:     4.80 m\nGrounded Length:      5.20 m\n",
+      "output": {"configuration": {"diameter": 0.1, "thickness": 0.01, "length": 10.0, "water_depth": 3.0, "material": "x70", "internal_fluid": "water"}, "results": {"converged": true, "horizontal_tension_N": 438.21, "top_tension_N": 1000.0, "touchdown_tension_N": 438.21, "top_angle_deg": 25.99, "arc_length_m": 4.8, "grounded_length_m": 5.2, "effective_weight_N_per_m": 187.26, "catenary_parameter_m": 2.34}}
+    }
+  ]
+}

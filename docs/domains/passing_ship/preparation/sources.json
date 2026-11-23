@@ -1,0 +1,65 @@
+{
+  "sources": [
+    {
+      "id": "park-2021",
+      "url": "https://mdpi-res.com/d_attachment/processes/processes-09-00558/article_deploy/processes-09-00558.pdf",
+      "retrieval_date": "2026-10-14",
+      "http_status": "200",
+      "sha256": "6e7c7d88a76a4b3102ba74e5197918e7d3fbcd5cec80fea4177d9efaf63d5dc0",
+      "record_count": 6,
+      "use": "Tables 2 and 3 supply input candidates only; force references not tabulated."
+    },
+    {
+      "id": "abramowicz-gerigk-2022",
+      "url": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC8839586/fullTextXML",
+      "retrieval_date": "2026-10-14",
+      "http_status": "200",
+      "sha256": "0c4a68c21565f804fdae3f103d2924caa148ab41b37f3aa2b5a06c541101bf6f",
+      "record_count": 0,
+      "use": "Source screening only; no numeric force reference extracted."
+    }
+  ],
+  "repository_inputs": [
+    {
+      "path": "docs/domains/orcaflex/passing_ship/sample/spec.yml",
+      "use": "Assumed speed, line length and pretension, not public measured mooring data.",
+      "sha256": "72435b82f5d3828027f97095af810e74b4724d1876f909dca978dc9b611a316f",
+      "retrieval_date": "2026-10-14",
+      "record_count": 1
+    },
+    {
+      "path": "docs/domains/mooring/screening/manifest.json",
+      "use": "Digest mapping convention only; isolated static line results are not vessel response.",
+      "sha256": "c00219cc81c8ed16d1b50529a13be79611ab14665cb898fa15a02ad8832ced7b",
+      "retrieval_date": "2026-10-14",
+      "record_count": 1
+    }
+  ],
+  "record_count": 6,
+  "unavailable_sources": [
+    {
+      "url": "https://www.mdpi.com/2227-9717/9/3/558/pdf",
+      "http_status": "403",
+      "retrieved_utc": "2026-10-15T01:26:53Z",
+      "reason": "No usable open document returned."
+    },
+    {
+      "url": "https://www.mdpi.com/1424-8220/22/3/868",
+      "http_status": "403",
+      "retrieved_utc": "2026-10-15T01:27:00Z",
+      "reason": "No usable open document returned."
+    },
+    {
+      "url": "https://www.slc.ca.gov/wp-content/uploads/2018/08/PF2006-MOTEMS-Passing-Paper.pdf",
+      "http_status": "404",
+      "retrieved_utc": "2026-10-15T01:27:22Z",
+      "reason": "No usable open document returned."
+    },
+    {
+      "url": "https://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.1020.4780&rep=rep1&type=pdf",
+      "http_status": "200",
+      "retrieved_utc": "2026-10-15T01:31:54Z",
+      "reason": "No usable open document returned."
+    }
+  ]
+}

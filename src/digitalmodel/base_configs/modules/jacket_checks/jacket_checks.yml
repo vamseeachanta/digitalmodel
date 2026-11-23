@@ -1,0 +1,12 @@
+basename: jacket_checks
+
+default:
+  log_level: INFO
+  config:
+    generate_plots: false
+    overwrite:
+      output: true
+
+jacket_checks:
+  members: []
+  joints: []

@@ -1,0 +1,14 @@
+{
+  "provenance": {
+    "source": "synthetic (generic DP-vessel telemetry record format); representative offline sample for CI",
+    "licence": "synthetic — no third-party or client data redistributed",
+    "note": "Offline fixture so the parse->reducer->envelope chain runs with no network. No client telemetry, no vessel identity, no authentication material of any kind. Values are round synthetic numbers chosen to exercise an operable->inoperable offset transition at a generic 1500 m water depth; they match no real vessel's rated capacity.",
+    "captured_offline": true
+  },
+  "records": [
+    {"timestamp": "2026-01-01T00:00:00", "vessel_offset_m": 15.0, "vessel_heading_deg": 172.0, "top_tension_kn": 3000.0, "thrusters_online": 6, "total_available_thrust_kn": 9000.0, "total_commanded_thrust_kn": 2400.0, "flexjoint_angle_upper_deg": 0.6, "flexjoint_angle_lower_deg": 0.9},
+    {"timestamp": "2026-01-01T00:01:00", "vessel_offset_m": 30.0, "vessel_heading_deg": 171.0, "top_tension_kn": 3000.0, "thrusters_online": 6, "total_available_thrust_kn": 9000.0, "total_commanded_thrust_kn": 2600.0, "flexjoint_angle_upper_deg": 1.1, "flexjoint_angle_lower_deg": 1.5},
+    {"timestamp": "2026-01-01T00:02:00", "vessel_offset_m": null, "vessel_heading_deg": 170.0, "top_tension_kn": 3000.0, "thrusters_online": 6, "total_available_thrust_kn": 9000.0, "total_commanded_thrust_kn": 2600.0, "flexjoint_angle_upper_deg": 1.2, "flexjoint_angle_lower_deg": 1.6},
+    {"timestamp": "2026-01-01T00:03:00", "vessel_offset_m": 225.0, "vessel_heading_deg": 168.0, "top_tension_kn": 3000.0, "thrusters_online": 4, "total_available_thrust_kn": 6000.0, "total_commanded_thrust_kn": 5700.0, "flexjoint_angle_upper_deg": 6.4, "flexjoint_angle_lower_deg": 7.8}
+  ]
+}

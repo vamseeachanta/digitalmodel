@@ -1,0 +1,7 @@
+fender_id,manufacturer,fender_type,diameter_mm,length_mm,internal_pressure_kpa,rated_energy_knm,reaction_kn,hull_pressure_kpa,rated_deflection_pct,source
+GEN-PN-1,generic,pneumatic,1500,3000,50,150,600,130,60,fictional test row
+GEN-PN-2,generic,pneumatic,2000,3500,50,250,800,130,60,fictional test row
+GEN-PN-3,generic,pneumatic,2200,4000,50,400,1100,135,60,fictional test row
+GEN-PN-4,generic,pneumatic,2600,4500,80,700,1450,210,60,fictional test row
+GEN-PN-5,generic,pneumatic,3000,5000,50,900,1600,150,60,fictional test row
+GEN-FM-6,generic,foam,2800,5000,,1000,1400,180,60,fictional test row

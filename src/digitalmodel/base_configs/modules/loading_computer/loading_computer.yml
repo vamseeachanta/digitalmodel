@@ -1,0 +1,12 @@
+# ABOUTME: Base config for the loading computer / loadicator screening workflow.
+# ABOUTME: Box-hull equilibrium, intact + damage stability, longitudinal strength.
+basename: loading_computer
+
+default:
+  log_level: INFO
+  config:
+    generate_plots: false
+    overwrite:
+      output: true
+
+loading_computer: {}

@@ -1,0 +1,130 @@
+default:
+  log_level: DEBUG
+  config:
+    overwrite:
+      output: True
+  analysis:
+    db:
+      simple: False
+      table_statistics:
+        flag: False
+        statistics: [min, max, count, avg]
+        statistics_df_columns: [RiserId, SchemaName, TableName, ColumnName, ColumnDataType, StatisticsClassId, StartTime, EndTime, TableRows, Minimum, Maximum, Average, RMS, StandardDeviation]
+        schema: XOM
+#        tables: All
+        tables: [BD_TENSIONERS, BD_CALCULATEDDATAROOT, BD_RMSAS_VIVMONITOR, BD_RMSOUTPUT]
+      timeline_statistics:
+        flag: False
+        schema: XOM
+        time_interval_in_hours: 1
+        sets:
+          - table: YT_BOPYELLOWMRU_ACCMRU
+            time: TIMESTAMP
+            columns: [ACCMRU_FWD, ACCMRU_STBD]
+
+    run_example: False
+    statistics: True
+    fft: False
+    filter:
+      low_pass:
+        flag: False
+        frequency_maximum:
+      high_pass:
+        flag: False
+        frequency_minimum:
+      band_pass:
+        flag: False
+        frequency_minimum:
+        frequency_maximum:
+    ifft: True
+
+  units:
+    theta: degrees
+    time: s
+
+  input_data:
+#    TODO ensure consistent design between Excel data, db data and text files and .csv files
+    source: db
+    sets:
+      -
+        label: witsml
+        schema: Mole
+        query:
+          filename: get_time_window_records_from_table.sql
+          arguments: [Witsml, RigTime, "2020-01-25 13:00:20", "2020-01-25 13:15:20"]
+
+  db:
+    dev:
+        server_type: mssql
+        server: OHYWSQLAE-T
+        user: MoleSQLRWUser
+        password: K0hler_Krauss
+        database: Mole
+
+plot_settings:
+  -
+    file_name_extension: example_timetrace_1
+    df: input_data_witsml
+    label: [BitWt, Wob]
+    x: [BitDepth]
+    y: [BitWt, Wob]
+    size: half_letter
+    orientation: portrait
+    plt_kind: scatter
+    xlabel: Bit Depth (ft)
+    ylabel: Weight on Bit (kips)
+    suptitle: ODA Platform Quantities
+    title: Well API
+    xticklabels: NULL
+    grid: True
+    legend: True
+    legend_location: outside
+    marker: NULL
+#    xlim: [0, 1.6]
+#    ylim: [0, 1.6]
+#    xscale:
+#      log: False
+#    text_fields:
+#      -
+#        x: 0.4
+#        y: 0.4
+#        text: Acceptable
+#        color: g
+#      -
+#        x: 0.8
+#        y: 1.0
+#        text: Unacceptable
+#        color: r
+  -
+    file_name_extension: example_polar
+    df: input_data_witsml
+    label: [polar]
+    x: [BitWt]
+    y: [BitDepth]
+    size: half_letter
+    orientation: portrait
+    plt_kind: polar_scatter
+    xlabel: Bit Depth (ft)
+    ylabel: Weight on Bit (kips)
+    suptitle: ODA Platform Quantities
+    title: Well API
+    xticklabels: NULL
+    grid: True
+    legend: True
+    legend_location: outside
+    marker: NULL
+#    xlim: [0, 1.6]
+#    ylim: [0, 1.6]
+#    xscale:
+#      log: False
+#    text_fields:
+#      -
+#        x: 0.4
+#        y: 0.4
+#        text: Acceptable
+#        color: g
+#      -
+#        x: 0.8
+#        y: 1.0
+#        text: Unacceptable
+#        color: r

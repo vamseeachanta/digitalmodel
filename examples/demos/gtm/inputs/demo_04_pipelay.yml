@@ -1,0 +1,87 @@
+# ABOUTME: demo_04 Sweep Config — Baseline Run encoding the 60-case S-lay pipelay matrix.
+# ABOUTME: COMPLETE source of truth for ALL config (ADR-0002/0005); axes are LISTS, engine crosses them.
+#
+# Per ADR-0002/0005, this yaml is the COMPLETE reviewable source of truth for ALL config: the
+# sweep axes (vessels / pipe_sizes / water_depths), the material grade selecting SMYS/SMTS, the
+# fundamental physical constants (seawater density, gravity, steel density, Young's modulus), the
+# acceptance/criteria constants (stress-limit factor, tension margin, go/no-go bands, the
+# sagbend stress basis toggle), the display utilisation-colour thresholds (kept SEPARATE from the
+# go/no-go logic), the stinger-band annotations (derived from the vessel catalog, not duplicated
+# literals), the catalog locations, and the artifact paths. No compute-path config is hardcoded
+# in the demo module.
+#
+# Baseline-defining values (BD-*):
+#   BD-1: the 60 live cases are frozen on the CORRECTED (combined-stress) output.
+#   B1:   water_depths are INTEGERS — the loader preserves the type (no coercion).
+#   CS:   sagbend_stress_basis = combined (default): utilisation = (sigma_bending + sigma_axial)
+#         / (stress_limit_factor * SMYS). bending_only is an explicit labelled diagnostic path.
+#   PS:   pipe_sizes maps nominal size -> target wall thickness (mm). WT IS ON THE COMPUTE PATH
+#         (drives A_steel -> axial stress, and OD/WT -> bending), so it is externalized here, not
+#         hardcoded in the module.
+#
+# Cross-product nesting (must match the frozen golden order):
+#   vessel (outer) -> pipe_size -> depth (inner)  => 2 x 5 x 6 = 60 cases.
+
+meta:
+  demo_id: demo_04
+  code_ref: "DNV-ST-F101 (2021) / API RP 1111 (2015) / DNV-OS-F101 (2013)"
+
+sweep:
+  # The 2 vessels, identified by the catalog "id" the demo loop resolves against.
+  vessels: ["PLV-001", "PLV-002"]
+  # 5 pipe sizes — nominal size -> target wall thickness (mm). WT is ON the compute path.
+  # Standard/minimum WT for installation screening (worst-case bending stress).
+  pipe_sizes:
+    8in: 8.18    # Sch 40
+    12in: 9.53   # Sch 40
+    16in: 9.53   # Sch 30
+    20in: 9.53   # Sch 20
+    24in: 9.53   # Sch 20
+  # 6 water depths — INTEGERS (B1: kept as int, never coerced to float). Shallow-water focus.
+  water_depths_m: [7, 10, 15, 20, 25, 30]
+
+# Material grade — selects SMYS / SMTS (API 5L). Today's baseline is X65.
+material:
+  grade: X65
+  # The grade->property map (Pa). The grade key above selects one row; the others are
+  # available for client runs without editing the module (calc_values.py GRADES mirror).
+  grades:
+    X52: {smys_pa: 358.0e+6, smts_pa: 455.0e+6}
+    X60: {smys_pa: 413.0e+6, smts_pa: 517.0e+6}
+    X65: {smys_pa: 448.0e+6, smts_pa: 531.0e+6}
+    X70: {smys_pa: 482.0e+6, smts_pa: 565.0e+6}
+
+# Physical constants — frozen at today's Baseline values.
+physical_constants:
+  seawater_density_kg_m3: 1025.0
+  gravity_m_s2: 9.80665
+  steel_density_kg_m3: 7850.0
+  youngs_modulus_pa: 207.0e+9      # 207 GPa
+
+# Acceptance / criteria constants.
+criteria:
+  stress_limit_factor: 0.72        # sigma_allow = 0.72 * SMYS (DNV-ST-F101 installation)
+  tension_margin: 1.10             # operational margin above absolute minimum tension
+  go_threshold: 0.85               # max_util >= this (and all pass) => MARGINAL
+  nogo_utilisation: 1.0            # max_util > this (or any check fails) => NO_GO
+  # Sagbend stress basis toggle (the §4 fix). 'combined' (default) =
+  #   sigma_combined = sigma_bending + sigma_axial; utilisation = sigma_combined / sigma_allow.
+  # 'bending_only' = the legacy diagnostic path (bending stress only).
+  sagbend_stress_basis: combined
+
+# Display-only utilisation-colour thresholds. KEPT SEPARATE from the go/no-go LOGIC bands above
+# (a reviewer finding: display colour and acceptance logic must not be coupled).
+display:
+  util_color_green_below: 0.70     # util < this => green
+  util_color_amber_below: 0.90     # green..this => amber, above => red
+
+# Catalog file locations — paths are relative to THIS yaml file's directory. The catalogs are
+# the SOURCE OF TRUTH; the loop resolves vessels by id and pipes by nominal size.
+catalogs:
+  vessels: ../data/pipelay_vessels.json
+  pipelines: ../data/pipelines.json
+
+# Artifact roots — paths are relative to THIS yaml file's directory.
+artifacts:
+  results_root: ../results
+  output_root: ../output

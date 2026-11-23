@@ -1,0 +1,193 @@
+metadata:
+  title: "Pipeline Girth Weld Fatigue Assessment"
+  doc_id: "CALC-001"
+  revision: 1
+  date: "2026-03-13"
+  author: "Vamsee Achanta"
+  reviewer: "Independent Reviewer"
+  status: draft
+  project: "Generic Pipeline Fatigue"
+  change_log:
+    - rev: 1
+      date: "2026-03-13"
+      description: "Initial calculation"
+
+inputs:
+  - name: "S-N Curve Class"
+    symbol: "C"
+    value: "DNV D"
+    unit: "-"
+    source: "DNV-RP-C203 Table 2-1"
+    notes: "Seawater with cathodic protection"
+  - name: "Stress Concentration Factor"
+    symbol: "SCF"
+    value: 1.5
+    unit: "-"
+    source: "DNV-RP-C203 Section 3.3"
+  - name: "Design Fatigue Factor"
+    symbol: "DFF"
+    value: 3.0
+    unit: "-"
+    source: "DNV-OS-F101"
+  - name: "Design Life"
+    symbol: "T_d"
+    value: 20
+    unit: "years"
+  - name: "Weibull Shape Parameter"
+    symbol: "h"
+    value: 0.9
+    unit: "-"
+    source: "Long-term stress analysis"
+  - name: "Weibull Scale Parameter"
+    symbol: "S_{scale}"
+    value: 80
+    unit: "MPa"
+    source: "Long-term stress analysis"
+  - name: "Number of Stress Cycles"
+    symbol: "N_{total}"
+    value: 1.0e8
+    unit: "cycles"
+    source: "20-year wave loading"
+
+methodology:
+  description: |
+    Fatigue assessment of a pipeline girth weld using Palmgren-Miner
+    linear damage accumulation. Stress ranges are derived from a Weibull
+    distribution fitted to long-term hydrodynamic analysis. The S-N curve
+    is selected per DNV-RP-C203 for seawater with cathodic protection.
+    Stress ranges are multiplied by the SCF before entering the S-N lookup.
+  standard: "DNV-RP-C203 (2021)"
+  equations:
+    - id: 1
+      name: "S-N Curve"
+      latex: "\\log N = \\log \\bar{a} - m \\log \\Delta\\sigma"
+      description: "Relates number of cycles to failure N to stress range."
+      variables:
+        - symbol: "N"
+          description: "Number of cycles to failure"
+          unit: "cycles"
+        - symbol: "\\bar{a}"
+          description: "S-N curve intercept (design basis)"
+          unit: "-"
+        - symbol: "m"
+          description: "S-N curve slope (negative inverse)"
+          unit: "-"
+        - symbol: "\\Delta\\sigma"
+          description: "Stress range"
+          unit: "MPa"
+    - id: 2
+      name: "Palmgren-Miner Damage"
+      latex: "D = \\sum_{i=1}^{k} \\frac{n_i}{N_i}"
+      description: "Cumulative fatigue damage as sum of cycle ratios."
+      variables:
+        - symbol: "D"
+          description: "Cumulative fatigue damage ratio"
+          unit: "-"
+        - symbol: "n_i"
+          description: "Number of applied cycles in stress block i"
+          unit: "cycles"
+        - symbol: "N_i"
+          description: "Number of cycles to failure at stress range i"
+          unit: "cycles"
+    - id: 3
+      name: "Factored Damage"
+      latex: "D_{factored} = D \\times DFF"
+      description: "Factored damage applying the Design Fatigue Factor."
+      variables:
+        - symbol: "DFF"
+          description: "Design Fatigue Factor"
+          unit: "-"
+
+outputs:
+  - name: "Total Unfactored Damage"
+    symbol: "D"
+    value: 0.15
+    unit: "-"
+    notes: "Sum of n_i/N_i across all stress blocks"
+  - name: "Factored Damage"
+    symbol: "D_{factored}"
+    value: 0.45
+    unit: "-"
+    pass_fail: "pass"
+    limit: 1.0
+    notes: "D * DFF = 0.15 * 3.0"
+  - name: "Calculated Fatigue Life"
+    symbol: "T_{calc}"
+    value: 133.3
+    unit: "years"
+    notes: "T_d / D = 20 / 0.15"
+  - name: "Minimum Required Life"
+    symbol: "T_{req}"
+    value: 60.0
+    unit: "years"
+    pass_fail: "pass"
+    limit: 60.0
+    notes: "T_d * DFF = 20 * 3.0"
+
+assumptions:
+  - "Linear damage accumulation (Palmgren-Miner) is valid"
+  - "Stress ranges follow a Weibull distribution"
+  - "No significant corrosion degradation beyond CP assumptions"
+  - "Weld quality meets DNV fabrication tolerances"
+  - "Mean stress effects are neglected (conservative)"
+
+references:
+  - "DNV-RP-C203 (2021) — Fatigue Design of Offshore Steel Structures"
+  - "DNV-OS-F101 (2021) — Submarine Pipeline Systems"
+  - "BS 7608:2014 — Fatigue Design and Assessment of Steel Structures"
+
+charts:
+  - id: "sn_curve"
+    title: "S-N Curve (DNV D — Seawater + CP)"
+    type: log_log
+    x_label: "Stress Range"
+    y_label: "Cycles to Failure"
+    x_unit: "MPa"
+    y_unit: "cycles"
+    x_scale: log
+    y_scale: log
+    datasets:
+      - label: "DNV D Curve"
+        data: [[10, 1.58e9], [20, 1.97e8], [50, 1.26e7], [100, 1.58e6],
+               [200, 1.97e5], [500, 1.26e4]]
+        color: "#0f766e"
+      - label: "Applied Stress Ranges"
+        data: [[30, 5.0e7], [50, 1.0e7], [80, 2.5e6], [120, 8.0e5]]
+        color: "#b91c1c"
+  - id: "stress_histogram"
+    title: "Stress Range Histogram"
+    type: bar
+    x_label: "Stress Range Bin"
+    y_label: "Number of Cycles"
+    x_unit: "MPa"
+    y_unit: "cycles"
+    datasets:
+      - label: "Cycle Count"
+        data: [[10, 5.0e7], [20, 2.5e7], [30, 1.2e7], [40, 5.0e6],
+               [50, 2.0e6], [60, 8.0e5], [70, 3.0e5], [80, 1.0e5],
+               [90, 3.0e4], [100, 8.0e3]]
+        color: "#0f766e"
+
+data_tables:
+  - id: "damage_contributors"
+    title: "Top Damage Contributors"
+    columns:
+      - name: "Stress Range"
+        unit: "MPa"
+      - name: "Cycles Applied"
+        unit: "-"
+      - name: "Cycles to Failure"
+        unit: "-"
+      - name: "Damage Fraction"
+        unit: "-"
+      - name: "Cumulative Damage"
+        unit: "-"
+    rows:
+      - [80, 1.0e5, 2.5e6, 0.040, 0.040]
+      - [70, 3.0e5, 4.1e6, 0.073, 0.113]
+      - [60, 8.0e5, 7.2e6, 0.111, 0.224]
+      - [50, 2.0e6, 1.26e7, 0.159, 0.383]
+      - [40, 5.0e6, 2.5e7, 0.200, 0.583]
+      - [30, 1.2e7, 5.6e7, 0.214, 0.797]
+      - [20, 2.5e7, 1.97e8, 0.127, 0.924]
+      - [10, 5.0e7, 1.58e9, 0.032, 0.956]

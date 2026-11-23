@@ -1,0 +1,36 @@
+basename: mooring_fatigue
+
+mooring_fatigue:
+  design_life_years: 25.0
+  dff: 3.0
+  sn_curve:
+    curve: D
+    environment: seawater_cp
+  output_dir: results
+  lines:
+    - id: chain-01
+      material: CHAIN
+      area_mm2: 8000.0
+      tension_range_bins:
+        - tension_range_kN: 220.0
+          n_cycles: 150000
+        - tension_range_kN: 300.0
+          n_cycles: 60000
+        - tension_range_kN: 380.0
+          n_cycles: 10000
+    - id: wire-01
+      material: STEEL-WIRE
+      area_mm2: 5200.0
+      tension_range_bins:
+        - tension_range_kN: 180.0
+          n_cycles: 180000
+        - tension_range_kN: 260.0
+          n_cycles: 90000
+        - tension_range_kN: 360.0
+          n_cycles: 20000
+
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: true

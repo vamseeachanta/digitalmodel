@@ -1,0 +1,4 @@
+ref_id,sn_curve_name,environment,scf_ref,dff_ref,code_id,wiki_path,note
+riser_girth_weld_class_d,D,seawater_cp,get_riser_scf,get_riser_dff,dnv-rp-c203,wikis/engineering-standards/wiki/standards/dnv-rp-c203.md,common girth-weld detail class for riser fatigue screening
+riser_girth_weld_class_e,E,seawater_cp,get_riser_scf,get_riser_dff,dnv-rp-c203,wikis/engineering-standards/wiki/standards/dnv-rp-c203.md,alternative girth-weld detail class for riser fatigue screening
+riser_touchdown_default,F1,seawater_cp,get_riser_scf,get_riser_dff,dnv-rp-c203,wikis/engineering-standards/wiki/standards/dnv-rp-c203.md,defaults used by the riser_fatigue touchdown assessment

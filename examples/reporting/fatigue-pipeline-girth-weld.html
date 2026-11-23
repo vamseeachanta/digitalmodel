@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pipeline Girth Weld Fatigue Assessment — CALC-001</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.6/dist/chart.umd.min.js"></script>
+<style>
+:root {
+  --bg:         #f3efe6;
+  --panel:      #fffdf8;
+  --ink:        #172126;
+  --muted:      #55636b;
+  --accent:     #0f766e;
+  --accent-2:   #8a5a2b;
+  --line:       #d9d0c0;
+  --shadow:     0 16px 40px rgba(20,33,38,0.08);
+  --good:       #166534;
+  --warn:       #b45309;
+  --bad:        #b91c1c;
+}
+*{box-sizing:border-box;}
+body{font-family:Georgia,"Times New Roman",serif;
+  background:radial-gradient(circle at top,#fffaf0 0,var(--bg) 48%,#ebe5d7 100%);
+  color:var(--ink);line-height:1.55;margin:0;padding:0;}
+a{color:var(--accent);text-decoration:none;}
+a:hover{text-decoration:underline;}
+code{font-family:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;
+  background:rgba(27,31,35,0.06);padding:.2em .4em;border-radius:3px;font-size:.88em;}
+
+.hero{padding:28px 24px 20px;border-bottom:1px solid rgba(23,33,38,0.08);
+  background:linear-gradient(135deg,rgba(15,118,110,0.07),rgba(138,90,43,0.09));}
+.hero-inner{max-width:1100px;margin:0 auto;}
+.eyebrow{text-transform:uppercase;letter-spacing:.12em;font-size:.68rem;
+  color:var(--accent);font-weight:700;margin:0 0 6px;}
+h1.report-title{margin:0 0 8px;font-size:clamp(1.6rem,3vw,2.4rem);line-height:1.1;}
+.lede{color:var(--muted);font-size:.92rem;margin:0 0 14px;max-width:72ch;}
+
+.meta-chips{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 2px;}
+.meta-chip{background:var(--panel);border:1px solid var(--line);border-radius:8px;
+  padding:5px 10px;font-size:.8rem;}
+.meta-chip strong{font-size:.65rem;text-transform:uppercase;letter-spacing:.07em;
+  color:var(--accent-2);display:block;margin-bottom:1px;}
+
+.content{max-width:1100px;margin:0 auto;padding:24px 24px 56px;}
+.card{background:var(--panel);padding:26px;border-radius:18px;
+  box-shadow:var(--shadow);border:1px solid var(--line);margin-bottom:20px;}
+.card h2{border-bottom:1px solid var(--line);padding-bottom:.3em;margin-top:0;
+  color:var(--accent-2);letter-spacing:.02em;font-size:1.2rem;}
+.card p,.card li,.card td,.card th{color:var(--muted);}
+.card strong,.card code{color:var(--ink);}
+
+table{border-collapse:collapse;width:100%;margin:14px 0;font-size:.9rem;}
+thead th{background:var(--panel);border-bottom:2px solid var(--accent);
+  font-weight:700;text-transform:uppercase;letter-spacing:.06em;
+  font-size:.78rem;padding:8px 10px;text-align:left;color:var(--ink);}
+tbody td{border-bottom:1px solid var(--line);padding:7px 10px;
+  color:var(--muted);vertical-align:top;}
+tbody tr:last-child td{border-bottom:none;}
+tbody td strong,tbody td code{color:var(--ink);}
+tbody tr:hover>td{background:rgba(15,118,110,.03);}
+
+.badge{display:inline-block;padding:2px 8px;border-radius:999px;
+  font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;
+  white-space:nowrap;}
+.badge-pass{background:#dcfce7;color:var(--good);}
+.badge-fail{background:#fee2e2;color:var(--bad);}
+.badge-draft{background:#fef3c7;color:var(--warn);}
+.badge-reviewed{background:#dbeafe;color:#1d4ed8;}
+.badge-approved{background:#dcfce7;color:var(--good);}
+
+.equation-block{background:#f8f9fa;border:1px solid var(--line);border-radius:10px;
+  padding:16px 20px;margin:12px 0;position:relative;}
+.equation-block .eq-number{position:absolute;right:16px;top:50%;transform:translateY(-50%);
+  font-size:.82rem;color:var(--muted);font-weight:700;}
+.equation-name{font-size:.85rem;font-weight:700;color:var(--accent);margin-bottom:6px;}
+.equation-desc{font-size:.85rem;color:var(--muted);margin-top:8px;}
+.variable-list{margin:8px 0 0;padding:0 0 0 18px;font-size:.82rem;}
+.variable-list li{margin:2px 0;color:var(--muted);}
+.variable-list li .var-sym{color:var(--ink);font-weight:600;}
+
+.chart-container{margin:16px 0;position:relative;}
+.chart-container canvas{max-height:400px;width:100%;}
+.chart-title{font-size:.9rem;font-weight:700;color:var(--accent-2);margin-bottom:8px;}
+
+details{margin:8px 0;}
+details summary{cursor:pointer;font-weight:700;color:var(--accent);
+  font-size:.9rem;padding:4px 0;}
+details summary:hover{text-decoration:underline;}
+details[open] summary{margin-bottom:8px;}
+
+.report-footer{text-align:center;padding:20px;font-size:.75rem;color:var(--muted);
+  border-top:1px solid var(--line);margin-top:40px;}
+
+@media print{
+  body{background:#fff;}
+  .card{box-shadow:none;border:1px solid #ccc;break-inside:avoid;}
+  .hero{background:#f8f8f8;border-bottom:2px solid #333;}
+  .chart-container canvas{max-height:300px;}
+}
+
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">CALC-001</div>
+    <h1 class="report-title">Pipeline Girth Weld Fatigue Assessment</h1>
+    <div class="meta-chips">
+      <div class="meta-chip"><strong>Status</strong><span class="badge badge-draft">DRAFT</span></div>
+      <div class="meta-chip"><strong>Revision</strong>1</div>
+      <div class="meta-chip"><strong>Date</strong>2026-03-13</div>
+      <div class="meta-chip"><strong>Author</strong>Vamsee Achanta</div>
+        <div class="meta-chip"><strong>Reviewer</strong>Independent Reviewer</div>
+        <div class="meta-chip"><strong>Project</strong>Generic Pipeline Fatigue</div>
+      <div class="meta-chip"><strong>Standard</strong>DNV-RP-C203 (2021)</div>
+    </div>
+  </div>
+</div>
+
+<div class="content">
+<div class="card">
+  <h2>Inputs</h2>
+  <table>
+    <thead><tr><th>Name</th><th>Symbol</th><th>Value</th><th>Unit</th><th>Source</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>S-N Curve Class</strong></td>
+        <td class="katex-inline">$C$</td>
+        <td>DNV D</td>
+        <td>-</td>
+        <td>DNV-RP-C203 Table 2-1</td>
+      </tr>
+      <tr>
+        <td><strong>Stress Concentration Factor</strong></td>
+        <td class="katex-inline">$SCF$</td>
+        <td>1.5</td>
+        <td>-</td>
+        <td>DNV-RP-C203 Section 3.3</td>
+      </tr>
+      <tr>
+        <td><strong>Design Fatigue Factor</strong></td>
+        <td class="katex-inline">$DFF$</td>
+        <td>3.0</td>
+        <td>-</td>
+        <td>DNV-OS-F101</td>
+      </tr>
+      <tr>
+        <td><strong>Design Life</strong></td>
+        <td class="katex-inline">$T_d$</td>
+        <td>20</td>
+        <td>years</td>
+        <td>—</td>
+      </tr>
+      <tr>
+        <td><strong>Weibull Shape Parameter</strong></td>
+        <td class="katex-inline">$h$</td>
+        <td>0.9</td>
+        <td>-</td>
+        <td>Long-term stress analysis</td>
+      </tr>
+      <tr>
+        <td><strong>Weibull Scale Parameter</strong></td>
+        <td class="katex-inline">$S_{scale}$</td>
+        <td>80</td>
+        <td>MPa</td>
+        <td>Long-term stress analysis</td>
+      </tr>
+      <tr>
+        <td><strong>Number of Stress Cycles</strong></td>
+        <td class="katex-inline">$N_{total}$</td>
+        <td>1.0e8</td>
+        <td>cycles</td>
+        <td>20-year wave loading</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="card">
+  <h2>Methodology</h2>
+  <p>Fatigue assessment of a pipeline girth weld using Palmgren-Miner
+linear damage accumulation. Stress ranges are derived from a Weibull
+distribution fitted to long-term hydrodynamic analysis. The S-N curve
+is selected per DNV-RP-C203 for seawater with cathodic protection.
+Stress ranges are multiplied by the SCF before entering the S-N lookup.</p>
+  <p><strong>Standard:</strong> DNV-RP-C203 (2021)</p>
+  <div class="equation-block">
+    <div class="equation-name">Equation 1: S-N Curve</div>
+    <div class="katex-display">$$\log N = \log \bar{a} - m \log \Delta\sigma$$</div>
+    <div class="equation-desc">Relates number of cycles to failure N to stress range.</div>
+    <span class="eq-number">(1)</span>
+    <ul class="variable-list">
+<li><span class="var-sym">$N$</span> — Number of cycles to failure [cycles]</li>
+<li><span class="var-sym">$\bar{a}$</span> — S-N curve intercept (design basis) [-]</li>
+<li><span class="var-sym">$m$</span> — S-N curve slope (negative inverse) [-]</li>
+<li><span class="var-sym">$\Delta\sigma$</span> — Stress range [MPa]</li>
+</ul>
+  </div>
+  <div class="equation-block">
+    <div class="equation-name">Equation 2: Palmgren-Miner Damage</div>
+    <div class="katex-display">$$D = \sum_{i=1}^{k} \frac{n_i}{N_i}$$</div>
+    <div class="equation-desc">Cumulative fatigue damage as sum of cycle ratios.</div>
+    <span class="eq-number">(2)</span>
+    <ul class="variable-list">
+<li><span class="var-sym">$D$</span> — Cumulative fatigue damage ratio [-]</li>
+<li><span class="var-sym">$n_i$</span> — Number of applied cycles in stress block i [cycles]</li>
+<li><span class="var-sym">$N_i$</span> — Number of cycles to failure at stress range i [cycles]</li>
+</ul>
+  </div>
+  <div class="equation-block">
+    <div class="equation-name">Equation 3: Factored Damage</div>
+    <div class="katex-display">$$D_{factored} = D \times DFF$$</div>
+    <div class="equation-desc">Factored damage applying the Design Fatigue Factor.</div>
+    <span class="eq-number">(3)</span>
+    <ul class="variable-list">
+<li><span class="var-sym">$DFF$</span> — Design Fatigue Factor [-]</li>
+</ul>
+  </div>
+</div>
+
+<div class="card">
+  <h2>Outputs</h2>
+  <table>
+    <thead><tr><th>Name</th><th>Symbol</th><th>Value</th><th>Unit</th><th>Pass/Fail</th><th>Limit</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>Total Unfactored Damage</strong></td>
+        <td class="katex-inline">$D$</td>
+        <td>0.15</td>
+        <td>-</td>
+        <td>—</td>
+        <td>—</td>
+      </tr>
+      <tr>
+        <td><strong>Factored Damage</strong></td>
+        <td class="katex-inline">$D_{factored}$</td>
+        <td>0.45</td>
+        <td>-</td>
+        <td><span class="badge badge-pass">PASS</span></td>
+        <td>≤ 1.0</td>
+      </tr>
+      <tr>
+        <td><strong>Calculated Fatigue Life</strong></td>
+        <td class="katex-inline">$T_{calc}$</td>
+        <td>133.3</td>
+        <td>years</td>
+        <td>—</td>
+        <td>—</td>
+      </tr>
+      <tr>
+        <td><strong>Minimum Required Life</strong></td>
+        <td class="katex-inline">$T_{req}$</td>
+        <td>60.0</td>
+        <td>years</td>
+        <td><span class="badge badge-pass">PASS</span></td>
+        <td>≤ 60.0</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="card">
+  <h2>Charts</h2>
+  <div class="chart-container">
+    <div class="chart-title">S-N Curve (DNV D — Seawater + CP)</div>
+    <canvas id="chart-sn_curve" height="300"></canvas>
+  </div>
+  <div class="chart-container">
+    <div class="chart-title">Stress Range Histogram</div>
+    <canvas id="chart-stress_histogram" height="300"></canvas>
+  </div>
+</div>
+
+<div class="card">
+  <h2>Data Tables</h2>
+  <h3>Top Damage Contributors</h3>
+  <table>
+    <thead><tr><th>Stress Range (MPa)</th><th>Cycles Applied (-)</th><th>Cycles to Failure (-)</th><th>Damage Fraction (-)</th><th>Cumulative Damage (-)</th></tr></thead>
+    <tbody>
+      <tr><td>80</td><td>1.0e5</td><td>2.5e6</td><td>0.04</td><td>0.04</td></tr>
+      <tr><td>70</td><td>3.0e5</td><td>4.1e6</td><td>0.073</td><td>0.113</td></tr>
+      <tr><td>60</td><td>8.0e5</td><td>7.2e6</td><td>0.111</td><td>0.224</td></tr>
+      <tr><td>50</td><td>2.0e6</td><td>1.26e7</td><td>0.159</td><td>0.383</td></tr>
+      <tr><td>40</td><td>5.0e6</td><td>2.5e7</td><td>0.2</td><td>0.583</td></tr>
+      <tr><td>30</td><td>1.2e7</td><td>5.6e7</td><td>0.214</td><td>0.797</td></tr>
+      <tr><td>20</td><td>2.5e7</td><td>1.97e8</td><td>0.127</td><td>0.924</td></tr>
+      <tr><td>10</td><td>5.0e7</td><td>1.58e9</td><td>0.032</td><td>0.956</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="card">
+  <details open>
+    <summary>Assumptions</summary>
+    <ol>
+    <li>Linear damage accumulation (Palmgren-Miner) is valid</li>
+    <li>Stress ranges follow a Weibull distribution</li>
+    <li>No significant corrosion degradation beyond CP assumptions</li>
+    <li>Weld quality meets DNV fabrication tolerances</li>
+    <li>Mean stress effects are neglected (conservative)</li>
+    </ol>
+  </details>
+</div>
+<div class="card">
+  <details open>
+    <summary>References</summary>
+    <ol>
+    <li>DNV-RP-C203 (2021) — Fatigue Design of Offshore Steel Structures</li>
+    <li>DNV-OS-F101 (2021) — Submarine Pipeline Systems</li>
+    <li>BS 7608:2014 — Fatigue Design and Assessment of Steel Structures</li>
+    </ol>
+  </details>
+</div>
+
+<div class="card">
+  <h2>Change Log</h2>
+  <table>
+    <thead><tr><th>Rev</th><th>Date</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>2026-03-13</td><td>Initial calculation</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="report-footer">
+  Generated by calculation-report skill &middot; CALC-001 Rev 1
+</div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  renderMathInElement(document.body, {
+    delimiters: [
+      {left: "$$", right: "$$", display: true},
+      {left: "$", right: "$", display: false}
+    ],
+    throwOnError: false
+  });
+});
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+new Chart(document.getElementById("chart-sn_curve"), {"type":"scatter","data":{"datasets":[{"label":"DNV D Curve","data":[{"x": 10, "y": "1.58e9"}, {"x": 20, "y": "1.97e8"}, {"x": 50, "y": "1.26e7"}, {"x": 100, "y": "1.58e6"}, {"x": 200, "y": "1.97e5"}, {"x": 500, "y": "1.26e4"}],"borderColor":"#0f766e","backgroundColor":"#0f766e80","showLine":true,"pointRadius":4},{"label":"Applied Stress Ranges","data":[{"x": 30, "y": "5.0e7"}, {"x": 50, "y": "1.0e7"}, {"x": 80, "y": "2.5e6"}, {"x": 120, "y": "8.0e5"}],"borderColor":"#b91c1c","backgroundColor":"#b91c1c80","showLine":true,"pointRadius":4}]},"options":{"responsive":true,"scales":{"x":{"type":"logarithmic","title":{"display":true,"text":"Stress Range"}},"y":{"type":"logarithmic","title":{"display":true,"text":"Cycles to Failure"}}}}});
+new Chart(document.getElementById("chart-stress_histogram"), {"type":"bar","data":{"labels":[10, 20, 30, 40, 50, 60, 70, 80, 90, 100],"datasets":[{"label":"Cycle Count","data":["5.0e7", "2.5e7", "1.2e7", "5.0e6", "2.0e6", "8.0e5", "3.0e5", "1.0e5", "3.0e4", "8.0e3"],"backgroundColor":"#0f766ecc","borderColor":"#0f766e","borderWidth":1}]},"options":{"responsive":true,"scales":{"x":{"title":{"display":true,"text":"Stress Range Bin"}},"y":{"title":{"display":true,"text":"Number of Cycles"}}}}}});
+});
+</script>
+</body>
+</html>

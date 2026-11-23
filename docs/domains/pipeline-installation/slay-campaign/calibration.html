@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Generic S-lay calibration plan</title>
+<style>body{font:1rem/1.6 system-ui;max-width:72rem;margin:3rem auto;padding:0 1rem}table{border-collapse:collapse;width:100%}th,td{border:1px solid #aaa;padding:.5rem;text-align:left}caption{caption-side:bottom;text-align:left}</style>
+<main><h1>Generic S-lay calibration plan</h1>
+<h2>Summary</h2>
+<p>The generic campaign will be calibrated internally against numerical outputs extracted by
+an authorized analyst in the licensed environment. This preparation will not open, locate, search,
+read or copy a previous model. Agreement is <strong>Not Evaluated</strong> because neither native
+output nor a qualified previous-experience extraction is available. The next step will be a
+rights-qualified neutral extraction and a matched-basis comparison, not a public copy of earlier work.</p>
+<h2>Revision history</h2>
+<table><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr>
+<tr><td>0</td><td>2026-10-14</td><td>Initial extraction and comparison plan; preserve the distinction between generic assumptions and internal calibration.</td></tr>
+<tr><td>1</td><td>2026-10-14</td><td>Neutral analyst and environment wording will define the extraction roles and source register.</td></tr>
+<caption>Table 1. Revision history.</caption></table>
+<h2>Basis and scope</h2>
+<p>The generic basis will remain the case table at this document's relative location.
+The source inventory structure will follow <code>docs/domains/pipeline-installation/coverage-2026-10.md</code>
+at <code>1fbcd89fa6c446d7baf09d4ccdc71cd30f09f498</code>. That inventory is not merged at the inspected
+default-branch basis <code>c9ae7591129b40732846b50661045f99ab249aba</code>.
+Its source-only capability will not be promoted to native acceptance. Internal access permission
+will not imply permission to publish extracts: an authorized analyst will verify source rights,
+permitted transformation and intended use before any extraction leaves its authorized storage.</p>
+<h2>Extraction contract</h2>
+<p>An authorized analyst will extract a neutral CSV of numbers with columns
+<code>quantity,unit,sample_coordinate,reference_value,uncertainty</code> and a separate neutral
+JSON manifest. Quantity identifiers will be selected from Table 2, with units explicitly declared.
+Sample coordinates will use arc length from the generic upper endpoint or normalized arc length
+between stinger exit and touchdown; coordinate type will be stated in the manifest.
+The numeric file and manifest will contain no project, field, client, vessel or person name,
+document number, original filename, source path or free-text note. Missing values will be null
+with an enumerated reason in the manifest; zero will remain a measured zero.</p>
+<table><tr><th>Quantity</th><th>Unit</th><th>Comparison basis</th></tr>
+<tr><td>effective tension</td><td>kN</td><td>Upper endpoint, stinger exit, minimum and maximum along the pipe; identical static state.</td></tr>
+<tr><td>bending moment</td><td>kN.m</td><td>Matched arc-length stations in overbend and sagbend; signed axes recorded.</td></tr>
+<tr><td>curvature</td><td>1/m</td><td>Signed planar curvature and magnitude, peak positions; free span separate from supports.</td></tr>
+<tr><td>steel bending strain</td><td>1</td><td>Steel diameter times curvature divided by two; same strain definition.</td></tr>
+<tr><td>roller reaction</td><td>kN</td><td>Indexed contact order, normal and tangential components, active/inactive contact.</td></tr>
+<tr><td>pipe geometry</td><td>m</td><td>Relative x and z from the stinger exit, measured exit height above touchdown.</td></tr>
+<tr><td>touchdown position and suspended length</td><td>m</td><td>Identical touchdown definition and coordinate origin.</td></tr>
+<tr><td>stinger exit angle</td><td>deg</td><td>Same tangent direction and sign convention.</td></tr>
+<tr><td>force imbalance and mesh change</td><td>kN; 1</td><td>Native convergence evidence, not process exit status.</td></tr>
+<caption>Table 2. Required internal comparison quantities and units.</caption></table>
+<p>The manifest will contain a neutral case identifier, extraction schema version, criteria revision,
+numeric-file SHA-256, unit mapping, coordinate and sign conventions, content condition, load stage,
+source freshness and intended-use status. It will record the solver version and mesh basis without
+source locators. Source provenance and rights evidence will remain in the private source register,
+linked by an opaque evidence identifier. A neutral file alone will not qualify its source.</p>
+<h2>Matched-basis calibration method</h2>
+<p>An authorized analyst will first establish whether depth, pipe diameter and wall, material stiffness,
+coating mass, contents, effective tension, stinger radius, exit geometry, support arrangement and
+seabed/contact assumptions can be matched. Where matching requires changing confidential geometry,
+only dimensionless trends will be compared internally; the generic public input will not be
+reconstructed from private geometry. A mismatch will be recorded as a comparison limitation.</p>
+<p>For each quantity q, agreement will be recorded as signed difference q_generic − q_reference,
+absolute difference and normalized difference |q_generic − q_reference|/S_q. S_q will be a declared
+positive reference magnitude or governing design scale, so a zero reference will not divide by zero.
+The comparison record will include both values, S_q, units, uncertainty, the applicable tolerance,
+the governing case and the disposition. Curve comparisons will use a shared normalized station grid,
+with interpolation method and uncertainty declared before comparison.</p>
+<p>The tolerance for each output will be approved before calibration, after considering extraction
+uncertainty and mesh convergence. No arbitrary percentage is assigned here. A null tolerance will
+yield Not Evaluated, never agreement. Required identities will also be checked: force equilibrium,
+positive effective tension in the suspended span, contact order and stable extrema under refinement.
+An unresolved sign, coordinate, input-digest or unit mismatch will block the affected comparison.</p>
+<p>Calibration will vary only explicitly uncertain generic parameters within independently justified
+ranges: submerged weight, support stiffness/friction, stinger radius/exit angle and effective tension.
+An authorized analyst will retain each trial and residual and will use a distinct held-out case to test transfer.
+Matching one output by degrading another will not establish calibration. Allowables, solver controls
+and measured source values will not be fitted to obtain a favorable result.</p>
+<h2>Agreement record and public boundary</h2>
+<p>Internal agreement records will use the exact basis label <strong>assumed, based on previous experience</strong>.
+The public analysis will carry that label, the output quantities assessed, qualified/unqualified
+status and the generic assumptions justified for reuse. Earlier numerical outputs, geometry,
+extraction files, identities and provenance will not be copied or committed to this repository.
+No statement of agreement will be published until the source rights, matching, tolerances,
+native read-back and held-out case establish its scope.</p>
+<h2>Way forward</h2>
+<p>An authorized analyst will validate the neutral extraction privately, qualify generic endpoint and
+contact topology, assign criteria, run the generic canary, compare matched quantities and hold out
+a separate case. The analysis will then distinguish calibrated quantities, unmatched quantities
+and assumptions. Until that evidence exists, every calibration result will remain Not Evaluated.</p>
+</main></html>

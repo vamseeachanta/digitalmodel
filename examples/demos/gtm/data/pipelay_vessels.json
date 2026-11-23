@@ -1,0 +1,163 @@
+{
+  "_description": "Pipelay vessel database for GTM demo 4 (shallow water S-lay focus). Vessel parameters are representative of real vessel classes.",
+  "_version": "1.0",
+  "_references": [
+    "DNV-ST-F101 (2021) - Submarine Pipeline Systems, Sec 5 (Installation)",
+    "DNV-OS-F101 (2013) - Submarine Pipeline Systems",
+    "API RP 1111 (2015) - Design, Construction, Operation, and Maintenance of Offshore Hydrocarbon Pipelines"
+  ],
+  "units": {
+    "length": "m",
+    "mass": "te (metric tonnes)",
+    "force": "kN",
+    "angle": "degrees"
+  },
+  "vessels": [
+    {
+      "id": "PLV-001",
+      "name": "Large PLV",
+      "representative_class": "Castorone / Seven Navica class (S-lay)",
+      "type": "S-lay_vessel",
+      "general": {
+        "loa_m": 200.0,
+        "beam_m": 40.0,
+        "depth_m": 16.0,
+        "draft_operational_m": 10.0,
+        "displacement_te": 45000,
+        "dp_class": "DP3",
+        "accommodation_pob": 420,
+        "transit_speed_knots": 14.0
+      },
+      "pipelay_system": {
+        "method": "S-lay",
+        "tensioner": {
+          "type": "Track-type",
+          "capacity_te": 600,
+          "number_of_tracks": 4,
+          "grip_length_m": 8.0,
+          "_note": "600te total tensioner hold-back capacity"
+        },
+        "stinger": {
+          "type": "Articulated",
+          "length_m": 140.0,
+          "adjustable_angle_range_deg": [2.0, 8.0],
+          "number_of_sections": 7,
+          "roller_spacing_m": 3.0,
+          "max_pipe_support_reaction_te": 80.0,
+          "_note": "Stinger departure angle set based on water depth and pipe properties"
+        },
+        "firing_line": {
+          "total_stations": 8,
+          "welding_stations": 4,
+          "ndt_stations": 2,
+          "field_joint_coating_stations": 2,
+          "pipe_joint_length_m": 12.2,
+          "_note": "Double-jointing on deck for larger diameter pipes"
+        },
+        "pipe_capacity": {
+          "min_diameter_in": 4,
+          "max_diameter_in": 60,
+          "min_diameter_m": 0.1016,
+          "max_diameter_m": 1.524
+        },
+        "water_depth_range": {
+          "min_m": 10,
+          "max_m": 3000,
+          "_note": "Minimum depth limited by stinger configuration and vessel draft"
+        },
+        "typical_lay_rate": {
+          "min_km_per_day": 3.0,
+          "max_km_per_day": 5.0,
+          "_note": "Depends on pipe diameter, joint length, welding complexity"
+        }
+      },
+      "operational_limits": {
+        "pipelay_operations": {
+          "max_hs_m": 3.5,
+          "max_wind_speed_ms": 18.0,
+          "max_current_ms": 1.5
+        },
+        "stinger_recovery": {
+          "max_hs_m": 3.0
+        }
+      }
+    },
+    {
+      "id": "PLV-002",
+      "name": "Shallow Water Barge",
+      "representative_class": "Conventional S-lay barge (DLB class)",
+      "type": "S-lay_barge",
+      "general": {
+        "loa_m": 120.0,
+        "beam_m": 30.0,
+        "depth_m": 8.0,
+        "draft_operational_m": 4.5,
+        "displacement_te": 18000,
+        "dp_class": "DP1",
+        "mooring": {
+          "type": "12-point anchor spread",
+          "anchor_type": "Stevpris Mk6",
+          "mooring_wire_length_m": 2000,
+          "_note": "Primary positioning by anchors, DP for heading control"
+        },
+        "accommodation_pob": 250,
+        "transit_speed_knots": 8.0,
+        "_note": "Barge typically towed to location"
+      },
+      "pipelay_system": {
+        "method": "S-lay",
+        "tensioner": {
+          "type": "Track-type",
+          "capacity_te": 250,
+          "number_of_tracks": 2,
+          "grip_length_m": 6.0,
+          "_note": "250te total tensioner capacity suitable for shallow water"
+        },
+        "stinger": {
+          "type": "Articulated",
+          "length_m": 80.0,
+          "adjustable_angle_range_deg": [3.0, 12.0],
+          "number_of_sections": 5,
+          "roller_spacing_m": 2.5,
+          "max_pipe_support_reaction_te": 40.0,
+          "_note": "Steeper angles available for very shallow water operations"
+        },
+        "firing_line": {
+          "total_stations": 6,
+          "welding_stations": 3,
+          "ndt_stations": 2,
+          "field_joint_coating_stations": 1,
+          "pipe_joint_length_m": 12.2,
+          "_note": "Single joint firing line"
+        },
+        "pipe_capacity": {
+          "min_diameter_in": 4,
+          "max_diameter_in": 36,
+          "min_diameter_m": 0.1016,
+          "max_diameter_m": 0.9144
+        },
+        "water_depth_range": {
+          "min_m": 5,
+          "max_m": 200,
+          "_note": "Shallow water specialist. Min depth limited by vessel draft + UKC"
+        },
+        "typical_lay_rate": {
+          "min_km_per_day": 1.0,
+          "max_km_per_day": 3.0,
+          "_note": "Lower rates due to anchor handling, smaller firing line"
+        }
+      },
+      "operational_limits": {
+        "pipelay_operations": {
+          "max_hs_m": 2.0,
+          "max_wind_speed_ms": 15.0,
+          "max_current_ms": 1.0,
+          "_note": "Barge motions more severe than DP vessel in equivalent sea states"
+        },
+        "anchor_handling": {
+          "max_hs_m": 1.5
+        }
+      }
+    }
+  ]
+}

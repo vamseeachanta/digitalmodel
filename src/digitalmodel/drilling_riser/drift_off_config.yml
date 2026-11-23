@@ -1,0 +1,40 @@
+# Generic drilling-riser DP drift-off screening config (#1375, epic #1372).
+#
+# GENERIC ILLUSTRATIVE nominals — NOT a real vessel. Governance (T2): a specific
+# (displacement, EDS-duration) tuple or a real vessel's particulars would
+# fingerprint an actual drillship, so every value here is a coarse round nominal
+# on the band grid enforced by test_drift_off.test_config_is_banded_generic.
+# k-anonymity: these bands are shared by many real assets.
+provenance:
+  source: synthetic / generic — nominal banded drillship particulars for a public drift-off screen
+  licence: synthetic — no client, field, well, vessel or vendor data
+  note: >
+    Generic nominal drillship (nominal 230 m LOA, 40 m beam), coarse round
+    effective-mass and EDS-duration bands. No real vessel identity, no real
+    project values. Environmental coefficients are the public Newman / flat-plate
+    formulas reused from mooring_analysis.designer.
+
+# Effective sway mass band [kg] = displacement + sway added mass. The screen uses
+# the LOW end (time-to-limit ~ sqrt(m); over-estimating m is non-conservative).
+m_eff_low_kg: 150000000.0     # 150,000 t band
+m_eff_high_kg: 250000000.0    # 250,000 t band
+
+# Emergency-disconnect-sequence duration [s] (nominal round band).
+t_eds_s: 60.0
+
+# Conservative directional thrust-credit efficiency in [0, 1]. DPState is scalar
+# (no direction), so surviving thrust cannot be shown to oppose the drift; default
+# 0 (credit none for the verdict; surviving thrust is reported as a margin).
+thrust_efficiency: 0.0
+
+# Reference water depth for the reused environmental-force model [m] (nominal band).
+water_depth_ref_m: 1500.0
+
+# Generic vessel particulars for the reused environmental-force model. All coarse
+# round nominals (banded), NOT a real vessel.
+vessel:
+  length_m: 230.0            # 10 m band
+  beam_m: 40.0              # 5 m band
+  draft_m: 12.0             # 2 m band
+  displacement_t: 100000.0  # 10,000 t band
+  windage_area_m2: 4000.0   # 500 m2 band

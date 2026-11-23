@@ -1,0 +1,52 @@
+{
+  "basename": "pile_capacity",
+  "atlas_id": "ff5a09087842",
+  "physics": "linear",
+  "response": "capacity_kN",
+  "axes": [
+    {
+      "name": "diameter_m",
+      "scale": "linear",
+      "grid": [
+        0.5,
+        1.0,
+        1.5,
+        2.0,
+        2.5
+      ]
+    },
+    {
+      "name": "embedded_length_m",
+      "scale": "linear",
+      "grid": [
+        10.0,
+        20.0,
+        30.0,
+        40.0,
+        50.0
+      ]
+    },
+    {
+      "name": "Su_kpa",
+      "scale": "linear",
+      "grid": [
+        30.0,
+        60.0,
+        90.0,
+        120.0,
+        150.0
+      ]
+    },
+    {
+      "name": "sigma_v_kpa",
+      "scale": "linear",
+      "grid": [
+        50.0,
+        150.0,
+        250.0,
+        350.0,
+        450.0
+      ]
+    }
+  ]
+}

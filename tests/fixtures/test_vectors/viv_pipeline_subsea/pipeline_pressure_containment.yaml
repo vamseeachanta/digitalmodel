@@ -1,0 +1,181 @@
+source_type: python
+source_description: "Pipeline pressure containment per DNV-ST-F101 and API RP 1111 — wall thickness sizing, burst resistance, collapse, propagating buckle"
+extracted_date: "2026-03-16"
+legal_scan_passed: true
+category: "viv_pipeline_subsea"
+subcategory: "pipeline_pressure"
+equations:
+  - name: "DNV wall thickness (pressure containment)"
+    latex: "t_{bare} = \\frac{(p_d - p_e) D \\gamma_{inc} \\gamma_m \\gamma_{SC}}{2 \\cdot SMYS \\cdot \\alpha_U}"
+    description: "Minimum wall thickness per DNV-ST-F101 pressure containment limit state"
+  - name: "DNV burst resistance"
+    latex: "p_b = 2 \\frac{t}{D} \\min(SMYS, 0.9 \\cdot SMTS)"
+    description: "Burst resistance per DNV-ST-F101 Eq. 5.4"
+  - name: "API elastic collapse (Timoshenko)"
+    latex: "p_e = \\frac{2 E (t/D)^3}{1 - \\nu^2}"
+    description: "Elastic collapse pressure per Timoshenko ring formula"
+  - name: "API propagating buckle pressure"
+    latex: "p_p = 24 \\cdot SMYS \\cdot (t/D)^{2.4}"
+    description: "Propagating buckle initiation pressure per API RP 1111"
+  - name: "DNV propagating buckle pressure"
+    latex: "p_{pr} = 35 \\cdot SMYS \\cdot (t/D)^{2.5}"
+    description: "Propagating buckle pressure per DNV-ST-F101 Section 5.4.6"
+  - name: "API water pressure"
+    latex: "p = \\frac{\\rho g d}{10^6}"
+    description: "Hydrostatic pressure at depth d (in MPa)"
+  - name: "API burst pressure (D/t > 15)"
+    latex: "p_b = 0.9 (SMYS + SMTS) \\frac{t}{D - t}"
+    description: "API RP 1111 burst pressure for thin-walled pipe"
+inputs:
+  - name: "Pipe outer diameter"
+    symbol: "D"
+    unit: "m"
+    test_value: 0.3239
+  - name: "Wall thickness"
+    symbol: "t"
+    unit: "m"
+    test_value: 0.01905
+  - name: "X65 SMYS"
+    symbol: "SMYS"
+    unit: "MPa"
+    test_value: 448.0
+  - name: "X65 SMTS"
+    symbol: "SMTS"
+    unit: "MPa"
+    test_value: 531.0
+  - name: "Safety class factor (normal)"
+    symbol: "gamma_SC"
+    unit: "-"
+    test_value: 1.138
+  - name: "Material resistance factor"
+    symbol: "gamma_m"
+    unit: "-"
+    test_value: 1.15
+  - name: "Incidental pressure ratio"
+    symbol: "gamma_inc"
+    unit: "-"
+    test_value: 1.1
+  - name: "Material strength factor"
+    symbol: "alpha_U"
+    unit: "-"
+    test_value: 0.96
+  - name: "API collapse design factor"
+    symbol: "DF_collapse"
+    unit: "-"
+    test_value: 0.7
+  - name: "API propagation safety factor"
+    symbol: "DF_propagation"
+    unit: "-"
+    test_value: 1.3
+outputs:
+  - name: "D/t ratio"
+    symbol: "D_over_t"
+    unit: "-"
+    test_expected: 17.003
+    tolerance: 0.03
+  - name: "Hydrostatic pressure at 1000m"
+    symbol: "p_water_1000m"
+    unit: "MPa"
+    test_expected: 10.055
+    tolerance: 0.001
+worked_examples:
+  - description: "DNV safety class factors — published design constants"
+    inputs:
+      code: "DNV-ST-F101"
+    outputs:
+      gamma_SC_low: 1.046
+      gamma_SC_normal: 1.138
+      gamma_SC_high: 1.308
+      gamma_m: 1.15
+      gamma_inc: 1.1
+      alpha_U: 0.96
+    use_as_test: true
+  - description: "DNV system pressure test — default factor 1.25"
+    inputs:
+      p_d: 20.0
+      factor: 1.25
+    outputs:
+      p_test: 25.0
+    use_as_test: true
+  - description: "API RP 1111 burst pressure — 12.75-inch X65 pipe (D/t > 15)"
+    inputs:
+      D_inch: 12.75
+      t_inch: 0.5
+      SMYS: 448.16
+      SMTS: 530.9
+    outputs:
+      p_b_MPa: 36.0
+    use_as_test: true
+  - description: "API RP 1111 burst pressure — thick wall (D/t <= 15)"
+    inputs:
+      D_inch: 12.75
+      t_inch: 1.0
+      SMYS: 448.16
+      SMTS: 530.9
+    outputs:
+      p_b_MPa: 75.1
+    use_as_test: true
+  - description: "API RP 1111 collapse pressure — 12.75-inch X65 pipe"
+    inputs:
+      D_inch: 12.75
+      t_inch: 0.5
+      SMYS: 448.16
+    outputs:
+      p_c_MPa: 21.66
+    use_as_test: true
+  - description: "API external collapse check at 1000m — p_allowable = 0.7 * p_c"
+    inputs:
+      depth: 1000.0
+      D_inch: 12.75
+      t_inch: 0.5
+      SMYS: 448.16
+    outputs:
+      pass: true
+      p_allowable_MPa: 15.16
+    use_as_test: true
+  - description: "API propagating buckle pressure — 12.75-inch X65"
+    inputs:
+      D_inch: 12.75
+      t_inch: 0.5
+      SMYS: 448.16
+    outputs:
+      p_p_MPa: 4.528
+    use_as_test: true
+  - description: "API transition water depth — 12.75-inch X65"
+    inputs:
+      D_inch: 12.75
+      t_inch: 0.5
+      SMYS: 448.16
+    outputs:
+      depth_m: 450.4
+    use_as_test: true
+  - description: "API propagating buckle check PASS at 200m (utilization ~ 0.577)"
+    inputs:
+      depth: 200.0
+      D_inch: 12.75
+      t_inch: 0.5
+      SMYS: 448.16
+    outputs:
+      pass: true
+      arrestors_required: false
+      utilization: 0.577
+    use_as_test: true
+  - description: "API propagating buckle check FAIL at 600m — arrestors required"
+    inputs:
+      depth: 600.0
+      D_inch: 12.75
+      t_inch: 0.5
+      SMYS: 448.16
+    outputs:
+      pass: false
+      arrestors_required: true
+    use_as_test: true
+assumptions:
+  - "Steel Young's modulus E = 207000 MPa"
+  - "Poisson's ratio nu = 0.3"
+  - "Seawater density 1025 kg/m3, g = 9.81 m/s2"
+  - "No corrosion allowance or fabrication tolerance unless specified"
+  - "API RP 1111 burst design factor fd = 0.72"
+references:
+  - "DNV-ST-F101 Submarine Pipeline Systems"
+  - "API RP 1111 Design, Construction, Operation, and Maintenance of Offshore Hydrocarbon Pipelines"

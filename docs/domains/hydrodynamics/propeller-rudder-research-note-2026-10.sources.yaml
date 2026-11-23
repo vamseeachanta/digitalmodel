@@ -1,0 +1,226 @@
+# R and L IDs are assigned by this transcription, in note-list order.
+schema_version: 1
+document: propeller-rudder-research-note-2026-10.md
+issue: 143
+source_of_entries: research note on the issue
+checked: '2026-10-11'
+sources_read:
+- id: R1
+  citation: Liu, Quadvlieg and Hekkenberg 2016 (repository manuscript; sections 1, 4.2, 5.4 to 5.6 and Table 2)
+  status: read
+  doi: 10.1016/j.oceaneng.2016.07.064
+- id: R2
+  citation: Soding Weinblum lecture (one page)
+  status: read
+- id: R3
+  citation: Molland and Turnock 1996 (abstract record)
+  status: read
+- id: R4
+  citation: Molland, Turnock and Wilson 1996 (abstract record)
+  status: read
+- id: R5
+  citation: Turnock, Wellicome and Molland 1994 (abstract record)
+  status: read
+- id: R6
+  citation: Carstensen 2019 (abstract record)
+  status: read
+- id: R7
+  citation: Bulten 2024 (sections 4.5, 6, 7)
+  status: read
+  doi: 10.15480/882.9324
+- id: R8
+  citation: Le Thuy Hang 2001 (abstract page)
+  status: read
+- id: R9
+  citation: SIMMAN 2020 event page
+  status: read
+located_not_read:
+- id: L1
+  text: Yasukawa and Yoshimura 2015 (primary)
+  status: located_not_read
+- id: L2
+  text: Southampton Ship Science Reports 46, 48, 49, 52, 64 and 90 and the related RINA paper
+  status: located_not_read
+- id: L3
+  text: Phillips, Turnock and Furlong 2009
+  status: located_not_read
+- id: L4
+  text: Badoe, Phillips and Turnock
+  status: located_not_read
+- id: L5
+  text: a 2012 actuator-disk induction method and a 2024 review of rudder sub-models in International Shipbuilding Progress
+  status: located_not_read
+- id: L6
+  text: a Flanders Hydraulics four-quadrant rudder model for KCS (file opened, text not extractable)
+  status: located_not_read
+- id: L7
+  text: a 2024 model-basin four-quadrant rudder model
+  status: located_not_read
+- id: L8
+  text: Ito, Takashina and Yasukawa 2025
+  status: located_not_read
+- id: L9
+  text: a 2026 open-access four-quadrant paper
+  status: located_not_read
+- id: L10
+  text: Brix, Manoeuvring Technical Manual
+  status: located_not_read
+- id: L11
+  text: Soding 1981
+  status: located_not_read
+equations:
+- number: eq. 1
+  name: Rudder normal force
+  text: F_N = 0.5 rho A_R V_R^2 C_N
+  printed_in: Liu, Quadvlieg and Hekkenberg 2016
+  attributed_to: Yasukawa and Yoshimura
+  primary_opened: false
+- number: eq. 2
+  name: Normal-force coefficient
+  text: C_N = 6.13 sin(alpha_R) Lambda / (Lambda + 2.25), with Lambda the geometric aspect ratio
+  printed_in: Liu, Quadvlieg and Hekkenberg 2016
+  attributed_to: Fujii; Fujii and Tsuda
+  primary_opened: false
+- number: eq. 13
+  name: Rudder forces on the ship
+  text: X_R = -(1 - t_R) F_N sin(delta); Y_R = -(1 + a_H) F_N cos(delta); N_R = -(x_R + a_H x_H) F_N cos(delta)
+  printed_in: Liu, Quadvlieg and Hekkenberg 2016
+  attributed_to: Yasukawa and Yoshimura
+  primary_opened: false
+- number: eq. 14
+  name: Effective rudder angle
+  text: alpha_R = delta - arctan(v_R / u_R)
+  printed_in: Liu, Quadvlieg and Hekkenberg 2016
+  attributed_to: Yasukawa and Yoshimura
+  primary_opened: false
+- number: eq. 15
+  name: Longitudinal inflow
+  text: u_R = u (1 - w_R) sqrt( eta [ 1 + kappa ( sqrt(1 + 8 K_T / (pi J^2)) - 1 ) ]^2 + (1 - eta) ), where w_R is the wake factor at the rudder, kappa "an experimental constant" and eta the ratio of propeller diameter to rudder span
+  printed_in: Liu, Quadvlieg and Hekkenberg 2016
+  attributed_to: Yasukawa and Yoshimura
+  primary_opened: false
+- number: eq. 16
+  name: Lateral inflow
+  text: v_R = V gamma_R (beta - l'_R r'), gamma_R the flow-straightening factor, different to port and starboard
+  printed_in: Liu, Quadvlieg and Hekkenberg 2016
+  attributed_to: Yasukawa and Yoshimura
+  primary_opened: false
+- number: eqs. 11, 12
+  name: Propeller wake in manoeuvring
+  text: beta_P = beta - x'_P r'; (1 - w_P) / (1 - w_P0) = 1 + [1 - exp(-C_1 |beta_P|)] (C_2 - 1)
+  printed_in: Liu, Quadvlieg and Hekkenberg 2016
+  attributed_to: Yasukawa and Yoshimura
+  primary_opened: false
+benchmark_values:
+- symbol: Lpp
+  value: 7.0
+  unit: m
+  condition: null
+  status: as reproduced in the secondary paper; primary not opened
+- symbol: propeller diameter
+  value: 0.216
+  unit: m
+  condition: null
+  status: as reproduced in the secondary paper; primary not opened
+- symbol: x'_P
+  value: -0.48
+  unit: null
+  condition: null
+  status: as reproduced in the secondary paper; primary not opened
+- symbol: k0
+  value: 0.2931
+  unit: null
+  condition: null
+  status: as reproduced in the secondary paper; primary not opened
+- symbol: k1
+  value: -0.2753
+  unit: null
+  condition: null
+  status: as reproduced in the secondary paper; primary not opened
+- symbol: k2
+  value: -0.1385
+  unit: null
+  condition: null
+  status: as reproduced in the secondary paper; primary not opened
+- symbol: t_P
+  value: 0.220
+  unit: null
+  condition: null
+  status: as reproduced in the secondary paper; primary not opened
+- symbol: w_P0
+  value: 0.40
+  unit: null
+  condition: null
+  status: as reproduced in the secondary paper; primary not opened
+- symbol: rudder area
+  value: 0.0539
+  unit: m2
+  condition: null
+  status: as reproduced in the secondary paper; primary not opened
+- symbol: aspect ratio
+  value: 1.827
+  unit: null
+  condition: null
+  status: as reproduced in the secondary paper; primary not opened
+- symbol: x'_R
+  value: -0.50
+  unit: null
+  condition: null
+  status: as reproduced in the secondary paper; primary not opened
+- symbol: t_R
+  value: 0.387
+  unit: null
+  condition: null
+  status: as reproduced in the secondary paper; primary not opened
+- symbol: a_H
+  value: 0.312
+  unit: null
+  condition: null
+  status: as reproduced in the secondary paper; primary not opened
+- symbol: x'_H
+  value: -0.464
+  unit: null
+  condition: null
+  status: as reproduced in the secondary paper; primary not opened
+- symbol: C_1
+  value: 2.0
+  unit: null
+  condition: null
+  status: as reproduced in the secondary paper; primary not opened
+- symbol: C_2
+  value: 1.6
+  unit: null
+  condition: beta_P positive
+  status: as reproduced in the secondary paper; primary not opened
+- symbol: C_2
+  value: 1.1
+  unit: null
+  condition: negative
+  status: as reproduced in the secondary paper; primary not opened
+- symbol: gamma_R
+  value: 0.395
+  unit: null
+  condition: beta_R negative
+  status: as reproduced in the secondary paper; primary not opened
+- symbol: gamma_R
+  value: 0.640
+  unit: null
+  condition: positive
+  status: as reproduced in the secondary paper; primary not opened
+- symbol: l'_R
+  value: -0.710
+  unit: null
+  condition: null
+  status: as reproduced in the secondary paper; primary not opened
+unconfirmed_constants:
+- value: 1.09
+  symbol: null
+  status: to be confirmed against the primary paper before use
+- value: 0.50
+  symbol: null
+  status: to be confirmed against the primary paper before use
+counts:
+  read: 9
+  located_not_read: 16
+  enumerated_read: 9
+  enumerated_located_not_read: 11

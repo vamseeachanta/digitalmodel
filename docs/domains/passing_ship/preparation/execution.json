@@ -1,0 +1,17 @@
+{
+  "criteria_sha256": "cce7f7187342033fc8270ee3c61daf6fb0c2adeecb90a2330fb4d9090aa72483",
+  "recorded_at_utc": "2026-10-15T06:25:17.727577+00:00",
+  "base_commit": "c76e2a2301952a4343cacf736f40ab764b14349c",
+  "first_run_started_at_utc": "2026-10-15T06:27:04.740034+00:00",
+  "criteria_revision": "3",
+  "previous_receipts": [
+    {
+      "criteria_sha256": "07bb361db5d6a0baece55868643bb44309d6de09f08eb8a0b13cf31c0ec84bb5",
+      "recorded_at_utc": "2026-10-15T01:29:04.524406+00:00",
+      "base_commit": "096b76dc242841726c5c8b41ca8f18b55fdab1fa",
+      "first_run_started_at_utc": "2026-10-15T01:31:01.403588+00:00"
+    }
+  ],
+  "first_benchmark_comparison_started_at_utc": null,
+  "benchmark_comparison_status": "not_run"
+}

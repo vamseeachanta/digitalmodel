@@ -1,0 +1,65 @@
+{
+  "issue": 2121,
+  "observed_utc": "2026-09-14T16:00:36.190130+00:00",
+  "scope": "Bounded authorized normal-exit settlement correction; source/test lane only",
+  "files": [
+    {
+      "path": "src/digitalmodel/ansys/cylinder_runner.py",
+      "sha256": "5091b6969b65250ba05642a7c016ed71f64ca0dc5aee2c7d45d94391a44ac5f9",
+      "bytes": 6589,
+      "lines": 149,
+      "maximum_function_lines": 29
+    },
+    {
+      "path": "tests/ansys/test_cylinder_runner.py",
+      "sha256": "cbc464550ea5246710c8f40e4f629f48cb75f1d01151ea3c3583b964a12b4ae3",
+      "bytes": 8668,
+      "lines": 217,
+      "maximum_function_lines": 19
+    }
+  ],
+  "tdd": {
+    "red": {
+      "tool_chunk": "42d3b9",
+      "result": "3 failed,1 passed,14 deselected in2.09s",
+      "failures": [
+        "clean1\u21920 marked incomplete",
+        "persistent case terminated after0.01s instead of bounded natural grace",
+        "returncode7 incorrectly evidence_completeTrue"
+      ]
+    },
+    "initial_green": {
+      "tool_chunk": "29f9d9",
+      "result": "28 passed in6.93s"
+    },
+    "final_green": {
+      "tool_chunk": "d99bf7",
+      "result": "31 passed in7.80s",
+      "command": "uv run --no-project --python <workspace-venv-python> python -m pytest tests/ansys/test_cylinder_runner.py tests/ansys/test_cylinder_process.py -q"
+    }
+  },
+  "behavior": [
+    "One settlement deadline is created before first active query. Clean return0/noerror/no timeout permits natural activity to reach0 before marking forced cleanup.",
+    "Natural settlement closes owned handles with settlement_requiredFalse.",
+    "Timeout,nonzeroexit,error or activity persisting through deadline requires owned termination and remains incomplete even if later0.",
+    "Forced cleanup polling shares the original deadline; no additional5-second polling budget is introduced. Final immediate active query after termination may establish0; otherwise token is retained.",
+    "Query/close errors preserve exact error text and unknown owned count/token.",
+    "evidence_complete additionally requires returncode0.",
+    "Raw capture,300-second launch ceiling and1800-second operator limit are unchanged."
+  ],
+  "limits": [
+    "No solver or real helper launched by this task; tests use mocked supervisors/fake clocks for new cases.",
+    "Polling deadline does not make operating-system calls or existing supervisor.close a hard real-time operation; existing close wait remains unchanged.",
+    "Independent exact-current Claude code review remains pending provider availability; no fully-reviewed or native-ready claim.",
+    "Native helper observation receipts remain separate evidence and consumed0ANSYS attempts."
+  ],
+  "publication": "No staging,commit,manifest or policy edits",
+  "cleanup": {
+    "classification": "EXPECTED",
+    "residue": [
+      "Two authorized modified main-worktree files",
+      "This private handoff receipt"
+    ],
+    "unexpected": []
+  }
+}

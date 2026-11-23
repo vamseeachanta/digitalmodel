@@ -1,0 +1,30 @@
+{
+  "basename": "riser_fatigue",
+  "atlas_id": "51b7f03704cf",
+  "physics": "log_log",
+  "response": "annual_damage",
+  "axes": [
+    {
+      "name": "scf",
+      "scale": "linear",
+      "grid": [
+        1.0,
+        1.1,
+        1.2,
+        1.3,
+        1.4
+      ]
+    },
+    {
+      "name": "viv_stress_scale",
+      "scale": "linear",
+      "grid": [
+        0.8,
+        1.0,
+        1.2,
+        1.4,
+        1.6
+      ]
+    }
+  ]
+}

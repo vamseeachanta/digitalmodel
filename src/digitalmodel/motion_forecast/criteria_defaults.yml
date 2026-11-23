@@ -1,0 +1,34 @@
+# Default marine-operation go/no-go criteria for motion_forecast (#1359).
+#
+# This is a DATA file (thresholds library), NOT a workflow engine-config template.
+# Thresholds are indicative screening values on the governing time-domain
+# quantity; project-tune per warranty basis. caution <= limit (both magnitudes).
+# poi_offset = [rx, ry, rz] m, the structure-interface point on the vessel.
+criteria:
+  crane_lift:
+    label: Offshore crane lift
+    governing: crane_tip_vertical_velocity
+    caution: 0.35
+    limit: 0.50
+    unit: m/s
+    alpha: 0.85
+    basis: DNV-ST-N001 / DNV-RP-N103 - snatch / slack-sling avoidance at the crane tip
+    poi_offset: [55.0, 0.0, 0.0]
+  gangway_transfer:
+    label: Walk-to-work gangway transfer
+    governing: gangway_tip_vertical_velocity
+    caution: 1.10
+    limit: 1.55
+    unit: m/s
+    alpha: 0.90
+    basis: DNV-ST-0358 / Walk2Work - motion-compensation stroke/rate envelope
+    poi_offset: [28.0, 0.0, 0.0]
+  helideck_landing:
+    label: Helideck landing
+    governing: helideck_heave_velocity
+    caution: 0.30
+    limit: 0.40
+    unit: m/s
+    alpha: 1.0
+    basis: CAP 437 / HCA HMS - deck heave velocity limit (companion inclination check > 1 deg)
+    poi_offset: [0.0, 0.0, 0.0]

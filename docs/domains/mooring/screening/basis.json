@@ -1,0 +1,153 @@
+{
+  "assumption_notes": [
+    "A sampled generic wire diameter is assumed; the held property table supplies empirical submerged mass and breaking strength.",
+    "The force-to-weight-and-depth ratio is assumed from the existing force-based catenary test, rather than derived from environmental loads.",
+    "Total length relative to depth is assumed from the existing prescribed-pretension test; a horizontal frictionless seabed and surface fairlead are assumed.",
+    "Gravity follows the existing marine-cable test. Elastic extension, chain segments and vessel coupling are not represented.",
+    "Platform mass, hydrostatics, numerical sea-state inputs and anchor properties are not stated on the page and are not assigned."
+  ],
+  "assumption_sources": {
+    "environment": "not stated on the page; not assigned; sea-state labels do not affect single-line statics",
+    "fairlead_depth_m": "src/digitalmodel/orcaflex/mooring_design.py solve_catenary default; not stated on the page; assumed surface fairlead",
+    "force_reference": "tests/marine_ops/marine_engineering/catenary/test_simplified.py TestSimplifiedCatenarySolverForceBased.test_force_based_basic",
+    "gravity_m_s2": "tests/marine_ops/marine_engineering/catenary/test_simplified.py TestSimplifiedCatenarySolverForceBased.test_force_based_realistic_marine_cable",
+    "length_to_depth_ratio": "tests/orcaflex/test_mooring_design.py TestCatenary.test_catenary_with_pretension",
+    "line_makeup": "not stated on the page for catenary concepts; assumed homogeneous wire, no certified selection",
+    "platform_properties": "not stated on the page; not assigned; platform labels do not affect single-line statics",
+    "pretension_rule": "Reference force / (reference weight * reference depth), scaled by selected submerged weight and water depth; not stated on the page; assumed, not an environmental load",
+    "wire_diameter_mm": "src/digitalmodel/data/marine_engineering/mooring_components/sources/moorpy_coefficients.json wire_diameters_mm; one held sampling diameter selected, not stated on the page; assumed"
+  },
+  "assumptions": {
+    "fairlead_depth_m": 0,
+    "force_reference": {
+      "depth_m": 100.0,
+      "force_n": 10000.0,
+      "weight_n_m": 50.0
+    },
+    "gravity_m_s2": 9.81,
+    "length_to_depth_ratio": 3.0,
+    "line_makeup": "one homogeneous generic wire; no chain or polyester segments",
+    "n_per_kn": 1000,
+    "seabed": "horizontal; frictionless; touchdown tangent",
+    "wire_diameter_mm": 40
+  },
+  "component_source": {
+    "commit": "1fb29f8eca2618543b2df7056adfdfce0265737b",
+    "held_retrieval_utc": "2026-10-11T23:39:03Z",
+    "license": "BSD-3-Clause",
+    "readiness": "computed examples only; not certified component selection",
+    "url": "https://github.com/NREL/MoorPy/blob/1fb29f8eca2618543b2df7056adfdfce0265737b/moorpy/library/MoorProps_default.yaml"
+  },
+  "component_source_id": "nrel-iea-reference-turbines",
+  "matrix": {
+    "concepts": [
+      "3-line catenary",
+      "4-line catenary",
+      "taut polyester",
+      "chain-polyester hybrid"
+    ],
+    "platforms": [
+      "semi-submersible",
+      "spar",
+      "ship-shaped floating unit"
+    ],
+    "sea_states": [
+      "operating",
+      "survival"
+    ],
+    "water_depths_m": [
+      200,
+      500,
+      1000,
+      1500,
+      2000
+    ]
+  },
+  "matrix_provenance": "Website Parameter Matrix; ship-shaped category uses a generic label; numerical sea-state inputs are not stated.",
+  "module_commit": "f60b9ad2bc6346d919bfa3707083e04bc585bb68",
+  "not_reproduced": [
+    {
+      "quantity": "PASS, MARGIN, FAIL distributions and pass-rate percentages",
+      "reason": "Combined tension, offset and response criteria are not computed; no environmental cases are qualified."
+    },
+    {
+      "quantity": "Restoring stiffness by concept and stiffness sensitivity",
+      "reason": "The force-based single-line solver has no vessel equilibrium or stiffness matrix."
+    },
+    {
+      "quantity": "Surge, heave and pitch periods; response classification",
+      "reason": "No mass, hydrostatic, hydrodynamic or wave-response basis is supplied or solved."
+    },
+    {
+      "quantity": "Environmental peak and damaged-line tensions",
+      "reason": "Prescribed static pretension is an assumed input; environmental demand and damaged-system redistribution are not solved."
+    },
+    {
+      "quantity": "Vessel offset and offset acceptance",
+      "reason": "No vessel equilibrium or numerical loads; line horizontal span cannot substitute for vessel offset."
+    },
+    {
+      "quantity": "Fatigue screening and life",
+      "reason": "No dynamic tension histories, cycle counts or qualified component fatigue basis."
+    },
+    {
+      "quantity": "Taut polyester and chain-polyester hybrid results",
+      "reason": "The selected module treats one homogeneous inextensible catenary; no segmented or taut system is solved."
+    },
+    {
+      "quantity": "Anchor strategy performance or capacity",
+      "reason": "No soil basis or anchor-capacity design is available."
+    },
+    {
+      "quantity": "Runtime and delivery-time claims",
+      "reason": "No performance or service-delivery campaign establishes these claims."
+    },
+    {
+      "quantity": "Standards acceptance verdict and required factors",
+      "reason": "Governing edition, analysis category and independently qualified clause criteria are not established; licensed table values are not reproduced."
+    }
+  ],
+  "observed_at_utc": "2026-10-14T10:43:02.740756+00:00",
+  "owner_repo": "digitalmodel",
+  "readiness": "partial; synthetic static lines with held empirical data; no environmental acceptance",
+  "revision": "R3",
+  "run_record_url": "README.md",
+  "schema_version": 1,
+  "solver_module": "src/digitalmodel/marine_ops/marine_analysis/catenary/simplified.py",
+  "source_files": {
+    "src/digitalmodel/citations/registry.py": "f0aa345fa6d9eaad1b97b3f18ec7682796c60b98e318d19da0537ce354da51ac",
+    "src/digitalmodel/data/marine_engineering/mooring_components/provenance.json": "7325f2e47cee62c9d88614c62e46b2e826de92ecff50a1dd9516e35e1204a99b",
+    "src/digitalmodel/data/marine_engineering/mooring_components/sources/moorpy_coefficients.json": "dc9ec64bafdaa0015847572e40f37e47cf804cead2f72c973b3857f1fb297cad",
+    "src/digitalmodel/data/marine_engineering/mooring_components/wire_properties.csv": "d9f6e963f22d5ecdcd1aa1ba9177fc2e4b5799cb778cd550cc03d2970a99271e",
+    "src/digitalmodel/marine_ops/marine_analysis/catenary/simplified.py": "5a0e89d7f4b07f70bb78fd90ed9dc621fae49c7e079c6b43ed81045ab4b5c969",
+    "src/digitalmodel/orcaflex/mooring_design.py": "9d9c44ffd0b5c2d4075b3dd8493ce12840b624c162550e9a2cc92cb03afb1777",
+    "tests/marine_ops/marine_engineering/catenary/test_simplified.py": "6cf7d94d490c7111228fb1086af6580b4a5121e5f6614e09d35b64fc7aa5f786",
+    "tests/orcaflex/test_mooring_design.py": "44478677d506537c2410459a9746288880c0edbf0ebfa20cb733bf527f6648ca"
+  },
+  "standards_references": [
+    {
+      "clause": "Section 2.2.3 (intact quasi-static; repository locator, not independently qualified)",
+      "disposition": "not established",
+      "edition": "July 2021 (repository registry reference)",
+      "number": "DNV-OS-E301",
+      "required_factor": null,
+      "title": "Position Mooring"
+    },
+    {
+      "clause": "Section 5 (repository design-module locator; clause title not established)",
+      "disposition": "not established",
+      "edition": "not established",
+      "number": "API RP 2SK",
+      "required_factor": null,
+      "title": "Design and Analysis of Stationkeeping Systems for Floating Structures"
+    }
+  ],
+  "static_concepts": [
+    "3-line catenary",
+    "4-line catenary"
+  ],
+  "website_commit": "99206c3b0abd5453d9f07f4ecb0100cb883062f8",
+  "website_source_sha256": "0f31f7561057b1024f5e0d91d7ab315ac712410312352c3297b3ec6ffe53f91e",
+  "website_source_url": "https://github.com/vamseeachanta/aceengineer-website/blob/99206c3b0abd5453d9f07f4ecb0100cb883062f8/content/demos/mooring.html",
+  "wire_table": "src/digitalmodel/data/marine_engineering/mooring_components/wire_properties.csv"
+}

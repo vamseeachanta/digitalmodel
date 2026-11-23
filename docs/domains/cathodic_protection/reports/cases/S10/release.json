@@ -1,0 +1,6 @@
+{
+  "input_fixture": "temporary_service.yml",
+  "input_sha256": "2c5bf9a69454a23421d897c12133db2f6cfaf460d293cc42aebd6b606f9d9fd9",
+  "private_benchmark_data": false,
+  "source_class": "repository_regression"
+}

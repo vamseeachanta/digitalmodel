@@ -1,0 +1,24 @@
+# OrcaFlex Tension Analysis Configuration
+analysis:
+  type: tension_analysis
+  
+input:
+  file_pattern: "*.csv"
+  time_column: "Time"
+  tension_columns:
+    - "Effective Tension"
+    - "Wall Tension"
+    
+processing:
+  sampling_rate: 10  # Hz
+  window_size: 512
+  overlap: 0.5
+  
+fatigue:
+  sn_curve: "DNV-C"
+  safety_factor: 2.0
+  
+output:
+  format: csv
+  include_plots: true
+  summary_report: true

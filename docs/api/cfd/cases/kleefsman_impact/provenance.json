@@ -1,0 +1,95 @@
+{
+  "validation_case": "kleefsman_impact",
+  "issue": "#1172",
+  "reference": "Kleefsman et al. (2005) MARIN experiment, doi:10.1016/j.jcp.2004.12.007",
+  "citations": [
+    "Kleefsman et al. (2005), J. Comput. Phys. 206(1) 363-393",
+    "SPHERIC/ERCOFTAC Test-case 2 (official geometry + data), https://www.spheric-sph.org/tests/test-02"
+  ],
+  "geometry": {
+    "tank_m": [
+      3.22,
+      1.0,
+      1.0
+    ],
+    "box": [
+      [
+        0.6635,
+        0.2955,
+        0.0
+      ],
+      [
+        0.8245,
+        0.6985,
+        0.161
+      ]
+    ],
+    "water_column_x_m": [
+      1.992,
+      3.22
+    ],
+    "water_depth_m": 0.55
+  },
+  "sensors": {
+    "pressure": {
+      "P1": [
+        0.8245,
+        0.471,
+        0.021
+      ],
+      "P2": [
+        0.8245,
+        0.471,
+        0.061
+      ],
+      "P3": [
+        0.8245,
+        0.471,
+        0.101
+      ],
+      "P4": [
+        0.8245,
+        0.471,
+        0.141
+      ],
+      "P5": [
+        0.8035,
+        0.471,
+        0.161
+      ],
+      "P6": [
+        0.7635,
+        0.471,
+        0.161
+      ],
+      "P7": [
+        0.7235,
+        0.471,
+        0.161
+      ],
+      "P8": [
+        0.6835,
+        0.471,
+        0.161
+      ]
+    },
+    "height_x": {
+      "H1": 0.496,
+      "H2": 0.992,
+      "H3": 1.488,
+      "H4": 2.638
+    }
+  },
+  "mesh": [
+    161,
+    50,
+    50
+  ],
+  "end_time_s": 6.0,
+  "tolerances": {
+    "p2_peak": 0.2,
+    "p2_arrival": 0.2,
+    "height_mae": 0.1,
+    "mass": 0.01
+  }
+}

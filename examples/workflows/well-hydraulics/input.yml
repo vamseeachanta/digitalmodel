@@ -1,0 +1,25 @@
+basename: well_hydraulics
+
+default:
+  log_level: INFO
+  config:
+    generate_plots: false
+    overwrite:
+      output: true
+
+well_hydraulics:
+  case:
+    id: registry_well_hydraulics
+    description: Field hydraulics for an 8.5 inch hole section
+  section:
+    pipe_od: 4.5
+    pipe_id: 3.826
+    hole_diameter: 8.5
+    mud_weight: 10.5
+    flow_rate: 400.0
+    tvd: 8000.0
+    plastic_viscosity: 18.0
+    yield_point: 12.0
+  outputs:
+    directory: results/well_hydraulics
+    summary_json: well_hydraulics_summary.json

@@ -1,0 +1,13 @@
+# This file is written by the ANSYS DesignXplorer
+# Project name: SplitBody_Mesh_rev3
+# Parameters:
+# P1 - Force Z Component [N]
+# P2 - Force 2 Z Component [N]
+# P3 - Total Deformation Maximum [mm]
+Name, P1, P2, P3
+DP 0, 1700000.0, -1700000.0, 12.54
+DP 1, 1000000.0, -1000000.0, 7.38
+DP 2, 2000000.0, -2000000.0, 14.81
+# Audit: design point 3 removed by analyst on 2024-01-15
+DP 3, 500000.0, -500000.0, 3.69
+DP 4, 1500000.0, -1500000.0, 11.07

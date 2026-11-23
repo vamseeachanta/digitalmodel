@@ -1,0 +1,271 @@
+# Source: ISO 10424-1:2004, Table 14; printed pages 40–41.
+# Scope: designation (1), OD (mm), bore (mm), nominal lengths (m),
+# bevel diameter (mm) and reference bending strength ratio (1), all 23 rows.
+# Supplied transcription: bundle tip 3feb4ddfcd219c13ddf022f3792e792005302310.
+# The bundle records a 138-cell PDF comparison; no fresh PDF comparison is
+# established by this release. Values and as_published strings are as supplied.
+# Source checked date, PDF digest and page locator are inherited metadata;
+# none constitutes a fresh source verification by this release.
+# Historical nominal reference only; current-edition design qualification is
+# not established. Source keys resolve in sources below. PDF bytes excluded.
+# Maintainer decision, 2026-10-16: cited standard values and tables may be
+# committed to public repositories with standard, edition and table citations.
+# Stored weight is an assumed calculation, not a published Table 14 value.
+schema_version: 1
+sources:
+- key: ISO10424-1-2004-T14
+  type: standard
+  title: BS EN ISO 10424-1:2004 Rotary drill stem elements
+  publisher: BSI / ISO
+  edition: '2004'
+  locator: Table 14; printed pages 40–41; PDF pages 50–51
+  url: https://www.iso.org/standard/33266.html
+  terms: Cited table values released by maintainer decision dated 2026-10-16; licensed
+    PDF excluded.
+  checked: '2026-10-16'
+  sha256: bc874fc24aebded53d76de12869a7bb2239cb5a871382bcfd3f2f3db7d6062ce
+- key: SYNTHETIC-STEEL-WEIGHT-ASSUMPTION
+  type: synthetic
+  title: Nominal steel collar weight approximation
+  publisher: Synthetic calculation basis
+  edition: '2026-10-16'
+  locator: 'Formula: 2.67 * (OD_in**2 - ID_in**2) lbf/ft'
+  url: null
+  terms: Authored approximation; coefficient is assumed, not a Table 14 material property.
+  checked: '2026-10-16'
+assemblies: []
+components:
+- component_id: DC-STD-NC23-31-B31.8
+  type: drill_collar
+  data_class: STANDARD-NOMINAL
+  designation: {value: NC23-31, unit: dimensionless, source_key: ISO10424-1-2004-T14, basis: published, as_published: NC23-31, as_published_on: '2004'}
+  od: {value: 79.4, unit: mm, source_key: ISO10424-1-2004-T14, basis: published, as_published: '79,4', as_published_on: '2004'}
+  id: {value: 31.8, unit: mm, source_key: ISO10424-1-2004-T14, basis: published, as_published: '31,8', as_published_on: '2004'}
+  length: {value: [9.14], unit: m, source_key: ISO10424-1-2004-T14, basis: published, as_published: '9,14', as_published_on: '2004'}
+  bevel_diameter: {value: 76.2, unit: mm, source_key: ISO10424-1-2004-T14, basis: published, as_published: '76,2', as_published_on: '2004'}
+  reference_bsr: {value: 2.57, unit: dimensionless, source_key: ISO10424-1-2004-T14, basis: published, as_published: '2,57:1', as_published_on: '2004'}
+  weight_per_length: {value: 21.905620931241867, unit: lbf/ft, source_key: SYNTHETIC-STEEL-WEIGHT-ASSUMPTION, basis: computed, as_published: not published; computed from nominal OD and bore, as_published_on: not applicable (computed 2026-10-16), formula: 2.67 * ((od_mm / 25.4)**2 - (id_mm / 25.4)**2)}
+- component_id: DC-STD-NC26-35-B38.1
+  type: drill_collar
+  data_class: STANDARD-NOMINAL
+  designation: {value: NC26-35, unit: dimensionless, source_key: ISO10424-1-2004-T14, basis: published, as_published: NC26-35, as_published_on: '2004'}
+  od: {value: 88.9, unit: mm, source_key: ISO10424-1-2004-T14, basis: published, as_published: '88,9', as_published_on: '2004'}
+  id: {value: 38.1, unit: mm, source_key: ISO10424-1-2004-T14, basis: published, as_published: '38,1', as_published_on: '2004'}
+  length: {value: [9.14], unit: m, source_key: ISO10424-1-2004-T14, basis: published, as_published: '9,14', as_published_on: '2004'}
+  bevel_diameter: {value: 82.9, unit: mm, source_key: ISO10424-1-2004-T14, basis: published, as_published: '82,9', as_published_on: '2004'}
+  reference_bsr: {value: 2.42, unit: dimensionless, source_key: ISO10424-1-2004-T14, basis: published, as_published: '2,42:1', as_published_on: '2004'}
+  weight_per_length: {value: 26.70000000000001, unit: lbf/ft, source_key: SYNTHETIC-STEEL-WEIGHT-ASSUMPTION, basis: computed, as_published: not published; computed from nominal OD and bore, as_published_on: not applicable (computed 2026-10-16), formula: 2.67 * ((od_mm / 25.4)**2 - (id_mm / 25.4)**2)}
+- component_id: DC-STD-NC31-41-B50.8
+  type: drill_collar
+  data_class: STANDARD-NOMINAL
+  designation: {value: NC31-41, unit: dimensionless, source_key: ISO10424-1-2004-T14, basis: published, as_published: NC31-41, as_published_on: '2004'}
+  od: {value: 104.8, unit: mm, source_key: ISO10424-1-2004-T14, basis: published, as_published: '104,8', as_published_on: '2004'}
+  id: {value: 50.8, unit: mm, source_key: ISO10424-1-2004-T14, basis: published, as_published: '50,8', as_published_on: '2004'}
+  length: {value: [9.14, 9.45], unit: m, source_key: ISO10424-1-2004-T14, basis: published, as_published: '9,14 or 9,45', as_published_on: '2004'}
+  bevel_diameter: {value: 100.4, unit: mm, source_key: ISO10424-1-2004-T14, basis: published, as_published: '100,4', as_published_on: '2004'}
+  reference_bsr: {value: 2.43, unit: dimensionless, source_key: ISO10424-1-2004-T14, basis: published, as_published: '2,43:1', as_published_on: '2004'}
+  weight_per_length: {value: 34.77340194680389, unit: lbf/ft, source_key: SYNTHETIC-STEEL-WEIGHT-ASSUMPTION, basis: computed, as_published: not published; computed from nominal OD and bore, as_published_on: not applicable (computed 2026-10-16), formula: 2.67 * ((od_mm / 25.4)**2 - (id_mm / 25.4)**2)}
+- component_id: DC-STD-NC35-47-B50.8
+  type: drill_collar
+  data_class: STANDARD-NOMINAL
+  designation: {value: NC35-47, unit: dimensionless, source_key: ISO10424-1-2004-T14, basis: published, as_published: NC35-47, as_published_on: '2004'}
+  od: {value: 120.6, unit: mm, source_key: ISO10424-1-2004-T14, basis: published, as_published: '120,6', as_published_on: '2004'}
+  id: {value: 50.8, unit: mm, source_key: ISO10424-1-2004-T14, basis: published, as_published: '50,8', as_published_on: '2004'}
+  length: {value: [9.14, 9.45], unit: m, source_key: ISO10424-1-2004-T14, basis: published, as_published: '9,14 or 9,45', as_published_on: '2004'}
+  bevel_diameter: {value: 114.7, unit: mm, source_key: ISO10424-1-2004-T14, basis: published, as_published: '114,7', as_published_on: '2004'}
+  reference_bsr: {value: 2.58, unit: dimensionless, source_key: ISO10424-1-2004-T14, basis: published, as_published: '2,58:1', as_published_on: '2004'}
+  weight_per_length: {value: 49.5119542439085, unit: lbf/ft, source_key: SYNTHETIC-STEEL-WEIGHT-ASSUMPTION, basis: computed, as_published: not published; computed from nominal OD and bore, as_published_on: not applicable (computed 2026-10-16), formula: 2.67 * ((od_mm / 25.4)**2 - (id_mm / 25.4)**2)}
+- component_id: DC-STD-NC38-50-B57.2
+  type: drill_collar
+  data_class: STANDARD-NOMINAL
+  designation: {value: NC38-50, unit: dimensionless, source_key: ISO10424-1-2004-T14, basis: published, as_published: NC38-50, as_published_on: '2004'}
+  od: {value: 127.0, unit: mm, source_key: ISO10424-1-2004-T14, basis: published, as_published: '127,0', as_published_on: '2004'}
+  id: {value: 57.2, unit: mm, source_key: ISO10424-1-2004-T14, basis: published, as_published: '57,2', as_published_on: '2004'}
+  length: {value: [9.14, 9.45], unit: m, source_key: ISO10424-1-2004-T14, basis: published, as_published: '9,14 or 9,45', as_published_on: '2004'}
+  bevel_diameter: {value: 121.0, unit: mm, source_key: ISO10424-1-2004-T14, basis: published, as_published: '121,0', as_published_on: '2004'}
+  reference_bsr: {value: 2.38, unit: dimensionless, source_key: ISO10424-1-2004-T14, basis: published, as_published: '2,38:1', as_published_on: '2004'}
+  weight_per_length: {value: 53.209463078926156, unit: lbf/ft, source_key: SYNTHETIC-STEEL-WEIGHT-ASSUMPTION, basis: computed, as_published: not published; computed from nominal OD and bore, as_published_on: not applicable (computed 2026-10-16), formula: 2.67 * ((od_mm / 25.4)**2 - (id_mm / 25.4)**2)}
+- component_id: DC-STD-NC44-60-B57.2
+  type: drill_collar
+  data_class: STANDARD-NOMINAL
+  designation: {value: NC44-60, unit: dimensionless, source_key: ISO10424-1-2004-T14, basis: published, as_published: NC44-60, as_published_on: '2004'}
+  od: {value: 152.4, unit: mm, source_key: ISO10424-1-2004-T14, basis: published, as_published: '152,4', as_published_on: '2004'}
+  id: {value: 57.2, unit: mm, source_key: ISO10424-1-2004-T14, basis: published, as_published: '57,2', as_published_on: '2004'}
+  length: {value: [9.14, 9.45], unit: m, source_key: ISO10424-1-2004-T14, basis: published, as_published: '9,14 or 9,45', as_published_on: '2004'}
+  bevel_diameter: {value: 144.5, unit: mm, source_key: ISO10424-1-2004-T14, basis: published, as_published: '144,5', as_published_on: '2004'}
+  reference_bsr: {value: 2.49, unit: dimensionless, source_key: ISO10424-1-2004-T14, basis: published, as_published: '2,49:1', as_published_on: '2004'}
+  weight_per_length: {value: 82.5794630789262, unit: lbf/ft, source_key: SYNTHETIC-STEEL-WEIGHT-ASSUMPTION, basis: computed, as_published: not published; computed from nominal OD and bore, as_published_on: not applicable (computed 2026-10-16), formula: 2.67 * ((od_mm / 25.4)**2 - (id_mm / 25.4)**2)}
+- component_id: DC-STD-NC44-60-B71.4
+  type: drill_collar
+  data_class: STANDARD-NOMINAL
+  designation: {value: NC44-60, unit: dimensionless, source_key: ISO10424-1-2004-T14, basis: published, as_published: NC44-60, as_published_on: '2004'}
+  od: {value: 152.4, unit: mm, source_key: ISO10424-1-2004-T14, basis: published, as_published: '152,4', as_published_on: '2004'}
+  id: {value: 71.4, unit: mm, source_key: ISO10424-1-2004-T14, basis: published, as_published: '71,4', as_published_on: '2004'}
+  length: {value: [9.14, 9.45], unit: m, source_key: ISO10424-1-2004-T14, basis: published, as_published: '9,14 or 9,45', as_published_on: '2004'}
+  bevel_diameter: {value: 144.5, unit: mm, source_key: ISO10424-1-2004-T14, basis: published, as_published: '144,5', as_published_on: '2004'}
+  reference_bsr: {value: 2.84, unit: dimensionless, source_key: ISO10424-1-2004-T14, basis: published, as_published: '2,84:1', as_published_on: '2004'}
+  weight_per_length: {value: 75.02205034410072, unit: lbf/ft, source_key: SYNTHETIC-STEEL-WEIGHT-ASSUMPTION, basis: computed, as_published: not published; computed from nominal OD and bore, as_published_on: not applicable (computed 2026-10-16), formula: 2.67 * ((od_mm / 25.4)**2 - (id_mm / 25.4)**2)}
+- component_id: DC-STD-NC44-62-B57.2
+  type: drill_collar
+  data_class: STANDARD-NOMINAL
+  designation: {value: NC44-62, unit: dimensionless, source_key: ISO10424-1-2004-T14, basis: published, as_published: NC44-62, as_published_on: '2004'}
+  od: {value: 158.8, unit: mm, source_key: ISO10424-1-2004-T14, basis: published, as_published: '158,8', as_published_on: '2004'}
+  id: {value: 57.2, unit: mm, source_key: ISO10424-1-2004-T14, basis: published, as_published: '57,2', as_published_on: '2004'}
+  length: {value: [9.14, 9.45], unit: m, source_key: ISO10424-1-2004-T14, basis: published, as_published: '9,14 or 9,45', as_published_on: '2004'}
+  bevel_diameter: {value: 149.2, unit: mm, source_key: ISO10424-1-2004-T14, basis: published, as_published: '149,2', as_published_on: '2004'}
+  reference_bsr: {value: 2.91, unit: dimensionless, source_key: ISO10424-1-2004-T14, basis: published, as_published: '2,91:1', as_published_on: '2004'}
+  weight_per_length: {value: 90.82204724409449, unit: lbf/ft, source_key: SYNTHETIC-STEEL-WEIGHT-ASSUMPTION, basis: computed, as_published: not published; computed from nominal OD and bore, as_published_on: not applicable (computed 2026-10-16), formula: 2.67 * ((od_mm / 25.4)**2 - (id_mm / 25.4)**2)}
+- component_id: DC-STD-NC46-62-B71.4
+  type: drill_collar
+  data_class: STANDARD-NOMINAL
+  designation: {value: NC46-62, unit: dimensionless, source_key: ISO10424-1-2004-T14, basis: published, as_published: NC46-62, as_published_on: '2004'}
+  od: {value: 158.8, unit: mm, source_key: ISO10424-1-2004-T14, basis: published, as_published: '158,8', as_published_on: '2004'}
+  id: {value: 71.4, unit: mm, source_key: ISO10424-1-2004-T14, basis: published, as_published: '71,4', as_published_on: '2004'}
+  length: {value: [9.14, 9.45], unit: m, source_key: ISO10424-1-2004-T14, basis: published, as_published: '9,14 or 9,45', as_published_on: '2004'}
+  bevel_diameter: {value: 150.0, unit: mm, source_key: ISO10424-1-2004-T14, basis: published, as_published: '150,0', as_published_on: '2004'}
+  reference_bsr: {value: 2.63, unit: dimensionless, source_key: ISO10424-1-2004-T14, basis: published, as_published: '2,63:1', as_published_on: '2004'}
+  weight_per_length: {value: 83.26463450926903, unit: lbf/ft, source_key: SYNTHETIC-STEEL-WEIGHT-ASSUMPTION, basis: computed, as_published: not published; computed from nominal OD and bore, as_published_on: not applicable (computed 2026-10-16), formula: 2.67 * ((od_mm / 25.4)**2 - (id_mm / 25.4)**2)}
+- component_id: DC-STD-NC46-65-B57.2
+  type: drill_collar
+  data_class: STANDARD-NOMINAL
+  designation: {value: NC46-65, unit: dimensionless, source_key: ISO10424-1-2004-T14, basis: published, as_published: NC46-65, as_published_on: '2004'}
+  od: {value: 165.1, unit: mm, source_key: ISO10424-1-2004-T14, basis: published, as_published: '165,1', as_published_on: '2004'}
+  id: {value: 57.2, unit: mm, source_key: ISO10424-1-2004-T14, basis: published, as_published: '57,2', as_published_on: '2004'}
+  length: {value: [9.14, 9.45], unit: m, source_key: ISO10424-1-2004-T14, basis: published, as_published: '9,14 or 9,45', as_published_on: '2004'}
+  bevel_diameter: {value: 154.8, unit: mm, source_key: ISO10424-1-2004-T14, basis: published, as_published: '154,8', as_published_on: '2004'}
+  reference_bsr: {value: 2.76, unit: dimensionless, source_key: ISO10424-1-2004-T14, basis: published, as_published: '2,76:1', as_published_on: '2004'}
+  weight_per_length: {value: 99.26696307892614, unit: lbf/ft, source_key: SYNTHETIC-STEEL-WEIGHT-ASSUMPTION, basis: computed, as_published: not published; computed from nominal OD and bore, as_published_on: not applicable (computed 2026-10-16), formula: 2.67 * ((od_mm / 25.4)**2 - (id_mm / 25.4)**2)}
+- component_id: DC-STD-NC46-65-B71.4
+  type: drill_collar
+  data_class: STANDARD-NOMINAL
+  designation: {value: NC46-65, unit: dimensionless, source_key: ISO10424-1-2004-T14, basis: published, as_published: NC46-65, as_published_on: '2004'}
+  od: {value: 165.1, unit: mm, source_key: ISO10424-1-2004-T14, basis: published, as_published: '165,1', as_published_on: '2004'}
+  id: {value: 71.4, unit: mm, source_key: ISO10424-1-2004-T14, basis: published, as_published: '71,4', as_published_on: '2004'}
+  length: {value: [9.14, 9.45], unit: m, source_key: ISO10424-1-2004-T14, basis: published, as_published: '9,14 or 9,45', as_published_on: '2004'}
+  bevel_diameter: {value: 154.8, unit: mm, source_key: ISO10424-1-2004-T14, basis: published, as_published: '154,8', as_published_on: '2004'}
+  reference_bsr: {value: 3.05, unit: dimensionless, source_key: ISO10424-1-2004-T14, basis: published, as_published: '3,05:1', as_published_on: '2004'}
+  weight_per_length: {value: 91.70955034410068, unit: lbf/ft, source_key: SYNTHETIC-STEEL-WEIGHT-ASSUMPTION, basis: computed, as_published: not published; computed from nominal OD and bore, as_published_on: not applicable (computed 2026-10-16), formula: 2.67 * ((od_mm / 25.4)**2 - (id_mm / 25.4)**2)}
+- component_id: DC-STD-NC46-67-B57.2
+  type: drill_collar
+  data_class: STANDARD-NOMINAL
+  designation: {value: NC46-67, unit: dimensionless, source_key: ISO10424-1-2004-T14, basis: published, as_published: NC46-67, as_published_on: '2004'}
+  od: {value: 171.4, unit: mm, source_key: ISO10424-1-2004-T14, basis: published, as_published: '171,4', as_published_on: '2004'}
+  id: {value: 57.2, unit: mm, source_key: ISO10424-1-2004-T14, basis: published, as_published: '57,2', as_published_on: '2004'}
+  length: {value: [9.14, 9.45], unit: m, source_key: ISO10424-1-2004-T14, basis: published, as_published: '9,14 or 9,45', as_published_on: '2004'}
+  bevel_diameter: {value: 159.5, unit: mm, source_key: ISO10424-1-2004-T14, basis: published, as_published: '159,5', as_published_on: '2004'}
+  reference_bsr: {value: 3.18, unit: dimensionless, source_key: ISO10424-1-2004-T14, basis: published, as_published: '3,18:1', as_published_on: '2004'}
+  weight_per_length: {value: 108.0403937007874, unit: lbf/ft, source_key: SYNTHETIC-STEEL-WEIGHT-ASSUMPTION, basis: computed, as_published: not published; computed from nominal OD and bore, as_published_on: not applicable (computed 2026-10-16), formula: 2.67 * ((od_mm / 25.4)**2 - (id_mm / 25.4)**2)}
+- component_id: DC-STD-NC50-70-B57.2
+  type: drill_collar
+  data_class: STANDARD-NOMINAL
+  designation: {value: NC50-70, unit: dimensionless, source_key: ISO10424-1-2004-T14, basis: published, as_published: NC50-70, as_published_on: '2004'}
+  od: {value: 177.8, unit: mm, source_key: ISO10424-1-2004-T14, basis: published, as_published: '177,8', as_published_on: '2004'}
+  id: {value: 57.2, unit: mm, source_key: ISO10424-1-2004-T14, basis: published, as_published: '57,2', as_published_on: '2004'}
+  length: {value: [9.14, 9.45], unit: m, source_key: ISO10424-1-2004-T14, basis: published, as_published: '9,14 or 9,45', as_published_on: '2004'}
+  bevel_diameter: {value: 164.7, unit: mm, source_key: ISO10424-1-2004-T14, basis: published, as_published: '164,7', as_published_on: '2004'}
+  reference_bsr: {value: 2.54, unit: dimensionless, source_key: ISO10424-1-2004-T14, basis: published, as_published: '2,54:1', as_published_on: '2004'}
+  weight_per_length: {value: 117.28946307892618, unit: lbf/ft, source_key: SYNTHETIC-STEEL-WEIGHT-ASSUMPTION, basis: computed, as_published: not published; computed from nominal OD and bore, as_published_on: not applicable (computed 2026-10-16), formula: 2.67 * ((od_mm / 25.4)**2 - (id_mm / 25.4)**2)}
+- component_id: DC-STD-NC50-70-B71.4
+  type: drill_collar
+  data_class: STANDARD-NOMINAL
+  designation: {value: NC50-70, unit: dimensionless, source_key: ISO10424-1-2004-T14, basis: published, as_published: NC50-70, as_published_on: '2004'}
+  od: {value: 177.8, unit: mm, source_key: ISO10424-1-2004-T14, basis: published, as_published: '177,8', as_published_on: '2004'}
+  id: {value: 71.4, unit: mm, source_key: ISO10424-1-2004-T14, basis: published, as_published: '71,4', as_published_on: '2004'}
+  length: {value: [9.14, 9.45], unit: m, source_key: ISO10424-1-2004-T14, basis: published, as_published: '9,14 or 9,45', as_published_on: '2004'}
+  bevel_diameter: {value: 164.7, unit: mm, source_key: ISO10424-1-2004-T14, basis: published, as_published: '164,7', as_published_on: '2004'}
+  reference_bsr: {value: 2.73, unit: dimensionless, source_key: ISO10424-1-2004-T14, basis: published, as_published: '2,73:1', as_published_on: '2004'}
+  weight_per_length: {value: 109.73205034410071, unit: lbf/ft, source_key: SYNTHETIC-STEEL-WEIGHT-ASSUMPTION, basis: computed, as_published: not published; computed from nominal OD and bore, as_published_on: not applicable (computed 2026-10-16), formula: 2.67 * ((od_mm / 25.4)**2 - (id_mm / 25.4)**2)}
+- component_id: DC-STD-NC50-72-B71.4
+  type: drill_collar
+  data_class: STANDARD-NOMINAL
+  designation: {value: NC50-72, unit: dimensionless, source_key: ISO10424-1-2004-T14, basis: published, as_published: NC50-72, as_published_on: '2004'}
+  od: {value: 184.2, unit: mm, source_key: ISO10424-1-2004-T14, basis: published, as_published: '184,2', as_published_on: '2004'}
+  id: {value: 71.4, unit: mm, source_key: ISO10424-1-2004-T14, basis: published, as_published: '71,4', as_published_on: '2004'}
+  length: {value: [9.14, 9.45], unit: m, source_key: ISO10424-1-2004-T14, basis: published, as_published: '9,14 or 9,45', as_published_on: '2004'}
+  bevel_diameter: {value: 169.5, unit: mm, source_key: ISO10424-1-2004-T14, basis: published, as_published: '169,5', as_published_on: '2004'}
+  reference_bsr: {value: 3.12, unit: dimensionless, source_key: ISO10424-1-2004-T14, basis: published, as_published: '3,12:1', as_published_on: '2004'}
+  weight_per_length: {value: 119.32014632029261, unit: lbf/ft, source_key: SYNTHETIC-STEEL-WEIGHT-ASSUMPTION, basis: computed, as_published: not published; computed from nominal OD and bore, as_published_on: not applicable (computed 2026-10-16), formula: 2.67 * ((od_mm / 25.4)**2 - (id_mm / 25.4)**2)}
+- component_id: DC-STD-NC56-77-B71.4
+  type: drill_collar
+  data_class: STANDARD-NOMINAL
+  designation: {value: NC56-77, unit: dimensionless, source_key: ISO10424-1-2004-T14, basis: published, as_published: NC56-77, as_published_on: '2004'}
+  od: {value: 196.8, unit: mm, source_key: ISO10424-1-2004-T14, basis: published, as_published: '196,8', as_published_on: '2004'}
+  id: {value: 71.4, unit: mm, source_key: ISO10424-1-2004-T14, basis: published, as_published: '71,4', as_published_on: '2004'}
+  length: {value: [9.14, 9.45], unit: m, source_key: ISO10424-1-2004-T14, basis: published, as_published: '9,14 or 9,45', as_published_on: '2004'}
+  bevel_diameter: {value: 185.3, unit: mm, source_key: ISO10424-1-2004-T14, basis: published, as_published: '185,3', as_published_on: '2004'}
+  reference_bsr: {value: 2.7, unit: dimensionless, source_key: ISO10424-1-2004-T14, basis: published, as_published: '2,70:1', as_published_on: '2004'}
+  weight_per_length: {value: 139.18746915493833, unit: lbf/ft, source_key: SYNTHETIC-STEEL-WEIGHT-ASSUMPTION, basis: computed, as_published: not published; computed from nominal OD and bore, as_published_on: not applicable (computed 2026-10-16), formula: 2.67 * ((od_mm / 25.4)**2 - (id_mm / 25.4)**2)}
+- component_id: DC-STD-NC56-80-B71.4
+  type: drill_collar
+  data_class: STANDARD-NOMINAL
+  designation: {value: NC56-80, unit: dimensionless, source_key: ISO10424-1-2004-T14, basis: published, as_published: NC56-80, as_published_on: '2004'}
+  od: {value: 203.2, unit: mm, source_key: ISO10424-1-2004-T14, basis: published, as_published: '203,2', as_published_on: '2004'}
+  id: {value: 71.4, unit: mm, source_key: ISO10424-1-2004-T14, basis: published, as_published: '71,4', as_published_on: '2004'}
+  length: {value: [9.14, 9.45], unit: m, source_key: ISO10424-1-2004-T14, basis: published, as_published: '9,14 or 9,45', as_published_on: '2004'}
+  bevel_diameter: {value: 190.1, unit: mm, source_key: ISO10424-1-2004-T14, basis: published, as_published: '190,1', as_published_on: '2004'}
+  reference_bsr: {value: 3.02, unit: dimensionless, source_key: ISO10424-1-2004-T14, basis: published, as_published: '3,02:1', as_published_on: '2004'}
+  weight_per_length: {value: 149.78205034410067, unit: lbf/ft, source_key: SYNTHETIC-STEEL-WEIGHT-ASSUMPTION, basis: computed, as_published: not published; computed from nominal OD and bore, as_published_on: not applicable (computed 2026-10-16), formula: 2.67 * ((od_mm / 25.4)**2 - (id_mm / 25.4)**2)}
+- component_id: DC-STD-6-5_8-REG-B71.4
+  type: drill_collar
+  data_class: STANDARD-NOMINAL
+  designation: {value: 6 5/8 REG, unit: dimensionless, source_key: ISO10424-1-2004-T14, basis: published, as_published: 6 5/8 REG, as_published_on: '2004'}
+  od: {value: 209.6, unit: mm, source_key: ISO10424-1-2004-T14, basis: published, as_published: '209,6', as_published_on: '2004'}
+  id: {value: 71.4, unit: mm, source_key: ISO10424-1-2004-T14, basis: published, as_published: '71,4', as_published_on: '2004'}
+  length: {value: [9.14, 9.45], unit: m, source_key: ISO10424-1-2004-T14, basis: published, as_published: '9,14 or 9,45', as_published_on: '2004'}
+  # Source-check status: issues #2716 and #2629; retain the supplied value.
+  bevel_diameter: {value: 195.6, unit: mm, source_key: ISO10424-1-2004-T14, basis: published, as_published: '195,6', as_published_on: '2004',
+    verification: pending,
+    verification_reason: 'Comparison against licensed ISO 10424-1:2004 Table 14 with its printed page is outstanding; an inch conversion does not verify the printed value.',
+    verification_issue: '#2629'}
+  reference_bsr: {value: 2.93, unit: dimensionless, source_key: ISO10424-1-2004-T14, basis: published, as_published: '2,93:1', as_published_on: '2004'}
+  weight_per_length: {value: 160.71565813131622, unit: lbf/ft, source_key: SYNTHETIC-STEEL-WEIGHT-ASSUMPTION, basis: computed, as_published: not published; computed from nominal OD and bore, as_published_on: not applicable (computed 2026-10-16), formula: 2.67 * ((od_mm / 25.4)**2 - (id_mm / 25.4)**2)}
+- component_id: DC-STD-NC61-90-B71.4
+  type: drill_collar
+  data_class: STANDARD-NOMINAL
+  designation: {value: NC61-90, unit: dimensionless, source_key: ISO10424-1-2004-T14, basis: published, as_published: NC61-90, as_published_on: '2004'}
+  od: {value: 228.6, unit: mm, source_key: ISO10424-1-2004-T14, basis: published, as_published: '228,6', as_published_on: '2004'}
+  id: {value: 71.4, unit: mm, source_key: ISO10424-1-2004-T14, basis: published, as_published: '71,4', as_published_on: '2004'}
+  length: {value: [9.14, 9.45], unit: m, source_key: ISO10424-1-2004-T14, basis: published, as_published: '9,14 or 9,45', as_published_on: '2004'}
+  bevel_diameter: {value: 212.7, unit: mm, source_key: ISO10424-1-2004-T14, basis: published, as_published: '212,7', as_published_on: '2004'}
+  reference_bsr: {value: 3.17, unit: dimensionless, source_key: ISO10424-1-2004-T14, basis: published, as_published: '3,17:1', as_published_on: '2004'}
+  weight_per_length: {value: 195.17205034410068, unit: lbf/ft, source_key: SYNTHETIC-STEEL-WEIGHT-ASSUMPTION, basis: computed, as_published: not published; computed from nominal OD and bore, as_published_on: not applicable (computed 2026-10-16), formula: 2.67 * ((od_mm / 25.4)**2 - (id_mm / 25.4)**2)}
+- component_id: DC-STD-7-5_8-REG-B76.2
+  type: drill_collar
+  data_class: STANDARD-NOMINAL
+  designation: {value: 7 5/8 REG, unit: dimensionless, source_key: ISO10424-1-2004-T14, basis: published, as_published: 7 5/8 REG, as_published_on: '2004'}
+  od: {value: 241.3, unit: mm, source_key: ISO10424-1-2004-T14, basis: published, as_published: '241,3', as_published_on: '2004'}
+  id: {value: 76.2, unit: mm, source_key: ISO10424-1-2004-T14, basis: published, as_published: '76,2', as_published_on: '2004'}
+  length: {value: [9.14, 9.45], unit: m, source_key: ISO10424-1-2004-T14, basis: published, as_published: '9,14 or 9,45', as_published_on: '2004'}
+  bevel_diameter: {value: 223.8, unit: mm, source_key: ISO10424-1-2004-T14, basis: published, as_published: '223,8', as_published_on: '2004'}
+  reference_bsr: {value: 2.81, unit: dimensionless, source_key: ISO10424-1-2004-T14, basis: published, as_published: '2,81:1', as_published_on: '2004'}
+  weight_per_length: {value: 216.93750000000006, unit: lbf/ft, source_key: SYNTHETIC-STEEL-WEIGHT-ASSUMPTION, basis: computed, as_published: not published; computed from nominal OD and bore, as_published_on: not applicable (computed 2026-10-16), formula: 2.67 * ((od_mm / 25.4)**2 - (id_mm / 25.4)**2)}
+- component_id: DC-STD-NC70-97-B76.2
+  type: drill_collar
+  data_class: STANDARD-NOMINAL
+  designation: {value: NC70-97, unit: dimensionless, source_key: ISO10424-1-2004-T14, basis: published, as_published: NC70-97, as_published_on: '2004'}
+  od: {value: 247.6, unit: mm, source_key: ISO10424-1-2004-T14, basis: published, as_published: '247,6', as_published_on: '2004'}
+  id: {value: 76.2, unit: mm, source_key: ISO10424-1-2004-T14, basis: published, as_published: '76,2', as_published_on: '2004'}
+  length: {value: [9.14, 9.45], unit: m, source_key: ISO10424-1-2004-T14, basis: published, as_published: '9,14 or 9,45', as_published_on: '2004'}
+  bevel_diameter: {value: 232.6, unit: mm, source_key: ISO10424-1-2004-T14, basis: published, as_published: '232,6', as_published_on: '2004'}
+  reference_bsr: {value: 2.57, unit: dimensionless, source_key: ISO10424-1-2004-T14, basis: published, as_published: '2,57:1', as_published_on: '2004'}
+  weight_per_length: {value: 229.6843951887904, unit: lbf/ft, source_key: SYNTHETIC-STEEL-WEIGHT-ASSUMPTION, basis: computed, as_published: not published; computed from nominal OD and bore, as_published_on: not applicable (computed 2026-10-16), formula: 2.67 * ((od_mm / 25.4)**2 - (id_mm / 25.4)**2)}
+- component_id: DC-STD-NC70-100-B76.2
+  type: drill_collar
+  data_class: STANDARD-NOMINAL
+  designation: {value: NC70-100, unit: dimensionless, source_key: ISO10424-1-2004-T14, basis: published, as_published: NC70-100, as_published_on: '2004'}
+  od: {value: 254.0, unit: mm, source_key: ISO10424-1-2004-T14, basis: published, as_published: '254,0', as_published_on: '2004'}
+  id: {value: 76.2, unit: mm, source_key: ISO10424-1-2004-T14, basis: published, as_published: '76,2', as_published_on: '2004'}
+  length: {value: [9.14, 9.45], unit: m, source_key: ISO10424-1-2004-T14, basis: published, as_published: '9,14 or 9,45', as_published_on: '2004'}
+  bevel_diameter: {value: 237.3, unit: mm, source_key: ISO10424-1-2004-T14, basis: published, as_published: '237,3', as_published_on: '2004'}
+  reference_bsr: {value: 2.81, unit: dimensionless, source_key: ISO10424-1-2004-T14, basis: published, as_published: '2,81:1', as_published_on: '2004'}
+  weight_per_length: {value: 242.97, unit: lbf/ft, source_key: SYNTHETIC-STEEL-WEIGHT-ASSUMPTION, basis: computed, as_published: not published; computed from nominal OD and bore, as_published_on: not applicable (computed 2026-10-16), formula: 2.67 * ((od_mm / 25.4)**2 - (id_mm / 25.4)**2)}
+- component_id: DC-STD-8-5_8-REG-B76.2
+  type: drill_collar
+  data_class: STANDARD-NOMINAL
+  designation: {value: 8 5/8 REG, unit: dimensionless, source_key: ISO10424-1-2004-T14, basis: published, as_published: 8 5/8 REG, as_published_on: '2004'}
+  od: {value: 279.4, unit: mm, source_key: ISO10424-1-2004-T14, basis: published, as_published: '279,4', as_published_on: '2004'}
+  id: {value: 76.2, unit: mm, source_key: ISO10424-1-2004-T14, basis: published, as_published: '76,2', as_published_on: '2004'}
+  length: {value: [9.14, 9.45], unit: m, source_key: ISO10424-1-2004-T14, basis: published, as_published: '9,14 or 9,45', as_published_on: '2004'}
+  bevel_diameter: {value: 266.7, unit: mm, source_key: ISO10424-1-2004-T14, basis: published, as_published: '266,7', as_published_on: '2004'}
+  reference_bsr: {value: 2.84, unit: dimensionless, source_key: ISO10424-1-2004-T14, basis: published, as_published: '2,84:1', as_published_on: '2004'}
+  weight_per_length: {value: 299.03999999999996, unit: lbf/ft, source_key: SYNTHETIC-STEEL-WEIGHT-ASSUMPTION, basis: computed, as_published: not published; computed from nominal OD and bore, as_published_on: not applicable (computed 2026-10-16), formula: 2.67 * ((od_mm / 25.4)**2 - (id_mm / 25.4)**2)}

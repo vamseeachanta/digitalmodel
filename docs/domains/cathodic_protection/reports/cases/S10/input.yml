@@ -1,0 +1,64 @@
+basename: cathodic_protection
+inputs:
+  calculation_type: DNV_RP_B401_offshore
+  design_data:
+    edition: '2021'
+    design_life: 0.5
+  environment:
+    seawater_temperature_C: 10.0
+  anode_families:
+  - name: sea
+    environment: seawater
+    material: aluminium
+    type: stand_off
+    individual_anode_mass_kg: 20.0
+    count: 5
+    length_m: 2.0
+    radius_m: 0.1
+    electrolyte_resistivity_ohm_m: 0.3
+    utilization_factor: 0.9
+  riser_base_assessment:
+    components:
+    - name: base
+      type: riser_base
+      composition_basis: project_practice
+      composition_reason: Generic round-area test composition.
+      zones:
+      - zone: frame
+        base_zone: submerged
+        depth_m: 100.0
+        area_m2: 10.0
+        coating_category: bare
+        anode_family: sea
+    phases:
+    - name: installation
+      type: temporary
+      life_years: 0.5
+      basis:
+        source: project_practice
+        reason: Synthetic half-year temporary service interval.
+      families:
+      - family: sea
+        mean_current_A: 2.0
+        initial_current_A: 2.0
+        final_current_A: 2.0
+        basis:
+          source: project_practice
+          reason: Rounded phase demand for hand calculation.
+report:
+  document:
+    approved_by: Pending
+    checked_by: Pending
+    client: Internal module review - no client issuance
+    date: '2026-10-03'
+    number: R2281-CP-010-00
+    prepared_by: Automated regression report
+    project: Digitalmodel CP regression portfolio
+    revision: '00'
+    revision_history:
+    - approved: Pending
+      checked: Pending
+      date: '2026-10-03'
+      description: Internal review draft
+      rev: '00'
+    title: 'CP module review: Temporary service'

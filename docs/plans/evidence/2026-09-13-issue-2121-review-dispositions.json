@@ -1,0 +1,93 @@
+{
+  "issue": "https://github.com/vamseeachanta/digitalmodel/issues/2121",
+  "stage": "plan",
+  "author_provider": "Codex",
+  "reviewed_prior_tree": "4a249ab7126c40fe6025e14096bb258a80c5cfcb",
+  "current_review": "pending final exact-current review after R2 inline corrections",
+  "findings": [
+    {
+      "ids": [
+        "C1"
+      ],
+      "disposition": "Source premise contradicted: VM25 explicitly uses nu=0.3 and its radial displacement distinguishes open ends, closed ends and plane strain. No axial-displacement target is published. Added independent Hooke-law axial derivation and wrong-branch mutation tests; no arbitrary second source requirement adopted.",
+      "source": "https://examples.mapdl.docs.pyansys.com/verif-manual/vm-025.html"
+    },
+    {
+      "ids": [
+        "C2"
+      ],
+      "disposition": "Clarified distinct ledger/production keys and unique finest candidate promotion. Coarse ledger coexistence does not block the campaign; direct coarse/control promotion does."
+    },
+    {
+      "ids": [
+        "C3"
+      ],
+      "disposition": "Added coexistence, overlapping geometry but disjoint temperature/response scope, repository ownership and pre-registration checks. Renamed proposed case namespace ocv. No observed historic ID collision asserted."
+    },
+    {
+      "ids": [
+        "C4",
+        "CX1",
+        "CX2"
+      ],
+      "disposition": "Enumerated finest/coarse mandatory vs diagnostic checks; added manifest 180-minute total wall-time cap."
+    },
+    {
+      "ids": [
+        "C5"
+      ],
+      "disposition": "Rejected claim that VM38 lacks elastic targets: primary source explicitly includes them. Reference narrowed to modelling background; no VM38 numeric comparator fixture promised.",
+      "source": "https://ansyshelp.ansys.com/public/Views/Secured/corp/v242/en/ans_vm/Hlp_V_VM38.html"
+    },
+    {
+      "ids": [
+        "C6"
+      ],
+      "disposition": "Explicit rights gate for stored vendor target numbers; independent recomputation plus published-target corroboration retained."
+    },
+    {
+      "ids": [
+        "C7"
+      ],
+      "disposition": "No evidence establishes claimed round-off or replacement tolerance. Retained explicitly labelled outer equilibrium scale; added nodal reaction distribution diagnostic and independent checker disposition."
+    },
+    {
+      "ids": [
+        "C8"
+      ],
+      "disposition": "Added checker pre-run error-estimate/limitation register and unexpected-trend disposition. No unsupported a priori accuracy prediction adopted."
+    },
+    {
+      "ids": [
+        "C9"
+      ],
+      "disposition": "Added auxiliary axial stations outside lookup and independent radial-equilibrium/constant-sum reference tests. Shell end-layer prediction not adopted as established."
+    },
+    {
+      "ids": [
+        "C10"
+      ],
+      "disposition": "Added affirmative no-launch guard and explicit native-test node-ID exclusions; no license-only skip assumption accepted."
+    }
+  ],
+  "verification": {
+    "documentation_tests": "8 passed",
+    "initial_four_file_render": "PASS; inspected screenshot; no overflow/page errors; local links resolve",
+    "case_matrix": "28 unique proposed nonexecuted attempts",
+    "baseline_source_hashes_verified": 8,
+    "legal": "Scoped snapshot text scan PASS; will rerun on final artifacts"
+  },
+  "reciprocal_review": "Independent Codex solver_evidence worker checked Claude source premises; main-session Codex dispositions above. Exact revised plan Claude/Codex review pending.",
+  "r2_dispositions": {
+    "A1": "Valid feasibility concern; exact PLANE182 numerical prediction is not established FE recovery. Proposed PLANE183, explicit independent B1 feasibility HOLD before freezing limits; unresolved evidence stops B1 at a report and blocks B2. No native success inferred.",
+    "A2": "Added six version-pinned source pages with retrieval timestamps and raw-byte digests; only factual metadata retained. C1/C5 remain author-disposed with independent Codex scrutiny of Claude output, not Claude concurrence. Source-rejection facts remain supported.",
+    "A3": "Reuse Stage A exact decimal-string canonicalization; reject JSON numbers, mismatched units and off-grid values.",
+    "A4": "Added machine-readable candidate response definitions, SXY mapping, keyopts, recovery, stations and criteria.",
+    "A5": "Single mandatory failure stops campaign; retained per-key qualification does not imply permission to continue; failed attempts count. No automatic continuation suggested by reviewer adopted.",
+    "A6": "Auxiliary band remains candidate subject to B1 feasibility; unresolved estimate blocks freeze. No post-hoc calibration to passing observed results.",
+    "A7": "Retained explicitly stated outer equilibrium comparator; unsupported round-off estimates and post-hoc calibration rejected. Independent distributions/checker required.",
+    "A8": "Independent distinct-provider/session derivation from physics-only brief; B1 checker register and separate precomparison hashes/commits. Owner authority remains separate.",
+    "A9": "Final verification receipt will record exact commands, times, tree/blob hashes and artifact digests. Scoped scanner workaround will be named; no live-root scan falsely claimed.",
+    "A10": "Added B1 adjacent historical golden disposition record and regression test; raw historical capture immutable."
+  }
+}

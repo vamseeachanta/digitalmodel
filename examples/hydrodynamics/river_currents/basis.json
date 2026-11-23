@@ -1,0 +1,139 @@
+{
+  "revision": "2",
+  "revisions": [
+    {
+      "revision": "1",
+      "date": "2026-10-14",
+      "change": "Initial synthetic river current analysis; expose flow and towing screening assumptions."
+    },
+    {
+      "revision": "2",
+      "date": "2026-10-15",
+      "change": "Expose the towing verdict reversal without the slot multiplier in the summary and results."
+    }
+  ],
+  "basis": "Synthetic inputs; assumed, based on previous experience. No measured river record or hull calibration is claimed.",
+  "sources": [
+    {
+      "title": "NASA Glenn: Conservation of Mass",
+      "url": "https://www.grc.nasa.gov/www/k-12/airplane/mass.html",
+      "retrieved_utc": "2026-10-14T20:27:36.770934+00:00",
+      "http_status": 200,
+      "response_sha256": "f5a88024d1c3997ea5fb2039a1fdaabfbf0a7fae0d7d50c9cd1f50f5903de70c"
+    },
+    {
+      "title": "NIST: Weibull Distribution",
+      "url": "https://www.itl.nist.gov/div898/handbook/eda/section3/eda3668.htm",
+      "retrieved_utc": "2026-10-14T20:27:50.909105+00:00",
+      "http_status": 200,
+      "response_sha256": "88665584dfdef1f9bbaef5af8a76c33b583bbed2b7da2a07268a28f18983dc4e"
+    },
+    {
+      "title": "NIST: Extreme Value Type I Distribution",
+      "url": "https://www.itl.nist.gov/div898/handbook/eda/section3/eda366g.htm",
+      "retrieved_utc": "2026-10-14T20:28:22.064275+00:00",
+      "http_status": 200,
+      "response_sha256": "fa71afa6b4d18a4b963eb555d1826f2d35a6fad468900725d52d0092d2260bed"
+    },
+    {
+      "title": "OpenStax University Physics: Centripetal Force",
+      "url": "https://openstax.org/books/university-physics-volume-1/pages/6-3-centripetal-force",
+      "retrieved_utc": "2026-10-14T20:30:27.138607+00:00",
+      "http_status": 200,
+      "response_sha256": "fa9b5508135bc58b01840dd8b0a55e40fff658365379bae3df2962c6d3f89b16"
+    }
+  ],
+  "repository_basis": [
+    {
+      "path": "src/digitalmodel/hydrodynamics/river_currents/profiles.py",
+      "use": "Power-law profile, exponent 6 and depth-average relation."
+    },
+    {
+      "path": "src/digitalmodel/hydrodynamics/ocimf_loading.py",
+      "use": "Existing approximate current-load coefficients; no licensed coefficient table."
+    },
+    {
+      "path": "src/digitalmodel/tug/bollard_pull.py",
+      "use": "Gravity 9.80665 for SI conversions; tug toolkit estimates capacity from power, not holding demand."
+    }
+  ],
+  "bank": {
+    "width_m": 100,
+    "depth_m": 5,
+    "beam_m": 20,
+    "draft_m": 2.5,
+    "surface_speed_m_s": 2,
+    "bank_retardation": 1,
+    "bend_radius_m": 200,
+    "outer_bias": 0.2,
+    "gravity_m_s2": 9.80665
+  },
+  "extremes": {
+    "weibull_series_m_s": [
+      0.4529604591464934,
+      0.806272731767049,
+      1.0727200426053032,
+      1.312681097742257,
+      1.546398397251653,
+      1.7871851568517143,
+      2.0492165571248715,
+      2.3548200450309493,
+      2.7547195754819627,
+      3.46163676520457
+    ],
+    "annual_maxima_m_s": [
+      2.4514056498175254,
+      2.679831530619626,
+      2.8366828700108595,
+      2.9756896277103055,
+      3.112505336514704,
+      3.2572185680869015,
+      3.4210754953623663,
+      3.622949661853619,
+      3.908480397389805,
+      4.485097624521082
+    ],
+    "seasonal_speeds_m_s": [
+      1,
+      2,
+      3,
+      4
+    ],
+    "season_labels": [
+      "dry",
+      "dry",
+      "flood",
+      "flood"
+    ],
+    "return_period_years": 10,
+    "independent_samples_per_year": 1,
+    "location_basis": "Uncorrected synthetic section-reference speeds; corrections are not fitted again."
+  },
+  "towing": {
+    "width_m": 100,
+    "depth_m": 3,
+    "discharge_m3_s": 600,
+    "bank_position_m": 50,
+    "bank_retardation": 1,
+    "length_m": 40,
+    "beam_m": 10,
+    "draft_m": 2,
+    "displacement_t": 500,
+    "exponent_m": 6,
+    "density_kg_m3": 1000,
+    "available_pull_N": 150000,
+    "efficiency": 0.8,
+    "reserve_factor": 1.2,
+    "yaw_capacity_Nm": 0,
+    "integration_slices": 1000
+  },
+  "assumptions": [
+    "The lateral factor 1-r+6*r*x*(1-x) has unit section average; bank retardation r is an assumed shape parameter, not a calibration.",
+    "The bend bias 1+a*(2*x-1) is a separate assumed outer-bank increase. Superelevation follows constant-speed radial equilibrium; it does not determine the velocity bias.",
+    "Channel blockage uses continuity with area width*depth minus beam*draft; rectangular section and cross-section are assumed.",
+    "The shallow drag multiplier (depth/(depth-draft)) squared is a full-width under-keel slot screening bound derived from continuity and quadratic drag, not a validated barge coefficient. Side bypass is ignored. Do not also use this slot model as a channel blockage correction.",
+    "The finite-width channel correction accounts for section-average acceleration; the slot multiplier is a separate local under-keel hypothesis. Their combined use in towing is an explicit stress scenario, not an empirical joint calibration.",
+    "Return levels use least-squares probability plots at (rank-0.5)/count; Weibull samples must be positive and independent, with the sampling rate specified. Gumbel input is one maximum per year.",
+    "Only steady current loading is considered. Tug self-resistance, wind, waves, debris, interaction forces, towline geometry and propulsion loss at speed are excluded; no operational approval follows from the synthetic decision."
+  ]
+}

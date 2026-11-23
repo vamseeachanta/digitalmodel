@@ -1,0 +1,946 @@
+# Lines Configuration
+# Generated from: C03 Turret moored FPSO.yml
+# Date: 2026-01-18 22:18:03
+Lines:
+- Name: 10" Prod 1
+  IncludeTorsion: No
+  TopEnd: End A
+  LengthAndEndOrientations: Explicit
+  Representation: Finite element
+  PyModel: (none)
+  PreBendSpecifiedBy: Curvature
+  DragFormulation: Standard
+  StaticsVIV: None
+  DynamicsVIV: None
+  WaveCalculationMethod: Specified by environment
+  ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+  : - - Turret buoy
+      - -2.5711504389999997
+      - 3.064177772
+      - -1.4
+      - 131.7656373387673
+      - 125.49293794619857
+      - 0
+      - ~
+    - - Anchored
+      - -96.41814145
+      - 114.9066665
+      - 0.1963
+      - 197.00654110858238
+      - 171.37401055915882
+      - 0
+      - ~
+  ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+  - - 0
+    - ~
+  - - 0
+    - ~
+  ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth
+  : - - ~
+      - 0
+      - 0.001
+    - - ~
+      - 0
+      - 0.001
+  LineType, Length, TargetSegmentLength:
+  - - 10"Product
+    - 97.5
+    - 2
+  - - 10"P+Buoys
+    - 65.7
+    - 2
+  - - 10"P+2Buoy
+    - 10
+    - 2
+  - - 10"Product
+    - 3.1
+    - 2
+  - - 10"Product
+    - 36.2
+    - 2
+  AttachmentType, Attachmentx, Attachmenty, Attachmentz, AttachmentzRelativeTo:
+  - - Flange
+    - 0
+    - 0
+    - 0
+    - End A
+  DecoupleLateralAndAxialSeabedFriction: No
+  CoveredSectionsWarnIfLineLeavesCover: Yes
+  ContentsMethod: Uniform
+  IncludeAxialContentsInertia: Yes
+  ContentsDensity: 1.025
+  ContentsTemperature: ~
+  ContentsPressureRefZ: ~
+  ContentsPressure: 0
+  ContentsFlowRate: 0
+  IncludedInStatics: Yes
+  StaticsStep1: Catenary
+  StaticsStep2: Full statics
+  StaticsSeabedFrictionPolicy: As laid
+  LayAzimuth: 315.7939502239743
+  AsLaidTension: 0
+  ContactPen:
+  - 5
+  - Solid
+  - White
+- Name: 5" GL 1
+  IncludeTorsion: No
+  TopEnd: End A
+  LengthAndEndOrientations: Explicit
+  Representation: Finite element
+  PyModel: (none)
+  PreBendSpecifiedBy: Curvature
+  DragFormulation: Standard
+  StaticsVIV: None
+  DynamicsVIV: None
+  WaveCalculationMethod: Specified by environment
+  ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+  : - - Turret buoy
+      - -2.000000000000001
+      - 3.464101615
+      - -1.4
+      - 124.75085389830825
+      - 116.62373015043788
+      - 0
+      - ~
+    - - Anchored
+      - -75
+      - 129.9038106
+      - 0.1286
+      - 150.7758905840071
+      - 178.27783242235228
+      - 0
+      - ~
+  ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+  - - 0
+    - ~
+  - - 0
+    - ~
+  ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth
+  : - - ~
+      - 0
+      - 0.001
+    - - ~
+      - 0
+      - 0.001
+  LineType, Length, TargetSegmentLength:
+  - - 5"Gas Lift
+    - 97.5
+    - 2
+  - - 5"GL+Buoys
+    - 65.7
+    - 2
+  - - 5"GL+Buoys
+    - 10
+    - 2
+  - - 5"Gas Lift
+    - 3.1
+    - 2
+  - - 5"Gas Lift
+    - 36.2
+    - 2
+  AttachmentType, Attachmentx, Attachmenty, Attachmentz, AttachmentzRelativeTo:
+  - - Flange
+    - 0
+    - 0
+    - 0
+    - End A
+  DecoupleLateralAndAxialSeabedFriction: No
+  CoveredSectionsWarnIfLineLeavesCover: Yes
+  ContentsMethod: Uniform
+  IncludeAxialContentsInertia: Yes
+  ContentsDensity: 0
+  ContentsTemperature: ~
+  ContentsPressureRefZ: ~
+  ContentsPressure: 0
+  ContentsFlowRate: 0
+  IncludedInStatics: Yes
+  StaticsStep1: Catenary
+  StaticsStep2: Full statics
+  StaticsSeabedFrictionPolicy: As laid
+  LayAzimuth: 305.95883492595607
+  AsLaidTension: 0
+  ContactPen:
+  - 5
+  - Solid
+  - White
+- Name: Umb 1
+  IncludeTorsion: No
+  TopEnd: End A
+  LengthAndEndOrientations: Explicit
+  Representation: Finite element
+  PyModel: (none)
+  PreBendSpecifiedBy: Curvature
+  DragFormulation: Standard
+  StaticsVIV: None
+  DynamicsVIV: None
+  WaveCalculationMethod: Specified by environment
+  ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+  : - - Turret buoy
+      - -1.3680805729999994
+      - 3.758770483
+      - -1.4
+      - 117.63075033730426
+      - 117.177562801341
+      - 0
+      - ~
+    - - Anchored
+      - -51.3030215
+      - 140.9538931
+      - 0.124
+      - 12.579904831317341
+      - 171.8240836356539
+      - 0
+      - ~
+  ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+  - - 0
+    - ~
+  - - 0
+    - ~
+  ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth
+  : - - ~
+      - 0
+      - 0.001
+    - - ~
+      - 0
+      - 0.001
+  LineType, Length, TargetSegmentLength:
+  - - Umbilical
+    - 97.5
+    - 2
+  - - Umb+Buoys
+    - 65.7
+    - 2
+  - - Umb+Buoys
+    - 10
+    - 2
+  - - Umbilical
+    - 3.1
+    - 2
+  - - Umbilical
+    - 36.2
+    - 2
+  AttachmentType, Attachmentx, Attachmenty, Attachmentz, AttachmentzRelativeTo:
+  - - Flange
+    - 0
+    - 0
+    - 0
+    - End A
+  DecoupleLateralAndAxialSeabedFriction: No
+  CoveredSectionsWarnIfLineLeavesCover: Yes
+  ContentsMethod: Uniform
+  IncludeAxialContentsInertia: Yes
+  ContentsDensity: 0
+  ContentsTemperature: ~
+  ContentsPressureRefZ: ~
+  ContentsPressure: 0
+  ContentsFlowRate: 0
+  IncludedInStatics: Yes
+  StaticsStep1: Catenary
+  StaticsStep2: Full statics
+  StaticsSeabedFrictionPolicy: As laid
+  LayAzimuth: 295.9461429987205
+  AsLaidTension: 0
+  ContactPen:
+  - 5
+  - Solid
+  - White
+- Name: 10" Prod 3
+  IncludeTorsion: No
+  TopEnd: End A
+  LengthAndEndOrientations: Explicit
+  Representation: Finite element
+  PyModel: (none)
+  PreBendSpecifiedBy: Curvature
+  DragFormulation: Standard
+  StaticsVIV: None
+  DynamicsVIV: None
+  WaveCalculationMethod: Specified by environment
+  ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+  : - - Turret buoy
+      - -1.3680805729999996
+      - -3.758770483
+      - -1.4
+      - 216.6863423643114
+      - 156.11571107830787
+      - 0
+      - ~
+    - - Anchored
+      - -51.3030215
+      - -140.9538931
+      - 0.1963
+      - 266.8959083660562
+      - 125.22409442387695
+      - 0
+      - ~
+  ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+  - - 0
+    - ~
+  - - 0
+    - ~
+  ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth
+  : - - ~
+      - 0
+      - 0.001
+    - - ~
+      - 0
+      - 0.001
+  LineType, Length, TargetSegmentLength:
+  - - 10"Product
+    - 97.5
+    - 2
+  - - 10"P+Buoys
+    - 65.7
+    - 2
+  - - 10"P+2Buoy
+    - 10
+    - 2
+  - - 10"Product
+    - 3.1
+    - 2
+  - - 10"Product
+    - 36.2
+    - 2
+  AttachmentType, Attachmentx, Attachmenty, Attachmentz, AttachmentzRelativeTo:
+  - - Flange
+    - 0
+    - 0
+    - 0
+    - End A
+  DecoupleLateralAndAxialSeabedFriction: No
+  CoveredSectionsWarnIfLineLeavesCover: Yes
+  ContentsMethod: Uniform
+  IncludeAxialContentsInertia: Yes
+  ContentsDensity: 1.025
+  ContentsTemperature: ~
+  ContentsPressureRefZ: ~
+  ContentsPressure: 0
+  ContentsFlowRate: 0
+  IncludedInStatics: Yes
+  StaticsStep1: Catenary
+  StaticsStep2: Full statics
+  StaticsSeabedFrictionPolicy: As laid
+  LayAzimuth: 66.58215411410262
+  AsLaidTension: 0
+  ContactPen:
+  - 5
+  - Solid
+  - White
+- Name: 5" GL 3
+  IncludeTorsion: No
+  TopEnd: End A
+  LengthAndEndOrientations: Explicit
+  Representation: Finite element
+  PyModel: (none)
+  PreBendSpecifiedBy: Curvature
+  DragFormulation: Standard
+  StaticsVIV: None
+  DynamicsVIV: None
+  WaveCalculationMethod: Specified by environment
+  ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+  : - - Turret buoy
+      - -2.0000000000000004
+      - -3.464101615
+      - -1.4
+      - 206.2026973488928
+      - 148.54238979942087
+      - 0
+      - ~
+    - - Anchored
+      - -75
+      - -129.9038106
+      - 0.1286
+      - 264.41355348331723
+      - 125.53120851248616
+      - 0
+      - ~
+  ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+  - - 0
+    - ~
+  - - 0
+    - ~
+  ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth
+  : - - ~
+      - 0
+      - 0.001
+    - - ~
+      - 0
+      - 0.001
+  LineType, Length, TargetSegmentLength:
+  - - 5"Gas Lift
+    - 97.5
+    - 2
+  - - 5"GL+Buoys
+    - 65.7
+    - 2
+  - - 5"GL+Buoys
+    - 10
+    - 2
+  - - 5"Gas Lift
+    - 3.1
+    - 2
+  - - 5"Gas Lift
+    - 36.2
+    - 2
+  AttachmentType, Attachmentx, Attachmenty, Attachmentz, AttachmentzRelativeTo:
+  - - Flange
+    - 0
+    - 0
+    - 0
+    - End A
+  DecoupleLateralAndAxialSeabedFriction: No
+  CoveredSectionsWarnIfLineLeavesCover: Yes
+  ContentsMethod: Uniform
+  IncludeAxialContentsInertia: Yes
+  ContentsDensity: 0
+  ContentsTemperature: ~
+  ContentsPressureRefZ: ~
+  ContentsPressure: 0
+  ContentsFlowRate: 0
+  IncludedInStatics: Yes
+  StaticsStep1: Catenary
+  StaticsStep2: Full statics
+  StaticsSeabedFrictionPolicy: As laid
+  LayAzimuth: 57.4067643508139
+  AsLaidTension: 0
+  ContactPen:
+  - 5
+  - Solid
+  - White
+- Name: Umb 3
+  IncludeTorsion: No
+  TopEnd: End A
+  LengthAndEndOrientations: Explicit
+  Representation: Finite element
+  PyModel: (none)
+  PreBendSpecifiedBy: Curvature
+  DragFormulation: Standard
+  StaticsVIV: None
+  DynamicsVIV: None
+  WaveCalculationMethod: Specified by environment
+  ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+  : - - Turret buoy
+      - -2.5711504389999993
+      - -3.064177772
+      - -1.4
+      - 198.76025630578906
+      - 146.31795867721578
+      - 0
+      - ~
+    - - Anchored
+      - -96.41814145
+      - -114.9066665
+      - 0.124
+      - 258.1765361354682
+      - 124.22306670351072
+      - 0
+      - ~
+  ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+  - - 0
+    - ~
+  - - 0
+    - ~
+  ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth
+  : - - ~
+      - 0
+      - 0.001
+    - - ~
+      - 0
+      - 0.001
+  LineType, Length, TargetSegmentLength:
+  - - Umbilical
+    - 97.5
+    - 2
+  - - Umb+Buoys
+    - 65.7
+    - 2
+  - - Umb+Buoys
+    - 10
+    - 2
+  - - Umbilical
+    - 3.1
+    - 2
+  - - Umbilical
+    - 36.2
+    - 2
+  AttachmentType, Attachmentx, Attachmenty, Attachmentz, AttachmentzRelativeTo:
+  - - Flange
+    - 0
+    - 0
+    - 0
+    - End A
+  DecoupleLateralAndAxialSeabedFriction: No
+  CoveredSectionsWarnIfLineLeavesCover: Yes
+  ContentsMethod: Uniform
+  IncludeAxialContentsInertia: Yes
+  ContentsDensity: 1.025
+  ContentsTemperature: ~
+  ContentsPressureRefZ: ~
+  ContentsPressure: 0
+  ContentsFlowRate: 0
+  IncludedInStatics: Yes
+  StaticsStep1: Catenary
+  StaticsStep2: Full statics
+  StaticsSeabedFrictionPolicy: As laid
+  LayAzimuth: 48.291232646420056
+  AsLaidTension: 0
+  ContactPen:
+  - 5
+  - Solid
+  - White
+- Name: Leg1
+  IncludeTorsion: No
+  TopEnd: End A
+  LengthAndEndOrientations: Explicit
+  Representation: Finite element
+  PyModel: (none)
+  PreBendSpecifiedBy: Curvature
+  DragFormulation: Standard
+  StaticsVIV: None
+  DynamicsVIV: None
+  WaveCalculationMethod: Specified by environment
+  ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+  : - - Turret buoy
+      - 4
+      - 4
+      - -1.4364044001783647
+      - 32.010815062347824
+      - 154.81494687022894
+      - 0.000799699005986512
+      - ~
+    - - Anchored
+      - 644.3229004
+      - 372
+      - 0.13208
+      - 29.79238009284104
+      - 88.56572650289814
+      - 0
+      - ~
+  ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+  - - 0
+    - ~
+  - - 0
+    - ~
+  ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth
+  : - - ~
+      - 0
+      - 0.001
+    - - ~
+      - 0
+      - 0.001
+  LineType, Length, TargetSegmentLength:
+  - - 13" Wire
+    - 80
+    - 5
+  - - 12" Chain
+    - 100
+    - 5
+  - - 13" Wire
+    - 100
+    - 5
+  - - 13" Wire
+    - 480
+    - 5
+  DecoupleLateralAndAxialSeabedFriction: No
+  CoveredSectionsWarnIfLineLeavesCover: Yes
+  ContentsMethod: Uniform
+  IncludeAxialContentsInertia: Yes
+  ContentsDensity: 0
+  ContentsTemperature: ~
+  ContentsPressureRefZ: ~
+  ContentsPressure: 0
+  ContentsFlowRate: 0
+  IncludedInStatics: Yes
+  StaticsStep1: Catenary
+  StaticsStep2: Full statics
+  StaticsSeabedFrictionPolicy: As laid
+  LayAzimuth: 209.84941994302022
+  AsLaidTension: 0
+  ContactPen:
+  - 5
+  - Solid
+  - White
+- Name: Leg2
+  IncludeTorsion: No
+  TopEnd: End A
+  LengthAndEndOrientations: Explicit
+  Representation: Finite element
+  PyModel: (none)
+  PreBendSpecifiedBy: Curvature
+  DragFormulation: Standard
+  StaticsVIV: None
+  DynamicsVIV: None
+  WaveCalculationMethod: Specified by environment
+  ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+  : - - Turret buoy
+      - -4
+      - 0
+      - -1.4364443262393003
+      - 179.32512689556165
+      - 110.35897117758036
+      - 0.000799699005986512
+      - ~
+    - - Anchored
+      - -744
+      - 0
+      - 0.13208
+      - 180.61863027115044
+      - 89.6002228155784
+      - 0
+      - ~
+  ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+  - - 0
+    - ~
+  - - 0
+    - ~
+  ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth
+  : - - ~
+      - 0
+      - 0.001
+    - - ~
+      - 0
+      - 0.001
+  LineType, Length, TargetSegmentLength:
+  - - 13" Wire
+    - 80
+    - 5
+  - - 12" Chain
+    - 100
+    - 5
+  - - 13" Wire
+    - 100
+    - 5
+  - - 13" Wire
+    - 480
+    - 5
+  DecoupleLateralAndAxialSeabedFriction: No
+  CoveredSectionsWarnIfLineLeavesCover: Yes
+  ContentsMethod: Uniform
+  IncludeAxialContentsInertia: Yes
+  ContentsDensity: 0
+  ContentsTemperature: ~
+  ContentsPressureRefZ: ~
+  ContentsPressure: 0
+  ContentsFlowRate: 0
+  IncludedInStatics: Yes
+  StaticsStep1: Catenary
+  StaticsStep2: Full statics
+  StaticsSeabedFrictionPolicy: As laid
+  LayAzimuth: 0.6068573191058048
+  AsLaidTension: 0
+  ContactPen:
+  - 5
+  - Solid
+  - White
+- Name: Leg3
+  IncludeTorsion: No
+  TopEnd: End A
+  LengthAndEndOrientations: Explicit
+  Representation: Finite element
+  PyModel: (none)
+  PreBendSpecifiedBy: Curvature
+  DragFormulation: Standard
+  StaticsVIV: None
+  DynamicsVIV: None
+  WaveCalculationMethod: Specified by environment
+  ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+  : - - Turret buoy
+      - 4
+      - -4
+      - -1.4364800744349715
+      - 328.5225583286398
+      - 142.66246784733497
+      - 0.000799699005986512
+      - ~
+    - - Anchored
+      - 644.3229004
+      - -372
+      - 0.13208
+      - 329.0584419465022
+      - 88.74730496990934
+      - 0
+      - ~
+  ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+  - - 0
+    - ~
+  - - 0
+    - ~
+  ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth
+  : - - ~
+      - 0
+      - 0.001
+    - - ~
+      - 0
+      - 0.001
+  LineType, Length, TargetSegmentLength:
+  - - 13" Wire
+    - 80
+    - 5
+  - - 12" Chain
+    - 100
+    - 5
+  - - 13" Wire
+    - 100
+    - 5
+  - - 13" Wire
+    - 480
+    - 5
+  DecoupleLateralAndAxialSeabedFriction: No
+  CoveredSectionsWarnIfLineLeavesCover: Yes
+  ContentsMethod: Uniform
+  IncludeAxialContentsInertia: Yes
+  ContentsDensity: 0
+  ContentsTemperature: ~
+  ContentsPressureRefZ: ~
+  ContentsPressure: 0
+  ContentsFlowRate: 0
+  IncludedInStatics: Yes
+  StaticsStep1: Catenary
+  StaticsStep2: Full statics
+  StaticsSeabedFrictionPolicy: As laid
+  LayAzimuth: 149.0667957281443
+  AsLaidTension: 0
+  ContactPen:
+  - 5
+  - Solid
+  - White
+- Name: Fore friction
+  IncludeTorsion: No
+  TopEnd: End A
+  LengthAndEndOrientations: Explicit
+  Representation: Finite element
+  PyModel: (none)
+  PreBendSpecifiedBy: Curvature
+  DragFormulation: Standard
+  StaticsVIV: None
+  DynamicsVIV: None
+  WaveCalculationMethod: Specified by environment
+  ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+  : - - Vessel
+      - 37.24618294241354
+      - -0.014642860363072607
+      - -5.159569155374429
+      - 0
+      - 180
+      - 0
+      - ~
+    - - Vessel
+      - 37.24618294241354
+      - -0.014642860363072607
+      - -7.159569155374429
+      - 0
+      - 180
+      - 0
+      - ~
+  ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+  - - 0
+    - ~
+  - - 0
+    - ~
+  ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth
+  : - - ~
+      - 0
+      - 0.001
+    - - ~
+      - 0
+      - 0.001
+  Sections:
+  - LineType: Dummy friction line
+    Length: 1.9
+    NumberOfSegments: 1
+    DisturbanceVessel: (none)
+  DecoupleLateralAndAxialSeabedFriction: No
+  CoveredSectionsWarnIfLineLeavesCover: Yes
+  ContentsMethod: Uniform
+  IncludeAxialContentsInertia: Yes
+  ContentsDensity: 0
+  ContentsTemperature: ~
+  ContentsPressureRefZ: ~
+  ContentsPressure: 0
+  ContentsFlowRate: 0
+  IncludedInStatics: Yes
+  StaticsStep1: Catenary
+  StaticsStep2: Full statics
+  StaticsSeabedFrictionPolicy: As laid
+  LayAzimuth: 0
+  AsLaidTension: 0
+- Name: Aft friction
+  IncludeTorsion: No
+  TopEnd: End A
+  LengthAndEndOrientations: Explicit
+  Representation: Finite element
+  PyModel: (none)
+  PreBendSpecifiedBy: Curvature
+  DragFormulation: Standard
+  StaticsVIV: None
+  DynamicsVIV: None
+  WaveCalculationMethod: Specified by environment
+  ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+  : - - Vessel
+      - 28.846182942413545
+      - -0.014642860363072607
+      - -5.159569155374429
+      - 0
+      - 180
+      - 0
+      - ~
+    - - Vessel
+      - 28.846182942413545
+      - -0.014642860363072607
+      - -7.159569155374429
+      - 0
+      - 180
+      - 0
+      - ~
+  ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+  - - 0
+    - ~
+  - - 0
+    - ~
+  ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth
+  : - - ~
+      - 0
+      - 0.001
+    - - ~
+      - 0
+      - 0.001
+  Sections:
+  - LineType: Dummy friction line
+    Length: 1.9
+    NumberOfSegments: 1
+    DisturbanceVessel: (none)
+  DecoupleLateralAndAxialSeabedFriction: No
+  CoveredSectionsWarnIfLineLeavesCover: Yes
+  ContentsMethod: Uniform
+  IncludeAxialContentsInertia: Yes
+  ContentsDensity: 0
+  ContentsTemperature: ~
+  ContentsPressureRefZ: ~
+  ContentsPressure: 0
+  ContentsFlowRate: 0
+  IncludedInStatics: Yes
+  StaticsStep1: Catenary
+  StaticsStep2: Full statics
+  StaticsSeabedFrictionPolicy: As laid
+  LayAzimuth: 0
+  AsLaidTension: 0
+- Name: Stbd friction
+  IncludeTorsion: No
+  TopEnd: End A
+  LengthAndEndOrientations: Explicit
+  Representation: Finite element
+  PyModel: (none)
+  PreBendSpecifiedBy: Curvature
+  DragFormulation: Standard
+  StaticsVIV: None
+  DynamicsVIV: None
+  WaveCalculationMethod: Specified by environment
+  ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+  : - - Vessel
+      - 33.046182942413544
+      - -4.214642860363073
+      - -5.159569155374429
+      - 0
+      - 180
+      - 0
+      - ~
+    - - Vessel
+      - 33.046182942413544
+      - -4.214642860363073
+      - -7.159569155374429
+      - 0
+      - 180
+      - 0
+      - ~
+  ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+  - - 0
+    - ~
+  - - 0
+    - ~
+  ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth
+  : - - ~
+      - 0
+      - 0.001
+    - - ~
+      - 0
+      - 0.001
+  Sections:
+  - LineType: Dummy friction line
+    Length: 1.9
+    NumberOfSegments: 1
+    DisturbanceVessel: (none)
+  DecoupleLateralAndAxialSeabedFriction: No
+  CoveredSectionsWarnIfLineLeavesCover: Yes
+  ContentsMethod: Uniform
+  IncludeAxialContentsInertia: Yes
+  ContentsDensity: 0
+  ContentsTemperature: ~
+  ContentsPressureRefZ: ~
+  ContentsPressure: 0
+  ContentsFlowRate: 0
+  IncludedInStatics: Yes
+  StaticsStep1: Catenary
+  StaticsStep2: Full statics
+  StaticsSeabedFrictionPolicy: As laid
+  LayAzimuth: 0
+  AsLaidTension: 0
+- Name: Port friction
+  IncludeTorsion: No
+  TopEnd: End A
+  LengthAndEndOrientations: Explicit
+  Representation: Finite element
+  PyModel: (none)
+  PreBendSpecifiedBy: Curvature
+  DragFormulation: Standard
+  StaticsVIV: None
+  DynamicsVIV: None
+  WaveCalculationMethod: Specified by environment
+  ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+  : - - Vessel
+      - 33.046182942413544
+      - 4.185357139636928
+      - -5.159569155374429
+      - 0
+      - 180
+      - 0
+      - ~
+    - - Vessel
+      - 33.046182942413544
+      - 4.185357139636928
+      - -7.159569155374429
+      - 0
+      - 180
+      - 0
+      - ~
+  ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+  - - 0
+    - ~
+  - - 0
+    - ~
+  ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth
+  : - - ~
+      - 0
+      - 0.001
+    - - ~
+      - 0
+      - 0.001
+  Sections:
+  - LineType: Dummy friction line
+    Length: 1.9
+    NumberOfSegments: 1
+    DisturbanceVessel: (none)
+  DecoupleLateralAndAxialSeabedFriction: No
+  CoveredSectionsWarnIfLineLeavesCover: Yes
+  ContentsMethod: Uniform
+  IncludeAxialContentsInertia: Yes
+  ContentsDensity: 0
+  ContentsTemperature: ~
+  ContentsPressureRefZ: ~
+  ContentsPressure: 0
+  ContentsFlowRate: 0
+  IncludedInStatics: Yes
+  StaticsStep1: Catenary
+  StaticsStep2: Full statics
+  StaticsSeabedFrictionPolicy: As laid
+  LayAzimuth: 0
+  AsLaidTension: 0

@@ -1,0 +1,85 @@
+# Lines Configuration
+# Generated from: M01 Pipeline walking.yml
+# Date: 2026-01-18 22:19:27
+Lines:
+- Name: Pipeline
+  IncludeTorsion: Yes
+  TopEnd: End B
+  LengthAndEndOrientations: Explicit
+  Representation: Finite element
+  PyModel: (none)
+  PreBendSpecifiedBy: Bend angle
+  DragFormulation: Standard
+  StaticsVIV: None
+  DynamicsVIV: None
+  WaveCalculationMethod: Specified by environment
+  ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+  : - - Anchored
+      - 0
+      - 0
+      - 0.1488500000514383
+      - 0
+      - 90
+      - 0
+      - ~
+    - - Free
+      - 3001
+      - 0
+      - -899.850386387681
+      - 0
+      - 90
+      - 0
+      - ~
+  ConnectionxBendingStiffness, ConnectionyBendingStiffness, ConnectionTwistingStiffness, ConnectionDamping:
+  - - Infinity
+    - ~
+    - Infinity
+  - []
+  ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth
+  : - - ~
+      - 0
+      - 0.001
+    - - ~
+      - 0
+      - 0.001
+  LineType, Length, TargetSegmentLength:
+  - - Pipeline type
+    - 3000
+    - 5
+  DecoupleLateralAndAxialSeabedFriction: No
+  ApplySeabedContactLoadsAtCentreline: No
+  SeabedSections:
+  - SeabedSectionsArclengthFrom: ~
+    SeabedSectionsArclengthTo: 1500
+    SeabedSectionsNormalStiffness: 50
+    SeabedSectionsLateralShearStiffness: 50
+    SeabedSectionsAxialShearStiffness: 50
+    SeabedSectionsLateralFrictionCoefficient: 0
+    SeabedSectionsAxialFrictionCoefficient: N/A
+    SeabedSectionsLateralResistanceProfile: Tangential resistance profile
+    SeabedSectionsAxialResistanceProfile: ~
+  - SeabedSectionsArclengthFrom: 1500
+    SeabedSectionsArclengthTo: ~
+    SeabedSectionsNormalStiffness: N/A
+    SeabedSectionsLateralShearStiffness: N/A
+    SeabedSectionsAxialShearStiffness: N/A
+    SeabedSectionsLateralFrictionCoefficient: N/A
+    SeabedSectionsAxialFrictionCoefficient: N/A
+    SeabedSectionsLateralResistanceProfile: ~
+    SeabedSectionsAxialResistanceProfile: ~
+  CoveredSectionsWarnIfLineLeavesCover: Yes
+  ContentsMethod: Tabular
+  IncludeAxialContentsInertia: Yes
+  TabularLineContentsDataSource: External
+  TabularLineContentsDataFileName: contents.txt
+  TabularLineContentsNominalDensity: 0
+  TabularLineContentsTimeOrigin: 0
+  IncludedInStatics: Yes
+  StaticsStep1: Quick
+  StaticsStep2: Full statics
+  StaticsSeabedFrictionPolicy: As laid
+  LayAzimuth: 0
+  AsLaidTension: 0
+  FullStaticsDoIntermediateNonTorsionSolve: No
+  FullStaticsMinDamping: 5
+  FullStaticsMaxDamping: 50

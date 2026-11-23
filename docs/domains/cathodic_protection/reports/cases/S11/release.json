@@ -1,0 +1,6 @@
+{
+  "input_fixture": "mixed_family.yml",
+  "input_sha256": "04ac76037e948dbe927c0fb485e541e628d06a79ea816b6a700b88fde2a40941",
+  "private_benchmark_data": false,
+  "source_class": "repository_regression"
+}

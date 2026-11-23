@@ -1,0 +1,21 @@
+# VariableData Configuration
+# Generated from: 5 tug_env - 6D buoys.yml
+# Date: 2026-01-21 14:02:14
+VariableData:
+  Coatingsorlinings:
+  - Name: coating+CWC120
+    LayerThickness, LayerMaterialDensity:
+    - - 0.0042
+      - 0.95
+    - - 0.12
+      - 2.978
+  - Name: coating+CWC90
+    LayerThickness, LayerMaterialDensity:
+    - - 0.0042
+      - 0.95
+    - - 0.09
+      - 2.978
+  - Name: coating
+    LayerThickness, LayerMaterialDensity:
+    - - 0.0042
+      - 0.95

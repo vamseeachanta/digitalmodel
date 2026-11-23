@@ -1,0 +1,95 @@
+{
+  "metric": "max_rel_error",
+  "max_rel_error": 0.0002379232358256374,
+  "threshold": 0.1,
+  "passes": true,
+  "n_holdout": 7,
+  "worst_samples": [
+    {
+      "point": {
+        "watch_circle_radius": 7.5,
+        "mbr_limit_m": 5.0
+      },
+      "predicted": 0.031633035176844626,
+      "actual": 0.031640563202025,
+      "rel_error": 0.0002379232358256374,
+      "in_range": true
+    },
+    {
+      "point": {
+        "watch_circle_radius": 12.5,
+        "mbr_limit_m": 5.0
+      },
+      "predicted": 0.033117411200396824,
+      "actual": 0.03312398971831359,
+      "rel_error": 0.00019860282449997378,
+      "in_range": true
+    },
+    {
+      "point": {
+        "watch_circle_radius": 17.5,
+        "mbr_limit_m": 5.0
+      },
+      "predicted": 0.03454900362741964,
+      "actual": 0.034554727777854566,
+      "rel_error": 0.00016565462392661407,
+      "in_range": true
+    },
+    {
+      "point": {
+        "watch_circle_radius": 22.5,
+        "mbr_limit_m": 5.0
+      },
+      "predicted": 0.035934014803096624,
+      "actual": 0.035939162186251115,
+      "rel_error": 0.00014322490679708836,
+      "in_range": true
+    },
+    {
+      "point": {
+        "watch_circle_radius": 27.5,
+        "mbr_limit_m": 5.0
+      },
+      "predicted": 0.037277780307167295,
+      "actual": 0.03728227153424004,
+      "rel_error": 0.00012046548903599152,
+      "in_range": true
+    },
+    {
+      "point": {
+        "watch_circle_radius": 20.0,
+        "mbr_limit_m": 4.5
+      },
+      "predicted": 0.03172723042429883,
+      "actual": 0.03172723042429883,
+      "rel_error": 0.0,
+      "in_range": true
+    },
+    {
+      "point": {
+        "watch_circle_radius": 20.0,
+        "mbr_limit_m": 5.5
+      },
+      "predicted": 0.03877772607414301,
+      "actual": 0.03877772607414301,
+      "rel_error": 0.0,
+      "in_range": true
+    }
+  ],
+  "local_error_map": {
+    "": {
+      "watch_circle_radius": [
+        0.0002379232358256374,
+        0.00019860282449997378,
+        0.00016565462392661407,
+        0.00014322490679708836,
+        0.00012046548903599152
+      ],
+      "mbr_limit_m": [
+        0.0,
+        0.0
+      ]
+    }
+  },
+  "densification_log": []
+}

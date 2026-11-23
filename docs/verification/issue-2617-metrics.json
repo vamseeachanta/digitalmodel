@@ -1,0 +1,40 @@
+{
+  "narrow_band": {
+    "seed": 2617,
+    "records": 2048,
+    "samples_per_record": 8192,
+    "duration_per_record_s": 12566.37061435916,
+    "monte_carlo_variance_kn2": 24.926308458002424,
+    "relative_95pct_halfwidth": 0.0029835655035290666,
+    "full_variance_kn2": 24.95248308621409,
+    "newman_variance_kn2": 24.95248308621378
+  },
+  "surge_oscillator": {
+    "predicted_std_m": 0.3535533905932738,
+    "monte_carlo_std_m": 0.3535356427801949,
+    "phase_record_stds_m": [
+      0.35353564278019506,
+      0.3535356427801948,
+      0.3535356427801951,
+      0.35353564278019484
+    ],
+    "force_variance_kn2": 50.0000000000001,
+    "samples_per_cycle": 256,
+    "retained_cycles": 128,
+    "discarded_cycles": 64
+  },
+  "baseline": {
+    "seed": 2617,
+    "records": 2048,
+    "samples_per_record": 8192,
+    "duration_per_record_s": 12566.37061435916,
+    "force_variance_kn2": 24.926308458002424,
+    "relative_95pct_halfwidth": 0.0029835655035290666,
+    "repository_variance_kn2": 50.005839732175204,
+    "repository_to_mc": 2.0061470320175374,
+    "newman_rectangle_variance_kn2": 25.053356645979488,
+    "newman_trapezoid_variance_kn2": 25.002919866096626,
+    "git_revision": "c5e4ac33",
+    "source_sha256": "b33d7cc8f677d4f61a42f2f5d9b96c95c57943d3d600c58baf721548b4872fa6"
+  }
+}

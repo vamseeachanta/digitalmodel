@@ -1,0 +1,23 @@
+id: pe-2026-04-24
+date: "2026-04-24"
+slug: pe-problem-of-the-day-4-24-2026
+source_url: https://app.collide.io/posts/pe-problem-of-the-day-4-24-2026
+title: "PE Problem of the Day 4/24/2026 — what an SP log actually measures"
+posted_by: Yogashri Pradhan
+tags: [upstream, reservoir-engineering, petrophysics, well-logging]
+type: conceptual
+
+statement: >
+  What is an SP (spontaneous potential) log ACTUALLY measuring? (Do not just spell out the name.)
+
+find:
+  - "State the physical quantity measured"
+
+solution:
+  method: "Petroleum-engineering concept recall (no calculation)."
+  answer: "A naturally occurring electrical potential difference — a small DC voltage (mV) in the borehole between mud filtrate and formation water across permeable beds (electrochemical membrane + liquid-junction, plus a small electrokinetic term). It measures voltage, not lithology directly."
+  confidence: high
+  solved_by: "petroleum-engineering domain knowledge (Deckhand wells-subsurface pack / Claude API solver)"
+
+# Knowledge dot: the concept lives in llm-wiki (Deckhand wells-subsurface pack source).
+wiki_concept: wikis/reservoir-engineering/wiki/concepts/spontaneous-potential-log.md

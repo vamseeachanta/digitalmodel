@@ -1,0 +1,9 @@
+basename: span_rectification
+
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: true
+
+span_rectification: {}

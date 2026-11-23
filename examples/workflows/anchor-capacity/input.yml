@@ -1,0 +1,35 @@
+basename: anchor_capacity
+
+default:
+  log_level: INFO
+  config:
+    generate_plots: false
+    overwrite:
+      output: true
+
+anchor_capacity:
+  case:
+    id: registry_anchor_capacity_e305
+    description: Drag-anchor and suction-caisson capacity screen over existing anchor calculators
+  drag_anchor:
+    anchor_type: stevpris
+    soil_type: soft_clay
+    weight_kn: 120.0
+    design:
+      factor_of_safety: 1.5
+      required_holding_kn: 2000.0
+  suction_anchor:
+    caisson:
+      diameter_m: 5.0
+      length_m: 15.0
+      wall_thickness_m: 0.04
+    soil:
+      Su_kpa: 30.0
+      alpha: 0.65
+      Nc: 9.0
+    design:
+      factor_of_safety: 1.5
+      required_capacity_kn: 9000.0
+  outputs:
+    directory: results/anchor_capacity
+    summary_json: anchor_capacity_summary.json

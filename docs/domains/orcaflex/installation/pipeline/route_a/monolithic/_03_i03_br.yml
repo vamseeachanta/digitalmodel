@@ -1,0 +1,20 @@
+﻿%YAML 1.1
+# Type: Model
+# Program: OrcaFlex 11.2d
+# File: <private-data>/_01_i03_br.yml
+# Created: 4:16 AM on 7/11/2023
+# User: 
+# Machine: 
+---
+BaseFile: _03_i02_cal.yml
+6DBuoys:
+  UTA:
+    DegreesOfFreedomInStatics: All
+
+Lines:
+  Umbilical:
+    NumberOfAttachments: 1
+    AttachmentType[1]: BR_Stiffener
+    AttachmentName[1]: Stiffener1
+    Attachmentz[1]: 6.4
+    AttachmentzRelativeTo[1]: End B

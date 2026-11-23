@@ -1,0 +1,45 @@
+{
+  "library": "sectionproperties",
+  "version": "3.10.2",
+  "reference": "workspace-hub#1499",
+  "cases": [
+    {
+      "case": "A - CFT",
+      "geometry": "CHS OD=508.0 WT=25.4 + concrete infill",
+      "A_total_mm2": 202357.56241606188,
+      "EA_N": 12606876138.520668,
+      "EIxx_eff_mm4": 1441321637.9957268,
+      "EJ_eff_mm4": 2882643275.99145,
+      "validation": {
+        "A_total_diff_pct": 0.161,
+        "EA_diff_pct": 0.161,
+        "EI_diff_pct": 0.321
+      }
+    },
+    {
+      "case": "B - Grouted Pile-Sleeve",
+      "geometry": "Sleeve OD=1200.0 WT=30.0 + Grout + Pile OD=1000.0 WT=25.0",
+      "A_total_mm2": 421473.703417111,
+      "EA_N": 42007793933.881775,
+      "EIxx_eff_mm4": 31267659156.38016,
+      "EJ_eff_mm4": 62525720997.42294,
+      "validation": {
+        "A_total_diff_pct": 0.161,
+        "EA_diff_pct": 0.161,
+        "EI_diff_pct": 0.321
+      }
+    },
+    {
+      "case": "C - Composite Beam",
+      "geometry": "W14x90 + 150x1500 concrete slab",
+      "A_total_mm2": 242389.5124991473,
+      "EA_N": 10227902499.829447,
+      "EIxx_eff_mm4": 1220476454.348485,
+      "EIyy_eff_mm4": 6477754548.63763,
+      "validation": {
+        "EI_diff_pct": 1.463,
+        "note": "approximate \u2014 analytical ignores fillets"
+      }
+    }
+  ]
+}

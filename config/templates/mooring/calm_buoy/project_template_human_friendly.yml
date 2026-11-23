@@ -1,0 +1,408 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# CALM BUOY PROJECT CONFIGURATION (Human-Friendly Format)
+# ═══════════════════════════════════════════════════════════════════════════════
+#
+# This template uses human-readable keys that are intuitive for engineers.
+# The system automatically handles conversion to technical formats internally.
+#
+# Units are specified in comments for clarity.
+# Boolean values: Yes/No or true/false
+#
+# ═══════════════════════════════════════════════════════════════════════════════
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# HUMAN INPUT SECTION
+# ═══════════════════════════════════════════════════════════════════════════════
+# Parameters specified by engineers and designers
+
+Human Input:
+
+  Project Information:
+    Name: "CALM Buoy Project"
+    Code: "CALM_001"
+    Client: "Client Name"
+    Operator: "Operating Company"
+    Location: "Geographic Location"
+    Latitude: 0.0  # degrees
+    Longitude: 0.0  # degrees
+    Created Date: "2025-01-01"
+    Engineer: "Lead Engineer Name"
+    Reviewer: "Reviewer Name"
+    Version: "1.0"
+    Description: |
+      Brief project description.
+      Design basis and key requirements.
+      Special considerations.
+
+  Standards & Codes:
+    Primary Code: "ISO 19901-7:2013"
+    Mooring Standard: "API RP 2SK 2005"
+    Buoy Standard: "DNVGL-OS-E403 2021"
+    Classification Society: "ABS"
+    National Regulations:
+      - "List applicable national regulations"
+      - "e.g., UK HSE Offshore Installation Regulations 1995"
+    Industry Guidelines:
+      - "OCIMF SMOG 4th Edition"
+      - "OCIMF MEG4"
+
+  Site Conditions:
+    Water Depth: 100  # m
+    Seabed Type: "soft clay"  # Options: soft clay, sand, rock
+    Seabed Slope: 2.0  # degrees
+    Seabed Friction Coefficient: 0.5  # dimensionless
+
+    Metocean Data Source: "path/to/metocean_data.csv"
+
+    Metocean Conditions:
+      Operating:
+        Significant Wave Height (Hs): 2.0  # m
+        Peak Period (Tp): 8.0  # s
+        Wind Speed: 15  # m/s (1-hour mean at 10m elevation)
+        Surface Current: 1.0  # m/s
+        Seabed Current: 0.3  # m/s
+
+      Design (1-year):
+        # 1-year return period: Annual exceedance probability = 63.2%
+        # Purpose: Operability limit per API RP 2SK, intact mooring design
+        # Data sources: NORA10 hindcast, NORSOK N-003, DNV-GL standards
+        Return Period: "1-year"
+        Annual Exceedance Probability: "63.2%"
+        Significant Wave Height (Hs): 2.5  # m
+        Peak Period (Tp): 7.5  # s
+        Zero-Crossing Period (Tz): 5.3  # s
+        Wind Speed (1-hour mean): 20  # m/s (at 10m elevation)
+        Wind Gust (3-second): 28  # m/s (at 10m elevation)
+        Surface Current: 1.4  # m/s (0-10m depth)
+        Mid-Depth Current: 1.0  # m/s (50% water depth)
+        Near-Bed Current: 0.6  # m/s (within 10m of seabed)
+
+      Design (10-year):
+        # 10-year return period: Annual exceedance probability = 9.5%
+        # Purpose: Design verification, damaged condition (1-line out)
+        # Data sources: NORA10 hindcast, NORSOK N-003, DNV-GL standards
+        Return Period: "10-year"
+        Annual Exceedance Probability: "9.5%"
+        Significant Wave Height (Hs): 5.0  # m
+        Peak Period (Tp): 11.0  # s
+        Zero-Crossing Period (Tz): 7.8  # s
+        Wind Speed (1-hour mean): 30  # m/s (at 10m elevation)
+        Wind Gust (3-second): 42  # m/s (at 10m elevation)
+        Surface Current: 1.9  # m/s (0-10m depth)
+
+      Extreme (100-year):
+        # 100-year return period: Annual exceedance probability = 1.0%
+        # Purpose: Ultimate limit state, survival condition
+        # Data sources: NORA10 hindcast, extreme value analysis
+        Return Period: "100-year"
+        Annual Exceedance Probability: "1.0%"
+        Significant Wave Height (Hs): 8.5  # m
+        Peak Period (Tp): 14.0  # s
+        Zero-Crossing Period (Tz): 9.9  # s
+        Wind Speed (1-hour mean): 37  # m/s (at 10m elevation)
+        Wind Gust (3-second): 52  # m/s (at 10m elevation)
+        Surface Current: 2.3  # m/s (0-10m depth)
+
+    Tidal Range: 4.0  # m (spring tides)
+    Marine Growth Thickness: 0.05  # m (average)
+
+  Buoy Specifications:
+    Type: "turret_calm"  # Options: turret_calm, external_turret, internal_turret
+
+    Geometry:
+      Outer Diameter: 12.0  # m
+      Draft: 10.0  # m (operating draft)
+      Freeboard: 3.0  # m (minimum)
+      Skirt Diameter: 11.0  # m (if applicable)
+
+    Mass Properties:
+      Displacement: 9500  # tonnes (seawater)
+      Dry Mass: 8500  # tonnes
+      Operating Mass: 9200  # tonnes (with ballast/equipment)
+      Centre of Gravity: [0.0, 0.0, -2.0]  # m (X, Y, Z relative to waterline)
+
+    Inertia:
+      Roll Inertia: 250000  # tonne-m²
+      Pitch Inertia: 6000000  # tonne-m²
+      Yaw Inertia: 6000000  # tonne-m²
+
+    Hydrodynamics:
+      Hydrodynamic Database: "path/to/hydrodynamic_coefficients.csv"
+      RAO Source: "path/to/rao_data.yml"
+
+    Material:
+      Steel Grade: "S355"  # Steel grade
+      Coating: "Epoxy + Marine Grade Paint System"
+      Design Life: 25  # years
+
+  Mooring System:
+    Configuration:
+      Pattern: "radial_symmetric"  # Options: radial_symmetric, asymmetric, spread
+      Number of Lines: 6  # Total number of mooring lines
+      Azimuth Spacing: 60  # degrees (for symmetric patterns)
+
+    Mooring Lines:
+      # Top segment (near buoy)
+      - Segment Name: "Top Chain"
+        Type: "studless_chain"  # Options: studless_chain, stud_chain, wire_rope, polyester_rope
+        Grade: "R4"  # Chain grade (R3, R4, R5) or rope grade
+        Diameter: 76  # mm
+        Length: 150  # m
+        Minimum Breaking Load: 7300  # kN
+        Mass per Meter: 88.3  # kg/m (in air)
+        Axial Stiffness (EA): 407000  # kN
+
+      # Bottom segment (near anchor)
+      - Segment Name: "Bottom Chain"
+        Type: "studless_chain"
+        Grade: "R4"
+        Diameter: 76  # mm
+        Length: 200  # m
+        Minimum Breaking Load: 7300  # kN
+        Mass per Meter: 88.3  # kg/m
+        Axial Stiffness (EA): 407000  # kN
+
+      # Add more segments as needed
+      # - Segment Name: "Middle Wire"
+      #   Type: "wire_rope"
+      #   ...
+
+    Connection Points:
+      Fairlead Height: -1.5  # m (below waterline, negative value)
+
+    Anchors:
+      Anchor Type: "drag_embedment"  # Options: drag_embedment, suction_pile, driven_pile
+      Anchor Holding Capacity: 2500  # kN (per anchor)
+
+    Design Criteria:
+      Safety Factor (Intact): 1.8  # Minimum 1.67 per API RP 2SK
+      Safety Factor (Damaged): 1.3  # One line damaged
+      Pretension: 500  # kN (applied pretension)
+
+  Offloading System:
+    Tanker Specifications:
+      Tanker Type: "VLCC"  # Options: VLCC, Suezmax, Aframax, Panamax
+      Deadweight Tonnage: 300000  # tonnes
+      Length Overall: 330  # m
+      Beam: 60  # m
+      Draft (Laden): 22  # m (fully loaded)
+
+    Hose System:
+      Hose Type: "floating_hose_string"  # Options: floating_hose_string, submarine_hose
+      Hose Diameter: 16  # inches
+      Hose Length: 120  # m (total length)
+      Number of Hose Segments: 3  # Number of hose sections
+      Hose Minimum Breaking Load: 150  # kN
+
+    Hawser:
+      Hawser Type: "nylon_rope"  # Options: nylon_rope, polyester_rope, chain
+      Hawser Diameter: 76  # mm
+      Hawser Length: 90  # m
+      Hawser Minimum Breaking Load: 1800  # kN
+
+    Transfer Operations:
+      Transfer Rate: 100000  # bbl/day (barrels per day)
+      Product Density: 0.85  # relative to water (0.85 = typical crude oil)
+
+  Analysis Settings:
+    Fidelity Levels:
+      Run Preliminary: Yes  # Coarse model for initial assessment
+      Run Detailed: No  # Fine model with discretized buoy
+      Run Sensitivity: No  # Parametric variations
+
+    Load Cases:
+      - Name: "Operating - Head Seas"
+        Condition: "operating"  # Options: operating, extreme, survival
+        Wave Direction: 0  # degrees (0 = head seas)
+        Current Direction: 0  # degrees
+        Wind Direction: 0  # degrees
+
+      - Name: "Operating - Quartering Seas"
+        Condition: "operating"
+        Wave Direction: 45  # degrees
+        Current Direction: 30  # degrees
+        Wind Direction: 15  # degrees
+
+      - Name: "Extreme - Head Seas"
+        Condition: "extreme"
+        Wave Direction: 0  # degrees
+        Current Direction: 0  # degrees
+        Wind Direction: 0  # degrees
+
+      - Name: "Extreme - Beam Seas"
+        Condition: "extreme"
+        Wave Direction: 90  # degrees (beam seas)
+        Current Direction: 60  # degrees
+        Wind Direction: 75  # degrees
+
+    Simulation:
+      Simulation Duration: 3600  # seconds (typically 1-3 hours)
+      Time Step: 0.1  # seconds (0.05-0.1s typical)
+      Ramp Time: 100  # seconds (gradual application of loads)
+
+    Output Requests:
+      Output Mooring Tension: Yes
+      Output Buoy Motions: Yes  # 6DOF motions
+      Output Hose Curvature: Yes
+      Output Clearances: Yes  # Buoy-tanker clearances
+      Output Statistics: Yes  # Mean, max, std dev
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# AI GENERATED SECTION
+# ═══════════════════════════════════════════════════════════════════════════════
+# Automatically calculated and validated by AI
+# DO NOT EDIT - This section is populated by the generation script
+
+AI Generated:
+
+  Validation Results:
+    Validated by AI: false
+    Validation Date: null
+    Validation Version: "1.0"
+    Confidence Score: null
+
+    Checks Performed:
+      Geometry Within Ranges: null
+      Metocean Realistic: null
+      Mooring Capacity Adequate: null
+      Safety Factors Met: null
+      OrcaFlex Syntax Valid: null
+
+  Derived Parameters:
+    Mooring Footprint Radius: null  # m (calculated from line length and water depth)
+    Total Mooring Mass: null  # tonnes (sum of all mooring line mass)
+    Mooring Stiffness (Surge): null  # kN/m
+    Mooring Stiffness (Sway): null  # kN/m
+    Watch Circle Radius: null  # m (maximum excursion)
+
+    Buoy Natural Periods:
+      Surge: null  # seconds
+      Heave: null  # seconds
+      Pitch: null  # seconds
+
+    Max Line Tension (Operating): null  # kN
+    Max Line Tension (Extreme): null  # kN
+    Utilization Ratio (Intact): null  # dimensionless (tension/MBL / SF)
+    Utilization Ratio (Damaged): null  # dimensionless (one line out)
+
+  Recommendations:
+    Warnings: []
+    Suggestions: []
+
+  Data Sources:
+    Hull Geometry Ranges: "data/raw/calm_buoy/generic_range/hull_geometry_ranges.csv"
+    Metocean Design Ranges: "data/raw/calm_buoy/generic_range/metocean_design_ranges.csv"
+    Mooring Capacity Ranges: "data/raw/calm_buoy/generic_range/mooring_capacity_ranges.csv"
+    Hydrodynamic Coefficients: "data/processed/calm_buoy/mature_design/hydrodynamic_coefficients.csv"
+    Structural Components: "data/processed/calm_buoy/mature_design/structural_components.csv"
+    Project Environmental Conditions: "data/results/calm_buoy/project_specific/environmental_conditions.csv"
+    Project Mooring Properties: "data/results/calm_buoy/project_specific/mooring_line_properties.csv"
+    Project Offloading Config: "data/results/calm_buoy/project_specific/offloading_configuration.csv"
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# GENERATION SETTINGS
+# ═══════════════════════════════════════════════════════════════════════════════
+# Controls how OrcaFlex models and outputs are generated
+
+Generation Settings:
+
+  OrcaFlex:
+    Templates:
+      Preliminary:
+        Base: "specs/modules/orcaflex/modular-input-file/output/calm_buoy_base.yml"
+        Description: "Standard model with lumped buoy representation"
+        Modules: 16
+
+      Detailed:
+        Base: "specs/modules/orcaflex/modular-input-file/output/discretised_calm_buoy_base.yml"
+        Description: "Discretised model with detailed buoy geometry"
+        Modules: 17
+
+    Overrides:
+      # Customization points for OrcaFlex modules
+      Environment:
+        Template: "jonswap_default"
+        Customize:
+          Wave Hs: "Human Input.Site Conditions.Metocean Conditions.Operating.Significant Wave Height (Hs)"
+          Wave Tp: "Human Input.Site Conditions.Metocean Conditions.Operating.Peak Period (Tp)"
+          Current Speed: "Human Input.Site Conditions.Metocean Conditions.Operating.Surface Current"
+          Wind Speed: "Human Input.Site Conditions.Metocean Conditions.Operating.Wind Speed"
+
+      Buoy:
+        Template: "vessel_type_default"
+        Customize:
+          Mass: "Human Input.Buoy Specifications.Mass Properties.Operating Mass"
+          Draft: "Human Input.Buoy Specifications.Geometry.Draft"
+          COG: "Human Input.Buoy Specifications.Mass Properties.Centre of Gravity"
+
+      Mooring:
+        Template: "radial_6_lines"
+        Customize:
+          Number of Lines: "Human Input.Mooring System.Configuration.Number of Lines"
+          Chain Diameter: "Human Input.Mooring System.Mooring Lines[0].Diameter"
+          Top Chain Length: "Human Input.Mooring System.Mooring Lines[0].Length"
+          Bottom Chain Length: "Human Input.Mooring System.Mooring Lines[1].Length"
+
+  Output:
+    Project Root: "projects/{project_code}"
+
+    Structure:
+      OrcaFlex:
+        Path: "orcaflex"
+        Files:
+          - "{project_code}_calm_buoy.yml"
+          - "modules/*.yml"
+
+      FreeCAD:
+        Path: "freecad"
+        Files:
+          - "buoy_geometry.FCStd"
+          - "mooring_layout.FCStd"
+
+      Blender:
+        Path: "blender"
+        Files:
+          - "visualization.blend"
+          - "renders/*.png"
+
+      Reports:
+        Path: "reports"
+        Files:
+          - "validation_report.html"
+          - "analysis_summary.pdf"
+
+      Data:
+        Path: "data"
+        Files:
+          - "project_metocean.csv"
+          - "mooring_properties.csv"
+
+  Validation:
+    Run After Generation: Yes
+    Levels:
+      - 1  # YAML syntax
+      - 3  # Physical consistency
+    Tolerance Percent: 10.0
+    Fail on Critical: Yes
+    Warn on Out of Range: Yes
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# MULTI-FIDELITY ANALYSIS
+# ═══════════════════════════════════════════════════════════════════════════════
+# Optional: Run multiple analysis levels in sequence
+
+Multi-Fidelity Analysis:
+  Enabled: No
+
+  # Analyses:
+  #   - Name: "Preliminary Screening"
+  #     Fidelity: "preliminary"
+  #     Load Cases: ["operating_head_seas"]
+  #
+  #   - Name: "Detailed Analysis"
+  #     Fidelity: "detailed"
+  #     Load Cases: ["extreme_head_seas", "extreme_beam_seas"]

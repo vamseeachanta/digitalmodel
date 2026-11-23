@@ -1,0 +1,4 @@
+sea_state_index,hs,tz,tp,occurrence_fraction,significant_stress_range,damage_per_year
+0,3.0,5.0,7.05,0.55,8.42e3,1.18e-3
+1,8.0,7.0,9.87,0.35,2.31e4,6.94e-3
+2,15.0,9.5,13.39,0.10,4.05e4,8.71e-3

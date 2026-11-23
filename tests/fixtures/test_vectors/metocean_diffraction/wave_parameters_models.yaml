@@ -1,0 +1,126 @@
+source_type: python
+source_description: "Wave parameter model tests from test_rao_analysis.py — peak frequency, zero-crossing period, vessel dimension ratios"
+extracted_date: "2026-03-16"
+legal_scan_passed: true
+category: "metocean_diffraction"
+subcategory: "wave_parameters_models"
+equations:
+  - name: "Peak angular frequency"
+    latex: "\\omega_p = 2\\pi / T_p"
+    description: "Peak angular frequency from peak period"
+  - name: "Zero-crossing period approximation"
+    latex: "T_z \\approx 0.711 \\cdot T_p"
+    description: "Approximate zero-crossing period for fully developed seas"
+  - name: "Length to beam ratio"
+    latex: "L/B = L_{oa} / B"
+    description: "Vessel length-over-all to beam ratio"
+  - name: "Beam to draft ratio"
+    latex: "B/T = B / T"
+    description: "Vessel beam to draft ratio"
+  - name: "Hydrodynamic matrix period"
+    latex: "T = 2\\pi / \\omega"
+    description: "Period from angular frequency for hydrodynamic matrices"
+inputs:
+  - name: "Peak period"
+    symbol: "Tp"
+    unit: "s"
+    test_value: 12.0
+  - name: "Significant wave height"
+    symbol: "Hs"
+    unit: "m"
+    test_value: 4.0
+  - name: "JONSWAP gamma"
+    symbol: "gamma"
+    unit: "dimensionless"
+    test_value: 3.3
+  - name: "Vessel length"
+    symbol: "Loa"
+    unit: "m"
+    test_value: 300.0
+  - name: "Vessel beam"
+    symbol: "B"
+    unit: "m"
+    test_value: 50.0
+  - name: "Vessel draft"
+    symbol: "T"
+    unit: "m"
+    test_value: 10.0
+outputs:
+  - name: "Peak angular frequency"
+    symbol: "omega_p"
+    unit: "rad/s"
+    test_expected: 0.5235987756
+    tolerance: 0.001
+  - name: "Zero-crossing period"
+    symbol: "Tz"
+    unit: "s"
+    test_expected: 8.532
+    tolerance: 0.01
+  - name: "Length to beam ratio"
+    symbol: "L_B"
+    unit: "dimensionless"
+    test_expected: 6.0
+    tolerance: 0.001
+  - name: "Beam to draft ratio"
+    symbol: "B_T"
+    unit: "dimensionless"
+    test_expected: 5.0
+    tolerance: 0.001
+worked_examples:
+  - description: "WaveParameters: Tp=12s => omega_p = 2*pi/12"
+    inputs:
+      tp: 12.0
+    outputs:
+      omega_p: 0.5235987756
+    use_as_test: true
+  - description: "WaveParameters: Tp=12s => Tz = 0.711*12 = 8.532s"
+    inputs:
+      tp: 12.0
+    outputs:
+      tz: 8.532
+    use_as_test: true
+  - description: "WaveParameters: Hs=4.0 Tp=12.0 gamma=3.3 stored correctly"
+    inputs:
+      hs: 4.0
+      tp: 12.0
+      gamma: 3.3
+    outputs:
+      hs_stored: 4.0
+      tp_stored: 12.0
+      gamma_stored: 3.3
+    use_as_test: true
+  - description: "VesselProperties: L/B = 300/50 = 6.0"
+    inputs:
+      length: 300.0
+      beam: 50.0
+    outputs:
+      l_b_ratio: 6.0
+    use_as_test: true
+  - description: "VesselProperties: B/T = 50/10 = 5.0"
+    inputs:
+      beam: 50.0
+      draft: 10.0
+    outputs:
+      b_t_ratio: 5.0
+    use_as_test: true
+  - description: "HydrodynamicMatrix: omega=pi => period=2.0s"
+    inputs:
+      omega: 3.14159265359
+    outputs:
+      period_s: 2.0
+    use_as_test: true
+  - description: "EnvironmentalConditions: default water density = 1025 kg/m3"
+    inputs:
+      constructor: "EnvironmentalConditions()"
+    outputs:
+      water_density: 1025.0
+      wind_speed: 0.0
+      current_speed: 0.0
+    use_as_test: true
+assumptions:
+  - "Zero-crossing period uses approximation Tz = 0.711 * Tp"
+  - "Default environmental conditions: water density 1025 kg/m3, zero wind/current"
+  - "Vessel properties validation rejects zero or negative dimensions"
+references:
+  - "digitalmodel/tests/unit/hydrodynamics/test_rao_analysis.py"
+  - "digitalmodel/src/digitalmodel/hydrodynamics/models.py"

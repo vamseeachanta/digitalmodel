@@ -1,0 +1,16 @@
+﻿%YAML 1.1
+# Type: Model
+# Program: OrcaFlex 11.2d
+# File: docs/domains/orcaflex/installation/pipeline/route_a/monolithic/_06headn10_i03_uta_dof_all.yml
+# Created: 2:59 PM on 10/26/2023
+# User: 
+# Machine: 
+---
+BaseFile: _06headn10_i02_cal.yml
+General:
+  StaticsTolerance: 10e-6
+  StaticsMinDamping: 2
+6DBuoys:
+  UTA:
+    DegreesOfFreedomInStatics: All
+...

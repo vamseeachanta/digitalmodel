@@ -1,0 +1,36 @@
+# Reference Materials
+
+Standards, papers, manuals, and external reference documentation.
+
+## Organization
+
+This section is organized to provide:
+- Clear categorization of content by purpose and scope
+- Consistent naming conventions using kebab-case
+- Maximum depth of 4 levels for predictable navigation
+- Metadata-enhanced documentation for AI-friendly access
+
+## Navigation
+
+Browse the subdirectories to find specific tools, domains, or topics.
+Each subdirectory contains focused documentation with clear scope boundaries.
+
+## Contributing
+
+When adding new content:
+1. Follow the established directory structure
+2. Use kebab-case naming conventions
+3. Add appropriate metadata to markdown files
+4. Maintain clear scope boundaries between categories
+
+## External tools
+
+Open repositories studied for ideas and cross-checks. Each page records the licence; a repository without a licence is reference only (no code copied).
+
+- [PointCloud Studio](external-tools/pointcloud-studio.md): survey point clouds for subsea cables, pipelines and foundations (free spans, scour, depth of burial, rock berms, sand waves); no licence stated.
+
+## Papers and posts
+
+Published papers, and the posts that pointed to them. Reports cite the paper, never the post.
+
+- [Clamp repair of cracked offshore tubular joints](external-sources/tubular-joint-clamp-repair.md): Fazel Mojtahedi, Aslani and Butt (2026), Marine Structures 110, 104124; joint mechanics, repair strategies and monitoring.

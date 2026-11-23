@@ -1,0 +1,55 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  v2312                                 |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volVectorField;
+    object      U;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+Umean @UMEAN@;
+mUmean -@UMEAN@;
+
+dimensions      [0 1 -1 0 0 0 0];
+
+internalField   uniform ($mUmean 0 0);
+
+boundaryField
+{
+    // Supplies symmetryPlane for `waterline`, `bottom`, `side` and
+    // `midPlane`. A constraint patch that is listed explicitly and gets a
+    // calculated condition instead is how a symmetry plane silently becomes a
+    // wall, so they are left to this include in every field.
+    #includeEtc "caseDicts/setConstraintTypes"
+
+    inlet
+    {
+        type            fixedValue;
+        value           $internalField;
+    }
+
+    outlet
+    {
+        type            inletOutlet;
+        inletValue      uniform (0 0 0);
+        value           $internalField;
+    }
+
+    // noSlip, not movingWallVelocity: the free-surface sibling moves its mesh
+    // to follow the interface, so its hull condition has to subtract the mesh
+    // flux. This mesh does not move.
+    hull
+    {
+        type            noSlip;
+    }
+}
+
+
+// ************************************************************************* //

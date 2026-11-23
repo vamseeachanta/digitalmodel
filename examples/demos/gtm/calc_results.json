@@ -1,0 +1,538 @@
+{
+  "catalog": {
+    "6in": {
+      "od_mm": 168.3,
+      "od_m": 0.1683,
+      "coating_thickness_mm": 3.0,
+      "cwc_thickness_mm": 0,
+      "wall_thicknesses": [
+        {
+          "wt_mm": 7.11,
+          "wt_m": 0.0071,
+          "a_steel_m2": 0.00360046,
+          "id_m": 0.1541,
+          "mass_steel_kg_per_m": 28.26,
+          "mass_coating_kg_per_m": 1.53,
+          "mass_cwc_kg_per_m": 0.0,
+          "mass_total_kg_per_m": 29.8,
+          "submerged_weight_n_per_m": 52.37,
+          "outer_diameter_m": 0.1743,
+          "i_steel_m4": 1.1716231197872976e-05
+        },
+        {
+          "wt_mm": 10.97,
+          "wt_m": 0.011,
+          "a_steel_m2": 0.00542211,
+          "id_m": 0.1464,
+          "mass_steel_kg_per_m": 42.56,
+          "mass_coating_kg_per_m": 1.53,
+          "mass_cwc_kg_per_m": 0.0,
+          "mass_total_kg_per_m": 44.1,
+          "submerged_weight_n_per_m": 192.6,
+          "outer_diameter_m": 0.1743,
+          "i_steel_m4": 1.6858054151449675e-05
+        },
+        {
+          "wt_mm": 14.27,
+          "wt_m": 0.0143,
+          "a_steel_m2": 0.00690525,
+          "id_m": 0.1398,
+          "mass_steel_kg_per_m": 54.21,
+          "mass_coating_kg_per_m": 1.53,
+          "mass_cwc_kg_per_m": 0.0,
+          "mass_total_kg_per_m": 55.74,
+          "submerged_weight_n_per_m": 306.78,
+          "outer_diameter_m": 0.1743,
+          "i_steel_m4": 2.0654345309082383e-05
+        },
+        {
+          "wt_mm": 18.26,
+          "wt_m": 0.0183,
+          "a_steel_m2": 0.00860712,
+          "id_m": 0.1318,
+          "mass_steel_kg_per_m": 67.57,
+          "mass_coating_kg_per_m": 1.53,
+          "mass_cwc_kg_per_m": 0.0,
+          "mass_total_kg_per_m": 69.1,
+          "submerged_weight_n_per_m": 437.79,
+          "outer_diameter_m": 0.1743,
+          "i_steel_m4": 2.4579159962121124e-05
+        }
+      ]
+    },
+    "8in": {
+      "od_mm": 219.1,
+      "od_m": 0.2191,
+      "coating_thickness_mm": 3.0,
+      "cwc_thickness_mm": 0,
+      "wall_thicknesses": [
+        {
+          "wt_mm": 8.18,
+          "wt_m": 0.0082,
+          "a_steel_m2": 0.00542027,
+          "id_m": 0.2027,
+          "mass_steel_kg_per_m": 42.55,
+          "mass_coating_kg_per_m": 1.99,
+          "mass_cwc_kg_per_m": 0.0,
+          "mass_total_kg_per_m": 44.54,
+          "submerged_weight_n_per_m": 36.74,
+          "outer_diameter_m": 0.2251,
+          "i_steel_m4": 3.018694757084952e-05
+        },
+        {
+          "wt_mm": 12.7,
+          "wt_m": 0.0127,
+          "a_steel_m2": 0.00823499,
+          "id_m": 0.1937,
+          "mass_steel_kg_per_m": 64.64,
+          "mass_coating_kg_per_m": 1.99,
+          "mass_cwc_kg_per_m": 0.0,
+          "mass_total_kg_per_m": 66.63,
+          "submerged_weight_n_per_m": 253.43,
+          "outer_diameter_m": 0.2251,
+          "i_steel_m4": 4.4018358973964884e-05
+        },
+        {
+          "wt_mm": 15.09,
+          "wt_m": 0.0151,
+          "a_steel_m2": 0.00967143,
+          "id_m": 0.1889,
+          "mass_steel_kg_per_m": 75.92,
+          "mass_coating_kg_per_m": 1.99,
+          "mass_cwc_kg_per_m": 0.0,
+          "mass_total_kg_per_m": 77.91,
+          "submerged_weight_n_per_m": 364.01,
+          "outer_diameter_m": 0.2251,
+          "i_steel_m4": 5.059097977568242e-05
+        },
+        {
+          "wt_mm": 18.26,
+          "wt_m": 0.0183,
+          "a_steel_m2": 0.01152128,
+          "id_m": 0.1826,
+          "mass_steel_kg_per_m": 90.44,
+          "mass_coating_kg_per_m": 1.99,
+          "mass_cwc_kg_per_m": 0.0,
+          "mass_total_kg_per_m": 92.43,
+          "submerged_weight_n_per_m": 506.41,
+          "outer_diameter_m": 0.2251,
+          "i_steel_m4": 5.857151619041911e-05
+        },
+        {
+          "wt_mm": 20.62,
+          "wt_m": 0.0206,
+          "a_steel_m2": 0.01285746,
+          "id_m": 0.1779,
+          "mass_steel_kg_per_m": 100.93,
+          "mass_coating_kg_per_m": 1.99,
+          "mass_cwc_kg_per_m": 0.0,
+          "mass_total_kg_per_m": 102.92,
+          "submerged_weight_n_per_m": 609.27,
+          "outer_diameter_m": 0.2251,
+          "i_steel_m4": 6.399721038167965e-05
+        }
+      ]
+    },
+    "10in": {
+      "od_mm": 273.1,
+      "od_m": 0.2731,
+      "coating_thickness_mm": 4.0,
+      "cwc_thickness_mm": 0,
+      "wall_thicknesses": [
+        {
+          "wt_mm": 9.27,
+          "wt_m": 0.0093,
+          "a_steel_m2": 0.00768341,
+          "id_m": 0.2546,
+          "mass_steel_kg_per_m": 60.31,
+          "mass_coating_kg_per_m": 3.31,
+          "mass_cwc_kg_per_m": 0.0,
+          "mass_total_kg_per_m": 63.62,
+          "submerged_weight_n_per_m": 0.11,
+          "outer_diameter_m": 0.2811,
+          "i_steel_m4": 6.693418547400709e-05
+        },
+        {
+          "wt_mm": 12.7,
+          "wt_m": 0.0127,
+          "a_steel_m2": 0.0103895,
+          "id_m": 0.2477,
+          "mass_steel_kg_per_m": 81.56,
+          "mass_coating_kg_per_m": 3.31,
+          "mass_cwc_kg_per_m": 0.0,
+          "mass_total_kg_per_m": 84.87,
+          "submerged_weight_n_per_m": 208.43,
+          "outer_diameter_m": 0.2811,
+          "i_steel_m4": 8.827106008271012e-05
+        },
+        {
+          "wt_mm": 15.09,
+          "wt_m": 0.0151,
+          "a_steel_m2": 0.01223139,
+          "id_m": 0.2429,
+          "mass_steel_kg_per_m": 96.02,
+          "mass_coating_kg_per_m": 3.31,
+          "mass_cwc_kg_per_m": 0.0,
+          "mass_total_kg_per_m": 99.32,
+          "submerged_weight_n_per_m": 350.22,
+          "outer_diameter_m": 0.2811,
+          "i_steel_m4": 0.00010212727995151514
+        },
+        {
+          "wt_mm": 18.26,
+          "wt_m": 0.0183,
+          "a_steel_m2": 0.01461902,
+          "id_m": 0.2366,
+          "mass_steel_kg_per_m": 114.76,
+          "mass_coating_kg_per_m": 3.31,
+          "mass_cwc_kg_per_m": 0.0,
+          "mass_total_kg_per_m": 118.07,
+          "submerged_weight_n_per_m": 534.03,
+          "outer_diameter_m": 0.2811,
+          "i_steel_m4": 0.00011928544787855822
+        },
+        {
+          "wt_mm": 21.44,
+          "wt_m": 0.0214,
+          "a_steel_m2": 0.01695075,
+          "id_m": 0.2302,
+          "mass_steel_kg_per_m": 133.06,
+          "mass_coating_kg_per_m": 3.31,
+          "mass_cwc_kg_per_m": 0.0,
+          "mass_total_kg_per_m": 136.37,
+          "submerged_weight_n_per_m": 713.53,
+          "outer_diameter_m": 0.2811,
+          "i_steel_m4": 0.0001351661672807193
+        }
+      ]
+    },
+    "12in": {
+      "od_mm": 323.9,
+      "od_m": 0.3239,
+      "coating_thickness_mm": 4.0,
+      "cwc_thickness_mm": 40,
+      "wall_thicknesses": [
+        {
+          "wt_mm": 9.53,
+          "wt_m": 0.0095,
+          "a_steel_m2": 0.00941204,
+          "id_m": 0.3048,
+          "mass_steel_kg_per_m": 73.88,
+          "mass_coating_kg_per_m": 3.91,
+          "mass_cwc_kg_per_m": 142.07,
+          "mass_total_kg_per_m": 219.87,
+          "submerged_weight_n_per_m": 816.78,
+          "outer_diameter_m": 0.4119,
+          "i_steel_m4": 0.00011637909991211189
+        },
+        {
+          "wt_mm": 12.7,
+          "wt_m": 0.0127,
+          "a_steel_m2": 0.01241633,
+          "id_m": 0.2985,
+          "mass_steel_kg_per_m": 97.47,
+          "mass_coating_kg_per_m": 3.91,
+          "mass_cwc_kg_per_m": 142.07,
+          "mass_total_kg_per_m": 243.46,
+          "submerged_weight_n_per_m": 1048.05,
+          "outer_diameter_m": 0.4119,
+          "i_steel_m4": 0.00015055842404539306
+        },
+        {
+          "wt_mm": 17.48,
+          "wt_m": 0.0175,
+          "a_steel_m2": 0.01682707,
+          "id_m": 0.2889,
+          "mass_steel_kg_per_m": 132.09,
+          "mass_coating_kg_per_m": 3.91,
+          "mass_cwc_kg_per_m": 142.07,
+          "mass_total_kg_per_m": 278.08,
+          "submerged_weight_n_per_m": 1387.6,
+          "outer_diameter_m": 0.4119,
+          "i_steel_m4": 0.00019813611331576664
+        },
+        {
+          "wt_mm": 21.44,
+          "wt_m": 0.0214,
+          "a_steel_m2": 0.02037242,
+          "id_m": 0.281,
+          "mass_steel_kg_per_m": 159.92,
+          "mass_coating_kg_per_m": 3.91,
+          "mass_cwc_kg_per_m": 142.07,
+          "mass_total_kg_per_m": 305.91,
+          "submerged_weight_n_per_m": 1660.53,
+          "outer_diameter_m": 0.4119,
+          "i_steel_m4": 0.0002341344196380594
+        },
+        {
+          "wt_mm": 25.4,
+          "wt_m": 0.0254,
+          "a_steel_m2": 0.02381924,
+          "id_m": 0.2731,
+          "mass_steel_kg_per_m": 186.98,
+          "mass_coating_kg_per_m": 3.91,
+          "mass_cwc_kg_per_m": 142.07,
+          "mass_total_kg_per_m": 332.97,
+          "submerged_weight_n_per_m": 1925.88,
+          "outer_diameter_m": 0.4119,
+          "i_steel_m4": 0.00026721440230657325
+        }
+      ]
+    },
+    "16in": {
+      "od_mm": 406.4,
+      "od_m": 0.4064,
+      "coating_thickness_mm": 5.0,
+      "cwc_thickness_mm": 50,
+      "wall_thicknesses": [
+        {
+          "wt_mm": 9.53,
+          "wt_m": 0.0095,
+          "a_steel_m2": 0.01188204,
+          "id_m": 0.3873,
+          "mass_steel_kg_per_m": 93.27,
+          "mass_coating_kg_per_m": 6.14,
+          "mass_cwc_kg_per_m": 222.72,
+          "mass_total_kg_per_m": 322.13,
+          "submerged_weight_n_per_m": 1053.75,
+          "outer_diameter_m": 0.5164,
+          "i_steel_m4": 0.00023407118313501936
+        },
+        {
+          "wt_mm": 12.7,
+          "wt_m": 0.0127,
+          "a_steel_m2": 0.01570793,
+          "id_m": 0.381,
+          "mass_steel_kg_per_m": 123.31,
+          "mass_coating_kg_per_m": 6.14,
+          "mass_cwc_kg_per_m": 222.72,
+          "mass_total_kg_per_m": 352.16,
+          "submerged_weight_n_per_m": 1348.27,
+          "outer_diameter_m": 0.5164,
+          "i_steel_m4": 0.00030465726249162664
+        },
+        {
+          "wt_mm": 16.66,
+          "wt_m": 0.0167,
+          "a_steel_m2": 0.02039858,
+          "id_m": 0.3731,
+          "mass_steel_kg_per_m": 160.13,
+          "mass_coating_kg_per_m": 6.14,
+          "mass_cwc_kg_per_m": 222.72,
+          "mass_total_kg_per_m": 388.98,
+          "submerged_weight_n_per_m": 1709.37,
+          "outer_diameter_m": 0.5164,
+          "i_steel_m4": 0.0003880187117503606
+        },
+        {
+          "wt_mm": 21.44,
+          "wt_m": 0.0214,
+          "a_steel_m2": 0.02592927,
+          "id_m": 0.3635,
+          "mass_steel_kg_per_m": 203.54,
+          "mass_coating_kg_per_m": 6.14,
+          "mass_cwc_kg_per_m": 222.72,
+          "mass_total_kg_per_m": 432.4,
+          "submerged_weight_n_per_m": 2135.13,
+          "outer_diameter_m": 0.5164,
+          "i_steel_m4": 0.0004818107743200482
+        },
+        {
+          "wt_mm": 26.19,
+          "wt_m": 0.0262,
+          "a_steel_m2": 0.03128304,
+          "id_m": 0.354,
+          "mass_steel_kg_per_m": 245.57,
+          "mass_coating_kg_per_m": 6.14,
+          "mass_cwc_kg_per_m": 222.72,
+          "mass_total_kg_per_m": 474.43,
+          "submerged_weight_n_per_m": 2547.28,
+          "outer_diameter_m": 0.5164,
+          "i_steel_m4": 0.0005679652765496771
+        }
+      ]
+    },
+    "20in": {
+      "od_mm": 508.0,
+      "od_m": 0.508,
+      "coating_thickness_mm": 5.0,
+      "cwc_thickness_mm": 60,
+      "wall_thicknesses": [
+        {
+          "wt_mm": 9.53,
+          "wt_m": 0.0095,
+          "a_steel_m2": 0.01492388,
+          "id_m": 0.4889,
+          "mass_steel_kg_per_m": 117.15,
+          "mass_coating_kg_per_m": 7.66,
+          "mass_cwc_kg_per_m": 331.21,
+          "mass_total_kg_per_m": 456.02,
+          "submerged_weight_n_per_m": 1258.52,
+          "outer_diameter_m": 0.638,
+          "i_steel_m4": 0.00046369090414039753
+        },
+        {
+          "wt_mm": 12.7,
+          "wt_m": 0.0127,
+          "a_steel_m2": 0.01976159,
+          "id_m": 0.4826,
+          "mass_steel_kg_per_m": 155.13,
+          "mass_coating_kg_per_m": 7.66,
+          "mass_cwc_kg_per_m": 331.21,
+          "mass_total_kg_per_m": 493.99,
+          "submerged_weight_n_per_m": 1630.94,
+          "outer_diameter_m": 0.638,
+          "i_steel_m4": 0.0006063927901206482
+        },
+        {
+          "wt_mm": 15.09,
+          "wt_m": 0.0151,
+          "a_steel_m2": 0.0233672,
+          "id_m": 0.4778,
+          "mass_steel_kg_per_m": 183.43,
+          "mass_coating_kg_per_m": 7.66,
+          "mass_cwc_kg_per_m": 331.21,
+          "mass_total_kg_per_m": 522.3,
+          "submerged_weight_n_per_m": 1908.5,
+          "outer_diameter_m": 0.638,
+          "i_steel_m4": 0.0007103278673648006
+        },
+        {
+          "wt_mm": 20.62,
+          "wt_m": 0.0206,
+          "a_steel_m2": 0.0315723,
+          "id_m": 0.4668,
+          "mass_steel_kg_per_m": 247.84,
+          "mass_coating_kg_per_m": 7.66,
+          "mass_cwc_kg_per_m": 331.21,
+          "mass_total_kg_per_m": 586.71,
+          "submerged_weight_n_per_m": 2540.15,
+          "outer_diameter_m": 0.638,
+          "i_steel_m4": 0.0009391356564075007
+        },
+        {
+          "wt_mm": 26.19,
+          "wt_m": 0.0262,
+          "a_steel_m2": 0.03964251,
+          "id_m": 0.4556,
+          "mass_steel_kg_per_m": 311.19,
+          "mass_coating_kg_per_m": 7.66,
+          "mass_cwc_kg_per_m": 331.21,
+          "mass_total_kg_per_m": 650.06,
+          "submerged_weight_n_per_m": 3161.41,
+          "outer_diameter_m": 0.638,
+          "i_steel_m4": 0.0011537299011124063
+        }
+      ]
+    },
+    "24in": {
+      "od_mm": 609.6,
+      "od_m": 0.6096,
+      "coating_thickness_mm": 5.0,
+      "cwc_thickness_mm": 75,
+      "wall_thicknesses": [
+        {
+          "wt_mm": 9.53,
+          "wt_m": 0.0095,
+          "a_steel_m2": 0.01796572,
+          "id_m": 0.5905,
+          "mass_steel_kg_per_m": 141.03,
+          "mass_coating_kg_per_m": 9.17,
+          "mass_cwc_kg_per_m": 497.53,
+          "mass_total_kg_per_m": 647.73,
+          "submerged_weight_n_per_m": 1676.19,
+          "outer_diameter_m": 0.7696,
+          "i_steel_m4": 0.0008088501237130188
+        },
+        {
+          "wt_mm": 12.7,
+          "wt_m": 0.0127,
+          "a_steel_m2": 0.02381525,
+          "id_m": 0.5842,
+          "mass_steel_kg_per_m": 186.95,
+          "mass_coating_kg_per_m": 9.17,
+          "mass_cwc_kg_per_m": 497.53,
+          "mass_total_kg_per_m": 693.65,
+          "submerged_weight_n_per_m": 2126.5,
+          "outer_diameter_m": 0.7696,
+          "i_steel_m4": 0.0010611209796460759
+        },
+        {
+          "wt_mm": 17.48,
+          "wt_m": 0.0175,
+          "a_steel_m2": 0.03251629,
+          "id_m": 0.5746,
+          "mass_steel_kg_per_m": 255.25,
+          "mass_coating_kg_per_m": 9.17,
+          "mass_cwc_kg_per_m": 497.53,
+          "mass_total_kg_per_m": 761.95,
+          "submerged_weight_n_per_m": 2796.33,
+          "outer_diameter_m": 0.7696,
+          "i_steel_m4": 0.0014262932429086512
+        },
+        {
+          "wt_mm": 24.61,
+          "wt_m": 0.0246,
+          "a_steel_m2": 0.04522827,
+          "id_m": 0.5604,
+          "mass_steel_kg_per_m": 355.04,
+          "mass_coating_kg_per_m": 9.17,
+          "mass_cwc_kg_per_m": 497.53,
+          "mass_total_kg_per_m": 861.74,
+          "submerged_weight_n_per_m": 3774.92,
+          "outer_diameter_m": 0.7696,
+          "i_steel_m4": 0.0019381383042352102
+        },
+        {
+          "wt_mm": 30.96,
+          "wt_m": 0.031,
+          "a_steel_m2": 0.05628067,
+          "id_m": 0.5477,
+          "mass_steel_kg_per_m": 441.8,
+          "mass_coating_kg_per_m": 9.17,
+          "mass_cwc_kg_per_m": 497.53,
+          "mass_total_kg_per_m": 948.5,
+          "submerged_weight_n_per_m": 4625.76,
+          "outer_diameter_m": 0.7696,
+          "i_steel_m4": 0.0023622600145066773
+        }
+      ]
+    }
+  },
+  "jumper_mass_per_m_air": 92.43,
+  "jumper_mass_per_m_sub": 51.64,
+  "jumper_sub_weight_per_m": 506.41,
+  "jumper_a_steel": 0.01152128,
+  "jumpers": [
+    {
+      "name": "Jumper-20m",
+      "length_m": 20,
+      "total_mass_air_kg": 1848.6,
+      "total_mass_submerged_kg": 1032.8
+    },
+    {
+      "name": "Jumper-40m",
+      "length_m": 40,
+      "total_mass_air_kg": 3697.2,
+      "total_mass_submerged_kg": 2065.6
+    },
+    {
+      "name": "Jumper-60m",
+      "length_m": 60,
+      "total_mass_air_kg": 5545.8,
+      "total_mass_submerged_kg": 3098.4
+    },
+    {
+      "name": "Jumper-80m",
+      "length_m": 80,
+      "total_mass_air_kg": 7394.5,
+      "total_mass_submerged_kg": 4131.2
+    },
+    {
+      "name": "Jumper-100m",
+      "length_m": 100,
+      "total_mass_air_kg": 9243.1,
+      "total_mass_submerged_kg": 5164.0
+    }
+  ]
+}

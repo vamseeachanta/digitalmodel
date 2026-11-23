@@ -1,0 +1,261 @@
+"""Root ProjectInputSpec model."""
+
+from __future__ import annotations
+
+import warnings
+
+from pydantic import BaseModel, Field, model_validator
+
+from .metadata import Metadata
+
+from .environment import Environment
+from .generic import GenericModel
+from .pipeline import Pipeline
+from .equipment import Equipment
+from .simulation import Simulation
+from .riser import Riser
+from .mooring import MooringSystem
+from .fowt import FowtSpec
+
+
+class ProjectInputSpec(BaseModel):
+    """
+    Root model for project-specific OrcaFlex model input specification.
+
+    This is the main entry point for validating YAML input files.
+    It contains all components needed to generate a complete OrcaFlex model.
+    Supports pipeline installation, riser production, mooring, and generic models.
+
+    Example (Pipeline):
+        ```python
+        from digitalmodel.solvers.orcaflex.modular_generator.schema import ProjectInputSpec
+        import yaml
+
+        with open('spec.yml', encoding="utf-8") as f:
+            data = yaml.safe_load(f)
+
+        spec = ProjectInputSpec(**data)
+        print(f"Model: {spec.metadata.name}")
+        print(f"Pipeline length: {sum(s.length for s in spec.pipeline.segments)}m")
+        ```
+
+    Example (Riser):
+        ```python
+        spec = ProjectInputSpec(**data)
+        print(f"Model: {spec.metadata.name}")
+        print(f"Riser lines: {len(spec.riser.lines)}")
+        ```
+
+    Example (Generic):
+        ```python
+        spec = ProjectInputSpec(**data)
+        print(f"Model: {spec.metadata.name}")
+        print(f"Line types: {len(spec.generic.line_types)}")
+        ```
+
+    Attributes:
+        metadata: Model identification and categorization.
+        environment: Environmental conditions (water, metocean).
+        pipeline: Pipeline definition (optional, for pipeline models).
+        riser: Riser definition (optional, for riser models).
+        mooring: Mooring system definition (optional, for mooring models).
+        generic: Generic OrcaFlex model or retained riser fallback (optional).
+        equipment: Installation equipment (tugs, rollers, buoyancy modules).
+        simulation: Simulation control parameters.
+    """
+
+    metadata: Metadata = Field(..., description="Model metadata")
+    environment: Environment = Field(..., description="Environmental conditions")
+    pipeline: Pipeline | None = Field(default=None, description="Pipeline definition")
+    riser: Riser | None = Field(default=None, description="Riser definition")
+    mooring: MooringSystem | None = Field(default=None, description="Mooring system definition")
+    fowt: FowtSpec | None = Field(
+        default=None, description="Floating offshore wind turbine definition"
+    )
+    generic: GenericModel | None = Field(
+        default=None, description="Generic OrcaFlex model definition"
+    )
+    equipment: Equipment = Field(
+        default_factory=Equipment, description="Equipment configuration"
+    )
+    simulation: Simulation = Field(
+        default_factory=Simulation, description="Simulation parameters"
+    )
+
+    @model_validator(mode="after")
+    def validate_consistency(self) -> "ProjectInputSpec":
+        """
+        Cross-validate model components for physical consistency.
+
+        Checks:
+        - One domain must be defined; risers may retain a generic fallback
+        - Water depth consistency with seabed features
+        - Current profile points must be at or above the water bottom
+        - Tug positions relative to pipeline length
+        - Buoyancy module spacing vs segment length
+        """
+        # Count how many model types are defined
+        model_types_defined = sum([
+            self.pipeline is not None,
+            self.riser is not None,
+            self.mooring is not None,
+            self.generic is not None,
+            self.fowt is not None,
+        ])
+
+        if model_types_defined == 0:
+            raise ValueError(
+                "Either 'pipeline', 'riser', 'mooring', 'generic' or 'fowt' must be "
+                "defined in spec"
+            )
+        riser_with_fallback = (
+            self.riser is not None and self.generic is not None
+            and self.pipeline is None and self.mooring is None and self.fowt is None
+        )
+        if model_types_defined > 1 and not riser_with_fallback:
+            defined = []
+            if self.pipeline is not None:
+                defined.append("pipeline")
+            if self.riser is not None:
+                defined.append("riser")
+            if self.mooring is not None:
+                defined.append("mooring")
+            if self.generic is not None:
+                defined.append("generic")
+            if self.fowt is not None:
+                defined.append("fowt")
+            raise ValueError(
+                f"Cannot define multiple model types ({', '.join(defined)}) "
+                "in same spec. Create separate spec files for each model type."
+            )
+
+        # Cross-validate current profile depth vs water depth
+        if self.environment.current and self.environment.current.profile:
+            max_profile_depth = max(
+                (p[0] for p in self.environment.current.profile), default=0
+            )
+            if max_profile_depth > self.environment.water.depth:
+                raise ValueError(
+                    f"Current profile depth {max_profile_depth} m exceeds "
+                    f"water depth {self.environment.water.depth} m; "
+                    "profile points must be at or above the water bottom."
+                )
+
+        # Pipeline-specific validation
+        if self.pipeline is not None:
+            # Check if tug spacing and count fit within pipeline length
+            if self.equipment.tugs:
+                total_pipeline_length = sum(s.length for s in self.pipeline.segments)
+                tugs = self.equipment.tugs
+                max_tug_x = tugs.first_position[0] + (tugs.count - 1) * tugs.spacing
+
+                # Only warn if tugs extend significantly beyond pipeline; this
+                # can be intentional (staged installation), so it is not an error.
+                if max_tug_x > total_pipeline_length * 1.5:
+                    warnings.warn(
+                        f"Last tug at x = {max_tug_x:g} m lies beyond 1.5 times the "
+                        f"pipeline length ({total_pipeline_length:g} m); check the "
+                        "tug spacing unless the spread is intended (staged installation).",
+                        UserWarning,
+                        stacklevel=2,
+                    )
+
+            # Check S-lay equipment consistency
+            if self.equipment.stinger and not self.equipment.vessel:
+                raise ValueError("Stinger requires a vessel to be defined")
+            if self.equipment.jlay and not self.equipment.vessel:
+                raise ValueError("J-lay tower requires a vessel to be defined")
+            if self.equipment.jlay and self.equipment.stinger:
+                raise ValueError("J-lay tower and stinger cannot both be defined")
+            if self.equipment.jlay and self.equipment.tensioner:
+                raise ValueError(
+                    "J-lay tower carries the pipe tension at the pinned hang-off; "
+                    "a tensioner cannot also be defined"
+                )
+            if self.equipment.jlay and self.equipment.buoyancy_modules:
+                raise ValueError("J-lay seed does not support buoyancy modules")
+            if self.equipment.jlay and self.equipment.slay_end_b_x is not None:
+                raise ValueError("J-lay seed cannot use slay_end_b_x")
+            if self.equipment.tensioner and not self.equipment.vessel:
+                raise ValueError("Tensioner requires a vessel to be defined")
+
+        return self
+
+    def get_total_pipeline_length(self) -> float:
+        """Calculate total pipeline length from all segments."""
+        if self.pipeline is None:
+            return 0.0
+        return sum(s.length for s in self.pipeline.segments)
+
+    def get_tug_positions(self) -> list[list[float]]:
+        """Generate positions for all tugs based on spacing configuration."""
+        if not self.equipment.tugs:
+            return []
+
+        tugs = self.equipment.tugs
+        positions = []
+        for i in range(tugs.count):
+            x = tugs.first_position[0] + i * tugs.spacing
+            y = tugs.first_position[1]
+            z = tugs.first_position[2]
+            positions.append([x, y, z])
+        return positions
+
+    def get_buoyancy_module_positions(self) -> list[float]:
+        """Generate arc-length positions for buoyancy modules."""
+        if not self.equipment.buoyancy_modules:
+            return []
+
+        bm = self.equipment.buoyancy_modules
+        total_length = self.get_total_pipeline_length()
+
+        start = bm.start_arc_length or 0
+        end = bm.end_arc_length or total_length
+
+        positions = []
+        current = start
+        while current <= end:
+            positions.append(current)
+            current += bm.spacing
+
+        return positions
+
+    def is_s_lay(self) -> bool:
+        """Check if this is an S-lay installation model."""
+        return self.pipeline is not None and self.equipment.vessel is not None
+
+    def is_floating(self) -> bool:
+        """Check if this is a floating installation model."""
+        return self.pipeline is not None and self.equipment.tugs is not None
+
+    def is_riser(self) -> bool:
+        """Check if this is a riser model."""
+        return self.riser is not None
+
+    def is_pipeline(self) -> bool:
+        """Check if this is a pipeline model."""
+        return self.pipeline is not None
+
+    def is_mooring(self) -> bool:
+        """Check if this is a mooring model."""
+        return self.mooring is not None
+
+    def is_fowt(self) -> bool:
+        """Check if this is a floating offshore wind turbine model."""
+        return self.fowt is not None
+
+    def is_generic(self) -> bool:
+        """Check if this is a generic model."""
+        return self.generic is not None
+
+    def get_riser_line_names(self) -> list[str]:
+        """Get names of all riser lines."""
+        if self.riser is None:
+            return []
+        return [line.name for line in self.riser.lines]
+
+    def get_riser_line_type_names(self) -> list[str]:
+        """Get names of all riser line types."""
+        if self.riser is None:
+            return []
+        return [lt.name for lt in self.riser.line_types]

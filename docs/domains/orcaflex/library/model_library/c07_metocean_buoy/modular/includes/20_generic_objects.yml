@@ -1,0 +1,672 @@
+General:
+  UnitsSystem: SI
+  JacobianBufferingPolicy: 1
+  JacobianPerturbationFactor: 0
+  BuoysIncludedInStatics: All
+  LineStaticsStep1Policy: All lines included
+  LineStaticsStep2Policy: Solve coupled systems
+  WholeSystemStaticsEnabled: true
+  StaticsMaxIterations: 4400
+  StaticsMinDamping: 5
+  StaticsMaxDamping: 50
+  DynamicsSolutionMethod: Implicit time domain
+  ImplicitUseVariableTimeStep: false
+  LogPrecision: Single
+  TargetLogSampleInterval: 0.1
+  LogStartTime: ~
+  StartTime: ~
+  FirstStage: ~
+  RampStartTime: ~
+  RampFinishTime: ~
+  TimeHistoryImportFrom: ~
+  TimeHistoryImportTo: ~
+  RestartStateRecordingPeriodicCount: 0
+  RestartStateRecordingTest: ~
+VariableData:
+  Dragcoefficient:
+  - IndependentValue, DependentValue:
+    - - 10e3
+      - 1.2
+    - - 50e3
+      - 1.2
+    - - 240e3
+      - 1.2
+    - - 255e3
+      - 1.19
+    - - 300e3
+      - 1.16
+    - - 340e3
+      - 1.05
+    - - 380e3
+      - 0.8
+    - - 425e3
+      - 0.42
+    - - 510e3
+      - 0.4
+    - - 600e3
+      - 0.42
+    - - 675e3
+      - 0.48
+    - - 850e3
+      - 0.57
+    - - 1.3e6
+      - 0.68
+    - - 1.7e6
+      - 0.7
+    - - 8.5e6
+      - 0.7
+    - - 25e6
+      - 0.7
+    Name: Generic Drag
+LineTypes:
+- Name: 25mm Chain Studless
+  Category: General
+  CentreOfMass:
+  - 0
+  - 0
+  BulkModulus: Infinity
+  CompressionIsLimited: true
+  AllowableTension: ~
+  MinRadius:
+  - ~
+  - ~
+  PoissonRatio: 0.5
+  ExpansionTable: None
+  GJ: 80
+  TensionTorqueCoupling: 0
+  OuterContactDiameter: 0.08375
+  InnerContactDiameter: ~
+  ClashStiffness: 0
+  Ca:
+  - 1
+  - ~
+  - 0.08
+  Cm:
+  - ~
+  - ~
+  - ~
+  Cs: 0
+  Ce: 0
+  Cd:
+  - 1
+  - ~
+  - 0.4
+  Cl: 0
+  NormalDragLiftDiameter: 0.052500000000000005
+  AxialDragLiftDiameter: 0.004297183463481174
+  StressOD: ~
+  StressID: ~
+  AllowableStress: ~
+  TensileStressLoadingFactor: 1
+  BendingStressLoadingFactor: 1
+  ShearStressLoadingFactor: 1
+  TorsionalStressLoadingFactor: 1
+  SeabedLateralFrictionCoefficient: 0.5
+  SeabedAxialFrictionCoefficient: ~
+  RayleighDampingCoefficients: (no damping)
+  Pen:
+  - 1
+  - Solid
+  - $8000FF
+  OD: 0.045000000000000005
+  ID: 0.0
+  MassPerUnitLength: 0.0124375
+  EI:
+  - 0
+  - ~
+  EA: 53.37500000000001e3
+- Name: 50mm Polyester
+  Category: General
+  CentreOfMass:
+  - 0
+  - 0
+  BulkModulus: Infinity
+  CompressionIsLimited: true
+  AllowableTension: ~
+  MinRadius:
+  - ~
+  - ~
+  PoissonRatio: 0.5
+  ExpansionTable: None
+  GJ: 80
+  TensionTorqueCoupling: 0
+  OuterContactDiameter: ~
+  InnerContactDiameter: ~
+  ClashStiffness: 0
+  Ca:
+  - 1
+  - ~
+  - 0
+  Cm:
+  - ~
+  - ~
+  - ~
+  Cs: 0
+  Ce: 0
+  Cd:
+  - Generic Drag
+  - ~
+  - 0.008
+  Cl: 0
+  NormalDragLiftDiameter: ~
+  AxialDragLiftDiameter: ~
+  StressOD: ~
+  StressID: ~
+  AllowableStress: ~
+  TensileStressLoadingFactor: 1
+  BendingStressLoadingFactor: 1
+  ShearStressLoadingFactor: 1
+  TorsionalStressLoadingFactor: 1
+  SeabedLateralFrictionCoefficient: 0.5
+  SeabedAxialFrictionCoefficient: ~
+  RayleighDampingCoefficients: (no damping)
+  Pen:
+  - 1
+  - Solid
+  - Red
+  OD: 0.043000000000000003
+  ID: 0.0
+  MassPerUnitLength: 0.0019945
+  EI:
+  - 0
+  - ~
+  EA: 2725.0000000000005
+- Name: 50mm Nylon Rope
+  Category: General
+  CentreOfMass:
+  - 0
+  - 0
+  BulkModulus: Infinity
+  CompressionIsLimited: true
+  AllowableTension: ~
+  MinRadius:
+  - ~
+  - ~
+  PoissonRatio: 0.5
+  ExpansionTable: None
+  GJ: 80
+  TensionTorqueCoupling: 0
+  OuterContactDiameter: ~
+  InnerContactDiameter: ~
+  ClashStiffness: 0
+  Ca:
+  - 1
+  - ~
+  - 0
+  Cm:
+  - ~
+  - ~
+  - ~
+  Cs: 0
+  Ce: 0
+  Cd:
+  - Generic Drag
+  - ~
+  - 0.008
+  Cl: 0
+  NormalDragLiftDiameter: ~
+  AxialDragLiftDiameter: ~
+  StressOD: ~
+  StressID: ~
+  AllowableStress: ~
+  TensileStressLoadingFactor: 1
+  BendingStressLoadingFactor: 1
+  ShearStressLoadingFactor: 1
+  TorsionalStressLoadingFactor: 1
+  SeabedLateralFrictionCoefficient: 0.5
+  SeabedAxialFrictionCoefficient: ~
+  RayleighDampingCoefficients: (no damping)
+  Pen:
+  - 1
+  - Solid
+  - Lime
+  OD: 0.0425
+  ID: 0.0
+  MassPerUnitLength: 0.001619
+  EI:
+  - 0
+  - ~
+  EA: 295.00000000000006
+- Name: 38mm Chain Studless
+  Category: General
+  CentreOfMass:
+  - 0
+  - 0
+  BulkModulus: Infinity
+  CompressionIsLimited: true
+  AllowableTension: ~
+  MinRadius:
+  - ~
+  - ~
+  PoissonRatio: 0.5
+  ExpansionTable: None
+  GJ: 80
+  TensionTorqueCoupling: 0
+  OuterContactDiameter: 0.1273
+  InnerContactDiameter: ~
+  ClashStiffness: 0
+  Ca:
+  - 1
+  - ~
+  - 0.08
+  Cm:
+  - ~
+  - ~
+  - ~
+  Cs: 0
+  Ce: 0
+  Cd:
+  - 1
+  - ~
+  - 0.4
+  Cl: 0
+  NormalDragLiftDiameter: 0.0798
+  AxialDragLiftDiameter: 0.0065317188644913845
+  StressOD: ~
+  StressID: ~
+  AllowableStress: ~
+  TensileStressLoadingFactor: 1
+  BendingStressLoadingFactor: 1
+  ShearStressLoadingFactor: 1
+  TorsionalStressLoadingFactor: 1
+  SeabedLateralFrictionCoefficient: 0.5
+  SeabedAxialFrictionCoefficient: ~
+  RayleighDampingCoefficients: (no damping)
+  OD: 0.0684
+  ID: 0.0
+  MassPerUnitLength: 0.028735599999999997
+  EI:
+  - 0
+  - ~
+  EA: 123.31759999999999e3
+ClumpTypes:
+- Name: Mid-line buoy
+  Height: 1
+  AlignWith: Line axes
+  DragArea:
+  - 2.3
+  - 2.3
+  - 3
+  Cd:
+  - 1.1
+  - 1.1
+  - 1.1
+  Ca:
+  - 1
+  - 1
+  - 1
+  Mass: 1.0
+  Volume: 2.3
+Lines:
+- Name: Mooring
+  IncludeTorsion: false
+  TopEnd: End A
+  LengthAndEndOrientations: Explicit
+  Representation: Finite element
+  PyModel: (none)
+  PreBendSpecifiedBy: Curvature
+  DragFormulation: Standard
+  StaticsVIV: None
+  DynamicsVIV: None
+  WaveCalculationMethod: Specified by environment
+  ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination,
+    ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+  : - - Metocean buoy
+      - 0
+      - 0
+      - -2.1
+      - 0
+      - 180
+      - 0
+      - ~
+    - - Anchored
+      - -400
+      - 0
+      - 0.06365
+      - 0
+      - 180
+      - 0
+      - ~
+  ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+  - - 0
+    - ~
+  - - 0
+    - ~
+  ? ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor,
+    ConnectionApplyRamp, ConnectionUseSmoothGrowth
+  : - - ~
+      - 0
+      - 0.001
+    - - ~
+      - 0
+      - 0.001
+  LineType, Length, TargetSegmentLength:
+  - - 25mm Chain Studless
+    - 60
+    - 1
+  - - 50mm Nylon Rope
+    - 230
+    - 20
+  - - 50mm Polyester
+    - 50
+    - 20
+  - - 50mm Polyester
+    - 230
+    - 20
+  - - 38mm Chain Studless
+    - 50
+    - 1
+  AttachmentType, Attachmentx, Attachmenty, Attachmentz, AttachmentzRelativeTo:
+  - - Mid-line buoy
+    - 0
+    - 0
+    - 340
+    - End A
+  DecoupleLateralAndAxialSeabedFriction: false
+  CoveredSectionsWarnIfLineLeavesCover: true
+  ContentsMethod: Uniform
+  IncludeAxialContentsInertia: true
+  ContentsDensity: 0
+  ContentsTemperature: ~
+  ContentsPressureRefZ: ~
+  ContentsPressure: 0
+  ContentsFlowRate: 0
+  IncludedInStatics: true
+  StaticsStep1: Catenary
+  StaticsStep2: Full statics
+  StaticsSeabedFrictionPolicy: As laid
+  LayAzimuth: 360
+  AsLaidTension: 0
+  DrawNodesAsDiscs: false
+  DrawShadedNodesAsSpheres: true
+  ContactPen:
+  - 5
+  - Solid
+  - White
+6DBuoys:
+- Name: Metocean buoy
+  BuoyType: Spar buoy
+  Connection: Free
+  DampingRelativeTo: Earth
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  InitialAttitude:
+  - 0
+  - 4.0671532295023765
+  - 0
+  MomentsOfInertia:
+  - 8
+  - 8
+  - 2.5
+  CentreOfMass:
+  - 0.001
+  - 0
+  - 0
+  StackBaseCentre:
+  - 0
+  - 0
+  - -2
+  BulkModulus: Infinity
+  MunkMomentCoefficient: 0
+  NormalDragAreaCalculatedFromGeometry: true
+  StackedBuoyAddedMassAndDampingMethod: Values for each cylinder
+  Cylinders:
+  - CylinderOuterDiameter: 0.35
+    CylinderInnerDiameter: 0
+    CylinderLength: 1
+    CylinderAxialDragArea: 0
+    DragForceCoefficient:
+    - 0.7
+    - 0
+    DragAreaMoment:
+    - 0
+    - 0
+    DragMomentCoefficient:
+    - 0
+    - 0
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    AddedMassForceCoefficient:
+    - 0
+    - 0
+    InertiaForceCoefficient:
+    - ~
+    - ~
+    AddedMomentOfInertia:
+    - 0
+    - 0
+    UnitDampingForce:
+    - 0
+    - 0
+    UnitDampingMoment:
+    - 0
+    - 0
+  - CylinderOuterDiameter: 0.95
+    CylinderInnerDiameter: 0
+    CylinderLength: 1.4
+    CylinderAxialDragArea: 0
+    DragForceCoefficient:
+    - 0.7
+    - 0
+    DragAreaMoment:
+    - 0
+    - 0
+    DragMomentCoefficient:
+    - 0
+    - 0
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    AddedMassForceCoefficient:
+    - 0
+    - 0
+    InertiaForceCoefficient:
+    - ~
+    - ~
+    AddedMomentOfInertia:
+    - 0
+    - 0
+    UnitDampingForce:
+    - 0
+    - 0
+    UnitDampingMoment:
+    - 0
+    - 0
+  - CylinderOuterDiameter: 1.5
+    CylinderInnerDiameter: 0
+    CylinderLength: 0.25
+    CylinderAxialDragArea: 0
+    DragForceCoefficient:
+    - 0.7
+    - 0
+    DragAreaMoment:
+    - 0
+    - 0
+    DragMomentCoefficient:
+    - 0
+    - 0
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    AddedMassForceCoefficient:
+    - 0
+    - 0
+    InertiaForceCoefficient:
+    - ~
+    - ~
+    AddedMomentOfInertia:
+    - 0
+    - 0
+    UnitDampingForce:
+    - 0
+    - 0
+    UnitDampingMoment:
+    - 0
+    - 0
+  - CylinderOuterDiameter: 2.8
+    CylinderInnerDiameter: 0
+    CylinderLength: 1.3
+    CylinderAxialDragArea: 4.390375733
+    DragForceCoefficient:
+    - 0.95
+    - 0.35
+    DragAreaMoment:
+    - 0
+    - 0
+    DragMomentCoefficient:
+    - 0
+    - 0
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    AddedMassForceCoefficient:
+    - 0.55
+    - 0.4
+    InertiaForceCoefficient:
+    - ~
+    - ~
+    AddedMomentOfInertia:
+    - 0
+    - 0
+    UnitDampingForce:
+    - 0
+    - 0
+    UnitDampingMoment:
+    - 0
+    - 0
+  - CylinderOuterDiameter: 1.5
+    CylinderInnerDiameter: 0
+    CylinderLength: 0.55
+    CylinderAxialDragArea: 1.382300768
+    DragForceCoefficient:
+    - 0.95
+    - 0.35
+    DragAreaMoment:
+    - 0
+    - 0
+    DragMomentCoefficient:
+    - 0
+    - 0
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    AddedMassForceCoefficient:
+    - 0.55
+    - 0.4
+    InertiaForceCoefficient:
+    - ~
+    - ~
+    AddedMomentOfInertia:
+    - 0
+    - 0
+    UnitDampingForce:
+    - 0
+    - 2
+    UnitDampingMoment:
+    - 2.5
+    - 1
+  - CylinderOuterDiameter: 0.25
+    CylinderInnerDiameter: 0.15
+    CylinderLength: 0.7
+    CylinderAxialDragArea: 0
+    DragForceCoefficient:
+    - 0.7
+    - 0
+    DragAreaMoment:
+    - 0
+    - 0
+    DragMomentCoefficient:
+    - 0
+    - 0
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    AddedMassForceCoefficient:
+    - 0.3
+    - 0
+    InertiaForceCoefficient:
+    - ~
+    - ~
+    AddedMomentOfInertia:
+    - 0
+    - 0
+    UnitDampingForce:
+    - 0
+    - 0
+    UnitDampingMoment:
+    - 0
+    - 0
+  - CylinderOuterDiameter: 0.7
+    CylinderInnerDiameter: 0.15
+    CylinderLength: 0.35
+    CylinderAxialDragArea: 0.314159265
+    DragForceCoefficient:
+    - 0.7
+    - 1.11
+    DragAreaMoment:
+    - 0
+    - 0
+    DragMomentCoefficient:
+    - 0
+    - 0
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    AddedMassForceCoefficient:
+    - 0.6
+    - 0.6
+    InertiaForceCoefficient:
+    - ~
+    - ~
+    AddedMomentOfInertia:
+    - 0
+    - 0
+    UnitDampingForce:
+    - 0
+    - 0
+    UnitDampingMoment:
+    - 0
+    - 0
+  - CylinderOuterDiameter: 0.3
+    CylinderInnerDiameter: 0.15
+    CylinderLength: 0.25
+    CylinderAxialDragArea: 0.070685835
+    DragForceCoefficient:
+    - 0.7
+    - 0.95
+    DragAreaMoment:
+    - 0
+    - 0
+    DragMomentCoefficient:
+    - 0
+    - 0
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    AddedMassForceCoefficient:
+    - 0.6
+    - 0.6
+    InertiaForceCoefficient:
+    - ~
+    - ~
+    AddedMomentOfInertia:
+    - 0
+    - 0
+    UnitDampingForce:
+    - 0
+    - 0
+    UnitDampingMoment:
+    - 0
+    - 0
+  SeabedFrictionCoefficient: 0
+  TotalContactArea: ~
+  Pen:
+  - 1
+  - Solid
+  - $FF80C0
+  ShadedDrawingCullingMode: Anticlockwise
+  InitialPosition:
+  - 102.59338477355298
+  - 0.0
+  - -0.42723999619858116
+  Mass: 4.0
+Groups:
+  Structure:
+    Metocean buoy: Model
+    Mooring: Model
+  State:
+    Collapsed:
+    - Variable data

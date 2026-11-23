@@ -1,0 +1,56 @@
+{
+  "schema": "review-packet/1",
+  "created": "2026-10-09T16:49:52+00:00",
+  "git_head": "abdf5ef979bcbe25347bc27d06a10e50c38b9779",
+  "digest_domain": "raw-bytes",
+  "packet_bytes": 82772,
+  "packet_sha256": "b1c2498009e3ec7e669059fdcb37dc675d64b06088d573b5285380ba4e694008",
+  "files": [
+    {
+      "path": "src/digitalmodel/naval_architecture/mesh_hydrostatics.py",
+      "sha256": "ad745569961e8dcb59fcfe1c931dad2655003fa886d702be1c1f7653ad00cc1b",
+      "bytes": 34580
+    },
+    {
+      "path": "src/digitalmodel/naval_architecture/hull_fixtures.py",
+      "sha256": "d0ab75f251489f0e4052d84d30d2c7de7252d23c498c31b85aef1735614f7044",
+      "bytes": 6535
+    },
+    {
+      "path": "tests/naval_architecture/test_array_integrity.py",
+      "sha256": "1f9452d66458fb723944b203dc3ffeeb53e1da748a85a5d2df29ef89a5de8e44",
+      "bytes": 9066
+    },
+    {
+      "path": "docs/plans/2026-10-09-2254-immutable-arrays.html",
+      "sha256": "91876a57622b3f0dcf8bd9dce13d64c7a32d0f8f1af1b4effd32932d99e90373",
+      "bytes": 1800
+    },
+    {
+      "path": "docs/plans/evidence/2254/plan-review-disposition.md",
+      "sha256": "617f9f62195cc843580ee854548df15d9b7ea29ddd411850d84f0932ff230878",
+      "bytes": 3679
+    },
+    {
+      "path": "docs/plans/evidence/2254/code-review-disposition.md",
+      "sha256": "c9cf6b9b311be374d24f70ee5983e79185808923042ea503e61bd7d0f4715b21",
+      "bytes": 3104
+    },
+    {
+      "path": "docs/plans/evidence/2254/r3-inline-review.md",
+      "sha256": "a867a4aa814047447be590f40836ed0d458f645c4f8f510be9d5ec4fe5d69081",
+      "bytes": 2118
+    },
+    {
+      "path": "docs/plans/evidence/2254/validation.html",
+      "sha256": "1d0428c8d2db20662e20b49aa75c0ecb178421d189d1800b2bc9c485df21d833",
+      "bytes": 3600
+    },
+    {
+      "path": "docs/plans/evidence/2254/claude-r2-review.md",
+      "sha256": "75dc7feca5f16f7b96aaaf763a96b4ccf26c14a3d73f5f4932dc8d8369a0a897",
+      "bytes": 7258
+    }
+  ],
+  "review_status": "Codex r3 inline review; Claude review required before owner merge"
+}

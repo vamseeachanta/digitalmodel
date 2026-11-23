@@ -1,0 +1,9 @@
+basename: pipelay
+
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: true
+
+pipelay: {}

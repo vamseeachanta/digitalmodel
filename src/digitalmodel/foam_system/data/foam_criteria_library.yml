@@ -1,0 +1,172 @@
+# Starter cited criteria library — commonly used low-expansion foam
+# application rates (issue #1586).
+#
+# Every entry carries the mandatory Citation fields (standard, edition,
+# clause) enforced by ``digitalmodel.foam_system.sizing.Citation``. Entries
+# state the edition explicitly; there are no uncited defaults.
+#
+# ``verify_against_source: true`` marks entries whose clause numbering,
+# duration basis or exact value MUST be confirmed against the purchased /
+# governing edition before use in a deliverable (the loader appends a
+# VERIFY marker to the citation note so it follows the value into every
+# output CSV). ``verify_against_source: false`` means the maintainers are
+# confident the value and clause match the cited edition — the screening
+# posture still applies: final designs are governed by the AHJ /
+# classification society review.
+#
+# Units: application_rate_lpm_per_m2 [L/min per m2], discharge_time_min [min].
+
+schema_version: 1
+library: foam_application_rate_criteria
+description: >
+  Commonly used low-expansion foam application-rate criteria for screening
+  sizing: NFPA 11 fixed-roof tank surface / floating-roof seal / spill
+  rates, SOLAS FSS Code fixed deck foam rate bases, and the IMO MODU Code
+  helideck rate. Select entries by key via
+  digitalmodel.foam_system.criteria_library (or the foam_system_sizing
+  config key ``criteria_library``) instead of re-typing cited values per
+  job.
+
+criteria:
+  nfpa11_fixed_roof_surface_flash_37_8_to_60c:
+    application: >
+      Fixed-roof (cone) atmospheric storage tank, hydrocarbon with flash
+      point between 37.8 degC and 60 degC (100-140 degF), surface
+      application through Type I/II fixed foam discharge outlets; rate over
+      the liquid surface area.
+    application_rate_lpm_per_m2: 4.1
+    discharge_time_min: 30.0
+    verify_against_source: true
+    citation:
+      standard: "NFPA 11"
+      edition: "2021"
+      clause: "Table 5.2.5.2.2 (fixed-roof tanks, Type I/II fixed foam discharge outlets)"
+      note: >
+        4.1 L/min/m2 (0.10 gpm/ft2) minimum; value stable across recent
+        editions but confirm the 2021 clause/table numbering and any
+        fuel-specific provisions against the purchased edition.
+
+  nfpa11_fixed_roof_surface_flash_below_37_8c:
+    application: >
+      Fixed-roof (cone) atmospheric storage tank, hydrocarbon with flash
+      point below 37.8 degC (100 degF) or crude petroleum, surface
+      application through Type I/II fixed foam discharge outlets; rate over
+      the liquid surface area.
+    application_rate_lpm_per_m2: 4.1
+    discharge_time_min: 55.0
+    verify_against_source: true
+    citation:
+      standard: "NFPA 11"
+      edition: "2021"
+      clause: "Table 5.2.5.2.2 (fixed-roof tanks, Type I/II fixed foam discharge outlets)"
+      note: >
+        4.1 L/min/m2 (0.10 gpm/ft2) minimum for 55 min; value stable across
+        recent editions but confirm the 2021 clause/table numbering and any
+        fuel-specific provisions against the purchased edition.
+
+  nfpa11_floating_roof_seal_top_of_seal_foam_dam:
+    application: >
+      Open-top floating roof tank, seal-area protection: fixed foam
+      discharge outlets above the mechanical shoe / tube seal with a foam
+      dam (top-of-seal method); rate over the annular seal area enclosed by
+      the foam dam.
+    application_rate_lpm_per_m2: 12.2
+    discharge_time_min: 20.0
+    verify_against_source: true
+    citation:
+      standard: "NFPA 11"
+      edition: "2021"
+      clause: "Ch. 5 - open-top floating roof tanks, top-of-seal application with foam dam"
+      note: >
+        12.2 L/min/m2 (0.3 gpm/ft2) for 20 min is the commonly applied
+        top-of-seal basis; confirm the 2021 clause/table numbering and the
+        seal-type-specific rows against the purchased edition.
+
+  nfpa11_hydrocarbon_spill_portable:
+    application: >
+      Hydrocarbon spill fire (not involving a storage tank in depth),
+      portable foam nozzles / monitors; rate over the assumed spill area.
+    application_rate_lpm_per_m2: 6.5
+    discharge_time_min: 15.0
+    verify_against_source: true
+    citation:
+      standard: "NFPA 11"
+      edition: "2021"
+      clause: "Ch. 5 - portable foam application to hydrocarbon spill fires"
+      note: >
+        6.5 L/min/m2 (0.16 gpm/ft2) minimum for 15 min is the commonly
+        applied spill basis; confirm the 2021 clause numbering and any
+        polar-solvent / depth provisions against the purchased edition.
+
+  fss_deck_foam_cargo_deck_area:
+    application: >
+      Tanker fixed deck foam system, rate basis 1: cargo tanks deck area
+      (maximum breadth times total longitudinal extent of the cargo tank
+      spaces). The governing supply rate is the greatest of the three FSS
+      Code bases.
+    application_rate_lpm_per_m2: 0.6
+    discharge_time_min: 20.0
+    verify_against_source: false
+    citation:
+      standard: "SOLAS FSS Code"
+      edition: "Res. MSC.98(73) as amended (2015 consolidated edition)"
+      clause: "Ch. 14 (fixed deck foam systems), para. 2.2.2.1"
+      note: >
+        0.6 L/min per m2 of cargo tanks deck area. Duration basis: at least
+        20 min of foam generation for tankers fitted with an inert gas
+        installation (30 min when not fitted), same chapter.
+
+  fss_deck_foam_largest_tank_section:
+    application: >
+      Tanker fixed deck foam system, rate basis 2: horizontal sectional
+      area of the single cargo tank having the largest such area. The
+      governing supply rate is the greatest of the three FSS Code bases.
+    application_rate_lpm_per_m2: 6.0
+    discharge_time_min: 20.0
+    verify_against_source: false
+    citation:
+      standard: "SOLAS FSS Code"
+      edition: "Res. MSC.98(73) as amended (2015 consolidated edition)"
+      clause: "Ch. 14 (fixed deck foam systems), para. 2.2.2.2"
+      note: >
+        6 L/min per m2 of the horizontal sectional area of the single
+        largest cargo tank. Duration basis: at least 20 min of foam
+        generation for tankers fitted with an inert gas installation
+        (30 min when not fitted), same chapter.
+
+  fss_deck_foam_largest_monitor_area:
+    application: >
+      Tanker fixed deck foam system, rate basis 3: area protected by the
+      largest monitor (area entirely forward of the monitor). Each monitor
+      must additionally deliver at least 1250 L/min. The governing supply
+      rate is the greatest of the three FSS Code bases.
+    application_rate_lpm_per_m2: 3.0
+    discharge_time_min: 20.0
+    verify_against_source: false
+    citation:
+      standard: "SOLAS FSS Code"
+      edition: "Res. MSC.98(73) as amended (2015 consolidated edition)"
+      clause: "Ch. 14 (fixed deck foam systems), para. 2.2.2.3"
+      note: >
+        3 L/min per m2 of the area protected by the largest monitor, with a
+        minimum monitor capacity of 1250 L/min. Duration basis: at least
+        20 min of foam generation for tankers fitted with an inert gas
+        installation (30 min when not fitted), same chapter.
+
+  imo_modu_helideck_foam:
+    application: >
+      MODU helideck foam application; rate over the helideck protected
+      area (commonly the D-value circle / practical critical area per the
+      helicopter type).
+    application_rate_lpm_per_m2: 6.0
+    discharge_time_min: 5.0
+    verify_against_source: true
+    citation:
+      standard: "IMO MODU Code"
+      edition: "2009 (Res. A.1023(26))"
+      clause: "Ch. 9 - helicopter facilities, foam application"
+      note: >
+        6 L/min/m2 for at least 5 min is the commonly applied helideck
+        basis; confirm rate, duration, foam performance level and clause
+        against the governing MODU Code edition and coastal/flag State
+        requirements (e.g. CAP 437, MSC.1/Circ.1431).

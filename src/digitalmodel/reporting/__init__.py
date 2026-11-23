@@ -1,0 +1,159 @@
+#!/usr/bin/env python3
+"""digitalmodel.reporting — reusable report block library.
+
+ABOUTME: A small, domain-agnostic toolkit for assembling self-contained HTML
+reports from ordered, keyed section builders. Extracted from the diffraction
+report generator (#1018) so other modules can reuse the same pattern.
+
+Public API:
+  * ``ReportDataModel``  — marker base for report envelope (pydantic) models.
+  * ``ReportBlock``      — runtime-checkable protocol for block-shaped objects.
+  * ``ReportBlockFn``    — ``Callable[..., str]`` alias (builders are functions).
+  * ``SectionMode``      — ALWAYS / COMPACT_SKIP / BENCHMARK_ONLY.
+  * ``ReportSection``    — a keyed builder with a render mode.
+  * ``ReportBackbone``   — ordered sections -> list[str] of section HTML.
+  * ``ReportRenderer``   — wrap sections in an HTML document + write to disk.
+  * ``ReportSpec`` / ``render_html`` / ``write_report`` — the standard
+    HTML/PDF report engine (#2212); ``report_adapter`` registers a domain.
+"""
+
+from __future__ import annotations
+
+from digitalmodel.reporting._backbone import ReportBackbone, ReportSection, SectionMode
+from digitalmodel.reporting._base import ReportBlock, ReportBlockFn, ReportDataModel
+from digitalmodel.reporting._renderer import ReportRenderer
+from digitalmodel.reporting.provenance import (
+    ContractError,
+    DataSource,
+    Provenance,
+    ProvenanceError,
+    assemble_report,
+    assumption_ledger_block,
+    provenance_block,
+)
+from digitalmodel.reporting.calc_report import (
+    CALC_REPORT_SKELETON,
+    CalcReport,
+    Confidence,
+    DataRow,
+    DesignDataGroup,
+    Equation,
+    KPI,
+    MethodBlock,
+    Objective,
+    Reference,
+    ResultBlock,
+    ValidationItem,
+    VariableDef,
+    WayForwardStage,
+)
+from digitalmodel.reporting.brief import Brief, BriefSection, Callout
+from digitalmodel.reporting.spec import (
+    DOC_NUMBER_RE,
+    MANIFEST_REQUIRED_FIELDS,
+    DocumentMeta,
+    FigureBlock,
+    PublicWebCitation,
+    ReportSpec,
+    RevisionRow,
+    Section,
+    StandardLabel,
+    StatusBlock,
+    TableBlock,
+    TextBlock,
+)
+from digitalmodel.reporting.engine import (
+    ReportArtifacts,
+    markdown_to_html,
+    render_html,
+    write_report,
+)
+from digitalmodel.reporting.figures import (
+    figure_from_columns,
+    inline_plotlyjs,
+    plotly_div,
+)
+from digitalmodel.reporting.pdf import PdfRenderError, PdfStatus, render_pdf
+from digitalmodel.reporting.adapters import (
+    ADAPTERS,
+    AdapterError,
+    build_spec,
+    maybe_render_report,
+    report_adapter,
+)
+from digitalmodel.reporting.skeleton import (
+    BlockSpec,
+    Completeness,
+    ReportSkeleton,
+    SectionSpec,
+)
+
+__all__ = [
+    "ReportDataModel",
+    "ReportBlock",
+    "ReportBlockFn",
+    "SectionMode",
+    "ReportSection",
+    "ReportBackbone",
+    "ReportRenderer",
+    # provenance / SSOT-view (#1019)
+    "ProvenanceError",
+    "ContractError",
+    "DataSource",
+    "Provenance",
+    "provenance_block",
+    "assumption_ledger_block",
+    "assemble_report",
+    # skeleton-first (#1021)
+    "ReportSkeleton",
+    "SectionSpec",
+    "BlockSpec",
+    "Completeness",
+    # standard calculation report — house section order + typed content
+    "CALC_REPORT_SKELETON",
+    "CalcReport",
+    "Confidence",
+    "DataRow",
+    "DesignDataGroup",
+    "Equation",
+    "KPI",
+    "MethodBlock",
+    "Objective",
+    "Reference",
+    "ResultBlock",
+    "ValidationItem",
+    "VariableDef",
+    "WayForwardStage",
+    # client brief — short-form companion
+    "Brief",
+    "BriefSection",
+    "Callout",
+    # standard report engine (#2212)
+    "DOC_NUMBER_RE",
+    "MANIFEST_REQUIRED_FIELDS",
+    "DocumentMeta",
+    "FigureBlock",
+    "PublicWebCitation",
+    "ReportSpec",
+    "RevisionRow",
+    "Section",
+    "StandardLabel",
+    "StatusBlock",
+    "TableBlock",
+    "TextBlock",
+    "ReportArtifacts",
+    "markdown_to_html",
+    "render_html",
+    "write_report",
+    "figure_from_columns",
+    "inline_plotlyjs",
+    "plotly_div",
+    "PdfRenderError",
+    "PdfStatus",
+    "render_pdf",
+    "ADAPTERS",
+    "AdapterError",
+    "build_spec",
+    "maybe_render_report",
+    "report_adapter",
+]

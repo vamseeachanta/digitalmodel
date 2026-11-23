@@ -1,0 +1,71 @@
+# Environment Configuration
+# Generated from: CALMBuoy_100YR_IM_R1_D6.yml
+# Date: 2026-01-18 21:53:20
+Environment:
+  WaterSurfaceZ: 0
+  KinematicViscosity: 1.35e-06
+  SeaTemperature: 10
+  ReynoldsNumberCalculation: Flow direction
+  HorizontalWaterDensityFactor: ~
+  VerticalDensityVariation: Constant
+  Density: 1.025
+  SeabedType: Flat
+  SeabedOrigin:
+  - 0
+  - 0
+  SeabedOriginDepth: 32.8
+  NominalDepth: ~
+  SeabedSlopeDirection: 0
+  SeabedSlope: 0
+  SeabedModel: Elastic
+  SeabedNormalStiffness: 100
+  SeabedShearStiffness: ~
+  KinematicStretchingMethod: Vertical stretching
+  WaveTrains:
+  - Name: Wave1
+    WaveType: Airy
+    WaveDirection: 0
+    WaveHeight: 7.4
+    WavePeriod: 8.1
+    WaveOrigin:
+    - 0
+    - 0
+    WaveTimeOrigin: 0
+  WaveKinematicsCutoffDepth: Infinity
+  WaveCalculationMethod: Instantaneous position (exact)
+  WaveCalculationTimeInterval: 0
+  WaveCalculationSpatialInterval: 0
+  MultipleCurrentDataCanBeDefined: No
+  CurrentModel: Variation scheme
+  CurrentRamped: Yes
+  CurrentApplyVerticalStretching: No
+  HorizontalCurrentFactor: ~
+  VerticalCurrentVariationMethod: Interpolated
+  RefCurrentSpeed: 1
+  RefCurrentDirection: 0
+  CurrentDepth, CurrentFactor, CurrentRotation:
+  - - 0
+    - 0.93
+    - 0
+  - - 16.4
+    - 0.61
+    - 0
+  - - 32.8
+    - 0.25
+    - 0
+  IncludeVesselWindLoads: Yes
+  IncludeLineWindLoads: Yes
+  IncludeBuoyWindLoads: No
+  IncludeBuoyWingWindLoads: Yes
+  WindRamping: From mean
+  WindType: Constant
+  AirDensity: 0.00128
+  AirSpeedOfSound: 343
+  WindSpeed: 22.7
+  WindDirection: 0
+  VerticalWindVariationFactor: 100yr Wind Profile
+  SeabedPen:
+  - 1
+  - Solid
+  - White
+  SeaSurfaceType: Single line

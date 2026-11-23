@@ -1,0 +1,80 @@
+atlas_id: 7ca25705d065
+basename: drilling_riser_envelope
+physics: linear
+response: von_mises_daf
+axes:
+- name: mode
+  values:
+  - drilling
+  - connected
+  - hang_off
+- name: offset_pct
+  scale: linear
+  grid:
+  - 0.0
+  - 2.0
+  - 4.0
+  - 6.0
+  - 8.0
+- name: current_speed_mps
+  scale: linear
+  grid:
+  - 0.0
+  - 0.5
+  - 1.0
+  - 1.5
+  - 2.0
+- name: hs_m
+  scale: linear
+  grid:
+  - 1.0
+  - 3.0
+  - 5.0
+  - 7.0
+- name: tp_s
+  scale: linear
+  grid:
+  - 8.0
+  - 12.0
+  - 16.0
+validation:
+  metric: null
+  max_rel_error: 0.0
+  threshold: null
+  passes: null
+provenance:
+  basename: drilling_riser_envelope
+  kind: library
+  solver:
+    name: OrcaFlex/OrcFxAPI
+    version: STUB
+    licensed: false
+    run_date: STUB
+    note: "synthetic placeholder von-Mises dynamic amplification \u2014 replace with\
+      \ a licensed OrcaFlex time-domain run per operating mode (operator step, dev-secondary)."
+  coverage:
+    key_axis: mode
+    covered_cases:
+    - drilling
+    - connected
+    - hang_off
+    continuous_axes:
+      offset_pct:
+        scale: linear
+        min: 0.0
+        max: 8.0
+      current_speed_mps:
+        scale: linear
+        min: 0.0
+        max: 2.0
+      hs_m:
+        scale: linear
+        min: 1.0
+        max: 7.0
+      tp_s:
+        scale: linear
+        min: 8.0
+        max: 16.0
+    note: STUB drilling-riser von-Mises dynamic-amplification library, 3 operating-mode
+      cases. Queries outside these modes or the gridded offset/current/Hs/Tp ranges
+      escalate to a licensed run.

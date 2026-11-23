@@ -1,0 +1,122 @@
+# OpenFOAM CFD BATCH — REQUIRES-SOLVER workflow (issue #1560).
+#
+# One input.yml -> a deterministic case matrix that saturates a dedicated CFD
+# node. Two modes (run_batch.mode):
+#   pool (default): N single-rank cases run CONCURRENTLY through a bounded
+#     thread pool sized to ~90% of host cores (run_batch.workers overrides;
+#     owner resource policy dm#1553). Each case reuses the fail-closed
+#     OpenFOAM build + solve path (the same code the `basename: openfoam`
+#     engine route uses, landed via #1161).
+#   mpi: ONE large case across ranks — decomposePar -force (scotch) ->
+#     mpirun -np <workers> <solver> -parallel -> reconstructPar. processor*
+#     dirs are pruned only after a SUCCESSFUL reconstruction; with
+#     run_batch.reconstruct: false the decomposed fields are the deliverable
+#     and are preserved. Set exactly one case for mpi mode, and SIZE IT to
+#     finish well inside one dispatch wall-clock window — a fresh retry
+#     restarts from t=0 unless run_batch.resume: true picks up an existing
+#     processor* decomposition and restarts the solver from latestTime.
+#
+# Case generation reuses parametric_run's variants schema
+# (factorial/range/csv/yaml_matrix + dotted-path mapping).
+#
+# This example is a tiny 2-case current-loading sweep in MOCK mode so it runs
+# solver-free (CI): the license-free builder authors each case tree but no
+# solver runs. On a solver-capable host set run_batch.mock: false to mesh +
+# solve for real. Small conclusions land under results/ (cases.csv +
+# batch_summary.json) for the licensed-run queue's return allowlist; heavy
+# case trees stay under batch_runs/ and processor* dirs are pruned.
+basename: openfoam_run_batch
+
+openfoam_run_batch:
+  base:
+    case_type: current_loading
+    solver: simpleFoam
+    mesh_utility: blockMesh
+    to_vtk: false
+  # Explicit case list: each case names its dir and overrides base settings via
+  # mapping's dotted paths. Knob names must not collide with reserved manifest
+  # columns (index/name/status/solver/...) — hence solver_app mapped onto the
+  # solver setting. For a parametric sweep instead, drop `cases:` and add a
+  # `variants:` block (parametric_run's factorial/range/csv/yaml_matrix
+  # schema) — see tests for a yaml_matrix example.
+  cases:
+    - name: current_simpleFoam
+      solver_app: simpleFoam
+    - name: current_pimpleFoam
+      solver_app: pimpleFoam
+  mapping:
+    solver_app: solver
+  run_batch:
+    mode: pool
+    workers: 2
+    mock: true
+
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: true
+
+# ---------------------------------------------------------------------------
+# CANONICAL CASE-DEFINITION CONTRACT (#1575)
+# ---------------------------------------------------------------------------
+# The `base:` above is the LEGACY flat form, still fully supported. It carries
+# only case type, name, solver and a few execution knobs, so a case's domain,
+# motion, fill, time controls and function objects cannot be expressed and were
+# previously dropped in transit.
+#
+# The canonical form below carries all of them, and is validated fail-closed:
+# unknown keys are refused by name rather than silently ignored. Use EITHER
+# form, never both in one input.
+#
+#   base:
+#     case_definition:
+#       schema_version: 1
+#       kind: authored          # `prebuilt` is reserved and refused in v1
+#       authored:
+#         case_type: sloshing
+#         name: synthetic_sloshing
+#         solver: interFoam
+#         domain:               # SI metres, right-handed, z up
+#           min_coords_m: [0.0, 0.0, 0.0]
+#           max_coords_m: [2.0, 1.0, 1.0]
+#           n_cells: [20, 10, 10]
+#         motion:               # roll/pitch/yaw need deg + origin_m;
+#           type: roll          # surge/sway/heave need m and reject origin_m
+#           amplitude: 3.0
+#           amplitude_unit: deg
+#           period_s: 1.5
+#           origin_m: [1.0, 0.5, 0.0]
+#         fill:                 # needs a multiphase case + run_set_fields true
+#           level: 0.4
+#         time:
+#           start_time_s: 0.0
+#           end_time_s: 2.0
+#           delta_t_s: 0.002
+#           write_interval_steps: 25
+#           adjustable_time_step: true
+#           max_co: 0.5
+#           purge_write: 0
+#         function_objects:
+#           pressure_taps:
+#             - name: synthetic_tap
+#               location_m: [1.0, 0.5, 0.8]
+#               fields: [p, p_rgh]
+#           write_control: timeStep
+#           write_interval: 1
+#     execution:
+#       mesh_utility: blockMesh
+#       run_snappy: false
+#       run_set_fields: true
+#       to_vtk: false
+#       timeout_seconds: 43200
+#       dry_run: false
+#
+# Sweeps map knobs onto dotted authored/execution leaves, and every mapping
+# target is checked against the accepted-leaf ledger before any case renders:
+#
+#   mapping:
+#     end_time: case_definition.authored.time.end_time_s
+#
+# Rank authority stays with run_batch.workers; n_subdomains is not accepted in
+# the schema, so decomposeParDict can never disagree with the dispatched ranks.

@@ -1,0 +1,37 @@
+# Artificial Lift Configuration - Dynacard Analysis
+# Supports surface-to-downhole card conversion, buckling detection, and diagnostics
+
+dynacard:
+  calculation_params:
+    default_oil_api: 30
+    gravity: 9.81
+    density_steel: 8500.0
+    density_water: 998.2
+    fourier_terms: 35
+    finite_difference_divisions: 10000
+    coulomb_friction: 0.3
+    viscosity_water_default: 0.001
+    ideal_card_points: 800
+  
+  fluid_properties:
+    sg_water: 0.9982
+    sg_oil: 0.85
+    pump_efficiency_assumed: 1.0
+  
+  buckling_params:
+    mud_oil_fluid_ratio: 0.8
+    mud_solid_ratio: 0.0
+    compressibility_water: 113.4973
+    compressibility_oil: 106.1639
+    compressibility_solid: -2.851
+    incline_threshold_vertical: 2.0
+    incline_threshold_inclined: 5.0
+  
+  signal_processing:
+    savgol_window: 21
+    savgol_poly_order: 5
+    n_pts_filter: 10
+
+  power_params:
+    efficiency_prime_mover: 0.9
+    efficiency_pumping_unit: 0.9

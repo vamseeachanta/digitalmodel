@@ -1,0 +1,662 @@
+"""Tests for CampaignGenerator and CLI campaign subcommand."""
+from __future__ import annotations
+
+import argparse
+import sys
+from pathlib import Path
+from unittest.mock import patch
+
+import pytest
+import yaml
+
+
+def _make_campaign_data() -> dict:
+    """Create minimal valid campaign data for testing."""
+    return {
+        "base": {
+            "metadata": {
+                "name": "test_pipe",
+                "description": "Test pipeline",
+                "structure": "pipeline",
+                "operation": "installation/floating",
+                "project": "test",
+            },
+            "environment": {
+                "water": {"depth": 10, "density": 1.025},
+                "seabed": {
+                    "slope": 0.5,
+                    "stiffness": {"normal": 100, "shear": 10},
+                },
+                "waves": {
+                    "type": "jonswap",
+                    "height": 1.5,
+                    "period": 6,
+                    "direction": 180,
+                },
+                "current": {"speed": 0.5, "direction": 270},
+                "wind": {"speed": 5, "direction": 270},
+            },
+            "pipeline": {
+                "name": "Test Line",
+                "material": "X65",
+                "dimensions": {"outer_diameter": 0.5, "wall_thickness": 0.02},
+                "coatings": {
+                    "corrosion": {"thickness": 0.004, "density": 0.95},
+                    "weight": [
+                        {"name": "CWC", "thickness": 0.1, "density": 3.0},
+                    ],
+                },
+                "segments": [
+                    {"type": "X65+CWC", "length": 5000, "segment_length": 10},
+                ],
+            },
+            "equipment": {
+                "tugs": {
+                    "count": 3,
+                    "spacing": 500,
+                    "first_position": [500, -20, 0],
+                    "properties": {"mass": 30, "volume": 100},
+                },
+                "buoyancy_modules": {
+                    "spacing": 4,
+                    "properties": {"volume": 4.91},
+                },
+            },
+            "simulation": {"time_step": 0.1, "stages": [8, 16]},
+        },
+        "campaign": {
+            "water_depths": [10, 20],
+            "environments": [
+                {
+                    "name": "calm",
+                    "waves": {
+                        "type": "airy",
+                        "height": 0.5,
+                        "period": 5,
+                        "direction": 180,
+                    },
+                    "current": {"speed": 0.3, "direction": 270},
+                    "wind": {"speed": 3, "direction": 270},
+                },
+                {
+                    "name": "storm",
+                    "waves": {
+                        "type": "jonswap",
+                        "height": 3.0,
+                        "period": 8,
+                        "direction": 180,
+                    },
+                    "current": {"speed": 1.0, "direction": 270},
+                    "wind": {"speed": 10, "direction": 270},
+                },
+            ],
+        },
+        "output_naming": "{base_name}_wd{water_depth}m_{environment}",
+    }
+
+
+def _write_campaign_yaml(path: Path) -> Path:
+    """Write a minimal valid campaign YAML for testing."""
+    campaign_file = path / "campaign.yml"
+    campaign_file.write_text(yaml.dump(_make_campaign_data(), default_flow_style=False))
+    return campaign_file
+
+
+class TestCampaignGeneratorLoadsValidYaml:
+    """Test 1: CampaignGenerator loads and parses a valid YAML file."""
+
+    def test_campaign_generator_loads_valid_yaml(self, tmp_path):
+        from digitalmodel.solvers.orcaflex.modular_generator.schema.campaign import (
+            CampaignGenerator,
+            CampaignSpec,
+        )
+
+        campaign_file = _write_campaign_yaml(tmp_path)
+        gen = CampaignGenerator(campaign_file)
+
+        assert isinstance(gen.spec, CampaignSpec)
+        assert gen.spec.base.metadata.name == "test_pipe"
+        assert len(gen.spec.campaign.water_depths) == 2
+        assert len(gen.spec.campaign.environments) == 2
+
+
+class TestCampaignGeneratorPreview:
+    """Test 2: Preview returns correct number of combinations."""
+
+    def test_campaign_generator_preview(self, tmp_path):
+        from digitalmodel.solvers.orcaflex.modular_generator.schema.campaign import (
+            CampaignGenerator,
+        )
+
+        campaign_file = _write_campaign_yaml(tmp_path)
+        gen = CampaignGenerator(campaign_file)
+
+        combos = gen.preview()
+
+        # 2 water_depths x 2 environments = 4 combinations
+        assert len(combos) == 4
+        assert all("water_depth" in c for c in combos)
+        assert all("environment" in c for c in combos)
+
+
+class TestCampaignGeneratorValidate:
+    """Test 3: Validate catches duplicate environment names."""
+
+    def test_campaign_generator_validate_duplicate_names(self, tmp_path):
+        from digitalmodel.solvers.orcaflex.modular_generator.schema.campaign import (
+            CampaignGenerator,
+        )
+
+        data = _make_campaign_data()
+        # Make both environments have the same name
+        data["campaign"]["environments"][1]["name"] = "calm"
+        campaign_file = tmp_path / "campaign_dup.yml"
+        campaign_file.write_text(yaml.dump(data, default_flow_style=False))
+
+        gen = CampaignGenerator(campaign_file)
+        warnings = gen.validate()
+
+        assert any("Duplicate environment names" in w for w in warnings)
+
+
+class TestCampaignGeneratorGenerate:
+    """Tests 4-7: Generate creates directories and returns correct results."""
+
+    def test_campaign_generator_generate_creates_directories(self, tmp_path):
+        """Test 4: Generate creates one directory per combination."""
+        from digitalmodel.solvers.orcaflex.modular_generator.schema.campaign import (
+            CampaignGenerator,
+        )
+
+        campaign_file = _write_campaign_yaml(tmp_path)
+        gen = CampaignGenerator(campaign_file)
+        output_dir = tmp_path / "output"
+
+        result = gen.generate(output_dir=output_dir)
+
+        # 2 depths x 2 environments = 4 runs
+        assert result.run_count == 4
+        assert len(result.run_dirs) == 4
+        for run_dir in result.run_dirs:
+            assert run_dir.exists()
+            assert run_dir.is_dir()
+
+    def test_campaign_generator_generate_force_overwrites(self, tmp_path):
+        """Test 5: With force=True, existing dirs are overwritten."""
+        from digitalmodel.solvers.orcaflex.modular_generator.schema.campaign import (
+            CampaignGenerator,
+        )
+
+        campaign_file = _write_campaign_yaml(tmp_path)
+        gen = CampaignGenerator(campaign_file)
+        output_dir = tmp_path / "output"
+
+        # First generation
+        result1 = gen.generate(output_dir=output_dir)
+        assert result1.run_count == 4
+
+        # Second generation without force: existing dirs skipped
+        result2 = gen.generate(output_dir=output_dir, force=False)
+        assert result2.skipped_count == 4
+        assert result2.run_count == 0
+
+        # Third generation with force: all regenerated
+        result3 = gen.generate(output_dir=output_dir, force=True)
+        assert result3.run_count == 4
+        assert result3.skipped_count == 0
+
+    def test_campaign_generator_generate_resume_skips_existing(self, tmp_path):
+        """Test 6: With resume=True, skips dirs with master.yml."""
+        from digitalmodel.solvers.orcaflex.modular_generator.schema.campaign import (
+            CampaignGenerator,
+        )
+
+        campaign_file = _write_campaign_yaml(tmp_path)
+        gen = CampaignGenerator(campaign_file)
+        output_dir = tmp_path / "output"
+
+        # First generate all
+        result1 = gen.generate(output_dir=output_dir)
+        assert result1.run_count == 4
+
+        # Resume should skip all (master.yml exists in each)
+        result2 = gen.generate(output_dir=output_dir, resume=True)
+        assert result2.skipped_count == 4
+        assert result2.run_count == 0
+
+    def test_campaign_generator_generate_returns_result(self, tmp_path):
+        """Test 7: CampaignResult has correct counts and summary."""
+        from digitalmodel.solvers.orcaflex.modular_generator.schema.campaign import (
+            CampaignGenerator,
+            CampaignResult,
+        )
+
+        campaign_file = _write_campaign_yaml(tmp_path)
+        gen = CampaignGenerator(campaign_file)
+        output_dir = tmp_path / "output"
+
+        result = gen.generate(output_dir=output_dir)
+
+        assert isinstance(result, CampaignResult)
+        assert result.run_count == 4
+        assert result.skipped_count == 0
+        assert result.errors == []
+        assert "water_depth" in result.matrix_summary
+        assert "environment" in result.matrix_summary
+        assert sorted(result.matrix_summary["water_depth"]) == [10.0, 20.0]
+        assert sorted(result.matrix_summary["environment"]) == ["calm", "storm"]
+
+
+class TestCampaignGeneratorSpecOnly:
+    def test_campaign_generator_spec_only_writes_spec_yml_per_combo(self, tmp_path):
+        from digitalmodel.solvers.orcaflex.modular_generator.schema.campaign import (
+            CampaignGenerator,
+        )
+        cf = _write_campaign_yaml(tmp_path)
+        gen = CampaignGenerator(cf)
+        out = tmp_path / "out"
+        result = gen.generate(out, spec_only=True)
+        # 2 water_depths × 2 environments = 4 runs
+        assert result.run_count == 4
+        spec_files = sorted(out.glob("*/spec.yml"))
+        assert len(spec_files) == 4
+
+    def test_campaign_generator_spec_only_skips_master_and_includes(self, tmp_path):
+        from digitalmodel.solvers.orcaflex.modular_generator.schema.campaign import (
+            CampaignGenerator,
+        )
+        cf = _write_campaign_yaml(tmp_path)
+        gen = CampaignGenerator(cf)
+        out = tmp_path / "out"
+        gen.generate(out, spec_only=True)
+        master_files = list(out.glob("*/master.yml"))
+        includes_dirs = list(out.glob("*/includes"))
+        assert master_files == []
+        assert includes_dirs == []
+
+    def test_spec_only_writes_top_level_manifest_with_combo_index(self, tmp_path):
+        from digitalmodel.solvers.orcaflex.modular_generator.schema.campaign import (
+            CampaignGenerator,
+        )
+        cf = _write_campaign_yaml(tmp_path)
+        gen = CampaignGenerator(cf)
+        out = tmp_path / "out"
+        result = gen.generate(out, spec_only=True)
+
+        manifest = out / "manifest.yml"
+        assert manifest.exists()
+        assert result.manifest_path == manifest
+
+        data = yaml.safe_load(manifest.read_text())
+        assert data["total_runs"] == 4
+        assert len(data["runs"]) == 4
+
+    def test_preflight_warning_above_max_runs_threshold(self, tmp_path, caplog):
+        import logging
+        from digitalmodel.solvers.orcaflex.modular_generator.schema.campaign import (
+            CampaignGenerator,
+        )
+        data = _make_campaign_data()
+        data["campaign"]["water_depths"] = [10, 20, 30, 40, 50]  # 5 × 2 envs = 10 combos
+        data["max_runs"] = 3
+        cf = tmp_path / "campaign_overload.yml"
+        cf.write_text(yaml.dump(data, default_flow_style=False))
+
+        gen = CampaignGenerator(cf)
+        caplog.set_level(logging.WARNING)
+        gen.generate(tmp_path / "out", spec_only=True)
+        assert any(
+            "max_runs" in r.message and "10" in r.message
+            for r in caplog.records
+        )
+
+
+class TestCampaignGeneratorMaxRuns:
+    """Test 8: max_runs limits generation count."""
+
+    def test_campaign_generator_generate_max_runs(self, tmp_path):
+        from digitalmodel.solvers.orcaflex.modular_generator.schema.campaign import (
+            CampaignGenerator,
+        )
+
+        data = _make_campaign_data()
+        data["max_runs"] = 2
+        campaign_file = tmp_path / "campaign_max.yml"
+        campaign_file.write_text(yaml.dump(data, default_flow_style=False))
+
+        gen = CampaignGenerator(campaign_file)
+        output_dir = tmp_path / "output"
+
+        result = gen.generate(output_dir=output_dir)
+
+        # max_runs=2, so only 2 of the 4 combinations should be generated
+        assert result.run_count == 2
+        assert len(result.run_dirs) == 2
+
+
+class TestCLICampaignPreview:
+    """Test 9: CLI preview shows matrix without generating."""
+
+    def test_cli_campaign_preview(self, tmp_path, capsys):
+        from digitalmodel.solvers.orcaflex.modular_generator.cli import (
+            cmd_campaign,
+            create_parser,
+        )
+
+        campaign_file = _write_campaign_yaml(tmp_path)
+        parser = create_parser()
+        args = parser.parse_args([
+            "campaign", str(campaign_file), "--preview",
+        ])
+
+        exit_code = cmd_campaign(args)
+        captured = capsys.readouterr()
+
+        assert exit_code == 0
+        assert "test_pipe" in captured.out
+        assert "2 depths" in captured.out
+        assert "2 environments" in captured.out
+        assert "4 runs" in captured.out
+
+
+class TestCLICampaignGenerate:
+    """Test 10: CLI generate creates output directories."""
+
+    def test_cli_campaign_generate(self, tmp_path, capsys):
+        from digitalmodel.solvers.orcaflex.modular_generator.cli import (
+            cmd_campaign,
+            create_parser,
+        )
+
+        campaign_file = _write_campaign_yaml(tmp_path)
+        output_dir = tmp_path / "cli_output"
+        parser = create_parser()
+        args = parser.parse_args([
+            "campaign", str(campaign_file), "--output", str(output_dir),
+        ])
+
+        exit_code = cmd_campaign(args)
+        captured = capsys.readouterr()
+
+        assert exit_code == 0
+        assert "Generated: 4" in captured.out
+        assert output_dir.exists()
+
+    def test_cli_campaign_missing_file(self, tmp_path, capsys):
+        from digitalmodel.solvers.orcaflex.modular_generator.cli import (
+            cmd_campaign,
+            create_parser,
+        )
+
+        parser = create_parser()
+        args = parser.parse_args([
+            "campaign", str(tmp_path / "nonexistent.yml"), "--preview",
+        ])
+
+        exit_code = cmd_campaign(args)
+
+        assert exit_code == 1
+
+    def test_cli_campaign_no_output_no_preview(self, tmp_path, capsys):
+        from digitalmodel.solvers.orcaflex.modular_generator.cli import (
+            cmd_campaign,
+            create_parser,
+        )
+
+        campaign_file = _write_campaign_yaml(tmp_path)
+        parser = create_parser()
+        args = parser.parse_args(["campaign", str(campaign_file)])
+
+        exit_code = cmd_campaign(args)
+
+        assert exit_code == 1
+
+
+class TestCLICampaignSpecOnly:
+    def test_cli_campaign_spec_only_flag(self, tmp_path, capsys):
+        from digitalmodel.solvers.orcaflex.modular_generator.cli import (
+            cmd_campaign,
+            create_parser,
+        )
+        cf = _write_campaign_yaml(tmp_path)
+        out = tmp_path / "cli_spec_only_out"
+        parser = create_parser()
+        args = parser.parse_args([
+            "campaign", str(cf), "--output", str(out), "--spec-only",
+        ])
+        exit_code = cmd_campaign(args)
+        assert exit_code == 0
+        spec_files = list(out.glob("*/spec.yml"))
+        assert len(spec_files) == 4
+        assert (out / "manifest.yml").exists()
+        assert list(out.glob("*/master.yml")) == []
+
+    def test_cli_preview_shows_sweep_counts(self, tmp_path, capsys):
+        from digitalmodel.solvers.orcaflex.modular_generator.cli import (
+            cmd_campaign,
+            create_parser,
+        )
+        data = _make_campaign_data()
+        data["campaign"]["sweeps"] = [
+            {
+                "parameter": "environment.waves.trains.0.height",
+                "values": [1.0, 2.0, 3.0],
+                "alias": "wave_h",
+            }
+        ]
+        data["output_naming"] = "{base_name}_wd{water_depth}m_{environment}_h{wave_h}"
+        cf = tmp_path / "campaign_sweep.yml"
+        cf.write_text(yaml.dump(data, default_flow_style=False))
+
+        parser = create_parser()
+        args = parser.parse_args(["campaign", str(cf), "--preview"])
+        exit_code = cmd_campaign(args)
+        captured = capsys.readouterr()
+
+        assert exit_code == 0
+        assert "sweep" in captured.out.lower()
+        assert "12 runs" in captured.out  # 2 depths × 2 envs × 3 sweep values
+
+
+class TestCampaignE2E:
+    def test_e2e_two_dotted_sweeps_produce_n_spec_ymls(self, tmp_path):
+        from digitalmodel.solvers.orcaflex.modular_generator.schema.campaign import (
+            CampaignGenerator,
+        )
+        data = _make_campaign_data()
+        data["campaign"] = {
+            "water_depths": [10],
+            "sweeps": [
+                {
+                    "parameter": "environment.waves.trains.0.height",
+                    "values": [1.0, 2.0],
+                    "alias": "wave_h",
+                },
+                {
+                    "parameter": "environment.waves.trains.0.period",
+                    "values": [6, 8, 10],
+                    "alias": "wave_p",
+                },
+            ],
+        }
+        data["output_naming"] = "{base_name}_wd{water_depth}m_h{wave_h}_p{wave_p}"
+        cf = tmp_path / "campaign_two_sweeps.yml"
+        cf.write_text(yaml.dump(data, default_flow_style=False))
+
+        gen = CampaignGenerator(cf)
+        out = tmp_path / "out"
+        result = gen.generate(out, spec_only=True)
+
+        assert result.run_count == 6  # 1 × 2 × 3
+        spec_files = list(out.glob("*/spec.yml"))
+        assert len(spec_files) == 6
+
+    def test_e2e_each_spec_yml_validates_as_project_input_spec(self, tmp_path):
+        from digitalmodel.solvers.orcaflex.modular_generator.schema import ProjectInputSpec
+        from digitalmodel.solvers.orcaflex.modular_generator.schema.campaign import (
+            CampaignGenerator,
+        )
+        data = _make_campaign_data()
+        data["campaign"]["sweeps"] = [
+            {
+                "parameter": "environment.waves.trains.0.height",
+                "values": [1.0, 2.0],
+                "alias": "wave_h",
+            }
+        ]
+        data["output_naming"] = "{base_name}_wd{water_depth}m_{environment}_h{wave_h}"
+        cf = tmp_path / "campaign_validates.yml"
+        cf.write_text(yaml.dump(data, default_flow_style=False))
+
+        gen = CampaignGenerator(cf)
+        out = tmp_path / "out"
+        gen.generate(out, spec_only=True)
+
+        spec_files = list(out.glob("*/spec.yml"))
+        assert len(spec_files) > 0
+        for spec_file in spec_files:
+            loaded = yaml.safe_load(spec_file.read_text())
+            ProjectInputSpec.model_validate(loaded)
+
+    def test_campaign_loader_handles_bom_encoded_yaml(self, tmp_path):
+        from digitalmodel.solvers.orcaflex.modular_generator.schema.campaign import (
+            CampaignGenerator,
+        )
+        cf = tmp_path / "campaign_bom.yml"
+        yaml_text = yaml.dump(_make_campaign_data(), default_flow_style=False)
+        cf.write_bytes(b"\xef\xbb\xbf" + yaml_text.encode("utf-8"))
+
+        gen = CampaignGenerator(cf)
+        assert gen.spec.base.metadata.name == "test_pipe"
+
+    def test_validate_with_sweeps_does_not_crash(self, tmp_path):
+        from digitalmodel.solvers.orcaflex.modular_generator.schema.campaign import (
+            CampaignGenerator,
+        )
+        data = _make_campaign_data()
+        data["campaign"]["sweeps"] = [
+            {
+                "parameter": "environment.waves.trains.0.height",
+                "values": [1.0, 2.0],
+                "alias": "wave_h",
+            }
+        ]
+        data["output_naming"] = "{base_name}_wd{water_depth}m_{environment}_h{wave_h}"
+        cf = tmp_path / "campaign_validate_sweep.yml"
+        cf.write_text(yaml.dump(data, default_flow_style=False))
+
+        gen = CampaignGenerator(cf)
+        warnings = gen.validate()
+        assert isinstance(warnings, list)
+
+
+class TestSpecOnlyYamlIsSafeLoadable:
+    """Regression: spec-only output must be yaml.safe_load-able (no python tags).
+
+    A python-mode model_dump leaves (str, Enum) fields (e.g. RollerType from
+    the equipment.rollers auto-conversion) as Enum members, which yaml.dump
+    serialises as '!!python/object/apply' tags that the yaml.safe_load used
+    by spec.yml consumers (cli.py, ModularModelGenerator) cannot read.
+    """
+
+    def _campaign_with_rollers(self) -> dict:
+        data = _make_campaign_data()
+        # equipment.py resolve_roller_compat auto-creates a RollerArrangement
+        # with the RollerType enum from legacy rollers.
+        data["base"]["equipment"]["rollers"] = {
+            "position": [10.0, 0.0, 5.0],
+            "supports": 4,
+        }
+        return data
+
+    def test_spec_yml_contains_no_python_tags(self, tmp_path):
+        from digitalmodel.solvers.orcaflex.modular_generator.schema.campaign import (
+            CampaignGenerator,
+        )
+
+        cf = tmp_path / "campaign.yml"
+        cf.write_text(yaml.dump(self._campaign_with_rollers(), default_flow_style=False))
+        gen = CampaignGenerator(cf)
+        result = gen.generate(tmp_path / "out", spec_only=True)
+
+        assert not result.errors
+        assert result.run_count > 0
+        for run_dir in result.run_dirs:
+            text = (run_dir / "spec.yml").read_text()
+            assert "!!python" not in text
+
+    def test_spec_yml_roundtrips_through_safe_load(self, tmp_path):
+        from digitalmodel.solvers.orcaflex.modular_generator.schema.campaign import (
+            CampaignGenerator,
+        )
+        from digitalmodel.solvers.orcaflex.modular_generator.schema import (
+            ProjectInputSpec,
+        )
+
+        cf = tmp_path / "campaign.yml"
+        cf.write_text(yaml.dump(self._campaign_with_rollers(), default_flow_style=False))
+        gen = CampaignGenerator(cf)
+        result = gen.generate(tmp_path / "out", spec_only=True)
+
+        assert not result.errors
+        run_dir = result.run_dirs[0]
+        data = yaml.safe_load((run_dir / "spec.yml").read_text())
+        spec = ProjectInputSpec(**data)
+        assert spec.equipment.roller_arrangement is not None
+        assert spec.equipment.roller_arrangement.type.value == "v_roller"
+
+
+class TestOutputNamingFormatSpecs:
+    """Regression: templates with str.format specs must pass coverage check."""
+
+    def test_format_spec_in_template_is_accepted(self, tmp_path):
+        from digitalmodel.solvers.orcaflex.modular_generator.schema.campaign import (
+            CampaignSpec,
+        )
+
+        data = _make_campaign_data()
+        data["output_naming"] = "{base_name}_wd{water_depth:.0f}m_{environment}"
+        spec = CampaignSpec(**data)
+
+        names = [name for name, _ in spec.generate_run_specs()]
+        assert "test_pipe_wd10m_calm" in names
+
+    def test_alias_with_format_spec_is_accepted(self, tmp_path):
+        from digitalmodel.solvers.orcaflex.modular_generator.schema.campaign import (
+            CampaignSpec,
+        )
+
+        data = _make_campaign_data()
+        data["campaign"]["sweeps"] = [
+            {
+                "parameter": "environment.waves.trains.0.height",
+                "values": [1.0, 2.5],
+                "alias": "wave_h",
+            }
+        ]
+        data["output_naming"] = (
+            "{base_name}_wd{water_depth:.0f}m_{environment}_h{wave_h:.1f}"
+        )
+        spec = CampaignSpec(**data)
+        names = [name for name, _ in spec.generate_run_specs()]
+        assert "test_pipe_wd10m_calm_h1.0" in names
+
+    def test_missing_parameter_still_rejected(self):
+        from digitalmodel.solvers.orcaflex.modular_generator.schema.campaign import (
+            CampaignSpec,
+        )
+
+        data = _make_campaign_data()
+        data["output_naming"] = "{base_name}_{environment}"  # water_depth missing
+        with pytest.raises(ValueError, match="water_depth"):
+            CampaignSpec(**data)
+
+    def test_malformed_template_rejected(self):
+        from digitalmodel.solvers.orcaflex.modular_generator.schema.campaign import (
+            CampaignSpec,
+        )
+
+        data = _make_campaign_data()
+        data["output_naming"] = "{base_name}_wd{water_depth}m_{environment}_{"
+        with pytest.raises(ValueError, match="format template"):
+            CampaignSpec(**data)

@@ -1,0 +1,104 @@
+source_type: textbook
+source_description: "USNA EN400 Principles of Ship Performance (Summer 2020), Chapter 7"
+extracted_date: "2026-03-16"
+legal_scan_passed: true
+category: "naval_architecture"
+subcategory: "resistance_and_powering"
+equations:
+  - name: "Shaft Horsepower"
+    latex: "SHP = \\frac{EHP}{PC}"
+    description: "Shaft horsepower from effective horsepower and propulsive coefficient"
+  - name: "Reynolds Number"
+    latex: "R_n = \\frac{V \\cdot L}{\\nu}"
+    description: "Reynolds number for ship or model hull"
+  - name: "ITTC 1957 Friction Coefficient"
+    latex: "C_f = \\frac{0.075}{(\\log_{10} R_n - 2)^2}"
+    description: "ITTC 1957 model-ship correlation line for frictional resistance"
+  - name: "Froude Speed Scaling"
+    latex: "V_s = V_m \\cdot \\sqrt{\\lambda}, \\quad \\lambda = \\frac{L_s}{L_m}"
+    description: "Scale model speed to ship speed via Froude number similarity"
+inputs:
+  - name: "Effective horsepower"
+    symbol: "EHP"
+    unit: "HP"
+    test_value: 30000.0
+  - name: "Propulsive coefficient"
+    symbol: "PC"
+    unit: "dimensionless"
+    test_value: 0.60
+  - name: "Ship length"
+    symbol: "L_s"
+    unit: "ft"
+    test_value: 450.0
+  - name: "Ship speed"
+    symbol: "V_s"
+    unit: "knots"
+    test_value: 15.0
+  - name: "Kinematic viscosity"
+    symbol: "nu"
+    unit: "ft^2/s"
+    test_value: 1.2791e-5
+  - name: "Knots to ft/s conversion"
+    symbol: "k_fps"
+    unit: "ft/s per knot"
+    test_value: 1.6878
+outputs:
+  - name: "Shaft horsepower"
+    symbol: "SHP"
+    unit: "HP"
+    test_expected: 50000.0
+    tolerance: 100.0
+  - name: "Reynolds number (450 ft ship at 15 knots)"
+    symbol: "R_n"
+    unit: "dimensionless"
+    test_expected: 8.91e+8
+    tolerance: 4.455e+7
+  - name: "ITTC 1957 friction coefficient (model)"
+    symbol: "C_f"
+    unit: "dimensionless"
+    test_expected: 0.00327
+    tolerance: 0.0005
+  - name: "Ship speed from Froude scaling"
+    symbol: "V_s"
+    unit: "knots"
+    test_expected: 9.57
+    tolerance: 0.5
+worked_examples:
+  - description: "Example 7.1 (p.253): SHP from EHP=30000 HP and PC=0.60"
+    inputs:
+      ehp: 30000.0
+      propulsive_coefficient: 0.60
+    outputs:
+      shp: 50000.0
+    use_as_test: true
+  - description: "Example 7.2 (p.260): Reynolds number for 450 ft ship at 15 knots, nu=1.2791e-5 ft2/s"
+    inputs:
+      length_ft: 450.0
+      speed_knots: 15.0
+      nu: 1.2791e-5
+    outputs:
+      reynolds_number: 8.91e+8
+    use_as_test: true
+  - description: "Example 7.3 (p.261): ITTC 1957 friction coefficient for model (L=5 ft, V=15 ft/s, nu=1.2260e-5)"
+    inputs:
+      model_length_ft: 5.0
+      model_speed_fps: 15.0
+      nu: 1.2260e-5
+      rn_model: 6117047.31
+    outputs:
+      cf: 0.00327
+    use_as_test: true
+  - description: "Example 7.4 (p.275): Froude scaling from model speed 3.0 fps, ship L=435 ft, model L=15 ft"
+    inputs:
+      model_speed_fps: 3.0
+      ship_length_ft: 435.0
+      model_length_ft: 15.0
+    outputs:
+      ship_speed_knots: 9.57
+    use_as_test: true
+assumptions:
+  - "1 knot = 1.6878 ft/s"
+  - "ITTC 1957 correlation line valid for turbulent flow"
+  - "Froude scaling assumes geometric similarity between model and ship"
+references:
+  - "USNA EN400 Principles of Ship Performance, Summer 2020, Chapter 7"

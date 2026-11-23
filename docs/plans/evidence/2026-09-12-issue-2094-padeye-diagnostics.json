@@ -1,0 +1,492 @@
+{
+  "issue": "https://github.com/vamseeachanta/digitalmodel/issues/2094",
+  "native_qualification_complete": false,
+  "convergence_demonstrated": false,
+  "capture_artifact_hashes_verified": 24,
+  "captures": [
+    {
+      "source_head": "62b4b4b377957904be954a19c1c2ee22c8e93870",
+      "created_utc": "20260912T221414Z",
+      "criteria_sha256": "01ca60dba2bdf58f5c007d3efd0e39afec0b8ba885a6c3efa358f15a03daccfb",
+      "native_qualification_complete": false,
+      "frozen_geometry": {
+        "plate_width_mm": 400.0,
+        "plate_height_mm": 300.0,
+        "thickness_mm": 8.0,
+        "hole_diameter_mm": 80.0,
+        "hole_center_x_mm": null,
+        "hole_center_y_mm": null,
+        "sling_load_kn": 50.0,
+        "sling_angle_deg": 0.0,
+        "youngs_modulus_mpa": 205000.0,
+        "poisson": 0.3,
+        "yield_strength_mpa": 355.0,
+        "design_factor": 1.67,
+        "element_size_mm": 10.0
+      },
+      "operator_sha256": "7ad7133e07138ed0934bcc66e15b699950f8d2ec401ca2c8dabcab0a1c304b5f",
+      "runs": [
+        {
+          "mesh": "coarse",
+          "input_sha256": "908d81c8171412b289ecd2a0ba757b65bd544a7da488b17d0959817ba31c2085",
+          "profile": {
+            "product": "Ansys Mechanical APDL",
+            "release": "2026 R1.01",
+            "build": "26.1",
+            "update": "UP20260202",
+            "platform": "WINDOWS x64",
+            "argv": "-b -np 1 -smp",
+            "cores": 1,
+            "parallel": "smp",
+            "equation_solver": "default sparse direct",
+            "note": "The run configuration is recorded because a value reproduces only under the conditions that produced it. Distributed and iterative solvers are not bit-reproducible across core counts, so a stability comparison is valid only against a matching configuration."
+          },
+          "executable_sha256": "6c6327f6b906db8e6dd498bd38c97685d7e3e4acf52fccbf243b2dff7ed7af1b",
+          "timeout_seconds": 120,
+          "license_counts_before": {
+            "ansys": {
+              "issued": 2,
+              "in_use": 0
+            },
+            "aqwa_solve": {
+              "issued": 2,
+              "in_use": 0
+            },
+            "anshpc": {
+              "issued": 4,
+              "in_use": 0
+            }
+          },
+          "argv": [
+            "ANSYS261.exe",
+            "-b",
+            "-i",
+            "coarse/padeye.inp",
+            "-o",
+            "coarse/padeye.out",
+            "-np",
+            "1",
+            "-smp"
+          ],
+          "status": "completed",
+          "return_code": 0,
+          "duration_seconds": 18.29700000002049,
+          "error_message": null,
+          "artifacts": [
+            {
+              "path": "coarse/file.db",
+              "sha256": "4d3619133c09cc96befb53988a6b7f4937840a48a3191921aa34de3d609543c0"
+            },
+            {
+              "path": "coarse/file.mntr",
+              "sha256": "0330c0580182bfee50aacc45e20dccaf0010e832bfdf9c9363421a2cec14eb9f"
+            },
+            {
+              "path": "coarse/file.rst",
+              "sha256": "cc64376225ab7408cc0286dd7a6daf11c21c41d47240eb787d005f9b5b160fc2"
+            },
+            {
+              "path": "coarse/padeye.inp",
+              "sha256": "908d81c8171412b289ecd2a0ba757b65bd544a7da488b17d0959817ba31c2085"
+            },
+            {
+              "path": "coarse/padeye.out",
+              "sha256": "6f424d5ab040c88748f3992107d0a2d2552fedcb8ea3c013adb349e3b3806b8a"
+            },
+            {
+              "path": "coarse/padeye_result.csv",
+              "sha256": "b441ccc5fbd1941003035994780b85afc8c46fc0abd944034954410213a675f8"
+            }
+          ],
+          "observed": {
+            "max_seqv_mpa": 174.3327,
+            "allowable_mpa": 212.5749,
+            "uc": 0.8201,
+            "peak_node": 149.0,
+            "peak_x_mm": 240.0,
+            "peak_y_mm": 220.0,
+            "peak_z_mm": 0.0,
+            "mesh_size_mm": 10.0,
+            "loaded_node_count": 15.0,
+            "mesh_node_count": 1207.0,
+            "mesh_element_count": 1123.0,
+            "applied_fx_n": 0.0,
+            "applied_fy_n": 50000.0,
+            "reaction_fx_n": -7.45058059692e-08,
+            "reaction_fy_n": 50000.0000305,
+            "force_residual_n": 100000.000031
+          },
+          "solver_processes_after": [],
+          "seat_lock_released": true,
+          "argv_presentation": "Case-relative presentation; exact host invocation retained in raw receipt",
+          "reaction_channel_validity": "invalid: FSUM mislabelled as reaction",
+          "warnings": "none observed"
+        },
+        {
+          "mesh": "fine",
+          "input_sha256": "c2b6c048247ceff4c4753a11f3c8103d796ac2909d0c5631e1b24fa4a6866d44",
+          "profile": {
+            "product": "Ansys Mechanical APDL",
+            "release": "2026 R1.01",
+            "build": "26.1",
+            "update": "UP20260202",
+            "platform": "WINDOWS x64",
+            "argv": "-b -np 1 -smp",
+            "cores": 1,
+            "parallel": "smp",
+            "equation_solver": "default sparse direct",
+            "note": "The run configuration is recorded because a value reproduces only under the conditions that produced it. Distributed and iterative solvers are not bit-reproducible across core counts, so a stability comparison is valid only against a matching configuration."
+          },
+          "executable_sha256": "6c6327f6b906db8e6dd498bd38c97685d7e3e4acf52fccbf243b2dff7ed7af1b",
+          "timeout_seconds": 120,
+          "license_counts_before": {
+            "ansys": {
+              "issued": 2,
+              "in_use": 0
+            },
+            "aqwa_solve": {
+              "issued": 2,
+              "in_use": 0
+            },
+            "anshpc": {
+              "issued": 4,
+              "in_use": 0
+            }
+          },
+          "argv": [
+            "ANSYS261.exe",
+            "-b",
+            "-i",
+            "fine/padeye.inp",
+            "-o",
+            "fine/padeye.out",
+            "-np",
+            "1",
+            "-smp"
+          ],
+          "status": "completed",
+          "return_code": 0,
+          "duration_seconds": 20.57799999997951,
+          "error_message": null,
+          "artifacts": [
+            {
+              "path": "fine/file.db",
+              "sha256": "58862ba496ae6b19d2ad0b1420bfaf0125f29ee86d5afa4b1ca00ac1a4c2fa01"
+            },
+            {
+              "path": "fine/file.mntr",
+              "sha256": "71e7c7b70517cb7f358749c4aac89080341b9e98243ee0b5410ceb59614f7b56"
+            },
+            {
+              "path": "fine/file.rst",
+              "sha256": "f7ab90acbacfcc6f62344d75319bc2d542e3318e0e33477a3b98a88a2bf0ccbe"
+            },
+            {
+              "path": "fine/padeye.inp",
+              "sha256": "c2b6c048247ceff4c4753a11f3c8103d796ac2909d0c5631e1b24fa4a6866d44"
+            },
+            {
+              "path": "fine/padeye.out",
+              "sha256": "677ca7f8295f731ac5374f6b1fbf75a210be9b23d801fb0c54652d6a24db327d"
+            },
+            {
+              "path": "fine/padeye_result.csv",
+              "sha256": "340e6a16668b937d2563a97373901eb24d1a7f159d959d116ce9279b9fd69992"
+            }
+          ],
+          "observed": {
+            "max_seqv_mpa": 183.8144,
+            "allowable_mpa": 212.5749,
+            "uc": 0.8647,
+            "peak_node": 282.0,
+            "peak_x_mm": 160.0,
+            "peak_y_mm": 220.0,
+            "peak_z_mm": 0.0,
+            "mesh_size_mm": 5.0,
+            "loaded_node_count": 27.0,
+            "mesh_node_count": 4158.0,
+            "mesh_element_count": 3992.0,
+            "applied_fx_n": 0.0,
+            "applied_fy_n": 50000.0,
+            "reaction_fx_n": 2.4601817131e-05,
+            "reaction_fy_n": 50000.0,
+            "force_residual_n": 100000.0
+          },
+          "solver_processes_after": [],
+          "seat_lock_released": true,
+          "argv_presentation": "Case-relative presentation; exact host invocation retained in raw receipt",
+          "reaction_channel_validity": "invalid: FSUM mislabelled as reaction",
+          "warnings": "one mesh element violates shape warning limits, reported twice"
+        }
+      ],
+      "assessment": {
+        "status": "unqualified_investigation_required",
+        "native_qualification_complete": false,
+        "convergence_demonstrated": false,
+        "evidence_binding_verified": false,
+        "case_acceptance": {
+          "coarse": "within_allowable",
+          "fine": "within_allowable"
+        },
+        "findings": [
+          "coarse: force imbalance exceeds 0.1% of applied load",
+          "fine: force imbalance exceeds 0.1% of applied load",
+          "Global peak changed beyond recorded print resolution",
+          "Global peak moved in peak_x_mm"
+        ],
+        "metrics": {
+          "peak_growth_mpa": 9.481700000000018,
+          "peak_displacement_mm": 80.0
+        },
+        "scope": "Two-mesh sensitivity only; no physical lug rating or golden promotion"
+      },
+      "evidence_id": "ansys-2094-padeye-20260912T221414Z",
+      "capture_role": "superseded reaction extraction",
+      "source_receipt_sha256": "b7859358de03b54195f7d0e55092c328782f3b21d5741dd911ab0621dd4aa7dc",
+      "storage": "Raw native artifacts retained locally on execution host; backup and raw publication are not established"
+    },
+    {
+      "source_head": "f63594b8a1becf8a1813446f1abbeea64621a118",
+      "created_utc": "20260912T221756Z",
+      "criteria_sha256": "01ca60dba2bdf58f5c007d3efd0e39afec0b8ba885a6c3efa358f15a03daccfb",
+      "native_qualification_complete": false,
+      "frozen_geometry": {
+        "plate_width_mm": 400.0,
+        "plate_height_mm": 300.0,
+        "thickness_mm": 8.0,
+        "hole_diameter_mm": 80.0,
+        "hole_center_x_mm": null,
+        "hole_center_y_mm": null,
+        "sling_load_kn": 50.0,
+        "sling_angle_deg": 0.0,
+        "youngs_modulus_mpa": 205000.0,
+        "poisson": 0.3,
+        "yield_strength_mpa": 355.0,
+        "design_factor": 1.67,
+        "element_size_mm": 10.0
+      },
+      "operator_sha256": "7ad7133e07138ed0934bcc66e15b699950f8d2ec401ca2c8dabcab0a1c304b5f",
+      "runs": [
+        {
+          "mesh": "coarse",
+          "input_sha256": "6900ea44695fed80031f007b5fe79e1926b626877b7d31582a0d1199b80ce084",
+          "profile": {
+            "product": "Ansys Mechanical APDL",
+            "release": "2026 R1.01",
+            "build": "26.1",
+            "update": "UP20260202",
+            "platform": "WINDOWS x64",
+            "argv": "-b -np 1 -smp",
+            "cores": 1,
+            "parallel": "smp",
+            "equation_solver": "default sparse direct",
+            "note": "The run configuration is recorded because a value reproduces only under the conditions that produced it. Distributed and iterative solvers are not bit-reproducible across core counts, so a stability comparison is valid only against a matching configuration."
+          },
+          "executable_sha256": "6c6327f6b906db8e6dd498bd38c97685d7e3e4acf52fccbf243b2dff7ed7af1b",
+          "timeout_seconds": 120,
+          "license_counts_before": {
+            "ansys": {
+              "issued": 2,
+              "in_use": 0
+            },
+            "aqwa_solve": {
+              "issued": 2,
+              "in_use": 0
+            },
+            "anshpc": {
+              "issued": 4,
+              "in_use": 0
+            }
+          },
+          "argv": [
+            "ANSYS261.exe",
+            "-b",
+            "-i",
+            "coarse/padeye.inp",
+            "-o",
+            "coarse/padeye.out",
+            "-np",
+            "1",
+            "-smp"
+          ],
+          "status": "completed",
+          "return_code": 0,
+          "duration_seconds": 18.5,
+          "error_message": null,
+          "artifacts": [
+            {
+              "path": "coarse/file.db",
+              "sha256": "7d868826770adceb20abed092d39410bedcd32b6cc33a5e30f988af91e777644"
+            },
+            {
+              "path": "coarse/file.mntr",
+              "sha256": "43acaa9c7fc2dbfca84a9d67f857c8b2bfb4bf98eb4227c9945104673198d54e"
+            },
+            {
+              "path": "coarse/file.rst",
+              "sha256": "a71b3360786eaf678d87e0c3d136db647ef62e152f9e679b1178aeb77dd07e49"
+            },
+            {
+              "path": "coarse/padeye.inp",
+              "sha256": "6900ea44695fed80031f007b5fe79e1926b626877b7d31582a0d1199b80ce084"
+            },
+            {
+              "path": "coarse/padeye.out",
+              "sha256": "1b7b372e22898e41f32d8d923feed0ca6a7b724899ef62440a83344b0a019bb9"
+            },
+            {
+              "path": "coarse/padeye_result.csv",
+              "sha256": "d78d189928113cac2ee40a940777571c5f1fd59c876b2d51e21177926a96b260"
+            }
+          ],
+          "observed": {
+            "max_seqv_mpa": 174.3327,
+            "allowable_mpa": 212.5749,
+            "uc": 0.8201,
+            "peak_node": 149.0,
+            "peak_x_mm": 240.0,
+            "peak_y_mm": 220.0,
+            "peak_z_mm": 0.0,
+            "mesh_size_mm": 10.0,
+            "loaded_node_count": 15.0,
+            "mesh_node_count": 1207.0,
+            "mesh_element_count": 1123.0,
+            "applied_fx_n": 0.0,
+            "applied_fy_n": 50000.0,
+            "reaction_fx_n": -1.14539489005e-10,
+            "reaction_fy_n": -50000.0,
+            "fsum_fx_n": -7.45058059692e-08,
+            "fsum_fy_n": 50000.0000305,
+            "force_residual_n": 1.03228420072e-09
+          },
+          "solver_processes_after": [],
+          "seat_lock_released": true,
+          "argv_presentation": "Case-relative presentation; exact host invocation retained in raw receipt",
+          "reaction_channel_validity": "verified: summed NODE RF matches PRRSOL within listing precision",
+          "warnings": "none observed"
+        },
+        {
+          "mesh": "fine",
+          "input_sha256": "933750ebbc1c9d9771b55fa37a21eb0d5ad46b5873d1acc123b6f378cf8590be",
+          "profile": {
+            "product": "Ansys Mechanical APDL",
+            "release": "2026 R1.01",
+            "build": "26.1",
+            "update": "UP20260202",
+            "platform": "WINDOWS x64",
+            "argv": "-b -np 1 -smp",
+            "cores": 1,
+            "parallel": "smp",
+            "equation_solver": "default sparse direct",
+            "note": "The run configuration is recorded because a value reproduces only under the conditions that produced it. Distributed and iterative solvers are not bit-reproducible across core counts, so a stability comparison is valid only against a matching configuration."
+          },
+          "executable_sha256": "6c6327f6b906db8e6dd498bd38c97685d7e3e4acf52fccbf243b2dff7ed7af1b",
+          "timeout_seconds": 120,
+          "license_counts_before": {
+            "ansys": {
+              "issued": 2,
+              "in_use": 0
+            },
+            "aqwa_solve": {
+              "issued": 2,
+              "in_use": 0
+            },
+            "anshpc": {
+              "issued": 4,
+              "in_use": 0
+            }
+          },
+          "argv": [
+            "ANSYS261.exe",
+            "-b",
+            "-i",
+            "fine/padeye.inp",
+            "-o",
+            "fine/padeye.out",
+            "-np",
+            "1",
+            "-smp"
+          ],
+          "status": "completed",
+          "return_code": 0,
+          "duration_seconds": 19.406999999890104,
+          "error_message": null,
+          "artifacts": [
+            {
+              "path": "fine/file.db",
+              "sha256": "daa579c8677cb806f84e36079db87a9a8a0591483c55351076a0258ec3017041"
+            },
+            {
+              "path": "fine/file.mntr",
+              "sha256": "03a0fa6ecbb8d6b5d2409b6686b3845de8de48698660979d37c436145aed7286"
+            },
+            {
+              "path": "fine/file.rst",
+              "sha256": "07da8b95611a3b367d2b55849225f57372a257b7f5a0ae2f729de2ea5b56db04"
+            },
+            {
+              "path": "fine/padeye.inp",
+              "sha256": "933750ebbc1c9d9771b55fa37a21eb0d5ad46b5873d1acc123b6f378cf8590be"
+            },
+            {
+              "path": "fine/padeye.out",
+              "sha256": "ac89e61b1c04ff4a83fec0b5302cb28d83fdd99418aef6868f12d6456fb8950e"
+            },
+            {
+              "path": "fine/padeye_result.csv",
+              "sha256": "5c40732784bf2d18e133023897dcce6ff428232de130004f111b46219f8f0a5e"
+            }
+          ],
+          "observed": {
+            "max_seqv_mpa": 183.8144,
+            "allowable_mpa": 212.5749,
+            "uc": 0.8647,
+            "peak_node": 282.0,
+            "peak_x_mm": 160.0,
+            "peak_y_mm": 220.0,
+            "peak_z_mm": 0.0,
+            "mesh_size_mm": 5.0,
+            "loaded_node_count": 27.0,
+            "mesh_node_count": 4158.0,
+            "mesh_element_count": 3992.0,
+            "applied_fx_n": 0.0,
+            "applied_fy_n": 50000.0,
+            "reaction_fx_n": 6.78710421198e-11,
+            "reaction_fy_n": -50000.0,
+            "fsum_fx_n": 2.4601817131e-05,
+            "fsum_fy_n": 50000.0,
+            "force_residual_n": 9.43110950732e-11
+          },
+          "solver_processes_after": [],
+          "seat_lock_released": true,
+          "argv_presentation": "Case-relative presentation; exact host invocation retained in raw receipt",
+          "reaction_channel_validity": "verified: summed NODE RF matches PRRSOL within listing precision",
+          "warnings": "one mesh element violates shape warning limits, reported twice"
+        }
+      ],
+      "assessment": {
+        "status": "unqualified_investigation_required",
+        "native_qualification_complete": false,
+        "convergence_demonstrated": false,
+        "evidence_binding_verified": false,
+        "case_acceptance": {
+          "coarse": "within_allowable",
+          "fine": "within_allowable"
+        },
+        "findings": [
+          "Global peak changed beyond recorded print resolution",
+          "Global peak moved in peak_x_mm"
+        ],
+        "metrics": {
+          "peak_growth_mpa": 9.481700000000018,
+          "peak_displacement_mm": 80.0
+        },
+        "scope": "Two-mesh sensitivity only; no physical lug rating or golden promotion"
+      },
+      "evidence_id": "ansys-2094-padeye-20260912T221756Z",
+      "capture_role": "corrected diagnostic capture",
+      "source_receipt_sha256": "84db8194211adfc90859f9a34bc373b77c62b86803bac3704687fbef5ed5bc26",
+      "storage": "Raw native artifacts retained locally on execution host; backup and raw publication are not established"
+    }
+  ]
+}

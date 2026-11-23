@@ -1,0 +1,7 @@
+{
+  "command": "PYTHONPATH=src uv run --no-sources python docs/domains/mooring/screening/run_screening.py --output-dir OUTPUT --receipt docs/domains/mooring/screening/execution.json",
+  "criteria_recorded_at_utc": "2026-10-14T13:59:32.151407+00:00",
+  "criteria_sha256": "2ee2eb574303125f0c0c23f611b225dc1adf8e156ee183af651fef7e2d06f5fb",
+  "first_run_started_at_utc": "2026-10-14T13:59:32.154024+00:00",
+  "module_commit": "f60b9ad2bc6346d919bfa3707083e04bc585bb68"
+}

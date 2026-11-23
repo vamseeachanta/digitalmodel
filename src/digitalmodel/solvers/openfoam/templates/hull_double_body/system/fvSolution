@@ -1,0 +1,71 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  v2312                                 |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      fvSolution;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+solvers
+{
+    p
+    {
+        solver          GAMG;
+        smoother        GaussSeidel;
+        tolerance       1e-7;
+        relTol          0.01;
+    }
+
+    "(U|k|omega)"
+    {
+        solver          smoothSolver;
+        smoother        symGaussSeidel;
+        nSweeps         1;
+        tolerance       1e-8;
+        relTol          0.1;
+    }
+}
+
+SIMPLE
+{
+    nNonOrthogonalCorrectors 0;
+    consistent          yes;
+
+    // NOT A CONVERGENCE CLAIM. residualControl stops the run when the linear
+    // residuals fall below these values; it says nothing about whether the
+    // integrated FORCE has stopped moving, which is the quantity this case
+    // exists to report. Force convergence is assessed after the fact, from
+    // the forces log, by the form-factor reduction -- and a run that hits
+    // this criterion with a drifting force is an unconverged run that stopped
+    // early, not a converged one.
+    residualControl
+    {
+        p               1e-5;
+        U               1e-6;
+        "(k|omega)"     1e-6;
+    }
+}
+
+relaxationFactors
+{
+    equations
+    {
+        ".*"            0.9;
+    }
+}
+
+cache
+{
+    grad(U);
+}
+
+
+// ************************************************************************* //

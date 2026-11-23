@@ -1,0 +1,18 @@
+{
+  "provenance": {
+    "source": "synthetic (generic instantaneous metocean sequence); representative offline sample for CI",
+    "licence": "synthetic — no third-party, client, or real hindcast data redistributed",
+    "note": "Fully synthetic illustrative metocean track for the twin E rolling loop (#1377), aligned index-for-index with monitor_demo_track.json. Round numbers only. No real metocean station, no station id, no latitude/longitude, no basin name, no vessel identity, no credentials. wave_hs rises above the static operability screen's validity ceiling (1.0 m) mid-track to exercise the seastate-domain guard; current stays on an atlas current knot (0.5 m/s).",
+    "captured_offline": true
+  },
+  "records": [
+    {"t": 0.0,   "current_speed_mps": 0.5, "wave_hs_m": 0.8, "wave_tp_s": 8.0, "wind_speed_mps": 8.0},
+    {"t": 300.0, "current_speed_mps": 0.5, "wave_hs_m": 0.9, "wave_tp_s": 8.0, "wind_speed_mps": 8.0},
+    {"t": 600.0, "current_speed_mps": 0.5, "wave_hs_m": 1.0, "wave_tp_s": 8.0, "wind_speed_mps": 8.0},
+    {"t": 900.0, "current_speed_mps": 0.5, "wave_hs_m": 1.0, "wave_tp_s": 8.0, "wind_speed_mps": 8.0},
+    {"t": 1200.0,"current_speed_mps": 0.5, "wave_hs_m": 1.5, "wave_tp_s": 9.0, "wind_speed_mps": 12.0},
+    {"t": 1500.0,"current_speed_mps": 0.5, "wave_hs_m": 2.0, "wave_tp_s": 10.0,"wind_speed_mps": 14.0},
+    {"t": 1800.0,"current_speed_mps": 0.5, "wave_hs_m": 1.0, "wave_tp_s": 8.0, "wind_speed_mps": 9.0},
+    {"t": 2100.0,"current_speed_mps": 0.5, "wave_hs_m": 0.8, "wave_tp_s": 8.0, "wind_speed_mps": 8.0}
+  ]
+}

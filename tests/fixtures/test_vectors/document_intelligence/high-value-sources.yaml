@@ -1,0 +1,376 @@
+# High-value document sources for test vector extraction
+# Generated: 2026-03-16
+# Purpose: Catalogue of engineering standards and textbooks with potential test vectors
+# Source: Codebase grep of digitalmodel/src, specs/, docs/, config/, knowledge/
+
+domains:
+  - name: cathodic_protection
+    documents:
+      - standard_number: DNV-RP-B401
+        title: Cathodic Protection Design
+        availability_status: in_repo
+        potential_test_vectors: 20
+        priority: high
+        notes: >
+          Four editions available locally (1993, 2005, 2011, 2021). Implemented
+          as DNV_RP_B401_offshore route in cathodic_protection.py. Coating
+          breakdown formulas, current density tables, anode mass calculations
+          all provide worked examples. Standards-inventory.md has full version
+          diff analysis. 2021 edition has 4 coating categories with explicit
+          formula constants.
+
+      - standard_number: DNV-RP-F103
+        title: Cathodic Protection of Submarine Pipelines by Galvanic Anodes
+        availability_status: in_repo
+        potential_test_vectors: 18
+        priority: high
+        notes: >
+          2003 and 2010 editions locally available. Implemented as
+          DNV_RP_F103_2010 class. Eq.1-18 cover current demand, anode mass,
+          anode resistance, metallic resistance, attenuation. Table 5-1
+          current densities by burial/temperature. Annex 1 coating breakdown
+          linear formula. Critical defects G-1 through G-5 were identified
+          and fixed per standards-inventory.md audit.
+
+      - standard_number: API RP 1632
+        title: Cathodic Protection of Underground Petroleum Storage Tanks
+        availability_status: referenced_only
+        potential_test_vectors: 8
+        priority: medium
+        notes: >
+          Implemented in api_rp_1632.py. Protection criteria from section 4.2,
+          Dwight equation for anode resistance, bare-steel current density.
+          Extended by fuel_system_cp.py for impressed current systems.
+
+      - standard_number: ISO 15589-2
+        title: "Petroleum and Natural Gas \u2014 CP of Pipeline Transport Systems \u2014 Part 2: Offshore Pipelines"
+        availability_status: in_repo
+        potential_test_vectors: 10
+        priority: medium
+        notes: >
+          2004 first edition PDF available at /mnt/ace/O&G-Standards/ISO/.
+          Implemented in iso_15589_2.py. Table 1 current densities, section
+          5.2 protection criteria. Normative annexes A (GACP design), B
+          (performance testing), C (monitoring). F103-2010 is explicitly
+          based on this standard.
+
+      - standard_number: ABS GN Ships 2017
+        title: Guidance Notes on Cathodic Protection of Ships
+        availability_status: in_repo
+        potential_test_vectors: 12
+        priority: high
+        notes: >
+          Fully implemented as ABS_gn_ships_2018 route. Three anode resistance
+          formulas (Dwight slender-offset, long-flush, short-flat-plate).
+          Compound exponential coating breakdown model. Tables 3 and 5 for
+          current densities. Mass formula and disbonding model all verified
+          against standard in code audit.
+
+      - standard_number: ABS GN Offshore 2018
+        title: Guidance Notes on Cathodic Protection of Offshore Structures
+        availability_status: in_repo
+        potential_test_vectors: 8
+        priority: medium
+        notes: >
+          PDF locally available. Not yet implemented in code. Covers FPSOs,
+          TLPs, DDCVs, fixed jackets. Tables 1-2 for current densities.
+          Section 5 retrofit systems. Gap identified in standards-inventory.md.
+
+      - standard_number: SNAME T&R R-21
+        title: Fundamentals of Cathodic Protection for Marine Service
+        availability_status: in_repo
+        potential_test_vectors: 5
+        priority: low
+        notes: >
+          1976 report. PDF available. Referenced in literature.md.
+          Foundational CP concepts for marine service.
+
+  - name: fatigue
+    documents:
+      - standard_number: DNV-RP-C203
+        title: Fatigue Design of Offshore Steel Structures
+        availability_status: referenced_only
+        potential_test_vectors: 25
+        priority: high
+        notes: >
+          Core standard for fatigue module. 221 S-N curves from 17 standards
+          implemented in sn_curves.py. Covers in-air and seawater cathodic
+          protection curves. SCF lookup via Efthymiou parametric equations.
+          Thickness correction factors. Module rated production maturity.
+
+      - standard_number: BS 7608
+        title: Fatigue Design and Assessment of Steel Structures
+        availability_status: referenced_only
+        potential_test_vectors: 15
+        priority: high
+        notes: >
+          Weld classification S-N curves implemented in sn_curves.py alongside
+          DNV-RP-C203. Referenced in structural module spec as external
+          dependency. Mission item calls for expanding S-N curve library to
+          include BS 7608 latest revision.
+
+      - standard_number: ASTM E1049-85
+        title: Standard Practices for Cycle Counting in Fatigue Analysis
+        availability_status: referenced_only
+        potential_test_vectors: 8
+        priority: medium
+        notes: >
+          Rainflow counting algorithm implemented in rainflow.py. Compliant
+          implementation per standard. Module description confirms ASTM
+          E1049-85 compliance.
+
+      - standard_number: AWS D1.1
+        title: Structural Welding Code - Steel
+        availability_status: referenced_only
+        potential_test_vectors: 6
+        priority: low
+        notes: >
+          Simplified S-N curves implemented in sn_curves.py. Part of the
+          17-standard S-N curve library.
+
+      - standard_number: ISO 19902
+        title: Fixed Offshore Structures - Annex O Fatigue
+        availability_status: referenced_only
+        potential_test_vectors: 8
+        priority: medium
+        notes: >
+          Annex O S-N curves partially implemented in sn_curves.py
+          (ISO_19902_CURVES dict). Status listed as partial in module registry.
+
+  - name: naval_architecture
+    documents:
+      - standard_number: USNA EN400
+        title: Principles of Ship Performance
+        availability_status: in_repo
+        potential_test_vectors: 40
+        priority: high
+        notes: >
+          Primary TDD source for entire naval_architecture module. 2020 edition
+          PDF referenced. Chapters 1-4 (fundamentals, hydrostatics, stability)
+          validated with worked examples. Chapters 7-8 (resistance, seakeeping)
+          partially extracted. Chapter 10 (submarines) validated. data-needs.yaml
+          tracks 19 stability examples (7 done, 12 remaining), 12 resistance
+          examples (4 done, 8 remaining). DDG51 and FFG-7 reference vessels.
+          Constants extracted from pages 134, 182, 184, 188, 468.
+
+      - standard_number: SNAME 5-5/5-5A
+        title: "SNAME Panel Member: Ship Hull Form Coefficients"
+        availability_status: in_repo
+        potential_test_vectors: 15
+        priority: medium
+        notes: >
+          Panel_Member_copy_of_SNAME_5-5_and_5-5A_Rev3.pdf referenced
+          extensively in curves.py (17,000+ line file). Ship hull form
+          coefficients, hydrostatic curve data for multiple vessel types.
+
+      - standard_number: SNAME PNA
+        title: Principles of Naval Architecture (SNAME)
+        availability_status: referenced_only
+        potential_test_vectors: 12
+        priority: medium
+        notes: >
+          Referenced in data-needs.yaml for Wageningen B-series propeller
+          polynomials (Vol II). KT and KQ coefficients as functions of J, P/D,
+          Ae/Ao, Z.
+
+  - name: hydrodynamics
+    documents:
+      - standard_number: DNV-RP-C205
+        title: Environmental Conditions and Environmental Loads
+        availability_status: referenced_only
+        potential_test_vectors: 20
+        priority: high
+        notes: >
+          Implemented in wave_spectra.py (JONSWAP Section 3.5.2, PM Section
+          3.5.1). Used for VIV susceptibility screening safety factors. Wave
+          spectrum alpha calculation. Referenced across hydrodynamics, VIV
+          analysis, and diffraction modules. 2021 edition cited in benchmark
+          report.
+
+      - standard_number: "Faltinsen (1990)"
+        title: Sea Loads on Ships and Offshore Structures
+        availability_status: referenced_only
+        potential_test_vectors: 15
+        priority: medium
+        notes: >
+          Cambridge University Press textbook. Referenced in diffraction
+          benchmark report. Foundational reference for wave-structure
+          interaction, added mass, damping, and motion response calculations.
+
+      - standard_number: OCIMF MEG4
+        title: Mooring Equipment Guidelines 4th Edition
+        availability_status: referenced_only
+        potential_test_vectors: 10
+        priority: high
+        notes: >
+          Implemented in ocimf_loading.py — wind and current loads per Chapter
+          3. Also implemented in marine_ops/marine_engineering/environmental_loading/ocimf.py.
+          156 force coefficient validation cases in ocimf_validation_cases.csv.
+          Used for CALM buoy mooring design workflows.
+
+  - name: viv_pipeline
+    documents:
+      - standard_number: DNV-RP-F105
+        title: Free Spanning Pipelines
+        availability_status: referenced_only
+        potential_test_vectors: 15
+        priority: high
+        notes: >
+          Implemented in subsea/pipeline/free_span/ module (5 files: onset
+          screening, VIV response, fatigue damage, allowable length, models).
+          Also referenced in subsea/viv_analysis/ module. Stability parameter
+          curves, response amplitude tables, Strouhal number relationships
+          needed per data-needs.yaml SB-003.
+
+      - standard_number: DNV-ST-F101
+        title: Submarine Pipeline Systems
+        availability_status: referenced_only
+        potential_test_vectors: 18
+        priority: high
+        notes: >
+          Implemented in structural/analysis/wall_thickness_codes/dnv_st_f101.py.
+          Wall thickness pressure design, collapse, propagation buckling.
+          Multi-code comparison with ISO 13623 and ASME B31.8. Config files
+          in config/pipe/ for multiple riser configurations. Data-needs.yaml
+          ST-004 requests worked examples from standard appendix.
+
+      - standard_number: API RP 1111
+        title: Design, Construction, Operation, and Maintenance of Offshore Hydrocarbon Pipelines
+        availability_status: referenced_only
+        potential_test_vectors: 10
+        priority: medium
+        notes: >
+          Implemented in asset_integrity/custom/PipeCapacity.py. Burst
+          pressure (evaluate_burst_pressure_API_RP_1111), collapse propagation
+          pressure, and minimum thickness calculations. Referenced in catenary
+          riser module alongside DNV-OS-F201.
+
+  - name: structural
+    documents:
+      - standard_number: API 579 / ASME FFS-1
+        title: Fitness-For-Service
+        availability_status: referenced_only
+        potential_test_vectors: 20
+        priority: high
+        notes: >
+          Implemented in asset_integrity/assessment/ module (7 files: ffs_router,
+          ffs_report, ffs_decision, level1_screener, level2_engine, grid_parser).
+          Config files in config/api579/. Covers general metal loss, local thin
+          areas. Data-needs.yaml AI-001 requests Parts 4-13 worked examples
+          and FAD reference curves.
+
+      - standard_number: API RP 2A-WSD
+        title: Recommended Practice for Planning, Designing and Constructing Fixed Offshore Platforms
+        availability_status: referenced_only
+        potential_test_vectors: 20
+        priority: high
+        notes: >
+          Implemented in structural/jacket_topside/ module. member_checks.py
+          covers Sections 3.2-3.5 (tension, compression, bending, combined).
+          joint_checks.py covers Section 4.3 (K/T/Y/X tubular joints).
+          21st Edition WSD. Euler stress, allowable stresses, interaction
+          equations all coded with API RP 2A section references.
+
+      - standard_number: ISO 13623
+        title: Pipeline Transportation Systems
+        availability_status: referenced_only
+        potential_test_vectors: 8
+        priority: medium
+        notes: >
+          Implemented in structural/analysis/wall_thickness_codes/iso_13623.py.
+          Part of multi-code wall thickness comparison alongside DNV-ST-F101
+          and ASME B31.8.
+
+      - standard_number: ASME B31.8
+        title: Gas Transmission and Distribution Piping Systems
+        availability_status: referenced_only
+        potential_test_vectors: 8
+        priority: medium
+        notes: >
+          Implemented in structural/analysis/wall_thickness_codes/asme_b31_8.py.
+          Part of multi-code wall thickness comparison.
+
+  - name: mooring
+    documents:
+      - standard_number: API RP 2SK
+        title: Design and Analysis of Stationkeeping Systems for Floating Structures
+        availability_status: referenced_only
+        potential_test_vectors: 12
+        priority: high
+        notes: >
+          Referenced extensively across mooring_analysis, marine_engineering,
+          and CALM buoy workflow modules. Chain catalog tables needed per
+          data-needs.yaml SB-002. Safety factor 1.67 (intact) referenced in
+          CALM buoy project template. Not yet fully implemented as standalone
+          checks — catenary solver exists but full API RP 2SK checks pending
+          per CALCULATIONS-VISION.md.
+
+      - standard_number: DNV-OS-E301
+        title: Position Mooring
+        availability_status: referenced_only
+        potential_test_vectors: 10
+        priority: high
+        notes: >
+          Implemented in subsea/mooring_analysis/designer.py. Safety factors
+          from Table 4-1 coded. Catenary analysis per standard in catenary.py.
+          Models.py implements required_safety_factor() per DNV-OS-E301.
+
+  - name: drilling
+    documents:
+      - standard_number: API RP 13D
+        title: Rheology and Hydraulics of Oil-Well Drilling Fluids
+        availability_status: referenced_only
+        potential_test_vectors: 10
+        priority: medium
+        notes: >
+          Referenced in well/drilling/hydraulics.py (WellboreHydraulics class).
+          Bingham Plastic rheological model. Annular velocity, pressure drop,
+          ECD, and cuttings transport ratio calculations. SPE Drilling
+          Engineering Chapter 4 also cited.
+
+      - standard_number: API TR 5C3
+        title: Technical Report on Equations and Calculations for Casing, Tubing, and Line Pipe
+        availability_status: referenced_only
+        potential_test_vectors: 12
+        priority: medium
+        notes: >
+          Implemented in well/tubulars/design_envelope.py and
+          asset_integrity/custom/PipeCapacity.py (API_TR_5C3 class). Biaxial
+          correction factors for burst and collapse ratings. ISO 10400:2011
+          equivalence noted. 2018 edition referenced in code.
+
+  - name: metocean
+    documents:
+      - standard_number: API RP 2MET
+        title: Derivation of Metocean Design and Operating Conditions
+        availability_status: referenced_only
+        potential_test_vectors: 8
+        priority: medium
+        notes: >
+          Table extraction scripts in scripts/metocean/ (extract_api_rp_2met.py,
+          clean_api_rp_2met.py, rank_metocean_tables.py, select_metocean_tables.py).
+          PDF referenced for tabula-py extraction. Return period comparison
+          script also present.
+
+      - standard_number: DNV-RP-F109
+        title: On-Bottom Stability Design of Submarine Pipelines
+        availability_status: referenced_only
+        potential_test_vectors: 8
+        priority: medium
+        notes: >
+          Implemented in geotechnical/on_bottom_stability.py. Simplified method.
+          8 functions, 14 tests reported in CALCULATIONS-VISION.md. Submerged
+          weight and soil resistance calculations.
+
+# Summary
+# -------
+# Total documents catalogued: 30
+# Domains covered: 9
+# Availability breakdown:
+#   in_repo: 8 (CP standards with local PDFs, EN400, SNAME 5-5)
+#   referenced_only: 22 (implemented in code but PDFs not in repo)
+# Priority breakdown:
+#   high: 14
+#   medium: 13
+#   low: 3
+# Estimated total test vectors: ~370

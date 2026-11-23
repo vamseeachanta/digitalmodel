@@ -1,0 +1,89 @@
+# Comparison_1_digitize.yaml
+# Figure 36 — Full QTFs PI quadratic + indirect potential (all 6 DOF)
+# Image: 488W x 633H  (Δω = 2.5 rad/s, β₁=0°, β₂=30°)
+
+image_title: "Full QTFs all DOF - Comparison_1 (Fig 36)"
+
+series:
+  - name:     OrcaWave_real
+    hue_lo:   175
+    hue_hi:   230
+    sat_min:  0.25
+    val_min:  0.30
+    kind:     line
+
+  - name:     OrcaWave_imag
+    hue_lo:   340
+    hue_hi:   380
+    sat_min:  0.30
+    val_min:  0.30
+    kind:     line
+
+  - name:     Wamit_real
+    hue_lo:   175
+    hue_hi:   230
+    sat_min:  0.25
+    val_min:  0.30
+    kind:     marker
+
+  - name:     Wamit_imag
+    hue_lo:   340
+    hue_hi:   380
+    sat_min:  0.30
+    val_min:  0.30
+    kind:     marker
+
+subplots:
+  - title:       "Surge"
+    output_name: surge_full_qtf
+    y_unit:      "kN/m2"
+    x_min:  0.5
+    x_max:  4.5
+    y_min:  -4.5
+    y_max:  1.5
+    pixel_box: [73, 33, 218, 148]
+
+  - title:       "Roll"
+    output_name: roll_full_qtf
+    y_unit:      "kN.m/m2"
+    x_min:  0.5
+    x_max:  4.5
+    y_min:  -7.0
+    y_max:  1.0
+    pixel_box: [291, 33, 437, 148]
+
+  - title:       "Sway"
+    output_name: sway_full_qtf
+    y_unit:      "kN/m2"
+    x_min:  0.5
+    x_max:  4.5
+    y_min:  -9.0
+    y_max:  3.0
+    pixel_box: [73, 199, 218, 315]
+
+  - title:       "Pitch"
+    output_name: pitch_full_qtf
+    y_unit:      "kN.m/m2"
+    x_min:  0.5
+    x_max:  4.5
+    y_min:  -1.0
+    y_max:  7.0
+    pixel_box: [291, 199, 437, 315]
+
+  - title:       "Heave"
+    output_name: heave_full_qtf
+    y_unit:      "kN/m2"
+    x_min:  0.5
+    x_max:  4.5
+    y_min:  -0.5
+    y_max:  0.5
+    pixel_box: [73, 366, 218, 482]
+
+  - title:       "Yaw"
+    output_name: yaw_full_qtf
+    y_unit:      "kN.m/m2"
+    x_min:  0.5
+    x_max:  4.5
+    y_min:  -0.5
+    y_max:  0.5
+    pixel_box: [291, 366, 437, 482]

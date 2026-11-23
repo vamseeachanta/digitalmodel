@@ -1,0 +1,4 @@
+# Generated parametric hull meshes — regenerate with prepare_vessel_decks.py
+# (kept out of git to avoid binary churn; the .yml decks + manifests are committed).
+*.gdf
+PROVIDE_HULL_MESH.gdf

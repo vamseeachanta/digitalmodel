@@ -1,0 +1,51 @@
+# General Configuration
+# Generated from: A05 Lazy wave with FPSO.yml
+# Date: 2026-01-18 22:18:01
+General:
+  UnitsSystem: User
+  LengthUnits: ft
+  MassUnits: lb
+  ForceUnits: kpf
+  g: 32.1740485564304
+  TemperatureUnits: °C
+  JacobianBufferingPolicy: 1
+  JacobianPerturbationFactor: 0
+  BuoysIncludedInStatics: All
+  LineStaticsStep1Policy: All lines included
+  LineStaticsStep2Policy: Solve coupled systems
+  WholeSystemStaticsEnabled: Yes
+  DynamicsSolutionMethod: Implicit time domain
+  ImplicitUseVariableTimeStep: No
+  ImplicitConstantTimeStep: 0.1
+  LogPrecision: Single
+  TargetLogSampleInterval: 0.1
+  LogStartTime: ~
+  StartTime: ~
+  FirstStage: ~
+  RampStartTime: ~
+  RampFinishTime: ~
+  TimeHistoryImportFrom: ~
+  TimeHistoryImportTo: ~
+  StageDuration:
+  - 18
+  - 144
+  RestartStateRecordingPeriodicCount: 0
+  RestartStateRecordingTest: ~
+  DefaultViewMode: Wire frame
+  DefaultViewSize: 4409.97913763584
+  DefaultViewCentre:
+  - 1708.14339718702
+  - 121.491795640829
+  - -1431.60660901177
+  DefaultViewAzimuth: 270
+  DefaultViewElevation: 0
+CodeChecks:
+  APIRP2RDDesignCaseFactor: 1.2
+Groups:
+  Structure:
+    FPSO: Model
+    Turret Shape: Model
+    Riser with Flexjoint: Model
+  State:
+    Collapsed:
+    - Variable data

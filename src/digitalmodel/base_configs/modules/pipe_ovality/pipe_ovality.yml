@@ -1,0 +1,15 @@
+basename: pipe_ovality
+
+pipe_ovality:
+  nominal_OD: 323.85
+  max_OD: 325.0
+  min_OD: 322.7
+  allowable: 0.03
+  output_dir: results
+
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: true
+

@@ -1,0 +1,131 @@
+metadata:
+  title: "On-Bottom Stability — DNV-RP-F109"
+  doc_id: "CALC-GEO-002"
+  revision: "A"
+  date: "2026-03-14"
+  author: "ACE Engineering"
+  status: draft
+inputs:
+  - name: "Steel outer diameter"
+    symbol: "D_{steel}"
+    value: 0.3239
+    unit: "m"
+    source: "12.75 inch pipe"
+  - name: "Steel wall thickness"
+    symbol: "t_{steel}"
+    value: 0.0127
+    unit: "m"
+    source: "0.5 inch wall"
+  - name: "Concrete coating thickness"
+    symbol: "t_{coat}"
+    value: 0.05
+    unit: "m"
+  - name: "Steel density"
+    symbol: "\\rho_{steel}"
+    value: 7850.0
+    unit: "kg/m^3"
+  - name: "Concrete coating density"
+    symbol: "\\rho_{coat}"
+    value: 3040.0
+    unit: "kg/m^3"
+  - name: "Contents density (oil)"
+    symbol: "\\rho_{cont}"
+    value: 800.0
+    unit: "kg/m^3"
+  - name: "Seawater density"
+    symbol: "\\rho_{sw}"
+    value: 1025.0
+    unit: "kg/m^3"
+  - name: "Water velocity"
+    symbol: "U"
+    value: 1.0
+    unit: "m/s"
+    source: "Combined wave + current"
+  - name: "Water acceleration"
+    symbol: "a"
+    value: 0.5
+    unit: "m/s^2"
+  - name: "Drag coefficient"
+    symbol: "C_D"
+    value: 0.7
+    unit: "-"
+  - name: "Inertia coefficient"
+    symbol: "C_M"
+    value: 3.29
+    unit: "-"
+  - name: "Lift coefficient"
+    symbol: "C_L"
+    value: 0.9
+    unit: "-"
+  - name: "Friction coefficient"
+    symbol: "\\mu"
+    value: 0.6
+    unit: "-"
+    source: "Sand seabed"
+  - name: "Safety factor"
+    symbol: "\\gamma"
+    value: 1.1
+    unit: "-"
+methodology:
+  description: "On-bottom stability of a concrete-coated subsea pipeline using the simplified method per DNV-RP-F109."
+  standard: "DNV-RP-F109"
+  equations:
+    - id: eq1
+      name: "Submerged weight"
+      latex: "W_s = W_{dry} - \\rho_{sw} g \\frac{\\pi}{4} D_{total}^2"
+      description: "Dry weight of steel + coating + contents minus buoyancy"
+    - id: eq2
+      name: "Drag force"
+      latex: "F_D = \\frac{1}{2} \\rho_{sw} C_D D_{total} U |U|"
+      description: "Morison drag force per unit length"
+    - id: eq3
+      name: "Inertia force"
+      latex: "F_I = \\rho_{sw} C_M \\frac{\\pi}{4} D_{total}^2 a"
+      description: "Morison inertia force per unit length"
+    - id: eq4
+      name: "Lift force"
+      latex: "F_L = \\frac{1}{2} \\rho_{sw} C_L D_{total} U^2"
+      description: "Hydrodynamic lift force per unit length"
+    - id: eq5
+      name: "Lateral stability utilization"
+      latex: "\\eta = \\frac{\\gamma (F_D + F_I)}{\\mu (W_s - F_L)}"
+      description: "Stable when eta <= 1.0"
+outputs:
+  - name: "Submerged weight"
+    symbol: "W_s"
+    value: 1837.81
+    unit: "N/m"
+    notes: "Computed via digitalmodel.geotechnical.on_bottom_stability.submerged_weight"
+  - name: "Buoyancy"
+    symbol: "B"
+    value: 1419.09
+    unit: "N/m"
+  - name: "Drag force"
+    symbol: "F_D"
+    value: 152.07
+    unit: "N/m"
+  - name: "Inertia force"
+    symbol: "F_I"
+    value: 237.96
+    unit: "N/m"
+  - name: "Lift force"
+    symbol: "F_L"
+    value: 195.52
+    unit: "N/m"
+  - name: "Utilization"
+    symbol: "\\eta"
+    value: 0.4354
+    unit: "-"
+    notes: "< 1.0 therefore pipeline is stable"
+  - name: "Required submerged weight"
+    symbol: "W_{s,req}"
+    value: 910.59
+    unit: "N/m"
+assumptions:
+  - "Simplified static method (DNV-RP-F109 Sec 3.2)"
+  - "Combined wave + current velocity applied as single design velocity"
+  - "Pipe resting on flat seabed, no embedment"
+  - "No end effects or axial forces considered"
+  - "Sand seabed with friction coefficient 0.6"
+references:
+  - "DNV-RP-F109, On-Bottom Stability Design of Submarine Pipelines, October 2010"

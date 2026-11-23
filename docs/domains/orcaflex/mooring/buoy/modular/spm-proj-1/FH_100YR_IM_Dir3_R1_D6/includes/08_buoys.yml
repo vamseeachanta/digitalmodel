@@ -1,0 +1,308 @@
+# 6DBuoys Configuration
+# Generated from: FH_100YR_IM_Dir3_R1_D6.yml
+# Date: 2026-01-18 22:19:57
+6DBuoys:
+- Name: CALM Buoy1
+  BuoyType: Spar buoy
+  Connection: Free
+  DegreesOfFreedomInStatics: All
+  DampingRelativeTo: Earth
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  InitialPosition:
+  - 0
+  - -5
+  - 0.7
+  InitialAttitude:
+  - 0
+  - 0
+  - 0
+  Mass: 284
+  MomentsOfInertia:
+  - 3346.5
+  - 3346.5
+  - 5112
+  CentreOfMass:
+  - 0
+  - 0
+  - -1.68
+  StackBaseCentre:
+  - 0
+  - 0
+  - -4.115
+  BulkModulus: Infinity
+  MunkMomentCoefficient: 0
+  NormalDragAreaCalculatedFromGeometry: Yes
+  StackedBuoyAddedMassAndDampingMethod: Values for each cylinder
+  Cylinders:
+  - CylinderOuterDiameter: 12
+    CylinderInnerDiameter: 0
+    CylinderLength: 3.3
+    CylinderAxialDragArea: 0
+    DragForceCoefficient:
+    - 1.14
+    - 0.85
+    DragAreaMoment:
+    - 15
+    - 0
+    DragMomentCoefficient:
+    - 0.7
+    - 0
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    AddedMassForceCoefficient:
+    - 1.06
+    - 0.9
+    InertiaForceCoefficient:
+    - ~
+    - ~
+    AddedMomentOfInertia:
+    - 220.8091774
+    - 0
+    UnitDampingForce:
+    - 160
+    - 0
+    UnitDampingMoment:
+    - 2500
+    - 0
+  - CylinderOuterDiameter: 12
+    CylinderInnerDiameter: 8.8
+    CylinderLength: 1.5
+    CylinderAxialDragArea: 0
+    DragForceCoefficient:
+    - 1.14
+    - 0.85
+    DragAreaMoment:
+    - 20.9
+    - 0
+    DragMomentCoefficient:
+    - 0.7
+    - 0
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    AddedMassForceCoefficient:
+    - 1.06
+    - 0.9
+    InertiaForceCoefficient:
+    - ~
+    - ~
+    AddedMomentOfInertia:
+    - 142.1054177
+    - 0
+    UnitDampingForce:
+    - 160
+    - 0
+    UnitDampingMoment:
+    - 2500
+    - 0
+  - CylinderOuterDiameter: 16
+    CylinderInnerDiameter: 0
+    CylinderLength: 0.5
+    CylinderAxialDragArea: 0
+    DragForceCoefficient:
+    - 1.14
+    - 0.85
+    DragAreaMoment:
+    - 2.8
+    - 0
+    DragMomentCoefficient:
+    - 0.7
+    - 0
+    CylinderSlamForceDataEntry: 0
+    CylinderSlamForceDataExit: 0
+    AddedMassForceCoefficient:
+    - 1.06
+    - 0.9
+    InertiaForceCoefficient:
+    - ~
+    - ~
+    AddedMomentOfInertia:
+    - 72.1328252
+    - 0
+    UnitDampingForce:
+    - 160
+    - 0
+    UnitDampingMoment:
+    - 2500
+    - 0
+  GlobalAppliedLoads:
+  - Origin:
+    - 0
+    - 0
+    - 0
+    Force:
+    - 0
+    - 0
+    - 0
+    Moment:
+    - 0
+    - 0
+    - 0
+  LocalAppliedLoads:
+  - Origin:
+    - 0
+    - 0
+    - 0
+    Force:
+    - 0
+    - 0
+    - 0
+    Moment:
+    - 0
+    - 0
+    - 0
+  SeabedFrictionCoefficient: 0
+  TotalContactArea: ~
+  Pen:
+  - 1
+  - Solid
+  - $FF80C0
+  ShadedDrawingCullingMode: Anticlockwise
+- Name: FloatingBuoy
+  BuoyType: Lumped buoy
+  Connection: Fixed
+  DampingRelativeTo: Earth
+  DisturbanceVessel: (none)
+  WaveCalculationMethod: Specified by environment
+  InitialPosition:
+  - 0
+  - -220
+  - 0
+  InitialAttitude:
+  - 0
+  - 0
+  - 0
+  Mass: 30
+  MomentsOfInertia:
+  - 100
+  - 100
+  - 100
+  CentreOfMass:
+  - 0
+  - 0
+  - 0
+  LumpedBuoyAddedMassMethod: Diagonal values
+  Volume: 100
+  BulkModulus: Infinity
+  Height: 6
+  CentreOfVolume:
+  - 0
+  - 0
+  - 0
+  UnitDampingForce:
+  - 0
+  - 0
+  - 0
+  UnitDampingMoment:
+  - 0
+  - 0
+  - 0
+  DragArea:
+  - 0
+  - 0
+  - 0
+  DragAreaMoment:
+  - 0
+  - 0
+  - 0
+  DragForceCoefficient:
+  - 0
+  - 0
+  - 0
+  DragMomentCoefficient:
+  - 0
+  - 0
+  - 0
+  HydrodynamicMass:
+  - ~
+  - ~
+  - ~
+  HydrodynamicInertia:
+  - 0
+  - 0
+  - 0
+  AddedMassCoefficient:
+  - 0
+  - 0
+  - 0
+  AddedInertiaCoefficient:
+  - 0
+  - 0
+  - 0
+  FluidAccelerationForceCoefficient:
+  - ~
+  - ~
+  - ~
+  LumpedBuoySlamArea: 0
+  LumpedBuoySlamForceDataEntry: 0
+  LumpedBuoySlamForceDataExit: 0
+  SeabedFrictionCoefficient: 0
+  TotalContactArea: ~
+  WireFrameOrigin:
+  - 0
+  - 0
+  - 0
+  WireFrameSymmetry: None
+  WireFrameType: Edges
+  VertexX, VertexY, VertexZ:
+  - - 3
+    - 3
+    - 3
+  - - -3
+    - 3
+    - 3
+  - - -3
+    - -3
+    - 3
+  - - 3
+    - -3
+    - 3
+  - - 3
+    - 3
+    - -3
+  - - -3
+    - 3
+    - -3
+  - - -3
+    - -3
+    - -3
+  - - 3
+    - -3
+    - -3
+  EdgeFrom, EdgeTo, EdgeDiameter:
+  - - 1
+    - 2
+    - ~
+  - - 2
+    - 3
+    - ~
+  - - 3
+    - 4
+    - ~
+  - - 4
+    - 1
+    - ~
+  - - 5
+    - 6
+    - ~
+  - - 6
+    - 7
+    - ~
+  - - 7
+    - 8
+    - ~
+  - - 8
+    - 5
+    - ~
+  - - 1
+    - 5
+    - ~
+  - - 2
+    - 6
+    - ~
+  - - 3
+    - 7
+    - ~
+  - - 4
+    - 8
+    - ~

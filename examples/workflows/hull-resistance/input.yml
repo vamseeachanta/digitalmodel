@@ -1,0 +1,32 @@
+basename: naval_arch
+
+default:
+  log_level: INFO
+  config:
+    generate_plots: false
+    overwrite:
+      output: true
+
+naval_arch:
+  calculation: hull_resistance
+  hull_resistance:
+    case:
+      id: registry_hull_resistance
+      description: Registry Series 60 hull-form and Holtrop-Mennen resistance screen
+    hull:
+      lwl_m: 121.92
+      beam_m: 16.26
+      draft_m: 6.50
+      displacement_m3: 7731.43488
+      midship_area_m2: 103.25913
+      waterplane_area_m2: 1387.69344
+      cm: 0.977
+      cp: 0.614
+      lcb_pct: -2.02
+      cstern: 0
+      bulbous_bow_area_m2: 0.0
+      transom_area_m2: 0.0
+    operating:
+      speed_ms: 7.72
+    outputs:
+      directory: results/hull_resistance

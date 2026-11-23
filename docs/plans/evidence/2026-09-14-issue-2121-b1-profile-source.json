@@ -1,0 +1,41 @@
+{
+  "issue": 2121,
+  "red": [
+    "6 adapter failures: spaced identity rejected and unrelated tokens accepted",
+    "Actual retained PV ASCII decoding failure plus synthetic Unicode regression RED"
+  ],
+  "green": {
+    "owned_tests": 131,
+    "adapter_tests": 26,
+    "actual_native_header_read_only_replay": true
+  },
+  "observed_source": {
+    "relative_path": "ansys-2094-canary-20260912T205311Z/pressure-vessel/pv.out",
+    "sha256": "5f3b0a90a91a723efe12e5d98dfe5a5a7aadd2e1d575316981ff1dbba7e6a54f",
+    "bytes": 25321,
+    "header_line": 106,
+    "header_byte_offset": 5144,
+    "header_sha256": "dcae592d2f4bb9053476e7b1538eb559f1b17dea5669e2186a3b5963833e7757"
+  },
+  "contract": {
+    "header": "Exactly one anchored RELEASE=... BUILD=... UP######## VERSION=... line",
+    "profile": {
+      "release": "2026 R1.01",
+      "build": "26.1",
+      "update": "20260202",
+      "platform": "WINDOWS x64"
+    },
+    "decoding": "Strict UTF-8 whole log; bounded ASCII profile fields; no lossy fallback",
+    "refusals": [
+      "unrelated comment tokens",
+      "swapped labels",
+      "duplicate headers",
+      "conflicting headers",
+      "split headers",
+      "missing headers",
+      "invalid UTF-8"
+    ]
+  },
+  "current_source_sha256": "1aaa9ddee68f3c1b10c9001cf30c9edaa5aaf19dd1032196e80f0578035b34d4",
+  "limitation": "Observed header shape and historical profile only; current canary native execution/qualification remain unestablished."
+}

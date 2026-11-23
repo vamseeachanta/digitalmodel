@@ -1,0 +1,60 @@
+basename: naval_arch
+
+# Packaged typical-ship manoeuvring-envelope example (generic ~225 m single-screw
+# tanker). Two loading conditions x a 0..5 kn current sweep. Screening-level.
+
+naval_arch:
+  calculation: maneuvering_envelope
+  maneuvering_envelope:
+    case:
+      id: typical_ship_maneuvering_envelope
+      description: Typical ~225 m single-screw tanker low-speed manoeuvring envelope
+    ship:
+      lbp_m: 225.5
+      beam_m: 32.26
+      K_prime: 1.02
+    rudder:
+      area_m2: 44.94
+      span_m: 9.0
+      aspect_ratio: 1.80
+      x_from_cg_m: 135.3
+      behind_hull: true
+    propulsion:
+      diameter_m: 7.0
+      kt_coeffs: [0.35, -0.30]
+      thrust_deduction: 0.2
+      wake_fraction: 0.25
+      C_rp: 0.5
+      ship_speed_m_s: 1.0
+      shaft_speed_rev_s: 1.2
+    environment:
+      wind_speed_m_s: 10.0
+      wind_force_coeff: 0.8
+      CXYc: 0.05
+    imo:
+      rudder_angle_deg: 35.0
+      advance_m: 720.0
+    loading_conditions:
+      - name: laden
+        draft_m: 12.2
+        Cb: 0.82
+        rudder_effective_area_m2: 44.94
+        lateral_underwater_area_m2: 2751.1
+        windage_area_m2: 2200.0
+        inflow_factor_engine_off: 1.0
+        inflow_factor_engine_on: 1.5
+      - name: ballast
+        draft_m: 7.0
+        Cb: 0.82
+        rudder_effective_area_m2: 35.0
+        lateral_underwater_area_m2: 1578.5
+        windage_area_m2: 3500.0
+        inflow_factor_engine_off: 1.0
+        inflow_factor_engine_on: 1.5
+    sweep:
+      current_speeds:
+        units: kn
+        values: [1.0, 2.0, 3.0, 4.0, 5.0]
+    outputs:
+      directory: results/naval_arch_maneuvering_envelope
+      tables: [csv, json]

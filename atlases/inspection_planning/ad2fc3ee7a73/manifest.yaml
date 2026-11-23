@@ -1,0 +1,42 @@
+atlas_id: ad2fc3ee7a73
+basename: inspection_planning
+physics: linear
+response: remaining_life_years
+axes:
+- name: corrosion_rate_mm_yr
+  scale: linear
+  grid:
+  - 0.1
+  - 0.15000000000000002
+  - 0.2
+  - 0.3
+  - 0.5
+  - 0.7
+  - 0.9
+- name: current_wall_thickness_mm
+  scale: linear
+  grid:
+  - 8.0
+  - 10.0
+  - 12.0
+  - 14.0
+  - 16.0
+validation:
+  metric: max_rel_error
+  max_rel_error: 0.06666666666666667
+  threshold: 0.1
+  passes: true
+provenance:
+  basename: inspection_planning
+  code_version: 0cefe0c8
+  standards:
+  - id: API-510
+    edition: '2014'
+  - id: API-570
+    edition: '2016'
+  - id: API-653
+    edition: '2014'
+  response_kwargs: {}
+  workflow_id: inspection-planning
+  content_fingerprint: ad2fc3ee7a739e809e9e361221f2fa0b3d15bcfdbc12fc8c78a01ccad66813a3
+  input_template_sha256: 9c12961a5c898fdcb4f9356230ee6f71d0ae04c33f9393898db2ea8e38c1e790

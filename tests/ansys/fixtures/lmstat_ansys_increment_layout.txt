@@ -1,0 +1,4 @@
+Feature "ansys" v2017.1031, vendor: ansyslmd, expiry: permanent(no expiration date) (Total of 1 license issued;  Total of 0 floating non-reserved licenses in use)
+    (Total of 0 users queued;  Total of 0 licenses reserved)
+Feature "ansys" v2027.0114, vendor: ansyslmd, expiry: permanent(no expiration date) (Total of 1 license issued;  Total of 0 floating non-reserved licenses in use)
+    (Total of 0 users queued;  Total of 0 licenses reserved)

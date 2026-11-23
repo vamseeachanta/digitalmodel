@@ -1,0 +1,197 @@
+source_type: python
+source_description: "Extracted from digitalmodel test_wall_thickness.py and test_wall_thickness_api_rp_2rd.py — DNV-ST-F101 and API RP 1111 design checks"
+extracted_date: "2026-03-16"
+legal_scan_passed: true
+category: "structural"
+subcategory: "wall_thickness_design"
+equations:
+  - name: "DNV-ST-F101 Pressure Containment (Eq 5.8)"
+    latex: "p_b = \\frac{2 t_1}{D - t_1} \\cdot \\frac{2}{\\sqrt{3}} \\cdot f_{cb}"
+    description: "DNV burst pressure capacity for pressure containment check"
+  - name: "DNV t1 Corroded Fabrication-Toleranced Thickness"
+    latex: "t_1 = (WT - corr) \\cdot (1 - f_{tol})"
+    description: "Effective wall thickness after corrosion and fabrication tolerance deductions"
+  - name: "DNV f_cb Characteristic Burst Strength"
+    latex: "f_{cb} = \\min(0.96 \\cdot SMYS, \\; 0.96 \\cdot SMTS / \\alpha_U)"
+    description: "Characteristic material strength for burst, with alpha_U = 1.15"
+  - name: "DNV Propagation Buckling (Eq 5.17)"
+    latex: "p_{pr} = 35 \\cdot f_y \\cdot \\alpha_{fab} \\cdot \\left(\\frac{t_2}{D}\\right)^{2.5}"
+    description: "DNV propagation buckling pressure for subsea pipelines"
+  - name: "API RP 1111 Burst (Thick-wall)"
+    latex: "p_b = 0.45 \\cdot (SMYS + SMTS) \\cdot \\ln\\left(\\frac{D}{D - 2t}\\right)"
+    description: "API RP 1111 burst pressure for thick-wall pipes (D/t <= 15)"
+  - name: "API RP 1111 Collapse (Transition)"
+    latex: "p_c = \\frac{p_{el} \\cdot p_y}{\\sqrt{p_{el}^2 + p_y^2}}"
+    description: "API collapse pressure as geometric mean of elastic and yield collapse"
+  - name: "API RP 1111 Propagation"
+    latex: "p_{pr} = 24 \\cdot SMYS \\cdot \\left(\\frac{t}{D}\\right)^{2.4}"
+    description: "API propagation buckling pressure"
+  - name: "API RP 2RD Hoop Stress Allowable"
+    latex: "\\sigma_{allow} = 0.6 \\cdot SMYS"
+    description: "API RP 2RD allowable hoop stress for riser design"
+inputs:
+  - name: "Outer diameter"
+    symbol: "D"
+    unit: "m"
+    test_value: 0.27305
+  - name: "Wall thickness"
+    symbol: "WT"
+    unit: "m"
+    test_value: 0.02144
+  - name: "Corrosion allowance"
+    symbol: "corr"
+    unit: "m"
+    test_value: 0.001
+  - name: "SMYS (X65)"
+    symbol: "SMYS"
+    unit: "Pa"
+    test_value: 448000000
+  - name: "SMTS (X65)"
+    symbol: "SMTS"
+    unit: "Pa"
+    test_value: 531000000
+outputs:
+  - name: "DNV t1"
+    symbol: "t1"
+    unit: "m"
+    test_expected: 0.017885
+    tolerance: 0.000001
+  - name: "DNV f_cb"
+    symbol: "f_cb"
+    unit: "Pa"
+    test_expected: 430080000
+    tolerance: 1000
+worked_examples:
+  - description: "DNV-ST-F101 burst pressure — 10.75in OD, X65 pipe hand calculation"
+    inputs:
+      D: 0.27305
+      WT: 0.02144
+      corrosion_allowance: 0.001
+      fabrication_tolerance: 0.125
+      SMYS: 448.0e6
+      SMTS: 531.0e6
+    outputs:
+      t1: 0.017885
+      f_cb: 430.08e6
+      p_b_approx_MPa: 69.63
+    use_as_test: true
+  - description: "DNV-ST-F101 pressure containment — 12.75in OD, X65, utilisation check"
+    inputs:
+      D: 0.32385
+      WT: 0.01905
+      corrosion_allowance: 0.001
+      SMYS: 448.0e6
+      SMTS: 531.0e6
+      internal_pressure: 30.0e6
+      external_pressure: 10.0e6
+      gamma_sc: 1.138
+      gamma_m: 1.15
+      gamma_inc: 1.0
+    outputs:
+      t1: 0.01580625
+      utilisation_range_min: 0.45
+      utilisation_range_max: 0.60
+    use_as_test: true
+  - description: "DNV propagation buckling — 10.75in OD, X65 hand calculation"
+    inputs:
+      D: 0.27305
+      WT: 0.02144
+      corrosion_allowance: 0.001
+      SMYS: 448.0e6
+      alpha_fab: 1.0
+    outputs:
+      t2: 0.02044
+      p_pr_formula: "35 * 448e6 * 1.0 * (0.02044/0.27305)^2.5"
+    use_as_test: true
+  - description: "API RP 1111 burst — 10.75in OD, X65, thick-wall (D/t <= 15)"
+    inputs:
+      D: 0.27305
+      WT: 0.02144
+      SMYS: 448.0e6
+      SMTS: 531.0e6
+    outputs:
+      d_over_t: 12.735
+      p_b_formula: "0.45 * (448e6 + 531e6) * ln(0.27305 / 0.23017)"
+    use_as_test: true
+  - description: "API RP 1111 collapse — transition formula hand calculation"
+    inputs:
+      D: 0.27305
+      t: 0.02144
+      E: 207.0e9
+      nu: 0.3
+      SMYS: 448.0e6
+    outputs:
+      p_el_formula: "2 * 207e9 * (t/D)^3 / (1 - 0.3^2)"
+      p_y_formula: "2 * 448e6 * t/D"
+      p_c_formula: "p_el * p_y / sqrt(p_el^2 + p_y^2)"
+    use_as_test: true
+  - description: "API RP 1111 propagation — 10.75in OD, X65"
+    inputs:
+      D: 0.27305
+      t: 0.02144
+      SMYS: 448.0e6
+    outputs:
+      p_pr_formula: "24 * 448e6 * (0.02144/0.27305)^2.4"
+    use_as_test: true
+  - description: "DNV safety class factors — Medium"
+    inputs:
+      safety_class: "MEDIUM"
+    outputs:
+      gamma_sc: 1.138
+      gamma_m: 1.15
+      gamma_inc: 1.0
+    use_as_test: true
+  - description: "DNV safety class factors — Low"
+    inputs:
+      safety_class: "LOW"
+    outputs:
+      gamma_sc: 1.046
+    use_as_test: true
+  - description: "DNV safety class factors — High"
+    inputs:
+      safety_class: "HIGH"
+    outputs:
+      gamma_sc: 1.308
+    use_as_test: true
+  - description: "API RP 2RD hoop stress allowable for X65"
+    inputs:
+      SMYS: 448.0e6
+    outputs:
+      sigma_allow: 268.8e6
+    use_as_test: true
+  - description: "API RP 2RD burst design factor"
+    inputs:
+      code: "API_RP_2RD"
+    outputs:
+      f_d: 0.667
+    use_as_test: true
+  - description: "Pipe geometry — t1 and t2 from WT and corrosion"
+    inputs:
+      outer_diameter: 0.3
+      wall_thickness: 0.02
+      corrosion_allowance: 0.001
+    outputs:
+      t1: 0.0166250
+      t2: 0.019
+      inner_diameter: 0.26
+      d_over_t: 15.0
+    use_as_test: true
+  - description: "Fabrication type alpha_fab factors"
+    inputs:
+      fabrication_types: ["SEAMLESS", "UOE", "UO"]
+    outputs:
+      alpha_fab_seamless: 1.0
+      alpha_fab_uoe: 0.93
+      alpha_fab_uo: 0.85
+    use_as_test: true
+assumptions:
+  - "DNV-ST-F101 pressure containment uses alpha_U = 1.15 for SMTS derating"
+  - "Fabrication tolerance default = 12.5% (0.125)"
+  - "API RP 1111 thick-wall/thin-wall transition at D/t = 15"
+  - "Young's modulus E = 207 GPa for API RP 1111 collapse calculation"
+  - "Poisson ratio nu = 0.3 for steel"
+  - "API RP 2RD uses f_d = 2/3 for operating condition burst check"
+references:
+  - "DNV-ST-F101:2021, Submarine Pipeline Systems"
+  - "API RP 1111:2009, Design, Construction, Operation and Maintenance of Offshore Hydrocarbon Pipelines"
+  - "API RP 2RD:2013, Design of Risers for Floating Production Systems"

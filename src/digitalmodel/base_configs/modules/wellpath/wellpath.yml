@@ -1,0 +1,18 @@
+basename: wellpath
+
+wellpath:
+  stations:
+    - measured_depth_m: 0.0
+      inclination_deg: 0.0
+      azimuth_deg: 0.0
+    - measured_depth_m: 100.0
+      inclination_deg: 30.0
+      azimuth_deg: 0.0
+  dls_normalization: 30.0
+  output_dir: results
+
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: true

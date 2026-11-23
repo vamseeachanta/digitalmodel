@@ -1,0 +1,30 @@
+basename: ffs
+
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: true
+
+# Phase-1 FFS metal-loss coordinator (assess_component). The grid is a 6x6
+# measurement lattice with a 2-cell deep local thin spot -> routes LML and the
+# measurement-sufficiency engine flags it under-sampled (TAKE_MORE) -- the #1066
+# "catch the under-measured ACCEPT" case.
+ffs_assessment:
+  input_units: in
+  component:
+    component_id: LINE-001
+    design_code: B31.8
+    nominal_od_in: 12.75
+    nominal_wt_in: 0.500
+    design_pressure_psi: 1000.0
+    smys_psi: 52000.0
+    corrosion_rate_in_per_yr: 0.005
+    rsf_a: 0.90
+  grid:
+    - [0.50, 0.50, 0.50, 0.50, 0.50, 0.50]
+    - [0.50, 0.50, 0.50, 0.50, 0.50, 0.50]
+    - [0.50, 0.50, 0.50, 0.30, 0.50, 0.50]
+    - [0.50, 0.50, 0.50, 0.32, 0.50, 0.50]
+    - [0.50, 0.50, 0.50, 0.50, 0.50, 0.50]
+    - [0.50, 0.50, 0.50, 0.50, 0.50, 0.50]

@@ -1,0 +1,506 @@
+{
+  "schema": "ansys-campaign-proposal-1",
+  "issue": "https://github.com/vamseeachanta/digitalmodel/issues/2121",
+  "status": "proposed",
+  "execution_authorized": false,
+  "results_present": false,
+  "source_baseline": "97a152c33e54c397f3d82802b860ef4a06c68c47",
+  "proposed_dataset_id": "ansys-open-cylinder-verification",
+  "intended_use": "verification_only",
+  "basis": {
+    "inner_radius_mm": "750",
+    "axial_slice_length_mm": "240",
+    "youngs_modulus_mpa": "200000",
+    "poisson_ratio": "0.3",
+    "temperature_change_C": "0",
+    "outer_pressure_mpa": "0",
+    "end_cap_load": "not_applied",
+    "formulation": "PLANE183 8-node quadratic axisymmetric; all midside nodes retained; linear elastic small displacement",
+    "axes": "X radial; Y axial; hoop stress SZ; tension positive",
+    "axial_restraint": "UY=0 on y=0; other edges axially free; no radial restraints",
+    "keyopts": {
+      "1": 0,
+      "3": 1,
+      "6": 0
+    }
+  },
+  "counts": {
+    "physical_cases": 9,
+    "mesh_levels_per_physical_case": 3,
+    "zero_controls": 1,
+    "native_attempt_cap": 28
+  },
+  "launch_order_first": [
+    "ocv-t60-p10-n4",
+    "ocv-t60-p10-n8",
+    "ocv-t60-p10-n16",
+    "ocv-zero-t60-n16"
+  ],
+  "native_gate": "Separate user approval of reviewed generated inputs, checker register and license/storage preflight",
+  "per_attempt_timeout_seconds": 300,
+  "automatic_retries": 0,
+  "cases": [
+    {
+      "case_id": "ocv-t45-p5-n4",
+      "physical_case_id": "ocv-t45-p5",
+      "wall_thickness_mm": "45",
+      "internal_pressure_mpa": "5",
+      "radial_elements": 4,
+      "axial_elements": 24,
+      "purpose": "physical-and-refinement",
+      "planned_status": "not_executed"
+    },
+    {
+      "case_id": "ocv-t45-p5-n8",
+      "physical_case_id": "ocv-t45-p5",
+      "wall_thickness_mm": "45",
+      "internal_pressure_mpa": "5",
+      "radial_elements": 8,
+      "axial_elements": 48,
+      "purpose": "physical-and-refinement",
+      "planned_status": "not_executed"
+    },
+    {
+      "case_id": "ocv-t45-p5-n16",
+      "physical_case_id": "ocv-t45-p5",
+      "wall_thickness_mm": "45",
+      "internal_pressure_mpa": "5",
+      "radial_elements": 16,
+      "axial_elements": 96,
+      "purpose": "physical-and-refinement",
+      "planned_status": "not_executed"
+    },
+    {
+      "case_id": "ocv-t45-p7p5-n4",
+      "physical_case_id": "ocv-t45-p7p5",
+      "wall_thickness_mm": "45",
+      "internal_pressure_mpa": "7.5",
+      "radial_elements": 4,
+      "axial_elements": 24,
+      "purpose": "physical-and-refinement",
+      "planned_status": "not_executed"
+    },
+    {
+      "case_id": "ocv-t45-p7p5-n8",
+      "physical_case_id": "ocv-t45-p7p5",
+      "wall_thickness_mm": "45",
+      "internal_pressure_mpa": "7.5",
+      "radial_elements": 8,
+      "axial_elements": 48,
+      "purpose": "physical-and-refinement",
+      "planned_status": "not_executed"
+    },
+    {
+      "case_id": "ocv-t45-p7p5-n16",
+      "physical_case_id": "ocv-t45-p7p5",
+      "wall_thickness_mm": "45",
+      "internal_pressure_mpa": "7.5",
+      "radial_elements": 16,
+      "axial_elements": 96,
+      "purpose": "physical-and-refinement",
+      "planned_status": "not_executed"
+    },
+    {
+      "case_id": "ocv-t45-p10-n4",
+      "physical_case_id": "ocv-t45-p10",
+      "wall_thickness_mm": "45",
+      "internal_pressure_mpa": "10",
+      "radial_elements": 4,
+      "axial_elements": 24,
+      "purpose": "physical-and-refinement",
+      "planned_status": "not_executed"
+    },
+    {
+      "case_id": "ocv-t45-p10-n8",
+      "physical_case_id": "ocv-t45-p10",
+      "wall_thickness_mm": "45",
+      "internal_pressure_mpa": "10",
+      "radial_elements": 8,
+      "axial_elements": 48,
+      "purpose": "physical-and-refinement",
+      "planned_status": "not_executed"
+    },
+    {
+      "case_id": "ocv-t45-p10-n16",
+      "physical_case_id": "ocv-t45-p10",
+      "wall_thickness_mm": "45",
+      "internal_pressure_mpa": "10",
+      "radial_elements": 16,
+      "axial_elements": 96,
+      "purpose": "physical-and-refinement",
+      "planned_status": "not_executed"
+    },
+    {
+      "case_id": "ocv-t60-p5-n4",
+      "physical_case_id": "ocv-t60-p5",
+      "wall_thickness_mm": "60",
+      "internal_pressure_mpa": "5",
+      "radial_elements": 4,
+      "axial_elements": 24,
+      "purpose": "physical-and-refinement",
+      "planned_status": "not_executed"
+    },
+    {
+      "case_id": "ocv-t60-p5-n8",
+      "physical_case_id": "ocv-t60-p5",
+      "wall_thickness_mm": "60",
+      "internal_pressure_mpa": "5",
+      "radial_elements": 8,
+      "axial_elements": 48,
+      "purpose": "physical-and-refinement",
+      "planned_status": "not_executed"
+    },
+    {
+      "case_id": "ocv-t60-p5-n16",
+      "physical_case_id": "ocv-t60-p5",
+      "wall_thickness_mm": "60",
+      "internal_pressure_mpa": "5",
+      "radial_elements": 16,
+      "axial_elements": 96,
+      "purpose": "physical-and-refinement",
+      "planned_status": "not_executed"
+    },
+    {
+      "case_id": "ocv-t60-p7p5-n4",
+      "physical_case_id": "ocv-t60-p7p5",
+      "wall_thickness_mm": "60",
+      "internal_pressure_mpa": "7.5",
+      "radial_elements": 4,
+      "axial_elements": 24,
+      "purpose": "physical-and-refinement",
+      "planned_status": "not_executed"
+    },
+    {
+      "case_id": "ocv-t60-p7p5-n8",
+      "physical_case_id": "ocv-t60-p7p5",
+      "wall_thickness_mm": "60",
+      "internal_pressure_mpa": "7.5",
+      "radial_elements": 8,
+      "axial_elements": 48,
+      "purpose": "physical-and-refinement",
+      "planned_status": "not_executed"
+    },
+    {
+      "case_id": "ocv-t60-p7p5-n16",
+      "physical_case_id": "ocv-t60-p7p5",
+      "wall_thickness_mm": "60",
+      "internal_pressure_mpa": "7.5",
+      "radial_elements": 16,
+      "axial_elements": 96,
+      "purpose": "physical-and-refinement",
+      "planned_status": "not_executed"
+    },
+    {
+      "case_id": "ocv-t60-p10-n4",
+      "physical_case_id": "ocv-t60-p10",
+      "wall_thickness_mm": "60",
+      "internal_pressure_mpa": "10",
+      "radial_elements": 4,
+      "axial_elements": 24,
+      "purpose": "physical-and-refinement",
+      "planned_status": "not_executed"
+    },
+    {
+      "case_id": "ocv-t60-p10-n8",
+      "physical_case_id": "ocv-t60-p10",
+      "wall_thickness_mm": "60",
+      "internal_pressure_mpa": "10",
+      "radial_elements": 8,
+      "axial_elements": 48,
+      "purpose": "physical-and-refinement",
+      "planned_status": "not_executed"
+    },
+    {
+      "case_id": "ocv-t60-p10-n16",
+      "physical_case_id": "ocv-t60-p10",
+      "wall_thickness_mm": "60",
+      "internal_pressure_mpa": "10",
+      "radial_elements": 16,
+      "axial_elements": 96,
+      "purpose": "physical-and-refinement",
+      "planned_status": "not_executed"
+    },
+    {
+      "case_id": "ocv-t90-p5-n4",
+      "physical_case_id": "ocv-t90-p5",
+      "wall_thickness_mm": "90",
+      "internal_pressure_mpa": "5",
+      "radial_elements": 4,
+      "axial_elements": 24,
+      "purpose": "physical-and-refinement",
+      "planned_status": "not_executed"
+    },
+    {
+      "case_id": "ocv-t90-p5-n8",
+      "physical_case_id": "ocv-t90-p5",
+      "wall_thickness_mm": "90",
+      "internal_pressure_mpa": "5",
+      "radial_elements": 8,
+      "axial_elements": 48,
+      "purpose": "physical-and-refinement",
+      "planned_status": "not_executed"
+    },
+    {
+      "case_id": "ocv-t90-p5-n16",
+      "physical_case_id": "ocv-t90-p5",
+      "wall_thickness_mm": "90",
+      "internal_pressure_mpa": "5",
+      "radial_elements": 16,
+      "axial_elements": 96,
+      "purpose": "physical-and-refinement",
+      "planned_status": "not_executed"
+    },
+    {
+      "case_id": "ocv-t90-p7p5-n4",
+      "physical_case_id": "ocv-t90-p7p5",
+      "wall_thickness_mm": "90",
+      "internal_pressure_mpa": "7.5",
+      "radial_elements": 4,
+      "axial_elements": 24,
+      "purpose": "physical-and-refinement",
+      "planned_status": "not_executed"
+    },
+    {
+      "case_id": "ocv-t90-p7p5-n8",
+      "physical_case_id": "ocv-t90-p7p5",
+      "wall_thickness_mm": "90",
+      "internal_pressure_mpa": "7.5",
+      "radial_elements": 8,
+      "axial_elements": 48,
+      "purpose": "physical-and-refinement",
+      "planned_status": "not_executed"
+    },
+    {
+      "case_id": "ocv-t90-p7p5-n16",
+      "physical_case_id": "ocv-t90-p7p5",
+      "wall_thickness_mm": "90",
+      "internal_pressure_mpa": "7.5",
+      "radial_elements": 16,
+      "axial_elements": 96,
+      "purpose": "physical-and-refinement",
+      "planned_status": "not_executed"
+    },
+    {
+      "case_id": "ocv-t90-p10-n4",
+      "physical_case_id": "ocv-t90-p10",
+      "wall_thickness_mm": "90",
+      "internal_pressure_mpa": "10",
+      "radial_elements": 4,
+      "axial_elements": 24,
+      "purpose": "physical-and-refinement",
+      "planned_status": "not_executed"
+    },
+    {
+      "case_id": "ocv-t90-p10-n8",
+      "physical_case_id": "ocv-t90-p10",
+      "wall_thickness_mm": "90",
+      "internal_pressure_mpa": "10",
+      "radial_elements": 8,
+      "axial_elements": 48,
+      "purpose": "physical-and-refinement",
+      "planned_status": "not_executed"
+    },
+    {
+      "case_id": "ocv-t90-p10-n16",
+      "physical_case_id": "ocv-t90-p10",
+      "wall_thickness_mm": "90",
+      "internal_pressure_mpa": "10",
+      "radial_elements": 16,
+      "axial_elements": 96,
+      "purpose": "physical-and-refinement",
+      "planned_status": "not_executed"
+    },
+    {
+      "case_id": "ocv-zero-t60-n16",
+      "physical_case_id": "zero-control",
+      "wall_thickness_mm": "60",
+      "internal_pressure_mpa": "0",
+      "radial_elements": 16,
+      "axial_elements": 96,
+      "purpose": "zero-load-control",
+      "planned_status": "not_executed"
+    }
+  ],
+  "total_wall_time_minutes": 180,
+  "criteria_status": "candidate; independent B1 recovery-feasibility hold before freeze; unresolved evidence blocks B2",
+  "identity_contract": {
+    "numeric_representation": "Stage A finite exact decimal strings; normalize trailing zeros without float conversion",
+    "numeric_json_values": "refuse",
+    "canonical_units": {
+      "length": "mm",
+      "pressure": "MPa",
+      "modulus": "MPa",
+      "poisson_ratio": "dimensionless"
+    },
+    "mismatched_units": "refuse",
+    "off_grid": "refuse; no interpolation or rounding"
+  },
+  "response_definitions": [
+    {
+      "name": "sigma_r_inner",
+      "station_radial": "a",
+      "station_axial_mm": "120",
+      "unit": "MPa",
+      "source": "S:X"
+    },
+    {
+      "name": "sigma_theta_inner",
+      "station_radial": "a",
+      "station_axial_mm": "120",
+      "unit": "MPa",
+      "source": "S:Z"
+    },
+    {
+      "name": "sigma_z_inner",
+      "station_radial": "a",
+      "station_axial_mm": "120",
+      "unit": "MPa",
+      "source": "S:Y"
+    },
+    {
+      "name": "tau_rz_inner",
+      "station_radial": "a",
+      "station_axial_mm": "120",
+      "unit": "MPa",
+      "source": "S:XY"
+    },
+    {
+      "name": "sigma_vm_inner",
+      "station_radial": "a",
+      "station_axial_mm": "120",
+      "unit": "MPa",
+      "source": "recomputed from recovered tensor"
+    },
+    {
+      "name": "u_r_inner",
+      "station_radial": "a",
+      "station_axial_mm": "120",
+      "unit": "mm",
+      "source": "U:X"
+    },
+    {
+      "name": "u_z_inner",
+      "station_radial": "a",
+      "station_axial_mm": "120",
+      "unit": "mm",
+      "source": "U:Y"
+    },
+    {
+      "name": "sigma_r_middle",
+      "station_radial": "a+t/2",
+      "station_axial_mm": "120",
+      "unit": "MPa",
+      "source": "S:X"
+    },
+    {
+      "name": "sigma_theta_middle",
+      "station_radial": "a+t/2",
+      "station_axial_mm": "120",
+      "unit": "MPa",
+      "source": "S:Z"
+    },
+    {
+      "name": "sigma_z_middle",
+      "station_radial": "a+t/2",
+      "station_axial_mm": "120",
+      "unit": "MPa",
+      "source": "S:Y"
+    },
+    {
+      "name": "tau_rz_middle",
+      "station_radial": "a+t/2",
+      "station_axial_mm": "120",
+      "unit": "MPa",
+      "source": "S:XY"
+    },
+    {
+      "name": "sigma_vm_middle",
+      "station_radial": "a+t/2",
+      "station_axial_mm": "120",
+      "unit": "MPa",
+      "source": "recomputed from recovered tensor"
+    },
+    {
+      "name": "u_r_middle",
+      "station_radial": "a+t/2",
+      "station_axial_mm": "120",
+      "unit": "mm",
+      "source": "U:X"
+    },
+    {
+      "name": "u_z_middle",
+      "station_radial": "a+t/2",
+      "station_axial_mm": "120",
+      "unit": "mm",
+      "source": "U:Y"
+    },
+    {
+      "name": "sigma_r_outer",
+      "station_radial": "b",
+      "station_axial_mm": "120",
+      "unit": "MPa",
+      "source": "S:X"
+    },
+    {
+      "name": "sigma_theta_outer",
+      "station_radial": "b",
+      "station_axial_mm": "120",
+      "unit": "MPa",
+      "source": "S:Z"
+    },
+    {
+      "name": "sigma_z_outer",
+      "station_radial": "b",
+      "station_axial_mm": "120",
+      "unit": "MPa",
+      "source": "S:Y"
+    },
+    {
+      "name": "tau_rz_outer",
+      "station_radial": "b",
+      "station_axial_mm": "120",
+      "unit": "MPa",
+      "source": "S:XY"
+    },
+    {
+      "name": "sigma_vm_outer",
+      "station_radial": "b",
+      "station_axial_mm": "120",
+      "unit": "MPa",
+      "source": "recomputed from recovered tensor"
+    },
+    {
+      "name": "u_r_outer",
+      "station_radial": "b",
+      "station_axial_mm": "120",
+      "unit": "mm",
+      "source": "U:X"
+    },
+    {
+      "name": "u_z_outer",
+      "station_radial": "b",
+      "station_axial_mm": "120",
+      "unit": "mm",
+      "source": "U:Y"
+    }
+  ],
+  "recovery": "Extrapolated nodal stress components; average selected adjacent elements of full homogeneous mesh; equivalent stress recomputed from components; nodal displacements",
+  "auxiliary_axial_stations_mm": [
+    "60",
+    "180"
+  ],
+  "candidate_criteria": {
+    "nonzero_accuracy_relative": "0.01",
+    "stress_floor_mpa": "0.00000001",
+    "displacement_floor_mm": "0.000000001",
+    "zero_stress_pressure_factor": "0.001",
+    "refinement_relative": "0.005",
+    "refinement_monotonicity": "delta16_8 <= delta8_4 + applicable floor",
+    "axial_equilibrium": "abs(sum constrained RFy) <= max(0.000001*p*pi*a*a,0.000001 N)",
+    "mesh_binding": "execution/evidence all; accuracy/zero/equilibrium finest; coarse diagnostics",
+    "control": "all stresses <= stress floor; all displacements <= displacement floor",
+    "auxiliary_stress": "finest differences from midplane <= max(0.001*p,stress floor)",
+    "auxiliary_displacement": "finest ur differences and uz linearity residual <= max(0.01*abs(applicable analytic displacement),displacement floor)",
+    "failure_action": "stop any mandatory failure; preserve evidence; no automatic retry/relaxation"
+  }
+}

@@ -1,0 +1,3 @@
+# Case: Deep Water Steep Wave Riser (1500m)
+BaseFile: ../base/swr_base.yml
+IncludeFile: ../variations/deep_water_1500m.yml

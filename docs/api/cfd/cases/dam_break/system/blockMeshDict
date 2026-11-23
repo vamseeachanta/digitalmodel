@@ -1,0 +1,30 @@
+FoamFile { version 2.0; format ascii; class dictionary; object blockMeshDict; }
+
+// Martin & Moyce (1952) dam break, n^2 = 2: column a x 2a in a plain
+// 8a x 4a tank (no obstacle). Uniform mesh, dx = dy = a/36, so the
+// column edges (x = a, y = 2a) fall exactly on cell faces.
+scale 1;
+vertices
+(
+    (0     0     0)
+    (1.1688  0     0)
+    (1.1688  0.5844  0)
+    (0     0.5844  0)
+    (0     0     0.0146)
+    (1.1688  0     0.0146)
+    (1.1688  0.5844  0.0146)
+    (0     0.5844  0.0146)
+);
+blocks
+(
+    hex (0 1 2 3 4 5 6 7) (288 144 1) simpleGrading (1 1 1)
+);
+edges ();
+boundary
+(
+    leftWall   { type wall;  faces ( (0 4 7 3) ); }
+    rightWall  { type wall;  faces ( (1 2 6 5) ); }
+    lowerWall  { type wall;  faces ( (0 1 5 4) ); }
+    atmosphere { type patch; faces ( (3 7 6 2) ); }
+);
+defaultPatch { name defaultFaces; type empty; }

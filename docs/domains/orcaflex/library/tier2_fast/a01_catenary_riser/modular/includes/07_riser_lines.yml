@@ -1,0 +1,51 @@
+Lines:
+- Name: Catenary Hose
+  IncludeTorsion: 'No'
+  TopEnd: End A
+  LengthAndEndOrientations: Explicit
+  Representation: Finite element
+  PyModel: (none)
+  PreBendSpecifiedBy: Bend angle
+  DragFormulation: Standard
+  StaticsVIV: None
+  DynamicsVIV: None
+  WaveCalculationMethod: Specified by environment
+  ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination,
+    ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+  : - - FPSO
+      - 37.0
+      - 0.0
+      - -7.5
+      - 0.0
+      - 171.5
+      - 0
+      - ~
+    - - Anchored
+      - 57.0
+      - 0.0
+      - 0.178
+      - 0.0
+      - 90.0
+      - 0
+      - ~
+  ConnectionxBendingStiffness, ConnectionyBendingStiffness, ConnectionTwistingStiffness, ConnectionDamping:
+  - - 0.0
+    - ~
+    - ~
+  - - 0.0
+    - ~
+    - ~
+  LineType, Length, TargetSegmentLength:
+  - - 10in_flexible
+    - 90.0
+    - 3.0
+  - - 10in_flexible
+    - 20.0
+    - 0.5
+  - - 10in_flexible
+    - 20.0
+    - 3.0
+  StaticsStep1: Catenary
+  LayAzimuth: 180.0
+  ContentsMethod: Uniform
+  ContentsDensity: 1.0

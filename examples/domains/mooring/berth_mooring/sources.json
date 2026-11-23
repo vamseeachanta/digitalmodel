@@ -1,0 +1,28 @@
+{
+  "public_sources": [
+    {
+      "title": "Drag Equation",
+      "url": "https://www1.grc.nasa.gov/beginners-guide-to-aeronautics/drag-equation/",
+      "retrieved_utc": "Tue Oct 20 07:03:13 UTC 2026",
+      "http_status": 200,
+      "edition": "Public web edition, no numbered edition stated",
+      "sha256": "5484657c3e2ba1d8561f0850040104a24d7fad59ce5fa3417d2fc547ae9afafe",
+      "use": "Dynamic-pressure relation only; no coefficient values adopted"
+    },
+    {
+      "title": "Links: Data",
+      "url": "https://www.orcina.com/webhelp/OrcaFlex/Content/html/Links,Data.htm",
+      "retrieved_utc": "Tue Oct 20 07:03:25 UTC 2026",
+      "http_status": 200,
+      "edition": "Public web edition, no numbered edition stated",
+      "sha256": "8737249ced20154680dc7a2f97d0e8bbe90569fa4414d18a2fb4c996ea40df19",
+      "use": "Tether and piecewise-linear spring laws; no stiffness or capacity values adopted"
+    }
+  ],
+  "repository_method": {
+    "path": "docs/domains/hydrodynamics/wang-passing-ship-forces.md",
+    "use": "Existing 1975-method force port; original papers not newly retrieved"
+  },
+  "numerical_inputs": "assumed, based on previous experience",
+  "criteria": "Not supplied; NOT_EVALUATED"
+}

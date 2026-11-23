@@ -1,0 +1,129 @@
+# WAMIT Reference Data for Case 2.8 - Ellipsoid - CS Mean Drift Load Convergence Study
+# Source: OrcaWave Validation Report, Project 1429, revision 01
+# Data type: mean_drift_convergence
+#
+# Status: TEMPLATE - numeric values require population via:
+#   1. OrcaWave .owd execution (preferred, exact values)
+#   2. Manual digitization from Figure 26 (p35), Figure 27 (p36)
+#
+# To populate with OrcaWave:
+#   Run the .owd file in the 'OrcaWave v11.0 files/' subdirectory,
+#   extract results, and fill in the empty arrays below.
+#   Then set status: 'populated' and populated_by: 'owd_execution'
+#
+case_id: '2.8'
+title: Ellipsoid - CS Mean Drift Load Convergence Study
+vessel_name: Ellipsoid_96p
+solver: WAMIT v7.3
+source: OrcaWave Validation Report, Orcina Project 1429, revision 01
+source_figures:
+- Figure 26 (p35)
+- Figure 27 (p36)
+data_type: mean_drift_convergence
+water_depth: infinite
+body_description: 'Ellipsoid: (1/2)x^2 + y^2 + (z - z0)^2 = 1, z0 = 0.2 m. Non-wall-sided (z0 != 0). Bi-symmetric
+  (xz + yz planes). Control surface: same shape enlarged by factor 2.'
+mesh:
+  panels_per_quadrant: 96
+  symmetry: xz+yz
+  convergence_variants: Multiple mesh densities from coarse to fine (panels per quadrant on horizontal
+    axis of Figure 26)
+headings_deg:
+- 0.0
+- 20.0
+- 40.0
+- 60.0
+- 80.0
+- 100.0
+- 120.0
+- 140.0
+- 160.0
+- 180.0
+- 200.0
+- 220.0
+- 240.0
+- 260.0
+- 280.0
+- 300.0
+- 320.0
+- 340.0
+periods_s:
+- 2.0
+frequencies_rad_s: []
+dofs:
+- surge
+- sway
+- heave
+- roll
+- pitch
+- yaw
+results:
+  pi_mean_drift:
+    description: PI mean drift loads at T=2s
+    surge:
+      magnitude: []
+      phase: []
+    sway:
+      magnitude: []
+      phase: []
+    heave:
+      magnitude: []
+      phase: []
+    roll:
+      magnitude: []
+      phase: []
+    pitch:
+      magnitude: []
+      phase: []
+    yaw:
+      magnitude: []
+      phase: []
+  cs_mean_drift:
+    description: CS mean drift loads at T=2s
+    surge:
+      magnitude: []
+      phase: []
+    sway:
+      magnitude: []
+      phase: []
+    heave:
+      magnitude: []
+      phase: []
+    roll:
+      magnitude: []
+      phase: []
+    pitch:
+      magnitude: []
+      phase: []
+    yaw:
+      magnitude: []
+      phase: []
+convergence_study:
+  description: 'Figure 26: max absolute CS-PI difference vs panels per quadrant at T=2s, over all heading
+    pairs. Figure 27: same study for wall-sided variant (z0=0).'
+  wave_period_s: 2.0
+  panel_counts_per_quadrant: []
+  max_abs_diff_per_dof:
+    surge: []
+    sway: []
+    heave: []
+    roll: []
+    pitch: []
+    yaw: []
+wall_sided_variant:
+  description: z0=0 makes the ellipsoid wall-sided. Both OrcaWave and WAMIT CS loads converge to PI limit.
+    Results in Figure 27.
+  z0: 0.0
+  panel_counts_per_quadrant: []
+  max_abs_diff_per_dof:
+    surge: []
+    sway: []
+    heave: []
+    roll: []
+    pitch: []
+    yaw: []
+notes: 'For non-wall-sided body (z0=0.2), WAMIT CS loads do not converge to PI limit. For wall-sided body
+  (z0=0), both programs pass convergence test. Orcina hypothesis: WAMIT CS results incorrect for non-wall-sided
+  bodies. See Section 2.8.'
+status: template
+populated_by: null

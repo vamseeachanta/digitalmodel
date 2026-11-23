@@ -1,0 +1,42 @@
+basename: cathodic_protection
+# Regression input for tests/cathodic_protection/test_engine_adapter.py (#2210).
+
+# Offshore-wind monopile foundation — sacrificial-anode CP per DNV-RP-B401 (2021).
+# Submerged + splash + atmospheric zones, North Sea water, 30-year design life.
+inputs:
+  calculation_type: DNV_RP_B401_offshore
+
+  design_data:
+    design_life: 30.0 # yr (offshore-wind foundation design life)
+    structure_type: monopile
+
+  structure:
+    zones:
+      - zone: submerged
+        area_m2: 1200.0
+        coating_category: III    # B401 6.4.6 Category III: primer + two or more coats, total DFT >= 350 um
+      - zone: splash
+        area_m2: 180.0
+        coating_category: III
+      - zone: atmospheric
+        area_m2: 120.0
+        coating_category: III
+
+  environment:
+    seawater_temperature_C: 8.0  # North Sea mean
+    seawater_resistivity_ohm_m: 0.28
+
+  anode:
+    material: aluminium
+    type: stand_off
+    individual_anode_mass_kg: 150.0
+    utilization_factor: 0.85
+    length_m: 0.9
+    radius_m: 0.06
+
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: true
+    cfg_sensitivities: false

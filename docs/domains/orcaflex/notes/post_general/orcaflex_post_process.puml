@@ -1,0 +1,116 @@
+@startuml orcaflex_post_process
+scale 3
+skinparam titleBorderRoundCorner 15
+skinparam titleBorderThickness 2
+skinparam titleBorderColor red
+skinparam titleBackgroundColor Tomato
+
+title OrcaFlex Post Process (OPP)
+
+start
+
+    note right
+        Objective: To manage Orcaflex postprocess files
+        For consistent, automated, timely outputs
+    end note
+
+    partition "Specify Inputs" {
+
+        :Current directory or \n specify directory;
+
+    }
+
+    partition "Analysis" {
+        :Get sim file status;
+            note right
+                Set time, end time and completion status
+            end note
+
+        :Summarize all files;
+            note right
+                TBA
+            end note
+
+    }
+
+    partition "Unfinished Run Actions" {
+        :Update unfinished runs per cfg settings;
+            note right
+                Files saved as: 
+                  - .yml or .dat
+
+            end note
+
+        :Prepare batch file;
+            note right
+                TBA
+            end note
+    }
+
+    partition "OPP - Summary" {
+        :summary;
+            note right
+                key outputs
+                - <font color=green>Statistics</font> (Min, Max, Mean etc.)
+                - LinkedStatistics (time dependent statistics)
+            end note
+
+    }
+
+    partition "OPP - LinkedStatistics" {
+        :summary;
+            note right
+                Issue: #61 #TODO
+                key outputs
+                - LinkedStatistics (time dependent statistics)
+            end note
+
+    }
+
+    partition "OPP - Time Trace" {
+        :detailed output;
+            note right
+                timetraces of motion, force etc. (.csv)
+            end note
+
+    }
+
+    partition "OPP - Range Graphs" {
+        :detailed output;
+            note right
+                Issue: #61 #TODO
+                motion, force etc. (.csv)
+                Min and Max along length (.csv)
+            end note
+
+    }
+
+
+    partition "OPP - Visualizations" {
+        :Visualizations;
+            note right
+                Issue: #61 #TODO
+                Snapshots (of the model)
+                range graphs plots
+                Timetrace plots
+            end note
+
+    }
+
+    partition "OPP - Frequency Analysis" {
+        :Frequency Analysis;
+            note right
+                Issue: #61 #TODO
+                FFT of time traces for in-depth analysis
+            end note
+
+    }
+
+stop
+
+footer
+%date("yyyy.MM.dd' at 'HH:mm")
+%filename()
+end footer
+
+@enduml

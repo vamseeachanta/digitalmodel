@@ -1,0 +1,476 @@
+# Copyright (c) 2024 Digital Model Project
+# Licensed under the MIT License. See LICENSE file for details.
+
+"""
+Command-line interface for the OrcaFlex Modular Model Generator.
+
+This module provides CLI commands for generating OrcaFlex modular models from
+YAML specification files and validating specifications without generating output.
+
+Usage:
+    # Generate offline using the installed console command
+    modular-generator spec.yml --output generated/
+
+    # Generate model
+    uv run python -m digitalmodel.solvers.orcaflex.modular_generator generate \
+        --input spec.yml \
+        --output generated/
+
+    # Validate spec
+    uv run python -m digitalmodel.solvers.orcaflex.modular_generator validate \
+        --input spec.yml
+"""
+
+import argparse
+import logging
+import sys
+from pathlib import Path
+from typing import NoReturn
+
+import yaml
+from pydantic import ValidationError
+
+from .schema import ProjectInputSpec
+from . import ModularModelGenerator
+
+
+def print_error(message: str) -> None:
+    """Print error message to stderr."""
+    print(f"ERROR: {message}", file=sys.stderr)
+
+
+def print_success(message: str) -> None:
+    """Print success message."""
+    print(f"[OK] {message}")
+
+
+def print_progress(message: str) -> None:
+    """Print progress message."""
+    print(f"  -> {message}")
+
+
+def validate_spec(input_path: Path) -> ProjectInputSpec | None:
+    """
+    Validate a YAML specification file.
+
+    Args:
+        input_path: Path to the YAML spec file
+
+    Returns:
+        Validated ProjectInputSpec if successful, None otherwise
+    """
+    if not input_path.exists():
+        print_error(f"Input file not found: {input_path}")
+        return None
+
+    if not input_path.suffix.lower() in ('.yml', '.yaml'):
+        print_error(f"Input file must be a YAML file (.yml or .yaml): {input_path}")
+        return None
+
+    try:
+        with open(input_path) as f:
+            data = yaml.safe_load(f)
+    except yaml.YAMLError as e:
+        print_error(f"Failed to parse YAML file: {e}")
+        return None
+    except Exception as e:
+        print_error(f"Failed to read file: {e}")
+        return None
+
+    if data is None:
+        print_error("Input file is empty")
+        return None
+
+    if not isinstance(data, dict):
+        print_error("Specification must be a YAML mapping")
+        return None
+
+    try:
+        spec = ProjectInputSpec(**data)
+        return spec
+    except ValidationError as e:
+        print_error("Specification validation failed:")
+        for error in e.errors():
+            loc = " -> ".join(str(x) for x in error['loc'])
+            msg = error['msg']
+            print(f"  - {loc}: {msg}", file=sys.stderr)
+        return None
+
+
+def cmd_validate(args: argparse.Namespace) -> int:
+    """
+    Execute the validate command.
+
+    Args:
+        args: Parsed command-line arguments
+
+    Returns:
+        Exit code (0 for success, 1 for failure)
+    """
+    input_path = Path(args.input)
+
+    print(f"Validating specification: {input_path}")
+    print("-" * 60)
+
+    spec = validate_spec(input_path)
+
+    if spec is None:
+        return 1
+
+    # Print validation summary
+    print_success("Specification is valid")
+    print()
+    print("Summary:")
+    print(f"  Model name:        {spec.metadata.name}")
+    print(f"  Description:       {spec.metadata.description}")
+    print(f"  Structure type:    {spec.metadata.structure}")
+    print(f"  Operation:         {spec.metadata.operation}")
+    print(f"  Project:           {spec.metadata.project}")
+    print()
+    print("Environment:")
+    print(f"  Water depth:       {spec.environment.water.depth} m")
+    print(f"  Water density:     {spec.environment.water.density} te/m3")
+    print(f"  Wave type:         {spec.environment.waves.type}")
+    print(f"  Wave height:       {spec.environment.waves.height} m")
+    print(f"  Current speed:     {spec.environment.current.speed} m/s")
+    print(f"  Wind speed:        {spec.environment.wind.speed} m/s")
+    print()
+    if spec.pipeline is not None:
+        print("Pipeline:")
+        print(f"  Name:              {spec.pipeline.name}")
+        print(f"  Material:          {spec.pipeline.material}")
+        print(f"  Outer diameter:    {spec.pipeline.dimensions.outer_diameter} m")
+        print(f"  Wall thickness:    {spec.pipeline.dimensions.wall_thickness} m")
+        print(f"  Total length:      {spec.get_total_pipeline_length()} m")
+        print(f"  Segments:          {len(spec.pipeline.segments)}")
+    elif spec.riser is not None:
+        print("Riser:")
+        print(f"  Line types:        {len(spec.riser.line_types)}")
+        print(f"  Lines:             {len(spec.riser.lines)}")
+    elif spec.mooring is not None:
+        print("Mooring:")
+        print(f"  Lines:             {len(spec.mooring.lines)}")
+    elif spec.generic is not None:
+        print("Generic model:")
+        print(f"  Line types:        {len(spec.generic.line_types)}")
+        print(f"  Lines:             {len(spec.generic.lines)}")
+        print(f"  Vessels:           {len(spec.generic.vessels)}")
+    print()
+    print("Equipment:")
+    if spec.equipment.tugs:
+        print(f"  Tugs:              {spec.equipment.tugs.count}")
+        print(f"  Tug spacing:       {spec.equipment.tugs.spacing} m")
+    else:
+        print("  Tugs:              None")
+    if spec.equipment.buoyancy_modules:
+        print(f"  BM spacing:        {spec.equipment.buoyancy_modules.spacing} m")
+    else:
+        print("  Buoyancy modules:  None")
+    print(f"  Ramps/shapes:      {len(spec.equipment.ramps)}")
+    print()
+    print("Simulation:")
+    print(f"  Time step:         {spec.simulation.time_step} s")
+    print(f"  Stages:            {spec.simulation.stages}")
+    print(f"  North direction:   {spec.simulation.north_direction} deg")
+
+    return 0
+
+
+def cmd_generate(args: argparse.Namespace) -> int:
+    """
+    Execute the generate command.
+
+    Args:
+        args: Parsed command-line arguments
+
+    Returns:
+        Exit code (0 for success, 1 for failure)
+    """
+    input_path = Path(args.input)
+    output_dir = Path(args.output)
+
+    print(f"OrcaFlex Modular Model Generator")
+    print("=" * 60)
+    print(f"Input:  {input_path}")
+    print(f"Output: {output_dir}")
+    print("-" * 60)
+
+    # Validate first
+    print("Step 1: Validating specification...")
+    spec = validate_spec(input_path)
+
+    if spec is None:
+        return 1
+
+    print_success(f"Validated: {spec.metadata.name}")
+    print()
+
+    print("Step 2: Building and validating model inputs...")
+    try:
+        generator = ModularModelGenerator(input_path)
+        generator.generate(output_dir)
+        # Report only files referenced by the successfully published master.
+        master_text = (output_dir / "master.yml").read_text(encoding="utf-8")
+        written_files = [
+            line.split("includes/", 1)[1]
+            for line in master_text.splitlines()
+            if line.startswith("- includefile: includes/")
+        ]
+    except Exception as e:
+        print_error(f"Generation failed: {e}")
+        import traceback
+        traceback.print_exc()
+        return 1
+
+    print()
+    print("=" * 60)
+    print_success(f"Model generated successfully in: {output_dir}")
+    print()
+    print("Generated files:")
+    print(f"  {output_dir}/")
+    print(f"    master.yml")
+    print(f"    includes/")
+    for file_name in written_files:
+        print(f"      {file_name}")
+    print(f"    inputs/")
+    print(f"      parameters.yml")
+
+    return 0
+
+
+def cmd_campaign(args: argparse.Namespace) -> int:
+    """Execute the campaign command."""
+    from .schema.campaign import CampaignGenerator
+
+    campaign_file = Path(args.campaign_file)
+
+    if not campaign_file.exists():
+        print_error(f"Campaign file not found: {campaign_file}")
+        return 1
+
+    # Configure logging
+    log_level = logging.WARNING
+    if hasattr(args, "verbose") and args.verbose:
+        log_level = logging.DEBUG
+    elif hasattr(args, "quiet") and args.quiet:
+        log_level = logging.ERROR
+    logging.basicConfig(level=log_level, format="%(levelname)s: %(message)s")
+
+    try:
+        gen = CampaignGenerator(campaign_file)
+    except Exception as e:
+        print_error(f"Failed to load campaign: {e}")
+        return 1
+
+    if args.preview:
+        combos = gen.preview()
+        print(f"Campaign: {gen.spec.base.metadata.name}")
+        matrix = gen.spec.campaign
+        parts: list[str] = []
+        if matrix.water_depths:
+            parts.append(f"{len(matrix.water_depths)} depths")
+        if matrix.route_lengths:
+            parts.append(f"{len(matrix.route_lengths)} lengths")
+        if matrix.tensions:
+            parts.append(f"{len(matrix.tensions)} tensions")
+        if matrix.environments:
+            parts.append(f"{len(matrix.environments)} environments")
+        if matrix.soils:
+            parts.append(f"{len(matrix.soils)} soils")
+        if matrix.sweeps:
+            parts.append(f"{len(matrix.sweeps)} sweep(s)")
+        print(f"Matrix: {' x '.join(parts)} = {len(combos)} runs")
+        print()
+
+        # Print header
+        if combos:
+            keys = list(combos[0].keys())
+            header = "  #  " + "  ".join(f"{k:>14}" for k in keys)
+            print(header)
+            for i, combo in enumerate(combos, 1):
+                values = "  ".join(f"{combo[k]:>14}" for k in keys)
+                print(f"{i:>3}  {values}")
+        return 0
+
+    if not args.output:
+        print_error("--output is required for generation (or use --preview)")
+        return 1
+
+    output_dir = Path(args.output)
+
+    # Validate first
+    warnings = gen.validate()
+    for w in warnings:
+        print(f"WARNING: {w}", file=sys.stderr)
+
+    result = gen.generate(
+        output_dir=output_dir,
+        force=getattr(args, "force", False),
+        resume=getattr(args, "resume", False),
+        spec_only=getattr(args, "spec_only", False),
+    )
+
+    print("Campaign generation complete:")
+    print(f"  Generated: {result.run_count}")
+    print(f"  Skipped:   {result.skipped_count}")
+    if result.errors:
+        print(f"  Errors:    {len(result.errors)}")
+        for err in result.errors:
+            print(f"    - {err}", file=sys.stderr)
+        return 1
+
+    return 0
+
+
+def create_parser() -> argparse.ArgumentParser:
+    """
+    Create and configure the argument parser.
+
+    Returns:
+        Configured ArgumentParser instance
+    """
+    parser = argparse.ArgumentParser(
+        prog='modular_generator',
+        description='OrcaFlex Modular Model Generator - Generate OrcaFlex models from YAML specs',
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  # Generate a model from a spec file
+  uv run python -m digitalmodel.solvers.orcaflex.modular_generator generate \\
+      --input spec.yml --output generated/
+
+  # Validate a spec file without generating
+  uv run python -m digitalmodel.solvers.orcaflex.modular_generator validate \\
+      --input spec.yml
+
+For more information, see the documentation at:
+  docs/domains/orcaflex/pipeline/installation/floating/30in_pipeline/
+"""
+    )
+
+    subparsers = parser.add_subparsers(
+        dest='command',
+        title='commands',
+        description='Available commands',
+        help='Command to execute'
+    )
+
+    # Generate command
+    generate_parser = subparsers.add_parser(
+        'generate',
+        help='Generate OrcaFlex modular model from spec',
+        description='Generate a complete OrcaFlex modular model structure from a YAML specification file.'
+    )
+    generate_parser.add_argument(
+        '--input', '-i',
+        required=True,
+        help='Path to the input YAML specification file'
+    )
+    generate_parser.add_argument(
+        '--output', '-o',
+        required=True,
+        help='Path to the output directory for generated files'
+    )
+    generate_parser.set_defaults(func=cmd_generate)
+
+    # Validate command
+    validate_parser = subparsers.add_parser(
+        'validate',
+        help='Validate spec without generating',
+        description='Validate a YAML specification file without generating any output files.'
+    )
+    validate_parser.add_argument(
+        '--input', '-i',
+        required=True,
+        help='Path to the input YAML specification file to validate'
+    )
+    validate_parser.set_defaults(func=cmd_validate)
+
+    # Campaign command
+    campaign_parser = subparsers.add_parser(
+        "campaign",
+        help="Generate parametric campaign of OrcaFlex models",
+        description="Generate multiple OrcaFlex models from a campaign specification.",
+    )
+    campaign_parser.add_argument(
+        "campaign_file",
+        help="Path to the campaign YAML file",
+    )
+    campaign_parser.add_argument(
+        "--output",
+        "-o",
+        help="Root output directory for generated runs",
+    )
+    campaign_parser.add_argument(
+        "--preview",
+        action="store_true",
+        help="Show parameter matrix without generating files",
+    )
+    campaign_parser.add_argument(
+        "--force",
+        action="store_true",
+        help="Overwrite existing run directories",
+    )
+    campaign_parser.add_argument(
+        "--resume",
+        action="store_true",
+        help="Skip runs with existing master.yml (or spec.yml in --spec-only mode)",
+    )
+    campaign_parser.add_argument(
+        "--spec-only",
+        action="store_true",
+        help="Emit per-run spec.yml only (no master.yml/includes), plus top-level manifest.yml",
+    )
+    campaign_parser.add_argument(
+        "--verbose",
+        "-v",
+        action="store_true",
+        help="Verbose logging output",
+    )
+    campaign_parser.add_argument(
+        "--quiet",
+        "-q",
+        action="store_true",
+        help="Only show errors",
+    )
+    campaign_parser.set_defaults(func=cmd_campaign)
+
+    return parser
+
+
+def main(argv: list[str] | None = None) -> NoReturn:
+    """
+    Main entry point for the CLI.
+
+    Parses arguments and dispatches to the appropriate command handler.
+    """
+    if argv is None:
+        argv = sys.argv[1:]
+
+    if argv and argv[0] in {"generate", "validate", "campaign"}:
+        parser = create_parser()
+    else:
+        parser = argparse.ArgumentParser(
+            prog="modular-generator",
+            description="Generate modular model YAML offline with mandatory validation.",
+            epilog=(
+                "Example: modular-generator spec.yml --output generated/\n"
+                "Existing commands: generate --input SPEC --output DIR; "
+                "validate --input SPEC; campaign --help."
+            ),
+        )
+        parser.add_argument("input", metavar="spec", help="Input YAML specification file")
+        parser.add_argument(
+            "--output", "-o", required=True,
+            help="Directory for the validated model files",
+        )
+        parser.set_defaults(func=cmd_generate)
+
+    args = parser.parse_args(argv)
+
+    exit_code = args.func(args)
+    sys.exit(exit_code)
+
+
+if __name__ == '__main__':
+    main()

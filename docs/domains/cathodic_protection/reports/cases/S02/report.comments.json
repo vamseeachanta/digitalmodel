@@ -1,0 +1,78 @@
+{
+  "comments": [],
+  "decision_conflicts": [],
+  "prior_rounds": [],
+  "report_id": "S02",
+  "report_sha256": "8902201ce9c84aca18ee1d9974584389f327d738bb05abf93a52f929a1d220e1",
+  "results": [
+    {
+      "decision": "pending",
+      "id": "review-1"
+    },
+    {
+      "decision": "pending",
+      "id": "review-2"
+    },
+    {
+      "decision": "pending",
+      "id": "review-3"
+    },
+    {
+      "decision": "pending",
+      "id": "review-4"
+    },
+    {
+      "decision": "pending",
+      "id": "review-5"
+    },
+    {
+      "decision": "pending",
+      "id": "review-6"
+    },
+    {
+      "decision": "pending",
+      "id": "review-7"
+    },
+    {
+      "decision": "pending",
+      "id": "review-8"
+    },
+    {
+      "decision": "pending",
+      "id": "review-9"
+    },
+    {
+      "decision": "pending",
+      "id": "review-10"
+    },
+    {
+      "decision": "pending",
+      "id": "design-basis"
+    },
+    {
+      "decision": "pending",
+      "id": "current-demand"
+    },
+    {
+      "decision": "pending",
+      "id": "anode-requirements"
+    },
+    {
+      "decision": "pending",
+      "id": "adequacy"
+    },
+    {
+      "decision": "pending",
+      "id": "references"
+    },
+    {
+      "decision": "pending",
+      "id": "result-adequacy-1"
+    }
+  ],
+  "reviewer_assignment": "pending",
+  "revision": "00",
+  "schema_version": 1,
+  "standard_revision": "c955b86159acc4f9e9f5964690c24dd1411e5b48",
+  "visual_review": "deferred by the owner"
+}

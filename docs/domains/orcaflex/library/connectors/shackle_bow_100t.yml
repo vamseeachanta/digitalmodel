@@ -1,0 +1,36 @@
+# Bow Shackle 100 Tonne - Library Component
+# Category: connectors
+# Description: Wide-body bow shackle for 100 tonne SWL
+# Application: Mooring line connections, hawser attachment, lifting
+# SWL: 100 tonnes (981 kN), Proof Load: 200 tonnes
+# Pin diameter: ~95mm, Jaw width: ~200mm
+# NOTE: No section header - properties only for IncludeFile
+# Modeled as 6D Buoy representing connector mass at joint point
+BuoyType: Spar buoy
+Connection: Free
+DampingRelativeTo: Earth
+Mass: 250
+Volume: 0.032
+MomentsOfInertia:
+- 15
+- 20
+- 20
+CentreOfMass:
+- 0
+- 0
+- 0
+Height: 0.35
+Pen: [2, Solid, $008000]
+# Shackle dimensions: ~350mm length x 200mm width
+# Forged alloy steel, galvanized or painted
+Cylinders:
+- CylinderOuterDiameter: 0.2
+  CylinderInnerDiameter: 0
+  CylinderLength: 0.35
+  CylinderAxialDragArea: 0.07
+  DragForceCoefficient:
+  - 1.2
+  - 1.0
+  AddedMassForceCoefficient:
+  - 1.0
+  - 0.5

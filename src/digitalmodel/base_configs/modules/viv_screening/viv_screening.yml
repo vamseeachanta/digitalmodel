@@ -1,0 +1,9 @@
+basename: viv_screening
+
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: true
+
+viv_screening: {}

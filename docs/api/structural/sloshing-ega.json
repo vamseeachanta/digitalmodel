@@ -1,0 +1,262 @@
+{
+  "meta": {
+    "generated_by": "scripts/cfd/run_sloshing_ega_sweep.py",
+    "solver": "interFoam (VOF), OpenFOAM ESI v2312",
+    "epic": "#1429",
+    "issue": "#1433",
+    "g": 9.80665,
+    "excitation": "combined sway+roll (Effective Gravity Angle) via multiMotion \u2014 roll about the tank floor + an in-phase lateral SURGE representing the roll-induced lateral acceleration for a roll axis a distance d below the floor (Carette 2023)",
+    "resonance_locator": "quadrature (damping) coefficient peak \u2014 phase-based, per B\u00e4uerlein & Avila (2021); moment referenced to the floor centre so it is comparable across levers",
+    "note": "lever d is the roll-axis depth below the floor; the EGA lateral surge amplitude is d*theta0 (rad), phaseShift T/2. ega_amplification = 1 + d*omega^2/g is the effective-gravity-angle magnification at the drive frequency."
+  },
+  "tank": {
+    "shape": "rectangular",
+    "breadth_m": 0.9,
+    "tank_height_m": 0.9,
+    "fill_h_over_L": 0.7,
+    "fill_depth_m": 0.63,
+    "roll_amplitude_deg": 4.0,
+    "T1_analytical_s": 1.0872,
+    "cells_per_breadth": 60,
+    "n_cycles": 12.0
+  },
+  "levers": [
+    {
+      "lever_m": 0.0,
+      "lever_over_L": 0.0,
+      "label": "roll-only",
+      "resonant_ratio": 1.117,
+      "freq_ratio": 0.8952,
+      "detuning_pct": -10.48,
+      "forcing_norm_resonant_ratio": 1.117,
+      "forcing_norm_detuning_pct": -10.48,
+      "peak_quad_at_grid_edge": false,
+      "peak_runup_m": 0.38897,
+      "points": [
+        {
+          "ratio": 0.95,
+          "drive_period_s": 1.03284,
+          "ega_amplification": 1.0,
+          "runup_amp_m": 0.282815,
+          "quad_coeff": 0.877,
+          "status": "completed"
+        },
+        {
+          "ratio": 1.0,
+          "drive_period_s": 1.0872,
+          "ega_amplification": 1.0,
+          "runup_amp_m": 0.300672,
+          "quad_coeff": 1.57259,
+          "status": "completed"
+        },
+        {
+          "ratio": 1.05,
+          "drive_period_s": 1.14156,
+          "ega_amplification": 1.0,
+          "runup_amp_m": 0.388968,
+          "quad_coeff": 2.65449,
+          "status": "completed"
+        },
+        {
+          "ratio": 1.1,
+          "drive_period_s": 1.19591,
+          "ega_amplification": 1.0,
+          "runup_amp_m": 0.388944,
+          "quad_coeff": 3.70548,
+          "status": "completed"
+        },
+        {
+          "ratio": 1.15,
+          "drive_period_s": 1.25027,
+          "ega_amplification": 1.0,
+          "runup_amp_m": 0.378514,
+          "quad_coeff": 3.50633,
+          "status": "completed"
+        },
+        {
+          "ratio": 1.2,
+          "drive_period_s": 1.30463,
+          "ega_amplification": 1.0,
+          "runup_amp_m": 0.335983,
+          "quad_coeff": 0.59301,
+          "status": "completed"
+        }
+      ],
+      "runup_amplification_vs_rollonly": 1.0
+    },
+    {
+      "lever_m": 0.45,
+      "lever_over_L": 0.5,
+      "label": "EGA d=0.5L",
+      "resonant_ratio": 1.1859,
+      "freq_ratio": 0.8433,
+      "detuning_pct": -15.67,
+      "forcing_norm_resonant_ratio": 1.1878,
+      "forcing_norm_detuning_pct": -15.81,
+      "peak_quad_at_grid_edge": false,
+      "peak_runup_m": 0.44972,
+      "points": [
+        {
+          "ratio": 0.95,
+          "drive_period_s": 1.03284,
+          "ega_amplification": 2.6982,
+          "runup_amp_m": 0.324822,
+          "quad_coeff": 1.31948,
+          "status": "completed"
+        },
+        {
+          "ratio": 1.0,
+          "drive_period_s": 1.0872,
+          "ega_amplification": 2.5326,
+          "runup_amp_m": 0.31508,
+          "quad_coeff": 1.51896,
+          "status": "completed"
+        },
+        {
+          "ratio": 1.05,
+          "drive_period_s": 1.14156,
+          "ega_amplification": 2.3901,
+          "runup_amp_m": 0.34426,
+          "quad_coeff": 1.87609,
+          "status": "completed"
+        },
+        {
+          "ratio": 1.1,
+          "drive_period_s": 1.19591,
+          "ega_amplification": 2.2666,
+          "runup_amp_m": 0.426318,
+          "quad_coeff": 2.78207,
+          "status": "completed"
+        },
+        {
+          "ratio": 1.15,
+          "drive_period_s": 1.25027,
+          "ega_amplification": 2.1589,
+          "runup_amp_m": 0.449723,
+          "quad_coeff": 3.13235,
+          "status": "completed"
+        },
+        {
+          "ratio": 1.2,
+          "drive_period_s": 1.30463,
+          "ega_amplification": 2.0643,
+          "runup_amp_m": 0.448564,
+          "quad_coeff": 3.79896,
+          "status": "completed"
+        },
+        {
+          "ratio": 1.25,
+          "drive_period_s": 1.35899,
+          "ega_amplification": 1.9809,
+          "runup_amp_m": 0.412416,
+          "quad_coeff": 1.39577,
+          "status": "completed"
+        },
+        {
+          "ratio": 1.3,
+          "drive_period_s": 1.41335,
+          "ega_amplification": 1.9069,
+          "runup_amp_m": 0.409132,
+          "quad_coeff": 0.53181,
+          "status": "completed"
+        },
+        {
+          "ratio": 1.35,
+          "drive_period_s": 1.46771,
+          "ega_amplification": 1.841,
+          "runup_amp_m": 0.415196,
+          "quad_coeff": 0.36721,
+          "status": "completed"
+        }
+      ],
+      "runup_amplification_vs_rollonly": 1.156
+    },
+    {
+      "lever_m": 0.9,
+      "lever_over_L": 1.0,
+      "label": "EGA d=1L",
+      "resonant_ratio": 1.2527,
+      "freq_ratio": 0.7983,
+      "detuning_pct": -20.17,
+      "forcing_norm_resonant_ratio": 1.2655,
+      "forcing_norm_detuning_pct": -20.98,
+      "peak_quad_at_grid_edge": false,
+      "peak_runup_m": 0.44526,
+      "points": [
+        {
+          "ratio": 0.95,
+          "drive_period_s": 1.03284,
+          "ega_amplification": 4.3964,
+          "runup_amp_m": 0.337742,
+          "quad_coeff": 2.27228,
+          "status": "completed"
+        },
+        {
+          "ratio": 1.0,
+          "drive_period_s": 1.0872,
+          "ega_amplification": 4.0652,
+          "runup_amp_m": 0.289064,
+          "quad_coeff": 2.23133,
+          "status": "completed"
+        },
+        {
+          "ratio": 1.05,
+          "drive_period_s": 1.14156,
+          "ega_amplification": 3.7803,
+          "runup_amp_m": 0.333048,
+          "quad_coeff": 2.14705,
+          "status": "completed"
+        },
+        {
+          "ratio": 1.1,
+          "drive_period_s": 1.19591,
+          "ega_amplification": 3.5333,
+          "runup_amp_m": 0.331493,
+          "quad_coeff": 2.54848,
+          "status": "completed"
+        },
+        {
+          "ratio": 1.15,
+          "drive_period_s": 1.25027,
+          "ega_amplification": 3.3178,
+          "runup_amp_m": 0.374491,
+          "quad_coeff": 2.90278,
+          "status": "completed"
+        },
+        {
+          "ratio": 1.2,
+          "drive_period_s": 1.30463,
+          "ega_amplification": 3.1287,
+          "runup_amp_m": 0.444294,
+          "quad_coeff": 3.17146,
+          "status": "completed"
+        },
+        {
+          "ratio": 1.25,
+          "drive_period_s": 1.35899,
+          "ega_amplification": 2.9618,
+          "runup_amp_m": 0.44526,
+          "quad_coeff": 3.53989,
+          "status": "completed"
+        },
+        {
+          "ratio": 1.3,
+          "drive_period_s": 1.41335,
+          "ega_amplification": 2.8138,
+          "runup_amp_m": 0.437411,
+          "quad_coeff": 3.24384,
+          "status": "completed"
+        },
+        {
+          "ratio": 1.35,
+          "drive_period_s": 1.46771,
+          "ega_amplification": 2.6819,
+          "runup_amp_m": 0.368335,
+          "quad_coeff": 0.66521,
+          "status": "completed"
+        }
+      ],
+      "runup_amplification_vs_rollonly": 1.145
+    }
+  ]
+}

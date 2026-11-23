@@ -1,0 +1,5 @@
+%YAML 1.1
+# Generated from: turret_mooring_base.yml + external_turret.yml
+---
+BaseFile: ../base/turret_mooring_base.yml
+IncludeFile: ../variations/external_turret.yml

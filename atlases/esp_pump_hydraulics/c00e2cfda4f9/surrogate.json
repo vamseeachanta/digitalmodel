@@ -1,0 +1,30 @@
+{
+  "basename": "esp_pump_hydraulics",
+  "atlas_id": "c00e2cfda4f9",
+  "physics": "utilization_threshold",
+  "response": "governing_utilisation",
+  "axes": [
+    {
+      "name": "flow_rate_m3_per_day",
+      "scale": "linear",
+      "grid": [
+        700.0,
+        1000.0,
+        1300.0,
+        1600.0,
+        1900.0
+      ]
+    },
+    {
+      "name": "dynamic_fluid_level_m",
+      "scale": "linear",
+      "grid": [
+        1200.0,
+        1500.0,
+        1800.0,
+        2100.0,
+        2400.0
+      ]
+    }
+  ]
+}

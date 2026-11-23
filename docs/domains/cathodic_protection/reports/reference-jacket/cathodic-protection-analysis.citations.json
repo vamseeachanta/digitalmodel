@@ -1,0 +1,357 @@
+{
+  "arrangements": {
+    "rechecked": {
+      "anode_count": 424,
+      "checks": [
+        {
+          "margin_percent": 0.20226770529361282,
+          "passes": true,
+          "provided": 9157.742585214248,
+          "quantity": "Mean-current lifetime mass",
+          "required": 9139.256820163213,
+          "unit": "kg"
+        },
+        {
+          "margin_percent": 1277.6112545923665,
+          "passes": true,
+          "provided": 656.4285407382255,
+          "quantity": "Initial current output",
+          "required": 47.649766111446425,
+          "unit": "A"
+        },
+        {
+          "margin_percent": 271.60297693716234,
+          "passes": true,
+          "provided": 489.7203836336474,
+          "quantity": "Final current output",
+          "required": 131.7859150833602,
+          "unit": "A"
+        }
+      ]
+    },
+    "stated": {
+      "anode_count": 252,
+      "checks": [
+        {
+          "margin_percent": -40.44582202421228,
+          "passes": false,
+          "provided": 5442.809272344317,
+          "quantity": "Mean-current lifetime mass",
+          "required": 9139.256820163213,
+          "unit": "kg"
+        },
+        {
+          "margin_percent": 718.7689532011236,
+          "passes": true,
+          "provided": 390.1414911934736,
+          "quantity": "Initial current output",
+          "required": 47.649766111446425,
+          "unit": "A"
+        },
+        {
+          "margin_percent": 120.85837308529457,
+          "passes": true,
+          "provided": 291.0602280086772,
+          "quantity": "Final current output",
+          "required": 131.7859150833602,
+          "unit": "A"
+        }
+      ]
+    }
+  },
+  "citations": [
+    {
+      "code_id": "dnv-rp-b401",
+      "note": "Existing CP route; no standard tables exported.",
+      "publisher": "DNV",
+      "revision": "2021-05",
+      "section": "Table 8-1",
+      "source_project": null,
+      "source_sibling": "generic",
+      "wiki_path": "wikis/engineering-standards/wiki/standards/dnv-rp-b401-2021.md"
+    },
+    {
+      "code_id": "dnv-rp-b401",
+      "note": "Existing CP route; no standard tables exported.",
+      "publisher": "DNV",
+      "revision": "2021-05",
+      "section": "Table 8-2",
+      "source_project": null,
+      "source_sibling": "generic",
+      "wiki_path": "wikis/engineering-standards/wiki/standards/dnv-rp-b401-2021.md"
+    },
+    {
+      "code_id": "dnv-rp-b401",
+      "note": "Existing CP route; no standard tables exported.",
+      "publisher": "DNV",
+      "revision": "2021-05",
+      "section": "Table 8-4",
+      "source_project": null,
+      "source_sibling": "generic",
+      "wiki_path": "wikis/engineering-standards/wiki/standards/dnv-rp-b401-2021.md"
+    },
+    {
+      "code_id": "dnv-rp-b401",
+      "note": "Existing CP route; no standard tables exported.",
+      "publisher": "DNV",
+      "revision": "2021-05",
+      "section": "Table 8-6",
+      "source_project": null,
+      "source_sibling": "generic",
+      "wiki_path": "wikis/engineering-standards/wiki/standards/dnv-rp-b401-2021.md"
+    },
+    {
+      "code_id": "dnv-rp-b401",
+      "note": "Existing CP route; no standard tables exported.",
+      "publisher": "DNV",
+      "revision": "2021-05",
+      "section": "Table 8-6 with [2.4.2] (design protective potential)",
+      "source_project": null,
+      "source_sibling": "generic",
+      "wiki_path": "wikis/engineering-standards/wiki/standards/dnv-rp-b401-2021.md"
+    },
+    {
+      "code_id": "dnv-rp-b401",
+      "note": "Existing CP route; no standard tables exported.",
+      "publisher": "DNV",
+      "revision": "2021-05",
+      "section": "Table 8-8",
+      "source_project": null,
+      "source_sibling": "generic",
+      "wiki_path": "wikis/engineering-standards/wiki/standards/dnv-rp-b401-2021.md"
+    },
+    {
+      "code_id": "dnv-rp-b401",
+      "note": "Existing CP route; no standard tables exported.",
+      "publisher": "DNV",
+      "revision": "2021-05",
+      "section": "[3.3.8] (buried surfaces)",
+      "source_project": null,
+      "source_sibling": "generic",
+      "wiki_path": "wikis/engineering-standards/wiki/standards/dnv-rp-b401-2021.md"
+    }
+  ],
+  "geometry_sources": [
+    {
+      "filename": "OpenFAST/IEA-15-240-RWT-Jacket_60m_water_depth/IEA-15-240-RWT-Jacket_HydroDyn.dat",
+      "read_at": "2026-10-13T15:10:41+00:00",
+      "sha256": "a017b4d7711e3673e88f520dfe4f61a88e2086af10169607736319c68885549d",
+      "size_bytes": 15726,
+      "url": "https://raw.githubusercontent.com/mmrocze2/IEA-15-240-RWT/da77a393569b6c5ddf7aa424e5b0a92d37eba833/OpenFAST/IEA-15-240-RWT-Jacket_60m_water_depth/IEA-15-240-RWT-Jacket_HydroDyn.dat"
+    },
+    {
+      "filename": "OpenFAST/IEA-15-240-RWT-Jacket_60m_water_depth/IEA-15-240-RWT-Jacket_SubDyn.dat",
+      "read_at": "2026-10-13T15:10:41+00:00",
+      "sha256": "7571292e733f455738a38aa1a279d4c060464a28d57b4b0139c6f67f05e39f1f",
+      "size_bytes": 14354,
+      "url": "https://raw.githubusercontent.com/mmrocze2/IEA-15-240-RWT/da77a393569b6c5ddf7aa424e5b0a92d37eba833/OpenFAST/IEA-15-240-RWT-Jacket_60m_water_depth/IEA-15-240-RWT-Jacket_SubDyn.dat"
+    },
+    {
+      "filename": "LICENSE",
+      "read_at": "2026-10-13T15:10:41+00:00",
+      "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+      "size_bytes": 11357,
+      "url": "https://raw.githubusercontent.com/mmrocze2/IEA-15-240-RWT/da77a393569b6c5ddf7aa424e5b0a92d37eba833/LICENSE"
+    },
+    {
+      "filename": "OpenFAST/IEA-15-240-RWT-Jacket_60m_water_depth/_IEA-15-240-RWT-Jacket.fst",
+      "read_at": "2026-10-13T15:10:41+00:00",
+      "sha256": "e3dcab7f9ec41c031be8d6d6e223fec2adf0195640094d5412913c602d10c01e",
+      "size_bytes": 7980,
+      "url": "https://raw.githubusercontent.com/mmrocze2/IEA-15-240-RWT/da77a393569b6c5ddf7aa424e5b0a92d37eba833/OpenFAST/IEA-15-240-RWT-Jacket_60m_water_depth/_IEA-15-240-RWT-Jacket.fst"
+    },
+    {
+      "filename": "OpenFAST/IEA-15-240-RWT-Jacket_60m_water_depth/README.md",
+      "read_at": "2026-10-13T15:10:41+00:00",
+      "sha256": "65ce0461477955e3d9871a8005418115860b4cc2ab9ce524c0c3d2e54f3df8f2",
+      "size_bytes": 655,
+      "url": "https://raw.githubusercontent.com/mmrocze2/IEA-15-240-RWT/da77a393569b6c5ddf7aa424e5b0a92d37eba833/OpenFAST/IEA-15-240-RWT-Jacket_60m_water_depth/README.md"
+    },
+    {
+      "filename": "README.md",
+      "read_at": "2026-10-13T15:10:41+00:00",
+      "sha256": "16a2e6422b6d0d79df046f0c9aecdb839070b989b522013b6361e49f59af54c9",
+      "size_bytes": 5032,
+      "url": "https://raw.githubusercontent.com/mmrocze2/IEA-15-240-RWT/da77a393569b6c5ddf7aa424e5b0a92d37eba833/README.md"
+    }
+  ],
+  "input_sha256": "8e9f9eb9bcec7564b19950385a18e2c7e58ac872b65a5a35c79221eeb29bfb39",
+  "report_sha256": "579e016facfe66cc1307012f6b4291a6e7fa653637c633bbb024416f3aa96245",
+  "reporting_standard_revision": "bc2472877b0af9e399ccb4b4fcb8eb8a8b7b5721",
+  "sensitivity": [
+    {
+      "base_years": 25.0,
+      "comparison": {
+        "anode_count": 252,
+        "checks": [
+          {
+            "margin_percent": -18.368003434986914,
+            "passes": false,
+            "provided": 5442.809272344317,
+            "quantity": "Mean-current lifetime mass",
+            "required": 6667.494979140407,
+            "unit": "kg"
+          },
+          {
+            "margin_percent": 718.7689532011236,
+            "passes": true,
+            "provided": 390.1414911934736,
+            "quantity": "Initial current output",
+            "required": 47.649766111446425,
+            "unit": "A"
+          },
+          {
+            "margin_percent": 154.88471164880778,
+            "passes": true,
+            "provided": 291.0602280086772,
+            "quantity": "Final current output",
+            "required": 114.19289376983653,
+            "unit": "A"
+          }
+        ]
+      },
+      "count_by_final_current": 99,
+      "count_by_initial_current": 31,
+      "count_by_mass": 309,
+      "evaluated_years": 20.0,
+      "governing_case": "mass",
+      "quantity": "Design life",
+      "required_count": 309
+    },
+    {
+      "base_years": 25.0,
+      "comparison": {
+        "anode_count": 252,
+        "checks": [
+          {
+            "margin_percent": -40.44582202421228,
+            "passes": false,
+            "provided": 5442.809272344317,
+            "quantity": "Mean-current lifetime mass",
+            "required": 9139.256820163213,
+            "unit": "kg"
+          },
+          {
+            "margin_percent": 718.7689532011236,
+            "passes": true,
+            "provided": 390.1414911934736,
+            "quantity": "Initial current output",
+            "required": 47.649766111446425,
+            "unit": "A"
+          },
+          {
+            "margin_percent": 120.85837308529457,
+            "passes": true,
+            "provided": 291.0602280086772,
+            "quantity": "Final current output",
+            "required": 131.7859150833602,
+            "unit": "A"
+          }
+        ]
+      },
+      "count_by_final_current": 115,
+      "count_by_initial_current": 31,
+      "count_by_mass": 424,
+      "evaluated_years": 25.0,
+      "governing_case": "mass",
+      "quantity": "Design life",
+      "required_count": 424
+    },
+    {
+      "base_years": 25.0,
+      "comparison": {
+        "anode_count": 252,
+        "checks": [
+          {
+            "margin_percent": -54.388492607951065,
+            "passes": false,
+            "provided": 5442.809272344317,
+            "quantity": "Mean-current lifetime mass",
+            "required": 11932.973899681105,
+            "unit": "kg"
+          },
+          {
+            "margin_percent": 718.7689532011236,
+            "passes": true,
+            "provided": 390.1414911934736,
+            "quantity": "Initial current output",
+            "required": 47.649766111446425,
+            "unit": "A"
+          },
+          {
+            "margin_percent": 94.84690079420648,
+            "passes": true,
+            "provided": 291.0602280086772,
+            "quantity": "Final current output",
+            "required": 149.37893639688392,
+            "unit": "A"
+          }
+        ]
+      },
+      "count_by_final_current": 130,
+      "count_by_initial_current": 31,
+      "count_by_mass": 553,
+      "evaluated_years": 30.0,
+      "governing_case": "mass",
+      "quantity": "Design life",
+      "required_count": 553
+    },
+    {
+      "base_years": 25.0,
+      "comparison": {
+        "anode_count": 252,
+        "checks": [
+          {
+            "margin_percent": -79.32644169892372,
+            "passes": false,
+            "provided": 5442.809272344317,
+            "quantity": "Mean-current lifetime mass",
+            "required": 26327.39460270349,
+            "unit": "kg"
+          },
+          {
+            "margin_percent": 718.7689532011236,
+            "passes": true,
+            "provided": 390.1414911934736,
+            "quantity": "Initial current output",
+            "required": 47.649766111446425,
+            "unit": "A"
+          },
+          {
+            "margin_percent": 32.449999923529774,
+            "passes": true,
+            "provided": 291.0602280086772,
+            "quantity": "Final current output",
+            "required": 219.7510216509787,
+            "unit": "A"
+          }
+        ]
+      },
+      "count_by_final_current": 191,
+      "count_by_initial_current": 31,
+      "count_by_mass": 1219,
+      "evaluated_years": 50.0,
+      "governing_case": "mass",
+      "quantity": "Design life",
+      "required_count": 1219
+    }
+  ],
+  "status": "Issued for information",
+  "zone_demand_A": {
+    "buried": {
+      "I_final_A": 36.7566,
+      "I_initial_A": 36.7566,
+      "I_mean_A": 36.7566
+    },
+    "water-lower": {
+      "I_final_A": 39.5945,
+      "I_initial_A": 5.5629,
+      "I_mean_A": 15.7069
+    },
+    "water-upper": {
+      "I_final_A": 55.4348,
+      "I_initial_A": 5.3303,
+      "I_mean_A": 22.6536
+    }
+  }
+}

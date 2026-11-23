@@ -1,0 +1,110 @@
+# LineTypes Configuration
+# Generated from: F06 Spool piece manoeuvring.yml
+# Date: 2026-01-18 22:18:19
+LineTypes:
+- Name: 10.75x0.19 Jumper No slam
+  Category: Homogeneous pipe
+  OD: 0.273
+  ID: 0.242824
+  MaterialDensity: 7.850000000000004
+  E: 211.99999999999997e6
+  PoissonRatio: 0.293
+  ExpansionTable: None
+  Cdn: 1.2
+  Cdz: 0.008
+  Cl: 0
+  Can: Ca1
+  Caz: 0
+  Cs: 0
+  Ce: 0
+  SeabedLateralFrictionCoefficient: 0.5
+  SeabedAxialFrictionCoefficient: ~
+  ClashStiffness: 0
+  AllowableStress: ~
+  RayleighDampingCoefficients: (no damping)
+  CoatingThickness: 0
+  LiningThickness: 0
+  AdditionalEI: 0
+  APIRP2RDTcorr: 0
+  APIRP2RDSMYS: 359.9999999999999e3
+- Name: 10.75x0.19 Jumper Slam
+  Category: Homogeneous pipe
+  OD: 0.273
+  ID: 0.242824
+  MaterialDensity: 7.850000000000004
+  E: 211.99999999999997e6
+  PoissonRatio: 0.293
+  ExpansionTable: None
+  Cdn: 1.2
+  Cdz: 0.008
+  Cl: 0
+  Can: Ca1
+  Caz: 0
+  Cs: Ca Rate1
+  Ce: 2.5
+  SeabedLateralFrictionCoefficient: 0.5
+  SeabedAxialFrictionCoefficient: ~
+  ClashStiffness: 0
+  AllowableStress: ~
+  RayleighDampingCoefficients: (no damping)
+  CoatingThickness: 0
+  LiningThickness: 0
+  AdditionalEI: 0
+  APIRP2RDTcorr: 0
+  APIRP2RDSMYS: 359.9999999999999e3
+- Name: Crane wire type
+  Category: General
+  OD: 0.16000000000000003
+  ID: 0
+  CentreOfMass:
+  - 0
+  - 0
+  BulkModulus: Infinity
+  MassPerUnitLength: 0.15958800000000004
+  CompressionIsLimited: No
+  AllowableTension: ~
+  MinRadius:
+  - ~
+  - ~
+  EI:
+  - 0
+  - ~
+  EA: 1.6160000000000002e6
+  PoissonRatio: 0.5
+  ExpansionTable: None
+  GJ: 80
+  TensionTorqueCoupling: 0
+  OuterContactDiameter: ~
+  InnerContactDiameter: ~
+  ClashStiffness: 0
+  Ca:
+  - 1
+  - ~
+  - 0
+  Cm:
+  - ~
+  - ~
+  - ~
+  Cs: 0
+  Ce: 0
+  Cd:
+  - 1.2
+  - ~
+  - 0.008
+  Cl: 0
+  NormalDragLiftDiameter: ~
+  AxialDragLiftDiameter: ~
+  StressOD: ~
+  StressID: ~
+  AllowableStress: ~
+  TensileStressLoadingFactor: 1
+  BendingStressLoadingFactor: 1
+  ShearStressLoadingFactor: 1
+  TorsionalStressLoadingFactor: 1
+  SeabedLateralFrictionCoefficient: 0.5
+  SeabedAxialFrictionCoefficient: ~
+  RayleighDampingCoefficients: (no damping)
+  Pen:
+  - 1
+  - Solid
+  - Aqua

@@ -1,0 +1,324 @@
+# Riser Database (#1245 / #1199a)
+
+First slice of the riser domain database (parent #1199, exemplar of the
+data-source flywheel epic llm-wiki#799). This slice ships the tabular
+foundation: a fail-closed loader, three public reference tables, two
+citation-emitting getters, and the leak gate.
+
+## Tables (`data/riser_database/`)
+
+Generated deterministically by `scripts/riser_database/build_tables.py` from
+the externalized seed spec `scripts/riser_database/sources.yml` — regenerate
+and `git diff --exit-code data/riser_database` to verify the committed tables
+match the seeds. `manifest.yaml` carries per-table sha256 fingerprints; the
+loader refuses a table whose fingerprint drifted.
+
+| Table | Route | Content |
+|---|---|---|
+| `config_catalog` | public | 42 configurations: 5 `examples/riser_input/*.yml` + 22 explicit `config/pipe` files + 1 lift reference + 14 public examples. Pipe filename depth uses ft → m × 0.3048; pipe OD/WT use inches → mm × 25.4. Missing evidence yields an empty cell. |
+| `standards_crosswalk` | public | Clause **identifiers** + `wiki_path` only: `api-std-2rd` (there is no `api-rp-2rd` — API reclassified RP 2RD as STD 2RD), `api-rp-16q`, `dnv-os-f201`, `dnv-rp-c203`. `registry_revision` mirrors llm-wiki `data/standards-registry.json` verbatim. |
+| `material_sn_scf_dff` | public | References into `fatigue/sn_curves.py` vocabulary (plain detail-category letters + environment — the REAL riser fatigue consumer, used by `riser_fatigue/workflow.py` and `touchdown.py`; NOT the composite ids of `sn_library_api`). `scf_ref`/`dff_ref` name getters. |
+
+**Licensing rule:** no DNV/API clause text, table content, or S-N parameter
+values in this public repo. Values come through `CitedValue` getters resolving
+against the **private** llm-wiki (`.claude/rules/codes-standards-data-routing.md`
+in workspace-hub). The schema tests enforce exact column allowlists plus
+content-shape tripwires (clause-locator regex for `section`; length and
+numeric-token-density caps on free text) so values cannot ride free-text
+columns either.
+
+## Loader
+
+```python
+from digitalmodel.riser_database import RiserDatabase
+
+db = RiserDatabase.load()          # fail-closed: raises RiserDatabaseError
+row = db.config("riser_scr")       # unknown key raises — never fuzzy-matches
+```
+
+Bounded reads (known filenames, 5 MB cap, `yaml.safe_load`), fingerprint
+verification against `manifest.yaml`, exact column checks, duplicate-key
+rejection. Escalation mirrors `parametric.atlas.Atlas.predict`: unknown key →
+raise with reason.
+
+## Citation getters
+
+```python
+from digitalmodel.riser_database import (
+    get_riser_dff, get_riser_scf,
+    get_tension_weight_factor, get_buoyancy_tension_factor, riser_citations,
+)
+
+get_riser_dff().value                  # 10.0 — DNV-OS-F201 (allowable damage = 1/DFF)
+get_riser_scf().value                  # 1.0  — DNV-RP-C203 methodology (neutral default)
+get_tension_weight_factor().value      # 1.05 — API RP 16Q (1st Ed. 1993) §3.3, f_wt
+get_buoyancy_tension_factor().value    # 0.96 — API RP 16Q (1st Ed. 1993) §3.3, f_bt
+get_riser_dff(override=3.0)            # user override wins; note records both values
+riser_citations()                      # {dff, scf, f_wt, f_bt, von_mises_df}; standalone may return {}
+```
+
+Direct getter calls are **fail-closed** (`CitationResolutionError` carrying the
+`code_id`). The consumer helper returns an empty mapping with a one-shot
+`RuntimeWarning` only when discovery exhausts every wiki route with
+`resolver_unconfigured:`. With an explicit `repo_root` or a resolved wiki,
+missing pages, missing identity metadata and mismatched revisions raise
+`CitationResolutionError`. Invalid `LLM_WIKI_PATH` or
+`DIGITALMODEL_REPO_ROOT` configuration also raises.
+An earlier standalone warning does not suppress later configured-wiki errors.
+The boundary is covered by `tests/riser_database/test_citations.py`; expected
+errors follow `citations/schema.py` and `citations/resolver.py`, independently
+of any engineering value. Issue 2166 tracks this failure boundary.
+Values match
+the riser literals (`touchdown.py` `dff=10.0`, `scf=1.0`; `stackup.py`
+`F_WT_DEFAULT=1.05`, `F_BT_DEFAULT=0.96`) so the #1246 wiring has day-one
+parity. `riser_fatigue/workflow.py` resolves DFF through `resolve_dff()`:
+an explicit `dff` in settings wins; an absent `dff` resolves the cited
+DNV-OS-F201 default in-context and **raises** standalone (never a silent
+default on a pass/fail input).
+
+Getter provenance discipline: a getter only cites a standard the code actually
+sources the value from. #1246 adds the two API RP 16Q **1st Ed. 1993**
+(reaffirmed 2001) §3.3 tension factors — the revision string is pinned to
+`1993` to match the 1993-numbered clause locators (a 2nd Edition, 2017,
+exists but is not the citation basis; the wiki page's `revision_note` records
+the drift; #2161 applies the same rule to DNV-RP-C203, pinned to the 2021
+edition whose tables the code implements). The
+top-tension safety factor (**1.25**) has **no** corresponding 16Q provision, so
+it carries no getter and stays a project default in `stackup.py`; the Barlow-SF
+likewise carries no standards attribution (generic formula, project default).
+
+## Leak gate (suite 6 — hard merge gate)
+
+`tests/riser_database/test_leak_gate.py`:
+
+* **Layer A** (always runs, public CI included): regex structural checks —
+  absolute paths, e-mail addresses, URLs — over every loaded public row and
+  the raw data files. Patterns are generic and contain no private identifiers
+  or licensed values.
+* **Layer B** (in-context): every public row matched against the PRIVATE
+  workspace-hub `.legal-deny-list.yaml` with case/separator normalization.
+  Skips loudly when workspace-hub is absent.
+
+**Merge-gate procedure:** Layer B must run GREEN in a workspace-hub checkout
+**before the branch is first pushed** (exposure happens at push, not merge).
+Additionally run `workspace-hub/scripts/legal/legal-sanity-scan.sh
+--repo=digitalmodel --diff-only` **while the changes are still uncommitted**
+(the flag diffs the working tree against HEAD; at PR time it is vacuous) and
+attach the output to the PR as evidence.
+
+## Extension map
+
+* **#1246** — *done*: added the two API RP 16Q §3.3 tension-factor getters
+  (behind the llm-wiki `api-rp-16q` revision-`1993` pin), corrected the
+  `stackup.py` attribution comments (1.25 has no 16Q provision), and wired
+  `riser_fatigue/workflow.py` DFF through `resolve_dff()`.
+* **#1247** — orcaflex riser citation surface (net-new; no parity baseline).
+* **#1281a** — *done*: operating-envelope analytical tier (beam-column response
+  model + sweep engine + von-Mises / flex-joint getters). **#1281c / #1346** —
+  *done*: solver-backed dynamic tier stub. **#1281b / #1345** — *done*:
+  wellhead/conductor moment + flex-joint hardware rating (AMJIG per-category
+  criteria still deferred). See the operating-envelope sections below.
+* **#1199d** (T3, tier-gated) — de-identified ACE result precedent,
+  `private_sidecar` route; extends the leak gate to those rows.
+* Future numeric response-surface atlases (metocean, VIV) live under
+  `atlases/riser_database*` per `parametric.atlas` conventions — deliberately
+  NOT used for these relational tables (binary Parquet is invisible to
+  text-based leak scanning).
+
+## riser_stackup + rig_riser_interface (#1259)
+
+The stack-up layer publishes **handles + banded envelopes only**. Each row of
+`riser_stackup` carries an `rsu_id` (resolving into the PRIVATE llm-wiki
+stack-up registry via `wiki_path` — always the registry page itself, never
+per-source pages), a `topology_class` from a controlled vocabulary (so
+depth-collapsed queries are first-class), a coarse `water_depth_band`
+(synthetic example: a dataset at an exact depth of, say, 1,234 m publishes
+only `1000-1500m`), and the `rig_ref` **residency join**: a riser string is
+stationed on a rig, so every stack-up row can join to a rig-class row in
+`rig_riser_interface` (tensioner/TJ capability columns; `wed_rig_name` joins
+the worldenergydata rig fleet and is populated only for rows sourced from
+public rig specifications).
+
+**De-id rules (enforced by tests):** no exact depths/masses/joint counts, no
+unit-bearing values, no registry generic-name strings, and no provenance name
+tokens or project numbers anywhere in the public artifacts (`tests/
+riser_database/test_stackup_rig.py`, `test_provenance_tripwire.py` — the
+latter auto-extracts tokens from the private registry's source pages, so it
+runs in-context and is part of the merge gate). Banding is decided wiki-side,
+on water depth only, one band per source dataset family.
+
+**Cross-repo coupling (by design):** registering a new RSU id in the llm-wiki
+registry makes the in-context reconciliation test fail here until the table
+gains the row — a conscious update, never silent drift. Public issues, PRs
+and commit messages about this table family carry bands and handles only.
+
+**Wave 2 (#1279, dm#1259 follow-on):** RSU-0010..RSU-0070 (61 handle rows)
+land from the second registry ingest. The controlled vocabularies grew with
+the corpus — `topology_class` adds `sbop`, `riserless`, `ttr`, `slwr`,
+`landing-string` and `workover-surface-stack`; `stackup_type` adds
+`stack-up-drawing` (GA/schematic-grade sources with no tabulated masses);
+`operation` adds `production` and `workover`; the band scheme adds
+`3000-4000m` and `4000-5000m`. Four rig classes join
+`rig_riser_interface` — two tensioner-capability classes
+(`semisub-6x833k-dat`, `semisub-10x250k-wireline`) and two drillship classes
+keyed by subsea-stack GA mass (`drillship-15k-stack-784kip`,
+`drillship-15k-stack-893kip`); `rig_ref` is wired only where a wave-2 source
+documented the rig class, and stays empty elsewhere.
+
+**Wave 5 (llm-wiki#829 pairing):** RSU-0071..RSU-0084 (14 handle rows) land
+from the wave-5 registry ingest: rig-keyed BOP-stack and riser-equipment
+weight tables, a wireline-tensioner semisub 16Q stack-up + joint/foam
+library, a shallow-water tension workbook from a surface-stack operation
+(the first `0-500m` drilling-operation row), two documented
+operating-window datasets, and a TTR
+weight/tension family. `stackup_type` adds `operability-dataset` (documented
+operating-envelope results); the topology, operation and band vocabularies
+are unchanged. Three rig classes join `rig_riser_interface` — one
+wireline-tensioner capability class (`semisub-12x125k-wireline`) and two
+drillship classes keyed by subsea-stack weight-estimate mass
+(`drillship-10k-stack-356kip`, `drillship-10k-stack-511kip`), following the
+wave-2 GA-mass precedent; weight tables with no documented water depth ship
+an empty band, never a guessed one.
+
+## Assembly engine (#1280)
+
+`drilling_riser/assembly.py` turns component records + counts into a
+`RiserStackupModel` (parts from the public wed component vocabulary via
+`from_component_counts`, or caller/wiki-side records via `from_records`) with
+fail-closed aggregates — notably `gross_submerged_weight_and_uplift()`, which
+REFUSES to degrade to net weight when a buoyed joint lacks uplift data
+(net weight would understate the required tension by combining gross steel
+weight and buoyancy uplift before their separate factors are applied under
+API RP 16Q, 1st Ed. 1993, §3.3). `minimum_top_tension_16q`
+applies the tensioner-system factor N/(Rf·(N−n)) and fleet-angle allowance to
+a minimum slip-ring tension; `check_rig_capability` evaluates the demand
+against a `rig_riser_interface` row (wireline rigs count wires, direct-acting
+count units; missing data → INSUFFICIENT_DATA, never guessed). The in-context
+golden asserts the chain against the RSU-0007 calc contract (machine-readable
+YAML on the private registry page — keys public, values wiki-side; tolerance
+abs ≤ 0.5 t / rel ≤ 0.15%, an order of magnitude tighter than any
+formula-omission error).
+
+## Operating-envelope engine (#1281a, epic #1279 child C)
+
+Two-tier, split into grandchild slices C1/C2/C3.
+
+**C1 (this slice) — analytical screening tier.**
+`drilling_riser/riser_response.py` solves the static tensioned beam-column BVP
+`EI y'''' − T y'' = w(z)` (pinned flex-joint ends, top offset BC, uniform
+current-drag load) in stable closed form → deflection, flex-joint angles, and
+the bending moment `M(z)`. Provenance is standard tensioned-beam / beam-column
+marine-riser mechanics (NOT any licensed project material); it is a **static
+screening** model with no dynamic amplification.
+
+`drilling_riser/envelope.py` (`compute_operating_envelope`) sweeps
+**offset × current × seastate** and evaluates four limits — flex-joint angle,
+von Mises utilisation, tensioner/TJ stroke, moonpool clearance. Offset and
+current move the responses through the beam-column model (the von Mises check
+feeds `orcaflex.code_check_engine.check_api_rp_2rd` the model's `M(z)`, so it is
+bending-aware); seastate enters via a linear RAO motion contribution. The
+operating mode (`OperatingMode` drilling / connected / hang-off) selects the
+active limit set via `envelope_modes.yml`.
+
+Criteria are fail-closed cited getters: flex-joint angle limits (mean 2° / max
+4°) cite **API RP 16Q**; the von Mises design factor (0.67) cites **API STD
+2RD** — both resolve against existing wiki pages (no paired wiki PR). Stroke
+margin and moonpool clearance are **uncited project defaults** (no public
+standards provision identified — the Barlow / top-tension-SF precedent). No new
+public data columns, so the leak surface is unchanged.
+
+**C2 (#1345, #1281b) — wellhead/conductor moment + flex-joint hardware rating.**
+`drilling_riser/conductor_response.py` models the conductor below the mudline as
+a Hetényi beam-on-elastic-foundation loaded by the riser lower-flex-joint shear
+`H` (added to `RiserResponse.shear_lower_n = T·X/L + w·L/2`) acting over the
+BOP/LMRP **stand-off** arm: the applied end moment `M0 = H·h_stack` dominates the
+soil-reaction peak, so the wellhead moment peaks at the mudline. The envelope
+gains a `wh_moment` limit (`M_conductor / conductor_moment_capacity`) and refines
+the flex-joint limit to the governing `min(operating-limit, hardware-rating)`.
+Two rated-capacity columns (`conductor_moment_capacity_kn_m`,
+`flexjoint_angle_rating_deg`) ship **empty** — a paired worldenergydata rig-spec
+issue populates them from public specs (client-specific ratings stay wiki-side).
+The allowable is a rated capacity (like `tensioner_capacity_kips`), **not** a
+cited getter — no wellhead-moment `code_id` is registered (ISO 13628-7 exists in
+the wiki but is unregistered/methodology-only). The analytical `envelope.py` +
+`conductor_response.py` are now inside the provenance-tripwire gate. Static
+screening (single Winkler `k`, no conductor axial load; layered p-y = solver
+tier). **Deferred: the AMJIG per-category extreme/survival criteria (licensed)**;
+standard selection (16Q vs AMJIG) is a query-time *threshold*, not a sweep axis.
+
+**D (#1282, #1279 child D) — metocean inputs.**
+`drilling_riser/metocean_inputs.py` turns a metocean time-series record stream
+(from `data_systems.data_procurement.metocean.MetoceanClient` or a committed
+offline fixture) into the envelope's inputs: `reduce_to_scatter` bins the (Hs,
+Tp) stream into a reused `orcaflex.weather_window.ScatterDiagram` (no new scatter
+type); `scatter_to_seastates` emits `SeaState` at bin **midpoints** (bins are
+upper edges); `current_to_surface_speeds` extracts the sweep's surface speed(s).
+The engine's own `envelope.CurrentProfile` gains **dormant** depth fields
+(depth/speed/direction/`current_type` incl. loop) — the sweep still uses surface
+current; depth-integrated drag is a deferred engine edit. CI runs fully offline
+against a synthetic NDBC-format fixture; the live provider path is opt-in
+(`RUN_LIVE_METOCEAN=1`) and guarded by `tests/metocean/netskip.skip_on_network_error`
+(catches `requests.RequestException` — the retry-exhausted `RetryError`, not just
+`HTTPError` — and skips, never errors). Public-provider data only; the CMEMS
+client is a follow-up (#1365). No client-derived archive tables are read.
+
+**C3 (#1346, #1281c) — solver-backed dynamic tier STUB.**
+`scripts/parametric/build_drilling_riser_envelope_library.py` builds a
+`parametric.library` atlas (`drilling_riser_envelope`) keyed on **operating
+mode** (categorical) × offset/current/Hs/Tp (continuous), storing a **von Mises
+dynamic amplification factor** (DAF). It ships as a STUB (`solver.licensed=False`,
+`version="STUB"`) with synthetic values until a licensed OrcaFlex time-domain
+run per mode replaces them; moving the `LIBRARY_EXPECTATIONS` version off "STUB"
+makes the committed stub read stale → the query escalates → a real run is
+prompted. `compute_operating_envelope(dynamic=True)` loads the atlas once,
+multiplies the **von Mises** utilisation by the DAF (the one response the static
+tier leaves untreated — flex-joint angle and stroke already carry a linear RAO
+term, so they are NOT re-amplified), escalates (never extrapolates) outside
+coverage, and populates `EnvelopeResult.dynamic_provenance` with the STUB marker
++ disclaimer so a dynamically-amplified verdict never leaves unlabeled. The
+`_provenance` surfacing of the solver block was extended for all library atlases
+(also closes the same gap for the OrcaFlex/diffraction libraries).
+
+## Public example catalogue ([issue 3955](https://github.com/vamseeachanta/digitalmodel/issues/3955))
+
+The fourteen `orcaflex_public_example` rows describe the primary named line and
+its bare section, selected explicitly in `sources.yml:public_example_configs`.
+Auxiliary lines and buoyed sections are excluded.
+Types are `catenary`, `lazy_wave`, `steep_wave`, `pliant_wave`, `lazy_s`, `steep_s`,
+`pliant_s`, `tower_jumper`, `drilling` and `running_bop`. Each master and its
+general, environment, line-type and line includes supply cited dimensions.
+SI lengths are metres; User/ft lengths use `ft_to_m` and `m_to_mm` from the spec.
+Only `Homogeneous pipe` establishes wall thickness as `(OD-ID)/2`; `General`
+wall thickness is not established, even if a nominal ID is present.
+
+| Example | Depth (m) | OD (mm) | Wall (mm) |
+|---|---:|---:|---:|
+| A01 catenary | 100 | 355.6 | not established |
+| A03 tower jumper, flat zero-slope seabed | 1350 | 381.4 | not established |
+| A05 semisub | 1999.488 | 231.775 | 25.400 |
+| A05 spar | 1798.32 | 219.075 | 19.050 |
+| A05 FPSO | 899.16 | 304.8 | 25.400 |
+| B01 drilling | 1020 | 650 | 25.000 |
+
+Table 1. Source readings before CSV rounding. Independent YAML readings test
+serialization within 0.005 m depth and 0.0005 mm OD/wall, with no relative tolerance;
+these bounds qualify serialization only. The CSV retains `%g` (semisub: `1999.49`).
+These rows are catalogue references, not qualified engineering inputs. Models in
+`docs/domains/orcaflex/risers/` are excluded: `PROVENANCE.md` records origin as
+not stated. Fourteen elevation sketches remain a separate documentation slice.
+
+## Reproduce
+
+```bash
+PYTHONPATH=src uv run python scripts/riser_database/build_tables.py
+PYTHONPATH=src uv run python scripts/riser_capability/build_riser_inventory.py
+PYTHONPATH=src uv run python scripts/riser_database/build_tables.py --check
+PYTHONPATH=src uv run python scripts/riser_capability/build_riser_inventory.py --check
+PYTHONPATH=src uv run python -m pytest tests/riser_database/ tests/riser_capability/ -q -rs -m "not solver"
+```
+
+## Run-it-yourself prompt
+
+Regenerate the public example catalogue and inventory, run both drift checks and
+the non-solver suites above, and compare dimensions with independent YAML readings.
+Report unknown wall thickness as not established; perform no licensed solver runs.

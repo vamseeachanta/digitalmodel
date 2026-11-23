@@ -1,0 +1,44 @@
+# Multi-code wall thickness comparison (W5).
+#
+# Runs one deepwater export pipeline section through several registered design
+# codes and packages a cross-code calc note (HTML + Markdown + JSON).
+#
+# Generic engineering case (no project/client identifiers).
+#
+# Run:  uv run python -m digitalmodel examples/workflows/wall-thickness-compare/input.yml
+
+basename: wall_thickness_compare
+
+wall_thickness_compare:
+  label: export_pipeline_12in
+  title: Export Pipeline Multi-Code Wall Thickness Comparison
+  output_dir: results/wt_multicode
+  safety_class: medium
+  codes:
+    - DNV-ST-F101
+    - API-RP-1111
+    - PD-8010-2
+
+  geometry:
+    outer_diameter: 0.3239        # m  (12.75 in)
+    wall_thickness: 0.0191        # m  (0.750 in)
+    corrosion_allowance: 0.003    # m
+
+  material:
+    grade: API 5L X65
+    smys: 448000000.0             # Pa
+    smts: 531000000.0             # Pa
+    youngs_modulus: 207000000000.0
+    poissons_ratio: 0.3
+
+  loads:
+    internal_pressure: 25000000.0  # Pa
+    external_pressure: 15000000.0  # Pa (~1500 m water depth)
+    bending_moment: 120000.0       # N*m
+    effective_tension: 800000.0    # N
+
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: true

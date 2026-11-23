@@ -1,0 +1,129 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Public HLV vessel specifications",
+  "type": "array",
+  "minItems": 1,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "vessel_name",
+      "owner",
+      "dp_class",
+      "dp_notation_source",
+      "source_url",
+      "retrieved_utc",
+      "field_sources",
+      "crane_capacity_tonnes",
+      "crane_capacity_basis",
+      "deck_area_m2",
+      "bollard_pull_tonnes"
+    ],
+    "properties": {
+      "vessel_name": {
+        "type": "string",
+        "minLength": 1,
+        "pattern": "\\S",
+        "description": "Publicly marketed vessel name.",
+        "x-unit": "1"
+      },
+      "owner": {
+        "type": "string",
+        "minLength": 1,
+        "pattern": "\\S",
+        "description": "Fleet owner/operator brand shown by the public source; not legal ownership certification.",
+        "x-unit": "1"
+      },
+      "dp_class": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "enum": [
+          "DP-1",
+          "DP-2",
+          "DP-3",
+          null
+        ],
+        "description": "Normalised IMO equipment-class vocabulary; not a statement of current class status.",
+        "x-unit": "1"
+      },
+      "source_url": {
+        "type": "string",
+        "format": "uri",
+        "pattern": "^https://[^\\s/?#]+(?:[/?#].*)?$",
+        "description": "HTTPS URL of a retrieved public source.",
+        "x-unit": "1"
+      },
+      "retrieved_utc": {
+        "type": "string",
+        "format": "date-time",
+        "pattern": "(Z|\\+00:00)$",
+        "description": "UTC retrieval instant of the row primary source; secondary retrievals are in the manifest.",
+        "x-unit": "UTC"
+      },
+      "field_sources": {
+        "type": "object",
+        "additionalProperties": {
+          "type": "string",
+          "format": "uri",
+          "pattern": "^https://[^\\s/?#]+(?:[/?#].*)?$",
+          "description": "HTTPS URL of a retrieved public source.",
+          "x-unit": "1"
+        },
+        "description": "Each non-null factual field maps to the exact source URL in the provenance manifest.",
+        "x-unit": "1"
+      },
+      "crane_capacity_tonnes": {
+        "type": [
+          "number",
+          "null"
+        ],
+        "description": "Published headline crane lift capacity; combined or individual according to crane_capacity_basis. Not a load chart or topsides-lifting-system capacity.",
+        "x-unit": "t",
+        "exclusiveMinimum": 0
+      },
+      "crane_capacity_basis": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "enum": [
+          "combined",
+          "individual",
+          null
+        ],
+        "description": "Combined vessel crane capacity or capacity of one crane, as published.",
+        "x-unit": "1"
+      },
+      "deck_area_m2": {
+        "type": [
+          "number",
+          "null"
+        ],
+        "description": "Published usable deck area; never calculated from hull dimensions.",
+        "x-unit": "m2",
+        "exclusiveMinimum": 0
+      },
+      "bollard_pull_tonnes": {
+        "type": [
+          "number",
+          "null"
+        ],
+        "description": "Published bollard pull in metric tonnes-force.",
+        "x-unit": "tf",
+        "exclusiveMinimum": 0
+      },
+      "dp_notation_source": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "minLength": 1,
+        "pattern": "^DP-[123]; printed page [1-9][0-9]*$",
+        "description": "Normalised positioning class and printed page locator; source link in field_sources; no copied wording or assertion of current class status.",
+        "x-unit": "1"
+      }
+    }
+  }
+}

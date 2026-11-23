@@ -1,0 +1,19 @@
+basename: wave_spectrum
+
+wave_spectrum:
+  spectrum: jonswap
+  Hs: 3.0
+  Tp: 10.0
+  gamma: 3.3
+  frequency_grid:
+    units: rad_s
+    start: 0.2
+    stop: 2.0
+    num: 181
+  output_dir: results
+
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: true

@@ -1,0 +1,665 @@
+# ==========================================
+# Root Directory Hygiene
+# ==========================================
+
+# Prevent test files in root
+/test_*.py
+/*_test.py
+/test_*.yml
+
+# Prevent backup files in root
+/*.backup*
+/*.bak
+/*~
+/*.old
+
+# Prevent migration files in root
+/*migration*
+/*upgrade*
+/requirements-*.txt
+
+# Prevent temporary files in root
+/atlases/.refresh-*/
+/tmp*
+/temp*
+/*.tmp
+/nul
+/.command-*
+/agos
+/tools
+
+# Claude temp working directories
+tmpclaude-*-cwd
+
+# AI agent session working directories (Codex, Gemini)
+# Transient per-session dirs; aggregated output lives in workspace-hub/.claude/skills/session-logs/
+.codex/Cu*/
+.gemini/Cu*/
+
+# Temp test directories
+/temp_test_conversion/
+/temp_workflow_test/
+
+# Prevent config files in root (except whitelisted)
+/*.yml
+/*.yaml
+!docker-compose.yml
+!mkdocs.yml
+!.pre-commit-config.yaml
+# The rules the client-identifier gate reads. Without this exception the root
+# hygiene rule above swallows it, the gate finds no rules file and exits
+# non-zero, and the natural fix is to disable the gate. That is the same shape
+# as the `env/` rule that silently excluded model inputs for eight months.
+!.legal-deny-list.yaml
+/*.json
+!package.json
+/*.ini
+
+# Prevent batch files in root
+/batch_*.yml
+/fsts_*.yml
+/*_batch.yml
+
+# Prevent generated files in root
+/*.log
+/*.pid
+/*.cache
+
+# ==========================================
+# Python
+# ==========================================
+
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# ==========================================
+# Build & Distribution
+# ==========================================
+
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# ==========================================
+# Testing & Coverage
+# ==========================================
+
+.pytest_cache/
+.tox/
+.nox/
+.coverage
+.coverage.*
+coverage.xml
+/coverage.json
+htmlcov/
+*.cover
+*.py,cover
+.hypothesis/
+nosetests.xml
+.cache
+
+# Temporary test outputs
+pytest_output.txt
+pytest_result.txt
+test_result.txt
+rao_batch_results.txt
+debug_output.txt
+rao_diverse_results.txt
+
+# ==========================================
+# Virtual Environments
+# ==========================================
+
+.venv/
+venv/
+/ENV/
+/env/
+# Nested environments are ignored by specific environment paths, not by env/.
+**/env/pyvenv.cfg
+**/env/bin/python*
+**/env/bin/activate*
+**/env/bin/pip*
+**/env/Scripts/python*.exe
+**/env/Scripts/activate*
+**/env/Scripts/Activate.ps1
+**/env/Scripts/pip*.exe
+**/env/Lib/site-packages/
+**/env/lib/python*/site-packages/
+**/env/lib64/python*/site-packages/
+**/env/include/python*/
+env.bak/
+venv.bak/
+
+# `/env/` above is root-anchored. Nested environments are covered by the
+# specific paths above; ordinary engineering inputs under env/ stay visible.
+# Generic include/, bin/ and Scripts/ content is not excluded by these rules.
+# Existing lib/ and lib64/ rules remain in effect independently.
+#
+# Engineering input under docs/ is re-included explicitly, and ONLY the YAML
+# case files. The directory is opened so its *.yml can be seen, then everything
+# else inside it is ignored again: a virtual environment created under docs/
+# (pyvenv.cfg, Lib/, Scripts/activate) stays ignored. Review found an earlier
+# `!docs/**/env/**` re-included all of that.
+#
+# There is deliberately no equivalent for `projects/`. That tree is excluded
+# wholesale further down, and git cannot re-include a file whose parent
+# directory is excluded, so a `!projects/**/env/` line here would read as a fix
+# and do nothing. Re-including anything under `projects/` requires opening the
+# directory chain first and is a separate change.
+!docs/**/env/
+docs/**/env/**
+!docs/**/env/*.yml
+.python-version
+__pypackages__/
+
+# ==========================================
+# Logs
+# ==========================================
+
+logs/
+*.log
+
+# ==========================================
+# IDE & Editors
+# ==========================================
+
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+.spyderproject
+.spyproject
+.ropeproject
+
+# ==========================================
+# Type Checkers
+# ==========================================
+
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.pyre/
+
+# ==========================================
+# Documentation
+# ==========================================
+
+docs/_build/
+/site
+
+# ==========================================
+# Frameworks
+# ==========================================
+
+# Django
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+
+# Flask
+instance/
+.webassets-cache
+
+# Scrapy
+.scrapy
+
+# Celery
+celerybeat-schedule
+celerybeat.pid
+
+# Jupyter
+.ipynb_checkpoints
+profile_default/
+ipython_config.py
+
+# SageMath
+*.sage.py
+
+# ==========================================
+# Environment & Secrets
+# ==========================================
+
+.env
+.env.*
+*.local
+!.env.template
+
+# ==========================================
+# Node.js (if applicable)
+# ==========================================
+
+node_modules/
+
+# ==========================================
+# Project-Specific: Generated Outputs
+# ==========================================
+
+/output/
+/results/
+/data/steel_shapes_local/
+reports/
+!docs/reports/
+docs/reports/*
+!docs/reports/orcaflex-smoke-artifact-freshness.html
+!docs/reports/solver-proof-inventory.json
+!docs/reports/solver-proof-completeness.html
+!docs/reports/2026-09-13-ansys-evidence-stage-a.html
+!docs/reports/2026-11-21-orcaflex-refactor-survey.md
+# BEGIN shared module-report retention rules
+# Open the parent and exclude module directories before named exceptions.
+!/docs/reports/modules/
+/docs/reports/modules/*
+
+# Preserve the GIS module report and its rebuild sources.
+!/docs/reports/modules/gis/
+/docs/reports/modules/gis/*
+!/docs/reports/modules/gis/build_report.py
+!/docs/reports/modules/gis/changes.json
+!/docs/reports/modules/gis/report.html
+!/docs/reports/modules/gis/sources.json
+
+# Retain the normalized-section example source; generated output stays ignored.
+!/docs/reports/modules/passing_ship/
+/docs/reports/modules/passing_ship/*
+!/docs/reports/modules/passing_ship/build_worked_example.py
+!/docs/reports/modules/passing_ship/README.md
+
+# Fender design generic method report: report, workbook, results and charts.
+!/docs/reports/modules/fender_design/
+/docs/reports/modules/fender_design/*
+!/docs/reports/modules/fender_design/fender-design-generic.md
+!/docs/reports/modules/fender_design/fender-design-generic.html
+!/docs/reports/modules/fender_design/fender-design-generic.xlsx
+!/docs/reports/modules/fender_design/results.json
+!/docs/reports/modules/fender_design/workbook-input-checks.md
+!/docs/reports/modules/fender_design/charts/
+/docs/reports/modules/fender_design/charts/*
+!/docs/reports/modules/fender_design/charts/cm_methods.png
+!/docs/reports/modules/fender_design/charts/database_coverage.png
+!/docs/reports/modules/fender_design/charts/database_sizes.png
+!/docs/reports/modules/fender_design/charts/guide_codes.svg
+!/docs/reports/modules/fender_design/charts/guide_summary.svg
+!/docs/reports/modules/fender_design/charts/methods.png
+!/docs/reports/modules/fender_design/charts/sizes.png
+!/docs/reports/modules/fender_design/charts/sweep_berthing_angle_deg.png
+!/docs/reports/modules/fender_design/charts/sweep_contact_x_over_lbp.png
+!/docs/reports/modules/fender_design/charts/sweep_cs.png
+!/docs/reports/modules/fender_design/charts/sweep_displacement_t.png
+!/docs/reports/modules/fender_design/charts/sweep_factor.png
+!/docs/reports/modules/fender_design/charts/sweep_velocity_m_s.png
+!/docs/reports/modules/fender_design/charts/sweep_water_depth_m.png
+!/docs/reports/modules/fender_design/charts/tornado.png
+!/docs/reports/modules/fender_design/charts/velocity_methods.png
+
+!/docs/reports/modules/pipe_capacity/
+/docs/reports/modules/pipe_capacity/*
+!/docs/reports/modules/pipe_capacity/build_worked_example.py
+!/docs/reports/modules/pipe_capacity/README.md
+
+!/docs/reports/modules/riserfatigue/
+/docs/reports/modules/riserfatigue/*
+!/docs/reports/modules/riserfatigue/generate_report.py
+!/docs/reports/modules/riserfatigue/report.html
+!/docs/reports/modules/riserfatigue/changes.json
+
+!/docs/reports/modules/vesselseakeeping/
+/docs/reports/modules/vesselseakeeping/*
+!/docs/reports/modules/vesselseakeeping/index.html
+!/docs/reports/modules/vesselseakeeping/changes.json
+!/docs/reports/modules/vesselseakeeping/manifest.json
+# END shared module-report retention rules
+!docs/domains/cathodic_protection/reports/
+!docs/domains/cathodic_protection/reports/**
+
+# ==========================================
+# Project-Specific: Agent/AI Runtime
+# ==========================================
+
+# Agent OS cache
+.agent-os/cache/
+.agent-os/temp/
+.cross-repo-cache/
+.fallback-cache/
+
+# Claude Flow runtime (consolidated)
+.claude/settings.local.json
+.mcp.json
+.swarm/
+.hive-mind/
+
+# Memory and coordination
+memory/
+coordination/
+memory/sessions/*
+!memory/sessions/README.md
+memory/agents/*
+!memory/agents/README.md
+coordination/memory_bank/*
+coordination/subtasks/*
+coordination/orchestration/*
+
+# Database files
+*.db
+*.db-journal
+*.db-wal
+*.sqlite
+*.sqlite-journal
+*.sqlite-wal
+
+# Hive mind prompts
+hive-mind-prompt-*.txt
+
+# ==========================================
+# Project-Specific: OrcaFlex/OrcaWave
+# ==========================================
+
+# Projects directory (large cached simulation project files)
+projects/
+
+# Simulation files in projects
+projects/**/*.sim
+
+# Large files (>100MB) - GitHub limit
+data/**/*.sim
+data/**/*.owr
+docs/**/*.sim
+docs/**/*.owr
+
+# Specific large YAML files
+docs/domains/orcaflex/aqwa/to_orcaflex/multibody_test1/orcaflex/fsts_fst1_l015_fst2_l015_lwl.yml
+docs/domains/orcaflex/aqwa/to_orcaflex/multibody_test1/orcaflex/fsts_fst1_l015_fst2_l015_hwl.yml
+
+# ==========================================
+# Project-Specific: AQWA Test Data
+# ==========================================
+
+src\digitalmodel\tests\test_data\aqwa\ef_server\02_S04_HR_EXT_FORCE.LIS
+src\digitalmodel\tests\test_data\aqwa\ef_server\02_S04_HR_EXT_FORCE.PLT
+src\digitalmodel\tests\test_data\aqwa\ef_server\02_S04_HR_EXT_FORCE.PLD
+
+# ==========================================
+# Private Workspace
+# ==========================================
+
+_dev-private/
+
+# ==========================================
+# Additional Generated Files (added 2026-01-20)
+# ==========================================
+
+AqwaServerLogFile.txt
+dat_files_list.txt
+cache/
+.temp/
+
+# Benchmark generated outputs
+benchmarks/reports/
+benchmarks/results/
+
+# ==========================================
+# Large Binary Solver Output (regenerable)
+# ==========================================
+
+# AQWA binary output files (regenerable from .dat input)
+**/*.HYD
+**/*.PAG
+**/*.VAC
+**/*.PAC
+**/*.RES
+**/*.USS
+**/*.POT
+**/*.PLT
+**/*.PLD
+**/*.MQT
+**/*.EQP
+
+# OrcaWave binary results (regenerable from .yml)
+**/*.owr
+!tests/fixtures/solver/*.owr
+
+# Wind binary time series
+**/*.bts
+
+# Benchmark scratch directory (canonical results live in docs/domains/)
+benchmark_output/
+# OrcaFlex simulation files (large binary)
+docs/domains/orcaflex/pipeline/installation/floating/24in_pipeline/monolithic/runs/*.sim
+# .claude-flow state files — ecosystem removed 2026-02-18
+.claude-flow/
+.hive-mind/
+.swarm/
+
+# Windows-path directory artifacts (cross-platform path bug — WRK-364)
+# Matches dirs like: <drive>:\workspace-hub\... created on Windows and synced to Linux
+[A-Z]:\*
+tests/outputs/
+
+# Session artifacts (WRK-573)
+test_output_ss
+verdict.txt
+coverage.wrk*.xml
+*.wrk*.xml
+outputs/
+specs/
+# Retain the scalar-result schema and its checks beside tracked manifests.
+!/src/digitalmodel/specs/
+/src/digitalmodel/specs/*
+!/src/digitalmodel/specs/engineering_result.py
+!/tests/specs/
+/tests/specs/*
+!/tests/specs/test_engineering_result.py
+
+# Agent worktrees (local-only, must not be tracked as gitlinks)
+.claude/worktrees/
+
+# Client/NDA scratch data — never commit
+.scratch/
+examples/workflows/*/results/
+examples/ansys/*/results/
+examples/workflows/*/logs/
+src/digitalmodel/base_configs/modules/*/logs/
+
+# epic #3084: keep repo-scoped agent memory tracked despite blanket memory/ rule
+!.claude/memory/
+!.claude/memory/**
+# Local-only agent config + ecosystem-propagated markers (machine/user-specific)
+CLAUDE.local.md
+.claude/skills/.ecosystem-propagated
+.claude/skills/guidelines
+output_610/
+
+# Dynacard capability staging intermediates — derived from PRIVATE client card
+# archives (reference client production-data paths); must stay uncommitted.
+scripts/capabilities/_*_stage.json
+scripts/capabilities/_*_manifest.json
+
+# Tidy publishing intermediates (scripts/hf/build_capability_datasets.py) — derived from
+# the committed sidecars, regenerated on demand, published to HF rather than committed.
+docs/api/_datasets/
+
+# 3D tension-moment study: 191 MB of JSON that compresses to ~1 MB as parquet.
+# Regenerated on demand and published to Hugging Face; never committed. (#1915)
+docs/api/structural/wall-thickness-3d.json
+
+# Retain the reviewed offline cylinder engineering report.
+!docs/reports/2026-09-14-issue-2121-b1-preparation.html
+
+# Maintainer board O04 reconciliation evidence (authored, not generated output).
+!docs/reports/o04-ecosystem-reconciliation.html
+# Retain A07 DWG conversion qualification evidence; staging DXFs stay outside Git.
+!docs/reports/dwg-conversion/
+docs/reports/dwg-conversion/*
+!docs/reports/dwg-conversion/plan.html
+!docs/reports/dwg-conversion/source-manifest.json
+!docs/reports/dwg-conversion/probe.json
+!docs/reports/dwg-conversion/provenance.html
+
+# X03 coordinate-only extraction guidance; no geometry is qualified for publication.
+!docs/reports/abstracted-hulls/
+docs/reports/abstracted-hulls/*
+!docs/reports/abstracted-hulls/plan.html
+!docs/reports/abstracted-hulls/schema.md
+!docs/reports/abstracted-hulls/provenance.html
+
+# Compute program first results (workspace-hub#4034): generic cases only, no project data.
+!docs/reports/2026-10-09-compute-program/
+!docs/reports/2026-10-09-compute-program/**
+
+# Retain the synthetic worked pipeline assessment.
+!docs/reports/pipeline-ffs-assessment.html
+!docs/reports/pipeline-ffs-assessment.manifest.json
+!docs/reports/padeye-lift-point-analysis.html
+
+# scripts/cfd/lib holds the OpenFOAM solve-chain SHELL library, not Python
+# build output. The bare `lib/` above is packaging boilerplate and matches any
+# directory named lib at ANY depth -- it silently swallowed the files that fix
+# the "chain is not reproducible from a clean checkout" defect (#2023), so the
+# remediation was itself invisible to git. Negation must follow the pattern it
+# overrides, and the DIRECTORY must be re-included before git will descend.
+!scripts/cfd/lib/
+
+# fetched by scripts/data/fetch.py
+/docs/cad-inventory/cad-file-manifest-deidentified.csv.gz
+/docs/domains/aqwa/examples/00_docs/2021 Aqwa_Intro/M04_Hydrodynamic_Diffraction/ship_model/ship.igs
+/docs/domains/aqwa/examples/00_docs/2021_training/FPSOTurret.scdoc
+/docs/domains/aqwa/examples/00_docs/2021_training/ship.igs
+/docs/domains/aqwa/examples/01_geometry/superseded/02_ship_with_pier_rev0.scdoc
+/docs/domains/aqwa/workflows/external-forces/v222/AD_PYTHONUSERFORCE_UDF3.LIS
+/docs/domains/guides/legacy/apirp2rd/MAN/0119-001 MAN-0001-01 Pipe Capacity & Utilization (Draft1).docx
+/docs/domains/guides/legacy/apirp2rd/MAN/0119-001 MAN-0001-01 Pipe Capacity & Utilization (Draft2).docx
+/docs/domains/guides/legacy/apirp2rd/PRE/0119-001 PRE-0001-01 API_STD_2RD Methods  (Draft1).pptx
+/docs/domains/guides/legacy/apirp2rd/Ref/hand-calculations_ref.jpg
+/docs/domains/installation/image-2.png
+/docs/domains/installation/image-4.png
+/docs/domains/installation/image-5.png
+/docs/domains/installation/image-6.png
+/docs/domains/installation/image-7.png
+/docs/domains/installation/image.png
+/docs/domains/installation/wave_shielding_installations.png
+/docs/domains/legacy/apirp2rd/MAN/0119-001 MAN-0001-01 Pipe Capacity & Utilization (Draft1).docx
+/docs/domains/legacy/apirp2rd/MAN/0119-001 MAN-0001-01 Pipe Capacity & Utilization (Draft2).docx
+/docs/domains/legacy/apirp2rd/PRE/0119-001 PRE-0001-01 API_STD_2RD Methods  (Draft1).pptx
+/docs/domains/legacy/apirp2rd/Ref/hand-calculations_ref.jpg
+/docs/domains/modal-analysis/time_vs_frequency_domain.gif
+/docs/domains/orcaflex/aqwa/to_orcaflex/multibody_test1/input/FST2L015_FST1L015_HWL.QTF
+/docs/domains/orcaflex/aqwa/to_orcaflex/multibody_test1/input/FST2L015_FST1L015_HWL.dat
+/docs/domains/orcaflex/aqwa/to_orcaflex/multibody_test1/input/FST2L015_FST1L015_LWL.LIS
+/docs/domains/orcaflex/aqwa/to_orcaflex/multibody_test1/input/FST2L015_FST1L015_LWL.QTF
+/docs/domains/orcaflex/aqwa/to_orcaflex/multibody_test1/input/FST2L015_FST1L015_LWL.dat
+/docs/domains/orcaflex/aqwa/to_orcaflex/multibody_test1/orcaflex/fsts_fst1_l015_fst2_l015_hwl.dat
+/docs/domains/orcaflex/aqwa/to_orcaflex/multibody_test1/orcaflex/fsts_fst1_l015_fst2_l015_lwl.dat
+/docs/domains/orcaflex/aqwa/to_orcaflex/multibody_test1/orcaflex/template_fsts_lngc.yml
+/docs/domains/orcaflex/aqwa/to_orcawave/multibody_test1/aqwa_input/AL_FST2F_FST1F_LWL.LIS
+/docs/domains/orcaflex/aqwa/to_orcawave/multibody_test1/aqwa_input/AL_FST2F_FST1F_LWL.dat
+/docs/domains/orcaflex/library/model_library/k03_15mw_semi_sub_fowt/monolithic/K03 15MW semi-sub FOWT.yml
+/docs/domains/orcaflex/library/model_library/l04_sectional_bodies/monolithic/L04 Sectional bodies.yml
+/docs/domains/orcaflex/library/model_library/l05_panel_pressures/monolithic/L05 Panel pressures.yml
+/docs/domains/orcaflex/pipeline/installation/floating/24in_pipeline/monolithic/_ss/vessel_end_fixed_converged.yml
+/docs/domains/orcaflex/pipeline/installation/floating/24in_pipeline/monolithic/postproc/rangegraphs/1250kN_env_001yr_090deg_rangegraph.csv
+/docs/domains/orcaflex/pipeline/installation/floating/24in_pipeline/monolithic/postproc/rangegraphs/1250kN_env_001yr_135deg_rangegraph.csv
+/docs/domains/orcaflex/pipeline/installation/floating/24in_pipeline/monolithic/postproc/rangegraphs/1250kN_env_95NE_090deg_rangegraph.csv
+/docs/domains/orcaflex/pipeline/installation/floating/24in_pipeline/monolithic/postproc/rangegraphs/1250kN_env_95NE_135deg_rangegraph.csv
+/docs/domains/orcaflex/pipeline/installation/floating/24in_pipeline/monolithic/postproc/rangegraphs/1500kN_env_001yr_090deg_rangegraph.csv
+/docs/domains/orcaflex/pipeline/installation/floating/24in_pipeline/monolithic/postproc/rangegraphs/1500kN_env_001yr_135deg_rangegraph.csv
+/docs/domains/orcaflex/pipeline/installation/floating/24in_pipeline/monolithic/postproc/rangegraphs/1500kN_env_95NE_090deg_rangegraph.csv
+/docs/domains/orcaflex/pipeline/installation/floating/24in_pipeline/monolithic/postproc/rangegraphs/1500kN_env_95NE_135deg_rangegraph.csv
+/docs/domains/orcaflex/pipeline/installation/floating/24in_pipeline/monolithic/postproc/rangegraphs/2000kN_env_001yr_090deg_rangegraph.csv
+/docs/domains/orcaflex/pipeline/installation/floating/24in_pipeline/monolithic/postproc/rangegraphs/2000kN_env_001yr_135deg_rangegraph.csv
+/docs/domains/orcaflex/pipeline/installation/floating/24in_pipeline/monolithic/postproc/rangegraphs/2000kN_env_95NE_090deg_rangegraph.csv
+/docs/domains/orcaflex/pipeline/installation/floating/24in_pipeline/monolithic/postproc/rangegraphs/2000kN_env_95NE_135deg_rangegraph.csv
+/docs/domains/orcaflex/pipeline/installation/floating/24in_pipeline/monolithic/postproc/rangegraphs/2500kN_env_001yr_090deg_rangegraph.csv
+/docs/domains/orcaflex/pipeline/installation/floating/24in_pipeline/monolithic/postproc/rangegraphs/2500kN_env_001yr_135deg_rangegraph.csv
+/docs/domains/orcaflex/pipeline/installation/floating/24in_pipeline/monolithic/postproc/rangegraphs/2500kN_env_95NE_090deg_rangegraph.csv
+/docs/domains/orcaflex/pipeline/installation/floating/24in_pipeline/monolithic/postproc/rangegraphs/2500kN_env_95NE_135deg_rangegraph.csv
+/docs/domains/orcaflex/pipeline/installation/floating/24in_pipeline/monolithic/postproc/rangegraphs/900kN_env_001yr_090deg_rangegraph.csv
+/docs/domains/orcaflex/pipeline/installation/floating/24in_pipeline/monolithic/postproc/rangegraphs/900kN_env_001yr_135deg_rangegraph.csv
+/docs/domains/orcaflex/pipeline/installation/floating/24in_pipeline/monolithic/postproc/rangegraphs/900kN_env_95NE_090deg_rangegraph.csv
+/docs/domains/orcaflex/pipeline/installation/floating/24in_pipeline/monolithic/postproc/rangegraphs/900kN_env_95NE_135deg_rangegraph.csv
+/docs/domains/orcaflex/pipeline/installation/floating/24in_pipeline/monolithic/postproc/rangegraphs_env_case/900kN_env_case_A_0deg_rangegraph.csv
+/docs/domains/orcaflex/pipeline/installation/floating/24in_pipeline/monolithic/postproc/rangegraphs_env_case/900kN_env_case_A_50deg_rangegraph.csv
+/docs/domains/orcaflex/pipeline/installation/floating/24in_pipeline/monolithic/postproc/rangegraphs_env_case/900kN_env_case_C_0deg_rangegraph.csv
+/docs/domains/orcaflex/pipeline/installation/floating/24in_pipeline/monolithic/postproc/rangegraphs_env_case/900kN_env_case_C_50deg_rangegraph.csv
+/docs/domains/orcaflex/pipeline/installation/floating/24in_pipeline/monolithic/postproc/rangegraphs_env_case/900kN_env_case_D_0deg_rangegraph.csv
+/docs/domains/orcaflex/pipeline/installation/floating/24in_pipeline/monolithic/postproc/rangegraphs_env_case/900kN_env_case_D_50deg_rangegraph.csv
+/docs/domains/orcaflex/pipeline/installation/floating/24in_pipeline/monolithic/postproc/vessel_end_winch_combined_report.html
+/docs/domains/orcaflex/risers/production/slwr/BuoyancyFactor/SLWR_16OD_SE1200_HE1500_BF_2p0_GA2_Driving.yml
+/docs/domains/orcaflex/risers/production/slwr/BuoyancyFactor/SLWR_16OD_SE1200_HE1500_BF_2p5_GA2_Driving.yml
+/docs/domains/orcaflex/risers/production/slwr/BuoyancyFactor/SLWR_16OD_SE1200_HE1500_BF_3p0_GA2_Driving.yml
+/docs/domains/orcaflex/risers/production/slwr/BuoyancyFactor/SLWR_16OD_SE1200_HE1500_BF_3p5_GA2_Driving.yml
+/docs/domains/orcaflex/risers/production/slwr/ConfigurationSensitivity/SCR_16OD_SCR_100yr Wave, Far BeamSea PS.yml
+/docs/domains/orcaflex/risers/production/slwr/ConfigurationSensitivity/SCR_16OD_SCR_No Load, No Offset.yml
+/docs/domains/orcaflex/risers/production/slwr/ConfigurationSensitivity/SLWR_16OD_SE0500_HE0800_100yr Wave, Far BeamSea PS.yml
+/docs/domains/orcaflex/risers/production/slwr/Declination_Angle/SLWR_16OD_SE1200_HE1500_Ang06_GA2_Driving.yml
+/docs/domains/orcaflex/risers/production/slwr/Declination_Angle/SLWR_16OD_SE1200_HE1500_Ang10_GA2_Driving.yml
+/docs/domains/orcaflex/risers/production/slwr/Declination_Angle/SLWR_16OD_SE1200_HE1500_Ang12_GA2_Driving.yml
+/docs/domains/orcaflex/risers/production/slwr/Declination_Angle/SLWR_16OD_SE1200_HE1500_Ang14_GA2_Driving.yml
+/docs/domains/orcaflex/risers/production/slwr/DesignPressure_8000Psi/SLWR_16OD_SE1200_HE1500_8000psi.yml
+/docs/domains/orcaflex/risers/production/slwr/DesignPressure_8000Psi/SLWR_16OD_SE1200_HE1500_8000psi_No Load, No Offset.yml
+/docs/domains/orcaflex/risers/production/slwr/FlexJoint_Stiffness/SLWR_16OD_SE1200_HE1500_FJ_X1p5.yml
+/docs/domains/orcaflex/risers/production/slwr/Fluid_Sensitivity/SLWR_16OD_SE1200_HE1500_Int_Fluid_Max.yml
+/docs/domains/orcaflex/risers/production/slwr/Fluid_Sensitivity/SLWR_16OD_SE1200_HE1500_Int_Fluid_Min.yml
+/docs/domains/orcaflex/risers/production/slwr/MooringCondition/SLWR_16OD_SE1200_HE1500_8percent_Offset_GA2_Driving.yml
+/docs/domains/orcaflex/risers/production/slwr/PressureTest/SLWR_16OD_SE1200_HE1500_1yr_Wave_Test_pressure_No Load, No Offset.yml
+/docs/domains/orcaflex/risers/production/slwr/PressureTest/SLWR_16OD_SE1200_HE1500_1yr_Wave_Test_pressure_Water_Filled.yml
+/docs/domains/orcaflex/risers/production/slwr/SLWR_Extreme/Seed1/GA-06_H_R_SubCase-3.yml
+/docs/domains/orcaflex/risers/production/slwr/SLWR_Extreme/Seed2/GA-08a_H_R_SubCase-2.yml
+/docs/domains/orcaflex/risers/production/slwr/SLWR_Extreme/Seed3/GA-01_H_R_SubCase-1.yml
+/docs/domains/orcaflex/risers/production/slwr/SLWR_Extreme/Seed3/GA-05_H_R_SubCase-1.yml
+/docs/domains/orcaflex/risers/production/slwr/SLWR_Extreme/Seed4/GA-03b_R_SubCase-3.yml
+/docs/domains/orcaflex/risers/production/slwr/SLWR_Extreme/Seed4/GA-04a_R_SubCase-1.yml
+/docs/domains/orcaflex/risers/production/slwr/SLWR_Extreme/Seed5/GA-02_R_SubCase-1.yml
+/docs/domains/orcaflex/risers/production/slwr/SLWR_Extreme/Seed5/GA-07b_H_SubCase-1.yml
+/docs/domains/orcaflex/risers/production/slwr/SLWR_Extreme/Static/SLWR_16OD_SE1200_HE1500_1LC_GA2_Driving.yml
+/docs/domains/orcaflex/risers/production/slwr/SLWR_Extreme/Static/SLWR_16OD_SE1200_HE1500_1LC_No Load, No Offset.yml
+/docs/domains/orcaflex/risers/production/slwr/TSJ_Extension/SLWR_16OD_SE1200_HE1500_TSJ2p0in_30ft_GA2_Driving.yml
+/docs/domains/orcaflex/risers/production/slwr/TSJ_Extension/SLWR_16OD_SE1200_HE1500_TSJ2p25in_30ft_GA2_Driving.yml
+/docs/domains/orcaflex/risers/production/slwr/TSJ_Extension/SLWR_16OD_SE1200_HE1500_TSJ2p5in_30ft_GA2_Driving.yml
+/docs/domains/orcaflex/risers/production/slwr/TSJ_Extension/SLWR_16OD_SE1200_HE1500_TSJ3p0in_12ft_GA2_Driving.yml
+/docs/domains/orcaflex/risers/production/slwr/TSJ_Extension/SLWR_16OD_SE1200_HE1500_TSJ3p0in_20ft_GA2_Driving.yml
+/docs/domains/orcaflex/risers/production/slwr/TSJ_Extension/SLWR_16OD_SE1200_HE1500_TSJ3p0in_30ft_GA2_Driving.yml
+/docs/domains/orcaflex/risers/production/slwr/TopTension_Sensitivity/SLWR_16OD_SE0500_HE0800_BF_2p5_GA2_Driving.yml
+/docs/domains/orcaflex/risers/production/slwr/TopTension_Sensitivity/SLWR_16OD_SE1200_HE1500_BF_2p5_GA2_Driving.yml
+/docs/domains/orcaflex/risers/production/slwr/TopTension_Sensitivity/SLWR_16OD_SE2000_HE2300_BF_2p5_GA2_Driving.yml
+/docs/domains/orcaflex/risers/production/slwr/WaveHeight/SLWR_16OD_SE1200_HE1500_HS_10_GA2_Driving.yml
+/docs/domains/orcaflex/risers/production/slwr/WaveHeight/SLWR_16OD_SE1200_HE1500_HS_12_GA2_Driving.yml
+/docs/domains/orcaflex/training/hulls/monolithic/NeptuneBatchTestCase.yml
+/docs/domains/orcawave/L00_validation_wamit/3.1/benchmark/qtf_sum_freq_surge.html
+/docs/domains/pipelines/plem/image.png
+
+# Retain the small native force evidence used by the indicative study.
+!data/cfd/calm_water_study/raw/
+!data/cfd/calm_water_study/raw/*
+
+# Reproducible vessel seakeeping module documentation
+!/scripts/reports/
+/scripts/reports/*
+!/scripts/reports/build_vessel_seakeeping_module_report.py
+!/docs/reports/

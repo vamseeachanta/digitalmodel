@@ -1,0 +1,186 @@
+basename: API579
+
+default:
+  Analysis:
+    GML:
+      data_source: inline
+      Circumference: true
+      Length: false
+      FCARate: Historical
+      FCA: [0.0, 0.04, 0.08, 0.12, 0.16]
+    LML: true
+    B31G: false
+  Units: inch
+  log_level: INFO
+  config:
+    generate_plots: false
+    overwrite:
+      output: true
+  settings:
+    StartWTFactor: 1
+    AssessmentLengthCeilingFactor_Circumference: null
+    AssessmentLengthCeilingFactor_Length: 0.5
+    CorrosionAllowance: 0.0
+
+ReadingSets:
+  - DataCorrectionFactor: 1.0
+    Label: B318 Feature 3
+    FCARate: Historical
+    FCA: [0.0, 0.04, 0.08, 0.12, 0.16]
+    Contour:
+      xlim: null
+      ylim: null
+      zlim: [0.50, 0.64]
+    grid:
+      index: [0, 1, 2, 3, 4, 5]
+      columns: [0, 1, 2, 3, 4, 5]
+      values:
+        - [0.625, 0.622, 0.620, 0.619, 0.621, 0.623]
+        - [0.621, 0.615, 0.600, 0.596, 0.611, 0.620]
+        - [0.618, 0.604, 0.556, 0.552, 0.592, 0.617]
+        - [0.617, 0.602, 0.550, 0.548, 0.590, 0.616]
+        - [0.620, 0.612, 0.598, 0.594, 0.610, 0.619]
+        - [0.623, 0.621, 0.618, 0.617, 0.620, 0.622]
+
+API579Parameters:
+  RSFa: 0.9
+  Age: 15
+  FCARateFloor: 0.00118
+  FoliasFactor:
+    FlawParameter: [0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0, 5.5, 6.0, 6.5, 7.0, 7.5, 8.0, 8.5, 9.0, 9.5, 10.0]
+    Mt:
+      Cylindrical: [1.001, 1.056, 1.199, 1.394, 1.618, 1.857, 2.103, 2.351, 2.600, 2.847, 3.091, 3.331, 3.568, 3.801, 4.032, 4.262, 4.492, 4.727, 4.970, 5.225, 5.497]
+      Conical: [1.001, 1.056, 1.199, 1.394, 1.618, 1.857, 2.103, 2.351, 2.600, 2.847, 3.091, 3.331, 3.568, 3.801, 4.032, 4.262, 4.492, 4.727, 4.970, 5.225, 5.497]
+      Spherical: []
+
+Geometry:
+  NominalID: null
+  NominalOD: 16
+  DesignWT: 0.625
+  StartWTFactor: 1
+  tmin: 0.526
+  AssessmentLengthCeilingFactor_Circumference: null
+  AssessmentLengthCeilingFactor_Length: 0.5
+  CorrosionAllowance: 0.0
+
+Outer_Pipe:
+  Geometry:
+    Nominal_ID: null
+    Nominal_OD: 16
+    Design_WT: 0.625
+    tmin: 0.526
+    Corrosion_Allowance: 0.0
+  Material:
+    Material: Steel
+    Material_Grade: API 5L X65
+    WeldFactor:
+      Seamless: 1.0
+    Insulation: null
+    Buoyancy: null
+  Manufacturing:
+    Coupling Mass Ratio: 0.0
+
+Inner_Pipe: null
+
+Design:
+  - Load Condition: {Outer_Pipe: internal_pressure}
+    InternalPressure: {Outer_Pipe: 2220}
+    InternalFluid: {Outer_Pipe: 0.03703047}
+    ExternalPressure: {Outer_Pipe: 0}
+    ExternalFluid: {Outer_Pipe: 0.03703047}
+    Temperature:
+      Ambient: {Outer_Pipe: 50}
+      Operating: {Outer_Pipe: 82}
+      Maximum: null
+    BendingMoment: 0
+    AxialForce: 0
+    Torsion: 0
+    Condition: Restrained
+    Water_Depth: 2460.63
+    Code:
+      - {Outer_Pipe: ASME B31.8-2016 Chapter VIII Pipeline}
+
+Material:
+  E: 30000000.0
+  rho: 7800
+  Poissionsratio: 0.3
+  SMYS: 65000
+  SMUS: null
+  ThermalExpansionCoefficient: 6.5e-06
+  WeldFactor:
+    Seamless: 1.0
+  Steel:
+    E: 30000000.0
+    Rho: 0.2817929
+    Poissionsratio: 0.3
+    ThermalExpansionCoefficient: 6.5e-06
+    Grades:
+      API 5L X65:
+        SMYS: 65000
+        SMUS: null
+        Reference: null
+
+DesignFactors:
+  Pressure: 0.5
+  Longitudinal: 0.9
+  EquivalentStress: 0.9
+  Logitudinal: 0.9
+  TemperatureDerating: 1.0
+  ASME B31.8-2016 Chapter VIII Pipeline:
+    internal_pressure: 0.72
+    Longitudinal: 0.8
+    EquivalentStress: 0.9
+    D_over_T_Trasition_Ratio: 30
+
+LML:
+  LTA:
+    - DataCorrectionFactor: 1.0
+      Label: B318 Feature 3 flaw
+      sIndex: [2, 4]
+      cIndex: [2, 4]
+      s: null
+      c: null
+      Contour:
+        xlim: null
+        ylim: null
+        zlim: [0.50, 0.64]
+      FCA: [0.0, 0.04, 0.08, 0.12, 0.16]
+      Lmsd: 15.0
+      MtType: Cylindrical
+      FCAs: null
+      FCAc: null
+      FCANonFlawRatio: 0.25
+      io: null
+      sheet_name: null
+      index_col: null
+      skiprows: 0
+      skipfooter: 0
+      grid:
+        index: [0, 1, 2, 3, 4, 5]
+        columns: [0, 1, 2, 3, 4, 5]
+        values:
+          - [0.625, 0.622, 0.620, 0.619, 0.621, 0.623]
+          - [0.621, 0.615, 0.600, 0.596, 0.611, 0.620]
+          - [0.618, 0.604, 0.556, 0.552, 0.592, 0.617]
+          - [0.617, 0.602, 0.550, 0.548, 0.590, 0.616]
+          - [0.620, 0.612, 0.598, 0.594, 0.610, 0.619]
+          - [0.623, 0.621, 0.618, 0.617, 0.620, 0.622]
+
+PlotSettings:
+  Data:
+    PltSupTitle: B318 pipe FFS
+    PltTitle: Inline wall thickness grid
+    PltXLabel: Circumference (inch)
+    PltYLabel: Length (inch)
+  LML:
+    PltSupTitle: B318 pipe FFS
+    PltTitle: Local Metal Loss, Levels 1 and 2
+    PltXLabel: Future Corrosion Allowance (inch)
+    PltYLabel: Maximum Allowable Working Pressure (psi)
+    ylim: [0, 4000]
+  GML:
+    PltSupTitle: B318 pipe FFS
+    PltTitle: General Metal Loss, Level 2
+    PltXLabel: Future Corrosion Allowance (inch)
+    PltYLabel: Maximum Allowable Working Pressure (psi)
+    ylim: [0, 4000]

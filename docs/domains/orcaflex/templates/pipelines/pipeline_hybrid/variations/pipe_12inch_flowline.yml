@@ -1,0 +1,19 @@
+# Variation: 12-inch Flowline
+# IMPORTANT: When overriding Lines, must include ALL properties
+
+Lines:
+  # 12-inch flowline (smaller diameter)
+  - Name: Pipeline_Main
+    EndAConnection: Anchored
+    EndAX: 0
+    EndAY: 0
+    EndAZ: -500
+    EndBConnection: Anchored
+    EndBX: 1500
+    EndBY: 0
+    EndBZ: -500
+    IncludedInStatics: Yes
+    StaticsStep1: Catenary
+    LineType, Length, TargetSegmentLength:
+      - [Pipe_12inch_X65, 1500, 15]
+

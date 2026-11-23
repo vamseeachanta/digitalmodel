@@ -1,0 +1,29 @@
+name: generic_barge
+hull_type: barge
+stations:
+- x_position: 0.0
+  waterline_offsets:
+  - - 0.0
+    - 15.0
+  - - 6.0
+    - 15.0
+- x_position: 50.0
+  waterline_offsets:
+  - - 0.0
+    - 15.0
+  - - 6.0
+    - 15.0
+- x_position: 100.0
+  waterline_offsets:
+  - - 0.0
+    - 15.0
+  - - 6.0
+    - 15.0
+length_bp: 100.0
+beam: 30.0
+draft: 6.0
+depth: 7.199999999999999
+source: generic/synthetic; digitalmodel issue 1700, Deliverables generic barge; retrieved
+  2026-10-11. Dimensions from issue; offsets and depth scaled from tests/hydrodynamics/hull_library/conftest.py::box_profile
+  by L/L0, B/B0 and T/T0.
+block_coefficient: 1.0

@@ -1,0 +1,195 @@
+{
+  "scope": "support",
+  "sources": [
+    {
+      "name": "Damen product sheets (AHTS / PSV / CSOV / FCMV)",
+      "url": "https://www.damen.com/vessels/offshore",
+      "layers_covered": [
+        "principal particulars",
+        "deck data",
+        "crane capacity"
+      ],
+      "access": "brochure-pdf",
+      "format": "PDF product sheets + web spec tables",
+      "freshness": "current (live catalog, models updated continuously)",
+      "reliability": "high",
+      "notes": "OEM/builder authoritative. Per-model PDF product sheets (e.g. medialibrary.damen.com/.../product-sheet-ahts-180.pdf) give L/B/D, deadweight, deck area, deck load, bollard pull, tank capacities, crane SWL/outreach, accommodation. No RAOs or full mass-property (GM/radii of gyration) tables. Best single starting point for support-fleet principal particulars + deck/crane."
+    },
+    {
+      "name": "Ulstein ship-design vessel pages (SX-series CSOV/SOV)",
+      "url": "https://ulstein.com/vessels/csov-sov-vessel",
+      "layers_covered": [
+        "principal particulars",
+        "deck data",
+        "crane capacity"
+      ],
+      "access": "public",
+      "format": "web spec pages (per design: SX175/SX195/SX197/SX216/SX222/SX226/SX250)",
+      "freshness": "current",
+      "reliability": "high",
+      "notes": "Designer-authoritative for walk-to-work CSOV/SOV. Gives LOA/beam, accommodation (POB), deck area, motion-compensated crane SWL, gangway, DP class, and stated operability Hs for gangway/crane (e.g. SX250 'up to ~2 m Hs'). Useful directly for SOV operability limits. No mass-property or RAO datasets."
+    },
+    {
+      "name": "VARD / other OSV builder vessel pages (Vard, Havyard, Salt Ship Design, Kongsberg-Maritime designs)",
+      "url": "https://www.vard.com",
+      "layers_covered": [
+        "principal particulars",
+        "deck data",
+        "crane capacity"
+      ],
+      "access": "public",
+      "format": "web spec pages + occasional brochure PDFs",
+      "freshness": "current",
+      "reliability": "high",
+      "notes": "Builder/designer-authoritative for PSV/AHTS/CSOV. Comparable layer coverage to Ulstein. Aggregate several builders to widen fleet coverage. No RAO/mass-property."
+    },
+    {
+      "name": "Damen / OEM PSV & AHTS brochure PDFs mirrored on Scribd",
+      "url": "https://www.scribd.com/document/513261374/Brochure-Damen-Platform-Supply-Vessels-Series-04-2017",
+      "layers_covered": [
+        "principal particulars",
+        "deck data",
+        "crane capacity"
+      ],
+      "access": "registration",
+      "format": "PDF (third-party mirror)",
+      "freshness": "stale (mirrors of dated brochures, e.g. 2017)",
+      "reliability": "medium",
+      "notes": "Convenient mirrors of builder PSV/AHTS series brochures with full spec tables, but Scribd is registration/credit-walled and versions may be outdated. Prefer pulling the same sheet from the builder's own medialibrary when available; use Scribd only as fallback / for retired models."
+    },
+    {
+      "name": "GRS Offshore Renewables 3D vessel portfolio (W2W/SOV)",
+      "url": "https://grs.group/grs-offshore-renewables/3d-vessel-portfolio/walk-2-work-vessel-sov/",
+      "layers_covered": [
+        "principal particulars",
+        "deck data",
+        "crane capacity"
+      ],
+      "access": "public",
+      "format": "web portfolio + brokerage listings",
+      "freshness": "current",
+      "reliability": "medium",
+      "notes": "Shipbroker portfolio of real in-service W2W/SOV/CSOV units with summary particulars, crane and gangway data. Good for as-built fleet inventory cross-check; figures are marketing-grade, verify against builder sheets."
+    },
+    {
+      "name": "Offshore Supply & Support Vessels - World Wide directory (Refvik.info)",
+      "url": "http://www.refvik.info/OSV/OffshoreSupplyandSupportVesselsWorldWide032019.pdf",
+      "layers_covered": [
+        "principal particulars"
+      ],
+      "access": "public",
+      "format": "PDF directory",
+      "freshness": "stale (2019 edition)",
+      "reliability": "medium",
+      "notes": "Free fleet directory: year built, GT, deadweight, bhp/power, bollard pull, class per vessel across the global OSV fleet. Broad but shallow (no deck/crane curves, no RAO) and several years old. Good for breadth + as-built power/BP; treat as a free analogue to the paid registers."
+    },
+    {
+      "name": "DNV-RP-C205 - Environmental conditions and environmental loads",
+      "url": "https://www.dnv.com/energy/standards-guidelines/dnv-rp-c205-environmental-conditions-and-environmental-loads/",
+      "layers_covered": [
+        "metocean criteria"
+      ],
+      "access": "public",
+      "format": "landing page (standard itself is purchase/registration; older 2019 edition PDF circulates on third-party mirrors)",
+      "freshness": "current (April 2025 edition; 2019 edition prior)",
+      "reliability": "high",
+      "notes": "The authoritative methodology RP for metocean characterization (short-term & long-term wave/wind/current models, joint distributions, design sea states) underpinning operability-limit assessment. Document is purchase-gated; the landing page + methodology summary are public. Pair with measured/hindcast data sources for actual site numbers."
+    },
+    {
+      "name": "DNV-ST-N001 / DNVGL-ST-0111 marine-operations & SOV standards",
+      "url": "https://www.dnv.com/energy/standards-guidelines/",
+      "layers_covered": [
+        "metocean criteria"
+      ],
+      "access": "public",
+      "format": "standards landing pages (docs purchase-gated)",
+      "freshness": "current",
+      "reliability": "high",
+      "notes": "Marine-operations weather-window and SOV/W2W operability-limit framing (alpha-factors, operational vs design limits). Methodology public via summaries/webinars; full text paywalled. Relevant for converting metocean stats into vessel operability limits."
+    },
+    {
+      "name": "BOEM Metocean Characterization Recommended Practices for U.S. Offshore Wind",
+      "url": "https://www.boem.gov/sites/default/files/environmental-stewardship/Environmental-Studies/Renewable-Energy/Metocean-Recommended-Practices.pdf",
+      "layers_covered": [
+        "metocean criteria"
+      ],
+      "access": "public",
+      "format": "PDF (3.7 MB, free download, confirmed live)",
+      "freshness": "current",
+      "reliability": "high",
+      "notes": "U.S. government recommended practice: wind, wave (Hs/Tp/spectra), current, water level, extreme & normal conditions, measurement and hindcast guidance for US OSW. Free and authoritative. Region-specific to US OSW lease areas; best public metocean-criteria reference for the support-vessel operability use case."
+    },
+    {
+      "name": "Copernicus Marine Service (CMEMS) wave/wind/current hindcast & reanalysis",
+      "url": "https://marine.copernicus.eu/",
+      "layers_covered": [
+        "metocean criteria"
+      ],
+      "access": "registration",
+      "format": "NetCDF / API / OPeNDAP datasets",
+      "freshness": "current (rolling reanalysis + multi-year hindcasts)",
+      "reliability": "high",
+      "notes": "Free (account required) gridded multi-year wave (Hs, Tp, direction), wind and current products incl. regional reanalyses (e.g. Arctic, global). Source of the actual site-specific metocean statistics behind operability/weather-window analysis. Data only - no vessel specs."
+    },
+    {
+      "name": "NOAA National Data Buoy Center (NDBC)",
+      "url": "https://www.ndbc.noaa.gov/",
+      "layers_covered": [
+        "metocean criteria"
+      ],
+      "access": "public",
+      "format": "web + downloadable historical text/NetCDF",
+      "freshness": "current (real-time + multi-decade archive)",
+      "reliability": "high",
+      "notes": "Free in-situ buoy observations (Hs, dominant/avg period, wind, met) for US waters incl. GoM and US east/west coast. Ground-truth for hindcasts and direct operability-limit calibration. US coverage only."
+    },
+    {
+      "name": "Norwegian hindcast metocean (NORA3 / NORA-SARAH, MET Norway)",
+      "url": "https://www.met.no/en",
+      "layers_covered": [
+        "metocean criteria"
+      ],
+      "access": "public",
+      "format": "NetCDF / THREDDS open data",
+      "freshness": "current",
+      "reliability": "high",
+      "notes": "Free high-resolution North Sea / Norwegian Sea wind-wave hindcast (NORA3) widely used for North Sea offshore-wind & OSV operability. Open framework (NORA-SARAH) for downscaled coastal hydrodynamics. Regional (NE Atlantic / North Sea). Data only."
+    },
+    {
+      "name": "Orcina OrcaFlex documentation - vessel RAO data handling",
+      "url": "https://www.orcina.com/webhelp/OrcaFlex/Content/html/Vesseltypes,RAOs.htm",
+      "layers_covered": [
+        "motion RAOs"
+      ],
+      "access": "public",
+      "format": "web help / documentation",
+      "freshness": "current",
+      "reliability": "high",
+      "notes": "Not a data source for vessel RAOs but the authoritative reference on RAO conventions/formats (displacement RAOs, phase conventions, import formats). RAOs themselves are vessel-confidential and generally NOT public - see paywalled_gaps. Useful for the schema/format of the RAO layer."
+    }
+  ],
+  "paywalled_gaps": [
+    "Motion RAOs for specific support vessels (AHTS/PSV/CTV/SOV): essentially NOT publicly available. RAOs are computed per-hull (model basin or diffraction codes WAMIT/AQWA/HydD) and held by builders/owners/class as confidential design data. Public domain has only academic examples (FPSO/ship RAOs in ScienceDirect/ResearchGate/DTIC/TU Delft papers) and tool docs (Orcina/Orcaflex). For a real database you must generate RAOs from hull geometry or obtain them under NDA from builder/owner.",
+    "Mass properties (lightship weight distribution, VCG/LCG, GM, radii of gyration / inertia): not published in builder brochures; come from the vessel's stability book / inclining test, which is class- and owner-confidential. Public sources give only displacement/deadweight, not the inertia tensor needed for seakeeping.",
+    "Crane capacity load charts (full SWL vs radius curves, dynamic/offboard de-rating): brochures give headline SWL and sometimes one radius; complete capacity curves live in OEM crane manuals (MacGregor, Liebherr, Palfinger, Huisman) which are document-controlled / not freely downloadable.",
+    "IHS Markit / S&P Global Petrodata (ODS-Petrodata, RigPoint, Offshore Rig/Vessel data): paid subscription. Authoritative for OSV/rig fleet, ownership, day-rates, utilization, principal particulars - but fully paywalled.",
+    "Clarksons Research - World Fleet Register / World Offshore Register (WOR) / Offshore Intelligence Network: paid subscription. Most comprehensive offshore-vessel principal-particulars + market dataset; bespoke data also paid.",
+    "Enverus (formerly Drillinginfo, includes RS Energy/offshore intel): paid subscription; offshore market & asset intelligence, not freely accessible.",
+    "Regional design-level metocean criteria (extreme Hs/Tp return-period values) baked into API RP 2MET / API RP 2A-WSD Sec.17 and ISO 19901-1: the standards are purchase-gated; only summaries and OTC papers are free. Site-specific design metocean reports from consultancies (Fugro, ABPmer, BMT) are commissioned/paid."
+  ],
+  "recommended_priority": [
+    "Damen product sheets (AHTS / PSV / CSOV / FCMV)",
+    "Ulstein ship-design vessel pages (SX-series CSOV/SOV)",
+    "BOEM Metocean Characterization Recommended Practices for U.S. Offshore Wind",
+    "Copernicus Marine Service (CMEMS) wave/wind/current hindcast & reanalysis",
+    "NOAA National Data Buoy Center (NDBC)",
+    "DNV-RP-C205 - Environmental conditions and environmental loads",
+    "VARD / other OSV builder vessel pages (Vard, Havyard, Salt Ship Design, Kongsberg-Maritime designs)",
+    "Norwegian hindcast metocean (NORA3 / NORA-SARAH, MET Norway)",
+    "GRS Offshore Renewables 3D vessel portfolio (W2W/SOV)",
+    "Offshore Supply & Support Vessels - World Wide directory (Refvik.info)",
+    "DNV-ST-N001 / DNVGL-ST-0111 marine-operations & SOV standards",
+    "Orcina OrcaFlex documentation - vessel RAO data handling",
+    "Damen / OEM PSV & AHTS brochure PDFs mirrored on Scribd"
+  ]
+}

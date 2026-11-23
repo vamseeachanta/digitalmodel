@@ -1,0 +1,8 @@
+# Large regenerable interactive dashboard + its embedded grid data (regenerate
+# via ../ship_panel_design_explorer.py). Kept out of git to avoid multi-MB blobs.
+ship_panel_design_explorer.html
+panel_design_grids.json
+
+# Self-contained (Plotly-inlined) report variants — regenerate via
+# ../make_standalone_report.py or the explorer driver.
+*_standalone.html

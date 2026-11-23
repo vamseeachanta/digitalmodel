@@ -1,0 +1,1 @@
+FACE RESOLUTION VERDICT: PASS -- patch 'hull': 95717 faces, max 0.0004296 m2 = 4.69x the target cell area (0.009573 m)^2, limit 8x; mean face 9.845e-05 m2

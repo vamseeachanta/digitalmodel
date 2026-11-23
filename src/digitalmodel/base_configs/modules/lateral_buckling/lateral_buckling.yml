@@ -1,0 +1,14 @@
+basename: lateral_buckling
+
+calculation:
+  name: lateral_buckling
+
+default:
+  log_level: INFO
+  config:
+    generate_plots: false
+    overwrite:
+      output: true
+
+Analysis:
+  fe_folder: null

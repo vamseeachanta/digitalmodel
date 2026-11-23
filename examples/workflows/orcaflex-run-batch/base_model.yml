@@ -1,0 +1,12 @@
+# Minimal OrcaFlex-style base model for the mock heading sweep. In mock mode
+# the file is only validated and rendered (variants + duration injected),
+# never loaded through OrcFxAPI. General.StageDuration = [build-up, stage-1];
+# analysis.duration overrides the main stage (index 1).
+General:
+  StageDuration: [8.0, 120.0]
+Environment:
+  WaterDepth: 100.0
+  WaveType: Airy
+  WaveDirection: 0.0
+  WaveHeight: 2.0
+  WavePeriod: 8.0

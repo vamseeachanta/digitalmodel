@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><title>Issue 2617: QTF variance verification</title>
+<style>body{font:16px/1.5 sans-serif;max-width:1060px;margin:40px auto;padding:0 20px}code,pre{background:#eee}pre{padding:12px;white-space:pre-wrap}td,th{border:1px solid #bbb;padding:8px}table{border-collapse:collapse}caption{caption-side:bottom;text-align:left;padding:8px}</style>
+<h1>Difference-frequency QTF variance: confirmed and corrected</h1>
+<p><a href="https://github.com/vamseeachanta/digitalmodel/issues/2617">Issue 2617</a>.
+The unmodified repository function at <code>c5e4ac33</code> returns 50.005840 kN² against
+a fixed-seed Monte Carlo variance of 24.926308 kN²: a ratio of 2.006147.
+The corrected function returns 24.952483 kN², within 0.1051% of Monte Carlo against the 1% criterion.
+All inputs are synthetic. This comparison qualifies the documented numerical cases, not a vessel or mooring design.</p>
+<h2>Physical convention and correction</h2>
+<p>The reference convention is the full difference-frequency load in
+<a href="https://www.orcina.com/webhelp/OrcaFlex/Content/html/Vesseltheory,Wavedriftandsumfrequencyloads.htm">Orcina's second-order load theory</a>:
+<code>F(t) = Re sum_ij Q_ij a_i a_j exp(i[(omega_i-omega_j)t+phi_i-phi_j])</code>.
+The complete difference-frequency QTF is Hermitian; <code>a_i = sqrt(2 S_i dw)</code>.</p>
+<p>Two ordered terms form one real sinusoid with amplitude <code>2 a_i a_j |Q_ij|</code>.
+Its variance is <code>(2 a_i a_j |Q_ij|)^2/2 = 8 S_i S_j dw^2 |Q_ij|^2</code>.
+Different unordered pairs have zero covariance under independent uniform phases, including pairs sharing one component.
+The variance sum therefore visits only <code>i&lt;j</code>. The old loop visits each off-diagonal pair twice
+and includes constant <code>i=j</code> mean loads as fluctuating variance.</p>
+<p>The implementation retains factor eight and visits each unique pair once. Newman's positive-lag calculation is retained;
+lag zero is set to zero to exclude mean load for this discrete fixed-amplitude sea. Discrete variance is
+<code>sum(S_sv)*dw</code> with full bin weights, including the final lag. A trapezoidal integral of these discrete bins
+would incorrectly halve an occupied final bin, as demonstrated by the bichromatic test.</p>
+<h2>Narrow-band Monte Carlo reference</h2>
+<p>The generated sea uses the repository JONSWAP function: Hs=2 m, Tp=7.853982 s, gamma=10,
+<code>omega=linspace(0.2,1.224,2049)</code> rad/s, <code>dw=0.0005</code> rad/s.
+The synthetic diagonal drift coefficient and every Newman QTF entry equal 10 kN/m².
+The initial code is called directly before production edits; its source SHA-256 is retained in
+<a href="issue-2617-metrics.json">the compact metrics record</a>.</p>
+<p>With seed 2617, 2048 independent phase vectors are drawn uniformly on [0,2π).
+Each record spans 12566.370614 s at 8192 equally spaced times. The complex wave envelope is evaluated by FFT,
+and <code>F(t)=10*|z(t)|^2</code> is formed in the time domain; this reference never evaluates a pair-variance sum.
+The carrier frequency cancels in the squared magnitude. Difference frequencies lie on exact DFT bins;
+Nyquist=2.048 rad/s exceeds the largest difference frequency of 1.024 rad/s.</p>
+<p>The record force mean is removed by <code>np.var</code>. Sampling uncertainty is estimated from the 2048 independent record variances,
+not the correlated time samples: <code>1.96*std(record_variances)/sqrt(2048)/mean(record_variances)</code>.
+The resulting 95% confidence half-width is 0.29836%, below the requested 1% sampling error.
+Exact sparse tests independently guard the diagonal correction, which is small on this fine grid.</p>
+<table><tr><th>Calculation</th><th>Variance (kN²)</th><th>Difference from Monte Carlo (%)</th></tr>
+<tr><td>Unmodified repository full QTF</td><td>50.005839732175204</td><td>+100.6147</td></tr>
+<tr><td>Monte Carlo</td><td>24.926308458002424</td><td>0</td></tr>
+<tr><td>Corrected repository full QTF</td><td>24.95248308621409</td><td>+0.105008</td></tr>
+<tr><td>Corrected Newman, full discrete bin weights</td><td>24.95248308621378</td><td>+0.105008</td></tr>
+<caption>Table 1. Narrow-band force variances; corrected Newman/full relative difference is below 1e-12.</caption></table>
+<h2>Bichromatic and linear surge checks</h2>
+<p>The two-component case uses frequencies 0.7 and 0.8 rad/s, amplitudes 1 m and 0.5 m,
+and a constant QTF of 10 kN/m². Its single beat force has amplitude 10 kN and exact variance 50 kN².
+The unmodified function returns 312.5 kN²; the time history returns 50.0 kN².
+An additional Hermitian complex-pair case, Q12=3+4i, has exact variance 12.5 kN².
+Single-component and diagonal-only QTFs give zero fluctuation; their mean load remains separate.</p>
+<p>The linear surge equation is <code>10000*x'' + 200*x' + 100*x = F(t)</code>,
+with force in kN and displacement in m. Natural frequency is 0.1 rad/s and damping ratio is 0.1.
+The frequency-domain prediction calls the actual full-QTF function after weighting each QTF entry by
+<code>|1/(k-m*mu²+i*c*mu)|</code>. This is equivalent to filtering the force variance by |H|².</p>
+<p>Four fixed-seed random-phase bichromatic histories are integrated using SciPy <code>signal.lsim</code>
+with piecewise-linear force interpolation, 256 samples per beat cycle, 64 cycles discarded and 128 complete cycles retained.
+The discarded interval reduces homogeneous transient amplitude below 4e-18 of its initial amplitude.
+Standard deviation removes the static offset. Complete-cycle averaging eliminates random-phase window error for this one-beat case;
+the four measured standard deviations differ by less than 1e-10 m.</p>
+<table><tr><th>Prediction</th><th>Surge standard deviation (m)</th></tr>
+<tr><td>Corrected repository function with oscillator weighting</td><td>0.3535533905932738</td></tr>
+<tr><td>Time-domain oscillator, four phase records</td><td>0.3535356427801949</td></tr>
+<caption>Table 2. Surge standard deviation difference is 0.005020%, below the 5% criterion.</caption></table>
+<h2>Caller audit and behavior change</h2>
+<p>A repository-wide text search, including tracked documentation, examples and notebooks, finds no production call site.
+The package re-exports the symbol in <code>src/digitalmodel/orcawave/__init__.py</code> (import and __all__).
+The sole pre-existing direct caller is <code>tests/orcawave/test_drift_forces.py::TestFullQTF.test_full_qtf_positive_std</code>;
+its fixture is updated to a complete QTF on a uniform grid and its assertion requires positive fluctuation.</p>
+<p>New direct callers in <code>tests/orcawave/test_drift_force_variance.py</code> are
+<code>narrow_band_reference</code>, <code>surge_oscillator_reference</code>,
+<code>test_bichromatic_pair_variance_excludes_double_count</code>,
+<code>test_diagonal_qtf_has_mean_load_but_zero_fluctuation</code>, and
+<code>test_newman_full_agree_with_full_endpoint_bin_weights</code>.
+The Monte Carlo and oscillator tests reach the function through the first two helpers.</p>
+<p>External consumers are not inventoried. Their fine-grid full-QTF standard deviations will decrease by approximately 1/sqrt(2);
+sparse/diagonal cases can change more. Newman's zero-lag bin changes from a positive value to zero.
+Both public signatures and return types are preserved. Complete Hermitian matrices and uniform increasing integration grids are prerequisites;
+validation of malformed, triangular-only or nonuniform inputs is unchanged. Nonlinear mooring response, directional seas and licensed solvers are not evaluated.</p>
+<h2>TDD, reproducibility and retained evidence</h2>
+<p>The pre-change regression run records seven failures and one pass, including force variance and surge response.
+The original 38 drift/spectrum/motion tests pass before the fix. Additional signed, frequency-varying Newman cases are included after reproduction.
+All 357 tests in <code>tests/orcawave</code> pass after correction. A public-package import smoke check resolves the function to the real repository module.</p>
+<pre>PYTHONPATH=src uv run --no-project --with numpy==1.26.4 --with pydantic --with scipy --with pytest python tests/orcawave/test_drift_force_variance.py
+PYTHONPATH=src uv run --no-project --with numpy==1.26.4 --with pydantic --with scipy --with pytest --with pytest-asyncio --with pyyaml --with pandas --with jinja2 --with plotly --with loguru python -m pytest tests/orcawave -q</pre>
+<p>Only generation code, compact numeric metrics, this report and frozen review evidence are retained.
+Time histories and full matrices are temporary in-memory arrays. No client data or licensed standards are used.
+Baseline and corrected observations are retained together in the metrics record; saved values are read back before publication.</p>
+</html>

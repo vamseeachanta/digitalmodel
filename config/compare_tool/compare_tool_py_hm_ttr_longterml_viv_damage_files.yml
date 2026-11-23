@@ -1,0 +1,134 @@
+parameters:
+  file_io_01: &file_io_01 tests\cfg\results\app_viv_analysis_viv_analysis_py_hm_long_term_A5_Low_total_viv_fatigue.xlsx
+  label_01: &label_01 A5, Low Tension
+  file_io_02: &file_io_02 tests\cfg\results\app_viv_analysis_viv_analysis_py_hm_long_term_A6_Low_total_viv_fatigue.xlsx
+  label_02: &label_02 A6, Low Tension
+  file_io_03: &file_io_03 tests\cfg\results\app_viv_analysis_viv_analysis_py_hm_long_term_A10_Low_total_viv_fatigue.xlsx
+  label_03: &label_03 A10, Low Tension
+
+default:
+  log_level: DEBUG
+  config:
+    overwrite:
+      output: True
+
+files:
+  -
+    file_type: xlsx
+    io: *file_io_01
+    label: *label_01
+    sheet_name: total_viv_fatigue
+    data_type: DataFrame
+    columns:
+      - elevation_above_mudline
+      - total_damage
+  -
+    file_type: xlsx
+    io: *file_io_02
+    label: *label_02
+    sheet_name: total_viv_fatigue
+    data_type: DataFrame
+    columns:
+      - elevation_above_mudline
+      - total_damage
+  -
+    file_type: xlsx
+    io: *file_io_03
+    label: *label_03
+    sheet_name: total_viv_fatigue
+    data_type: DataFrame
+    columns:
+      - elevation_above_mudline
+      - total_damage
+
+plot:
+  -
+    file_suffix: long_term_viv_comparison
+    suptitle: Combined VIV Fatigue Damage Comparison
+    size: default
+    orientation: portrait
+    plt_kind: line
+    title: " "
+    grid: True
+    label: NULL
+    legend: True
+    legend_location: best
+    marker: NULL
+    x: [total_damage]
+    y: [elevation_above_mudline]
+#    xlim: [0.00001, 100]
+    xlabel: Fatigue Damage (1/year)
+    ylabel: Elevation Above Mudline (ft)
+    x_reverse: False
+    y_reverse: False
+    xscale:
+      log: True
+    text_fields:
+      -
+        x : 0.0000001
+        y: 33
+        text: Stress Jt. Center
+      -
+        x : 0.0000001
+        y: 4908.5
+        text: Keel Jt. Center
+
+  -
+    file_suffix: long_term_viv_comparison_top
+    suptitle: Combined VIV Fatigue Damage Comparison
+    size: default
+    orientation: portrait
+    plt_kind: line
+    title: " "
+    grid: True
+    label: NULL
+    legend: True
+    legend_location: best
+    marker: NULL
+    x: [total_damage]
+    y: [elevation_above_mudline]
+    xlim: [0.0000000000001, 0.000001]
+    ylim: [4800, 5600]
+    xlabel: Fatigue Damage (1/year)
+    ylabel: Elevation Above Mudline (ft)
+    x_reverse: False
+    y_reverse: False
+    xscale:
+      log: True
+    text_fields:
+      -
+        x : 0.0000001
+        y: 4908.5
+        text: Keel Jt. Center
+      -
+        x : 0.0000001
+        y: 5423
+        text: Water Line
+
+  -
+    file_suffix: long_term_viv_comparison_bot
+    suptitle: Combined VIV Fatigue Damage Comparison
+    size: default
+    orientation: portrait
+    plt_kind: line
+    title: " "
+    grid: True
+    label: NULL
+    legend: True
+    legend_location: best
+    marker: NULL
+    x: [total_damage]
+    y: [elevation_above_mudline]
+    xlim: [0.0000000000001, 0.000001]
+    ylim: [0, 100]
+    xlabel: Fatigue Damage (1/year)
+    ylabel: Elevation Above Mudline (ft)
+    x_reverse: False
+    y_reverse: False
+    xscale:
+      log: True
+    text_fields:
+      -
+        x : 0.0000001
+        y: 33
+        text: Stress Jt. Center

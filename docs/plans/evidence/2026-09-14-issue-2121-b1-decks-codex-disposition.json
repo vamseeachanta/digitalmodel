@@ -1,0 +1,155 @@
+{
+  "provider": "Codex",
+  "scope": "Independent disposition of Claude DECK1-DECK5 with direct prepared-byte semantic checks; no native execution",
+  "claude_reviewed_revision": "dbb098f4837d1a688baacb71997599c9d19f4a25",
+  "current_head": "48027b1a1c6311fc738a08bb8992f97f4936c694",
+  "verdict": "NONBLOCKING_CURRENT_DECK_DISPOSITION_WITH_REGRESSION_COVERAGE_MINOR",
+  "reviewed_files": [
+    {
+      "path": "src/digitalmodel/ansys/cylinder_deck.py",
+      "sha256": "c9dca5a7a5a0e53f4c555c95ea38d363b24896ca340c4069813e97670f3516d4"
+    },
+    {
+      "path": "src/digitalmodel/ansys/cylinder_deck_exports.py",
+      "sha256": "48ff0fc3dce1ba196993c02b142a12d93ffea52ae25b9b5223bebbd723c69480"
+    },
+    {
+      "path": "src/digitalmodel/ansys/cylinder_mesh.py",
+      "sha256": "82c42b9d8cc063b78201d7977229998d8e42bfbd4dbe3622707719a98e450d01"
+    },
+    {
+      "path": "src/digitalmodel/ansys/cylinder_benchmark.py",
+      "sha256": "1a4ab9ceb167a31278aa39c6fb946af8ee6b47dceedcff28d466865159b4e30b"
+    },
+    {
+      "path": "src/digitalmodel/ansys/cylinder_results_audit.py",
+      "sha256": "079c4a0201ece1dc7db58b9edef407e4102e792d875bde4f0b22757762dda9ea"
+    },
+    {
+      "path": "src/digitalmodel/ansys/cylinder_results_validation.py",
+      "sha256": "da149366a2d3f08a943d9c5bac23aa71b4eeaa723d87ff99f3c821f18bcdd8a3"
+    },
+    {
+      "path": "src/digitalmodel/ansys/cylinder_results_cdb.py",
+      "sha256": "fbd3318e0baee4cc01ea1c1350776293d224ac8e44fe9d87e7ee2bc0c619f020"
+    },
+    {
+      "path": "docs/plans/2026-09-13-issue-2121-ansys-cylinder-campaign.html",
+      "sha256": "bc08cee28154cf3c211313f3fc08d4bc65f534ad8df36617192956e0ec5b542f"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-13-issue-2121-vendor-source-metadata.json",
+      "sha256": "159cd3d96202f180389e717be7061a92831d3ad117e1282a6428d0b41b3b90cb"
+    },
+    {
+      "path": "tests/ansys/test_cylinder_deck.py",
+      "sha256": "ff66a53e8acf511c13aabe901c5cc0ec5185a28b98c6f3598190c392008ac240"
+    }
+  ],
+  "raw_deck_checks": [
+    {
+      "path": "examples/ansys/cylinder-benchmark/prepared/ocv-zero-t60-n16.inp",
+      "sha256": "1fcaf94c00c7f40ad9ccffbde512ee084e21a6600cb668204a823d23e4241448",
+      "metadata_sha256": "1f266f7cb7751f5231f4bab3fba62bc2744ebb2e657ce396a5703dddb09c0ef7",
+      "nodes": 4833,
+      "elements": 1536,
+      "stations": 9,
+      "native_records": 54,
+      "ESOL_queries": 36,
+      "bottom_nodes": 33,
+      "pressure_faces": 0,
+      "raw_semantic_assertions": "PASS",
+      "inserted_audit_window_mutation": "REFUSED"
+    },
+    {
+      "path": "examples/ansys/cylinder-benchmark/prepared/ocv-t60-p10-n4.inp",
+      "sha256": "bd2f9529412545743e4527f637190eedc42cce519033c8bd837946645c750de0",
+      "metadata_sha256": "7b7956d25ad848bdc781ada64eea6edc4646e40f63d0fcea9d0dcbc527a44e5b",
+      "nodes": 345,
+      "elements": 96,
+      "stations": 9,
+      "native_records": 54,
+      "ESOL_queries": 36,
+      "bottom_nodes": 9,
+      "pressure_faces": 24,
+      "raw_semantic_assertions": "PASS",
+      "inserted_audit_window_mutation": "REFUSED"
+    },
+    {
+      "path": "examples/ansys/cylinder-benchmark/prepared/ocv-t60-p10-n8.inp",
+      "sha256": "ea4d95669f8e7922ab5ecd4e0d9f77713f14f4978d3a5ca1cc50f79f17c034e5",
+      "metadata_sha256": "e033de63d87051f0d6f0835318aef16965a1664eafebca5d79048f68c52a09d0",
+      "nodes": 1265,
+      "elements": 384,
+      "stations": 9,
+      "native_records": 54,
+      "ESOL_queries": 36,
+      "bottom_nodes": 17,
+      "pressure_faces": 48,
+      "raw_semantic_assertions": "PASS",
+      "inserted_audit_window_mutation": "REFUSED"
+    },
+    {
+      "path": "examples/ansys/cylinder-benchmark/prepared/ocv-t60-p10-n16.inp",
+      "sha256": "e12ec14194afba24176d34343ad8ecf0bec0d671509a1a9e27ddfb9413209f42",
+      "metadata_sha256": "834492a8698383a61264496bd41dea5b93735e588f08dc76a9096fe78187711e",
+      "nodes": 4833,
+      "elements": 1536,
+      "stations": 9,
+      "native_records": 54,
+      "ESOL_queries": 36,
+      "bottom_nodes": 33,
+      "pressure_faces": 96,
+      "raw_semantic_assertions": "PASS",
+      "inserted_audit_window_mutation": "REFUSED"
+    }
+  ],
+  "findings": [
+    {
+      "id": "DECK-1",
+      "disposition": "Proposed correction rejected: conflicts with approved audit-to-solve sequence",
+      "basis": "The plan permits only FINISH;/CONFIG,STAT;/SOLU;SOLVE afterSFELIST/FLIST/DLIST. Adding /COM,OCV_LOAD_AUDIT_END afterDLIST violates this exact requirement. Current cylinder_results_audit.load_audit_block explicitly delimits LOAD_AUDIT_BEGIN to SOLVED_STATE_BEGIN; pair-all-BEGIN convention is not this interval contract. Current raw sequence passes on allfour decks."
+    },
+    {
+      "id": "DECK-2",
+      "disposition": "No supported exact-geometry defect; documentation precision clarification remains nonblocking",
+      "basis": "Official /FORMAT Notes governs POST1 PRNSOL/PRESOL/PRRSOL and related tables, not NLIST/SFELIST/DLIST; moving it earlier is not a supported correction for these outputs. Current validation verifies native model.cdb rather than parsing NLIST coordinates as exact. CDB is generated beforeloads, so exact load/support state still requires separate complete SFELIST/FLIST/DLIST validation; do not call CDB an applied-load export. Default listings should not be described as exact full-precision geometry."
+    },
+    {
+      "id": "DECK-3",
+      "disposition": "Unsupported proposed ordering defect; no deck change required",
+      "basis": "Pinned method requires FULL/RSYS0 for recovery, allqueries and listings; allfour decks set these before stationGET/PRESOL/PRNSOL. Officialv242 /GRAPHICS page states FULL/POWER effects but supplies no SET-reload requirement. No native failure is established. Current mandatory POST1;SET1,1 activation sequence remains unchanged."
+    },
+    {
+      "id": "DECK-4",
+      "disposition": "Repository regression-coverage MINOR confirmed; exactcurrent four-deck requirements independently verified",
+      "basis": "Existing pytest precision/export/selection tests targetN4 and byte-equality mutation guard does not independently prove command semantics. This review parses allfour retained decks directly without generator calls and asserts counts,Q8counterclockwise corner/midside ordering, stationcorner adjacency, pressureface4/10MPa and zeroabsence, completebottomUY, allrequiredwindow/control/query/export/selection conditions. Injecting F,1,FY,1 afterDLIST is rejected by an independent exactsequence assertion. Parametrized semantic regression tests remain useful before future generatorchanges; no current failingdeck found."
+    },
+    {
+      "id": "DECK-5",
+      "disposition": "Source-pin-gap claim not supported; existing source references retained",
+      "basis": "Metadata already pinsFORMAT-v242 URL/bodydigest and NERR-v242 URL/bodydigest; NERR recordedfacts explicitly mentionsSTAT. OfficialFORMAT Notes explicitly documents /FORMAT,STAT; officialNERR Notes explicitly documents /NERR,STAT. These are documented grammar, although native feasibility is not established. No replacement or new assumption classification is required."
+    }
+  ],
+  "official_sources": [
+    {
+      "url": "https://ansyshelp.ansys.com/public/Views/Secured/corp/v242/en/ans_cmd/Hlp_C_FORMAT.html",
+      "checked": "Notes: POST1 table scope and STAT state listing"
+    },
+    {
+      "url": "https://ansyshelp.ansys.com/public/Views/Secured/corp/v242/en/ans_cmd/Hlp_C_NERR.html",
+      "checked": "Notes: STAT state listing and retained diagnostic limits"
+    },
+    {
+      "url": "https://ansyshelp.ansys.com/public/Views/Secured/corp/v242/en/ans_cmd/Hlp_C_GRAPHICS.html",
+      "checked": "FULL/POWER recovery/display scope; no required SETreload found"
+    }
+  ],
+  "blocking_findings": [],
+  "limitations": [
+    "Currentdeck structural verification is not native execution or output-format qualification.",
+    "Runtime/numerics independent review and B2 engineering authority remain separate.",
+    "No reviewedsource or preparedartifact edits, commits, provider dispatch or native calls."
+  ],
+  "expected_residue": "Requested private disposition and raw-deck assertion receipts; parent owns integrated cleanup"
+}

@@ -1,0 +1,164 @@
+source_type: python
+source_description: "Diffraction pipeline unit conversion tests from test_diffraction_units.py — exact numerical assertions"
+extracted_date: "2026-03-16"
+legal_scan_passed: true
+category: "metocean_diffraction"
+subcategory: "diffraction_unit_conversions"
+equations:
+  - name: "Mass kg to tonnes"
+    latex: "m_{t} = m_{kg} / 1000"
+    description: "Convert mass from kilograms to metric tonnes"
+  - name: "Density kg/m3 to t/m3"
+    latex: "\\rho_{t/m^3} = \\rho_{kg/m^3} / 1000"
+    description: "Convert density from kg/m3 to tonnes/m3"
+  - name: "Hz to rad/s"
+    latex: "\\omega = 2\\pi f"
+    description: "Convert frequency from Hz to angular frequency"
+  - name: "Period to rad/s"
+    latex: "\\omega = 2\\pi / T"
+    description: "Convert wave period to angular frequency"
+  - name: "Radians to degrees"
+    latex: "\\theta_{deg} = \\theta_{rad} \\cdot 180 / \\pi"
+    description: "Convert angle from radians to degrees"
+inputs:
+  - name: "Mass in kg"
+    symbol: "m_kg"
+    unit: "kg"
+    test_value: 1000.0
+  - name: "Seawater density"
+    symbol: "rho_sw"
+    unit: "kg/m^3"
+    test_value: 1025.0
+  - name: "Frequency"
+    symbol: "f"
+    unit: "Hz"
+    test_value: 1.0
+  - name: "Angle in radians"
+    symbol: "theta"
+    unit: "rad"
+    test_value: 3.14159265359
+outputs:
+  - name: "Mass in tonnes"
+    symbol: "m_t"
+    unit: "t"
+    test_expected: 1.0
+    tolerance: 0.001
+  - name: "Seawater density in t/m3"
+    symbol: "rho_t_m3"
+    unit: "t/m^3"
+    test_expected: 1.025
+    tolerance: 0.001
+  - name: "Angular frequency for 1 Hz"
+    symbol: "omega"
+    unit: "rad/s"
+    test_expected: 6.28318530718
+    tolerance: 0.0001
+  - name: "Angle in degrees"
+    symbol: "theta_deg"
+    unit: "deg"
+    test_expected: 180.0
+    tolerance: 0.001
+worked_examples:
+  - description: "kg to tonnes: 1000 kg = 1.0 t"
+    inputs:
+      mass_kg: 1000.0
+    outputs:
+      mass_t: 1.0
+    use_as_test: true
+  - description: "tonnes to kg: 1.0 t = 1000.0 kg"
+    inputs:
+      mass_t: 1.0
+    outputs:
+      mass_kg: 1000.0
+    use_as_test: true
+  - description: "Seawater density: 1025 kg/m3 = 1.025 t/m3"
+    inputs:
+      density_kg_m3: 1025.0
+    outputs:
+      density_t_m3: 1.025
+    use_as_test: true
+  - description: "Freshwater density: 1000 kg/m3 = 1.0 t/m3"
+    inputs:
+      density_kg_m3: 1000.0
+    outputs:
+      density_t_m3: 1.0
+    use_as_test: true
+  - description: "Hz to rad/s: 1.0 Hz = 2*pi rad/s"
+    inputs:
+      frequency_hz: 1.0
+    outputs:
+      omega_rad_s: 6.28318530718
+    use_as_test: true
+  - description: "rad/s to Hz: 2*pi rad/s = 1.0 Hz"
+    inputs:
+      omega_rad_s: 6.28318530718
+    outputs:
+      frequency_hz: 1.0
+    use_as_test: true
+  - description: "Period to rad/s: T=1.0s => omega=2*pi rad/s"
+    inputs:
+      period_s: 1.0
+    outputs:
+      omega_rad_s: 6.28318530718
+    use_as_test: true
+  - description: "Typical wave period: T=10s => omega=0.6283 rad/s"
+    inputs:
+      period_s: 10.0
+    outputs:
+      omega_rad_s: 0.6283185307
+    use_as_test: true
+  - description: "Radians to degrees: pi rad = 180 deg"
+    inputs:
+      angle_rad: 3.14159265359
+    outputs:
+      angle_deg: 180.0
+    use_as_test: true
+  - description: "Degrees to radians: 180 deg = pi rad"
+    inputs:
+      angle_deg: 180.0
+    outputs:
+      angle_rad: 3.14159265359
+    use_as_test: true
+  - description: "Complex phase: real positive (1+0j) = 0 deg"
+    inputs:
+      complex_value: "(1+0j)"
+    outputs:
+      phase_deg: 0.0
+    use_as_test: true
+  - description: "Complex phase: imaginary (0+1j) = 90 deg"
+    inputs:
+      complex_value: "(0+1j)"
+    outputs:
+      phase_deg: 90.0
+    use_as_test: true
+  - description: "Complex phase: negative real (-1+0j) = 180 deg"
+    inputs:
+      complex_value: "(-1+0j)"
+    outputs:
+      phase_deg: 180.0
+    use_as_test: true
+  - description: "ISSC TLP mass: 54500000 kg = 54500 t"
+    inputs:
+      mass_kg: 54500000.0
+    outputs:
+      mass_t: 54500.0
+    use_as_test: true
+  - description: "Inertia: 5000 kg.m2 = 5.0 t.m2"
+    inputs:
+      inertia_kg_m2: 5000.0
+    outputs:
+      inertia_t_m2: 5.0
+    use_as_test: true
+  - description: "WAMIT inertia: 1.234e6 t.m2 = 1.234e9 kg.m2"
+    inputs:
+      inertia_t_m2: 1234000.0
+    outputs:
+      inertia_kg_m2: 1234000000.0
+    use_as_test: true
+assumptions:
+  - "All conversions are simple scaling (divide or multiply by 1000, or 2*pi)"
+  - "Complex phase uses numpy angle convention (atan2)"
+  - "Roundtrip conversions must be exact to machine precision"
+references:
+  - "digitalmodel/tests/hydrodynamics/diffraction/test_diffraction_units.py"
+  - "digitalmodel/src/digitalmodel/hydrodynamics/diffraction/diffraction_units.py"

@@ -1,0 +1,13 @@
+﻿%YAML 1.1
+# Type: Model
+# Program: OrcaFlex 11.2d
+# File: docs/domains/orcaflex/installation/manifold/region_a/monolithic/__04b_mudmat_orient.yml
+# Created: 2:15 PM on 9/7/2023
+# User: 
+# Machine: 
+---
+BaseFile: __04a_calculated_positions.yml
+6DBuoys:
+  mudmat:
+    InitialRotation3: 0
+...

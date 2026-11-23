@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><title>Generic riser R23 review corrections</title>
+<h1>Generic riser R23 review corrections</h1>
+<p>Scope: <a href="https://github.com/vamseeachanta/digitalmodel/pull/2684">draft PR 2684</a>,
+following the review at 893af4d5 and its appended decision;
+<a href="https://github.com/vamseeachanta/digitalmodel/issues/2433">issue 2433</a>.
+Execution will remain in one lane. Only solver-free generation, checks and reporting will run.</p>
+<p>The implementation will use math.fsum for numerical reductions, record one tensioner
+arrangement, derive the surviving share and weight reserve from it, and apply the
+decided common factor 1.215. Fleet angle will be separated from mechanical efficiency.</p>
+<p>Tests will precede implementation and will cover changed N, n and fwt, compensated
+sums, all 96 scaled links, preservation of non-tensioner include bytes and governing-row
+selection by criterion name. Both Python 3.11 and 3.12 will run the four affected suites;
+interface-entry tests will be excluded to preserve the no-interface-import boundary.</p>
+<p>The builder will regenerate the 24 masters and 72 includes. Both validators will check
+every case. Independent output directories will establish cross-version byte identity,
+including the case table, preparation and screen records. The manifest will pin the
+implementation commit in a subsequent metadata commit, avoiding a self-referential hash.</p>
+<p>Adversarial plan assessment: the hand operating lengths will establish hand containment
+only; they will not qualify native statics. The 22.2 kN vertical-force correction will
+reduce check B by the arrangement-derived surviving share. Recorded old-setting native
+sums will remain distinct from hand estimates, particularly at o5-c3. Frozen inline
+artifact inspection will check those boundaries before publication; no external assistant
+will be invoked under the task restriction.</p>
+<p>Acceptance will require reproducible inputs, all scaled hand lengths inside their own
+tables, preserved public wording, no LFS-filtered change, and the PR remaining a draft.
+Native channels, held-edition confirmation, shielding and the moment explanation will
+remain open. No engineering qualification or production release will be claimed.</p>
+</html>

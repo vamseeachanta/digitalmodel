@@ -1,0 +1,40 @@
+{
+  "result": {
+    "kind": "in_memory",
+    "value": {
+      "citations": [
+        {
+          "code_id": "DNV-OS-E301",
+          "note": "Design factor for intact-quasi-static condition",
+          "publisher": "DNV",
+          "revision": "2021-07",
+          "section": "Section 2.2.3 (intact, quasi-static)",
+          "wiki_path": "wikis/engineering/wiki/standards/dnv-os-e301.md"
+        }
+      ],
+      "condition": "intact",
+      "results": {
+        "160mm_polyester": {
+          "passes": true,
+          "utilisation_no_sf": 0.3529,
+          "utilisation_with_sf": 0.5894
+        },
+        "R4_84mm_chain": {
+          "passes": true,
+          "utilisation_no_sf": 0.4299,
+          "utilisation_with_sf": 0.718
+        }
+      },
+      "safety_factor": 1.67
+    }
+  },
+  "result_hash": "8a1ec69407f11969d2480edc195265687516807274a02e61709680eb2d034afa",
+  "standard_revisions": [
+    {
+      "code_id": "DNV-OS-E301",
+      "publisher": "DNV",
+      "revision": "2021-07",
+      "section": "Section 2.2.3 (intact, quasi-static)"
+    }
+  ]
+}

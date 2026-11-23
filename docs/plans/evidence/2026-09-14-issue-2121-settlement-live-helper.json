@@ -1,0 +1,15 @@
+{
+  "return_code": 0,
+  "timed_out": false,
+  "owned_processes_remaining": 0,
+  "containment_verified": true,
+  "settlement_required": false,
+  "error": [],
+  "retained_supervisor_token": null,
+  "observed_utc": "2026-09-14T16:01:33.465671+00:00",
+  "pid": 4016,
+  "native_canary_attempts_consumed": 0,
+  "scope": "Real owned Python helper through corrected _invoke; no ANSYS or checkout; normal-exit behavior only",
+  "source_sha256": "5091b6969b65250ba05642a7c016ed71f64ca0dc5aee2c7d45d94391a44ac5f9",
+  "status": "PASS_NORMAL_EXIT_ONLY"
+}

@@ -1,0 +1,537 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
+"""Builder for the Lines section of OrcaFlex models.
+
+This builder generates Lines with pipeline configuration including:
+- Connection definitions (End A = Fixed, End B = buoy reference)
+- Segment array with LineType, Length, TargetSegmentLength
+- Attachments at arc-length positions based on buoyancy module spacing
+"""
+
+import math
+from typing import Any
+
+from .base import BaseBuilder
+from .registry import BuilderRegistry
+
+
+@BuilderRegistry.register("07_lines.yml", order=90)
+class LinesBuilder(BaseBuilder):
+    """Builds the Lines section of the OrcaFlex model.
+
+    Generates Line definitions including:
+    - Complete connection specification (End A and End B)
+    - Segment array with line types, lengths, and mesh sizes
+    - Inline attachments for buoyancy modules at calculated positions
+    - Connection stiffness and arclength settings
+
+    The output format uses OrcaFlex's multi-column key syntax for
+    compact representation of connection and segment data.
+
+    Reference: 07_lines.yml in modular include format.
+    """
+
+    # Object sections emitted by build(); read by
+    # writers.basefile.object_section_order() to derive a section
+    # dependency order from this builder's registered order.
+    _sections = (
+        "Lines",
+    )
+
+    def should_generate(self) -> bool:
+        """Only generate for pipeline models."""
+        return self.spec.is_pipeline()
+
+    def build(self) -> dict[str, Any]:
+        """Build the Lines section from pipeline and equipment configuration.
+
+        Returns:
+            Dictionary with 'Lines' key containing list of line definitions.
+        """
+        pipeline = self.spec.pipeline
+        lines_list = []
+
+        # Get end buoy name from context (populated by BuoysBuilder)
+        end_buoy_name = self.context.end_buoy_name
+        bm_buoy_name = self.context.bm_buoy_name
+
+        # Build main pipeline line
+        main_line = self._build_pipeline_line(
+            name=pipeline.name,
+            segments=pipeline.segments,
+            end_buoy_name=end_buoy_name,
+            bm_buoy_name=bm_buoy_name,
+        )
+        lines_list.append(main_line)
+
+        # Add winch wire for floating installations with tugs
+        if self.spec.equipment.tugs:
+            total_length = sum(s.length for s in pipeline.segments)
+            winch_wire = self._build_winch_wire_line(
+                end_buoy_name=end_buoy_name,
+                pipeline_length=total_length,
+            )
+            lines_list.append(winch_wire)
+            self._register_entity("additional_line_names", ["Winch wire"])
+
+        # Register line names for cross-builder reference
+        line_names = [pipeline.name]
+        self._register_entity("line_names", line_names)
+        self._register_entity("main_pipeline_name", pipeline.name)
+
+        return {"Lines": lines_list}
+
+    def _build_pipeline_line(
+        self,
+        name: str,
+        segments: list,
+        end_buoy_name: str,
+        bm_buoy_name: str,
+    ) -> dict[str, Any]:
+        """Build the main pipeline line definition.
+
+        Args:
+            name: Pipeline name (e.g., "30'' Line")
+            segments: List of Segment objects from spec
+            end_buoy_name: Name of the 6D buoy for End B connection
+            bm_buoy_name: Name of the buoyancy module buoy type
+
+        Returns:
+            Dictionary representing an OrcaFlex Line definition.
+        """
+        # Build segment table entries
+        segment_data = self._build_segment_data(segments)
+
+        # Build connection data
+        connection_data = self._build_connection_data(end_buoy_name)
+
+        # Build attachments for buoyancy modules
+        attachments = self._build_attachments(bm_buoy_name)
+
+        line_def = {
+            "Name": name,
+            "IncludeTorsion": "No" if self.spec.is_s_lay() else "Yes",
+            "TopEnd": "End A",
+            "LengthAndEndOrientations": "Explicit",
+            "Representation": "Finite element",
+            "PyModel": "(none)",
+            "PreBendSpecifiedBy": "Bend angle",
+            "DragFormulation": "Standard",
+            "StaticsVIV": "None",
+            "DynamicsVIV": "None",
+            "WaveCalculationMethod": "Specified by environment",
+            # Connection specification (multi-column format)
+            "Connection, ConnectionX, ConnectionY, ConnectionZ, "
+            "ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, "
+            "ConnectionReleaseStage, ConnectionzRelativeTo": connection_data["connections"],
+            # Connection stiffness
+            ("ConnectionxBendingStiffness, ConnectionyBendingStiffness"
+             if self.spec.is_s_lay() else
+             "ConnectionxBendingStiffness, ConnectionyBendingStiffness, "
+             "ConnectionTwistingStiffness, ConnectionDamping"): connection_data["stiffness"],
+            # Connection arclength settings
+            "ConnectionInitialArclength, ConnectionPayoutRate, "
+            "ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, "
+            "ConnectionUseSmoothGrowth": connection_data["arclength"],
+            # Segment data (multi-column format)
+            "LineType, Length, TargetSegmentLength": segment_data,
+        }
+
+        if self.spec.equipment.jlay is not None:
+            # The J-lay End B seed takes the pipe empty (jlay_seed); state it
+            # rather than rely on the solver's default contents (#3978).
+            line_def["ContentsMethod"] = "Uniform"
+            line_def["ContentsDensity"] = 0
+
+        # Add attachments if present
+        if attachments:
+            line_def["Attachments"] = attachments
+
+        return line_def
+
+    def _build_segment_data(self, segments: list) -> list[list]:
+        """Build segment data array for OrcaFlex Line definition.
+
+        Each segment entry is [LineType, Length, TargetSegmentLength].
+
+        Args:
+            segments: List of Segment objects from spec.
+
+        Returns:
+            List of segment data entries.
+        """
+        segment_data = []
+
+        for segment in segments:
+            entry = [
+                segment.type,  # LineType name
+                segment.length,  # Total length
+                segment.segment_length,  # Target mesh segment length
+            ]
+            segment_data.append(entry)
+
+        return segment_data
+
+    def _build_connection_data(self, end_buoy_name: str) -> dict[str, list]:
+        """Build connection specification data for End A and End B.
+
+        Connection logic depends on installation type:
+        - Floating: End A=Fixed, End B=end buoy
+        - S-lay: End A=Free (vessel/stinger), End B=Anchored
+
+        Args:
+            end_buoy_name: Name of the 6D buoy for End B connection (floating).
+
+        Returns:
+            Dictionary with 'connections', 'stiffness', and 'arclength' keys.
+        """
+        seabed_slope = self.spec.environment.seabed.slope
+        is_s_lay = self.spec.is_s_lay()
+
+        if self.spec.equipment.jlay is not None:
+            end_a, end_b = self._jlay_endpoints()
+        elif is_s_lay:
+            end_a, end_b = self._slay_endpoints()
+        else:
+            # Floating installation (existing logic)
+            end_a = [
+                "Fixed",  # Connection type
+                -101,  # X position (before pipeline start)
+                0,  # Y position
+                4.505,  # Z position (slightly above seabed)
+                0,  # Azimuth
+                90 + seabed_slope,  # Declination
+                0,  # Gamma
+                None,  # ReleaseStage
+            ]
+
+            end_b = [
+                end_buoy_name,  # Connection to 6D buoy
+                0,  # X offset
+                0,  # Y offset
+                0,  # Z offset
+                0,  # Azimuth
+                90,  # Declination (horizontal)
+                0,  # Gamma
+                None,  # ReleaseStage
+            ]
+
+        # Connection stiffness (End A, End B)
+        stiffness: list[list[Any]] = [
+            ["Infinity", None, "Infinity"],  # End A: rigid
+            ["Infinity", None, "Infinity"],  # End B: rigid
+        ]
+        if self.spec.equipment.jlay is not None:
+            stiffness = [[0, None], [0, None]]  # pinned hang-off and seabed end
+        elif is_s_lay:
+            stiffness = [[], [0, None]]
+
+        # Arclength settings (End A, End B)
+        arclength = [
+            [None, 0, 0.001],  # End A
+            [None, 0, 0.001],  # End B
+        ]
+
+        return {
+            "connections": [end_a, end_b],
+            "stiffness": stiffness,
+            "arclength": arclength,
+        }
+
+    def _slay_endpoints(self) -> list[list]:
+        """Seed a free upper end and a separated seabed anchor.
+        Declared anchors override the weight-only fallback. Neither supplies a
+        solved contact state. The seed requires a planar, level hull; on sloping
+        seabeds the span is approximate and End B z is relative to local seabed.
+        """
+        vessel = self.spec.equipment.vessel
+        stinger = self.spec.equipment.stinger
+        pipeline = self.spec.pipeline
+        if vessel is None or pipeline is None:
+            raise ValueError("S-lay endpoints require vessel and pipeline")
+        if any(vessel.orientation[:2]):
+            raise ValueError("S-lay endpoint seed requires level hull")
+        origin = list(stinger.origin_position) if stinger else [0, 0, 0]
+        if stinger:
+            origin[0] += stinger.firing_line_length
+        heading = math.radians(vessel.orientation[2])
+        c, s = math.cos(heading), math.sin(heading)
+        x = vessel.position[0] + c * origin[0] - s * origin[1]
+        y = vessel.position[1] + s * origin[0] + c * origin[1]
+        z = vessel.position[2] + origin[2]
+        height = self.spec.environment.water.depth + z
+        span = sum(segment.length for segment in pipeline.segments) - height
+        if self.spec.equipment.slay_end_b_x is not None:
+            span = origin[0] - self.spec.equipment.slay_end_b_x
+        elif stinger is not None and stinger.sections and self.spec.equipment.tensioner is not None:
+            span = self._slay_taut_span(height)
+        coated_radius = pipeline.dimensions.outer_diameter / 2
+        coated_radius += pipeline.coatings.corrosion.thickness
+        coated_radius += sum(coating.thickness for coating in pipeline.coatings.weight)
+        if height <= 0 or span <= 0:
+            raise ValueError("S-lay endpoint height must be positive and below pipe length")
+        # Necessary seed-geometry screen; this does not establish static closure.
+        length = sum(segment.length for segment in pipeline.segments)
+        if math.hypot(span, height - coated_radius) > length:
+            raise ValueError("S-lay End B is beyond pipe reach: endpoint chord exceeds pipe length")
+        return [["Free", x, y, z, 180, 90, 0, None],
+                ["Anchored", x - span * c, y - span * s, coated_radius, 180,
+                 90 + self.spec.environment.seabed.slope, 0, None]]
+
+    def jlay_seed(self) -> dict[str, float]:
+        """Inextensible-catenary seed for a J-lay hang-off (#3978).
+
+        Pipe taken empty with its coatings; wet and dry weights apply below
+        and above the waterline. For hang-off angle phi from horizontal,
+        H = (w_wet*h_wet + w_dry*h_dry)/(sec(phi) - 1). Each uniform arc
+        obeys dT = w*dh, ds = dV/w, dx = (H/w)*d(asinh(V/H)), V**2 = T**2-H**2;
+        H and V are continuous at the waterline. End B span = x + (L - s).
+        Basis: Classical Mechanics (online edition accessed 2026-11-13),
+        section 18.3, equations 18.3.2-18.3.9; source linked in the example.
+        Returned a = H/w_wet is the submerged arc's catenary parameter.
+        Requires uniform segment coatings and a flat seabed; unused coating
+        alternatives do not contribute to weight or diameter. Heights are
+        measured from the emitted WaterSurfaceZ: the seabed lies the water
+        depth below it (OrcaFlex seabed data), so translating the sea surface
+        and the vessel together leaves the seed unchanged.
+        """
+        from digitalmodel.installation.pipelay.integrity import G_STANDARD
+        from .context import BuilderContext
+        from .environment_builder import EnvironmentBuilder
+        from .linetype_builder import LineTypeBuilder
+        from .vardata_builder import VarDataBuilder
+
+        pipe = self.spec.pipeline
+        jlay = self.spec.equipment.jlay
+        vessel = self.spec.equipment.vessel
+        if not all(math.isfinite(value) for value in (*vessel.position, *vessel.orientation)):
+            raise ValueError("J-lay seed requires finite vessel position and orientation")
+        if self.spec.environment.seabed.slope != 0:
+            raise ValueError("J-lay seed requires a flat seabed")
+
+        # Resolve the same environment, coating references and layers that are
+        # emitted by the other builders, without changing the shared context.
+        context = BuilderContext()
+        environment = EnvironmentBuilder(self.spec, context).build()["Environment"]
+        if environment.get("SeabedType", "Flat") != "Flat":
+            raise ValueError("J-lay seed requires a flat seabed (SeabedType Flat)")
+        surface = environment.get("WaterSurfaceZ", 0)
+        if (isinstance(surface, bool) or not isinstance(surface, (int, float))
+                or not math.isfinite(surface)):
+            raise ValueError(f"J-lay seed requires a finite numeric WaterSurfaceZ, got {surface!r}")
+        coating_data = VarDataBuilder(self.spec, context).build()
+        coatings = {entry["Name"]: entry["LayerThickness, LayerMaterialDensity"]
+                    for entry in coating_data["VariableData"]["Coatingsorlinings"]}
+        line_types = {entry["Name"]: entry
+                      for entry in LineTypeBuilder(self.spec, context).build()["LineTypes"]}
+        segment_layers = []
+        for segment in pipe.segments:
+            reference = line_types[segment.type]["CoatingThickness"]
+            if reference not in coatings:
+                raise ValueError(f"J-lay seed has an unresolved coating: {reference}")
+            segment_layers.append(coatings[reference])
+        layers = segment_layers[0]
+        if any(other != layers for other in segment_layers[1:]):
+            raise ValueError("J-lay seed requires uniform segment coatings")
+
+        od = pipe.dimensions.outer_diameter
+        wall = pipe.dimensions.wall_thickness
+        density = line_types[pipe.segments[0].type]["MaterialDensity"]
+        mass = density * math.pi / 4 * (od**2 - (od - 2 * wall) ** 2)
+        for thickness, coating_density in layers:
+            outer = od + 2 * thickness
+            mass += coating_density * math.pi / 4 * (outer**2 - od**2)
+            od = outer
+        weight = (mass - self.spec.environment.water.density * math.pi / 4 * od**2) * G_STANDARD
+        dry_weight = mass * G_STANDARD
+        depth = self.spec.environment.water.depth
+        # Tower top above the seabed, which lies at WaterSurfaceZ - depth.
+        height = depth + vessel.position[2] + jlay.tower_top[2] - surface
+        if (not all(math.isfinite(value) for value in (weight, dry_weight, height))
+                or min(weight, dry_weight, height) <= 0):
+            raise ValueError("J-lay seed requires finite positive weights and hang-off height")
+        phi = math.radians(90.0 - jlay.tower_angle)
+        wet_height = min(height, depth)
+        dry_height = height - wet_height
+        wet_load = weight * wet_height
+        load = wet_load + dry_weight * dry_height
+        horizontal = load / (1.0 / math.cos(phi) - 1.0)
+        if not math.isfinite(horizontal) or horizontal <= 0:
+            raise ValueError("J-lay seed requires finite positive horizontal tension")
+        a = horizontal / weight
+        wet_vertical = math.sqrt(wet_load * (2 * horizontal + wet_load))
+        top_vertical = horizontal * math.tan(phi)
+        suspended = wet_vertical / weight
+        suspended_span = a * math.asinh(wet_vertical / horizontal)
+        if dry_height > 0:
+            suspended += (top_vertical - wet_vertical) / dry_weight
+            suspended_span += horizontal / dry_weight * (
+                math.asinh(math.tan(phi)) - math.asinh(wet_vertical / horizontal)
+            )
+        length = sum(segment.length for segment in pipe.segments)
+        top_tension = horizontal + load
+        if not all(math.isfinite(value) for value in
+                   (suspended, suspended_span, length, top_tension)):
+            raise ValueError("J-lay seed requires finite catenary geometry and tensions")
+        if suspended >= length:
+            raise ValueError(
+                f"J-lay seed requires a grounded remainder: suspended length "
+                f"{suspended:.1f} m is not below the pipe length {length:.1f} m"
+            )
+        return {
+            "weight": weight, "height": height, "a": a, "suspended": suspended,
+            "suspended_span": suspended_span, "span": suspended_span + length - suspended,
+            "top_tension": top_tension, "horizontal_tension": horizontal,
+            "outer_diameter": od, "dry_weight": dry_weight,
+        }
+
+    def _jlay_endpoints(self) -> list[list]:
+        """End A pinned to the vessel at the tower top; End B on the seabed aft."""
+        vessel = self.spec.equipment.vessel
+        jlay = self.spec.equipment.jlay
+        seed = self.jlay_seed()
+        if any(vessel.orientation[:2]):
+            raise ValueError("J-lay endpoint seed requires level hull")
+        heading = math.radians(vessel.orientation[2])
+        c, s = math.cos(heading), math.sin(heading)
+        top = jlay.tower_top
+        x = vessel.position[0] + c * top[0] - s * top[1]
+        y = vessel.position[1] + s * top[0] + c * top[1]
+        span = seed["span"]
+        end_b_x, end_b_y = x - span * c, y - span * s
+        if not all(math.isfinite(value) for value in (x, y, end_b_x, end_b_y)):
+            raise ValueError("J-lay endpoint coordinates must be finite")
+        return [[vessel.name, top[0], top[1], top[2], 180, 180 - jlay.tower_angle, 0, None],
+                ["Anchored", end_b_x, end_b_y, seed["outer_diameter"] / 2, 180,
+                 90 + self.spec.environment.seabed.slope, 0, None]]
+
+    def _slay_taut_span(self, height: float) -> float:
+        """Close the supported arc plus weight-only suspended/grounded lengths.
+
+        Equations and limitations: slay-campaign/case-table.yml,
+        static_equilibrium_screen. The seed uses an empty uniform coated pipe.
+        """
+        from digitalmodel.installation.pipelay.integrity import G_STANDARD
+        from .linetype_builder import material_properties
+
+        pipe = self.spec.pipeline
+        stinger = self.spec.equipment.stinger
+        od = pipe.dimensions.outer_diameter
+        wall = pipe.dimensions.wall_thickness
+        density = material_properties(pipe.material)["MaterialDensity"]
+        mass = density * math.pi / 4 * (od**2 - (od - 2 * wall)**2)
+        for coating in [pipe.coatings.corrosion, *pipe.coatings.weight]:
+            outer = od + 2 * coating.thickness
+            mass += coating.density * math.pi / 4 * (outer**2 - od**2)
+            od = outer
+        weight = (mass - self.spec.environment.water.density * math.pi / 4 * od**2) * G_STANDARD
+        arc = sum(section.length for section in stinger.sections)
+        radius = stinger.radius
+        drop = radius * (1 - math.cos(arc / radius))
+        hanging_height = height - drop
+        tension = self.spec.equipment.tensioner.tension_value
+        horizontal = tension - weight * height
+        if min(weight, hanging_height, horizontal) <= 0:
+            raise ValueError("S-lay seed requires positive weight, hanging height and horizontal tension")
+        a = horizontal / weight
+        suspended = math.sqrt(hanging_height**2 + 2 * a * hanging_height)
+        suspended_span = a * math.acosh(1 + hanging_height / a)
+        length = sum(segment.length for segment in pipe.segments)
+        if arc + suspended >= length:
+            raise ValueError("S-lay seed requires a positive grounded remainder")
+        span = radius * math.sin(arc / radius) + suspended_span + length - arc - suspended
+        # Round toward shorter spans so numerical roundoff cannot imply extension.
+        return math.nextafter(span, 0.0)
+
+    def _build_attachments(self, bm_buoy_name: str) -> list[dict[str, Any]]:
+        """Build attachment list for buoyancy modules.
+
+        Generates attachments at arc-length positions based on BM spacing.
+
+        Args:
+            bm_buoy_name: Name of the buoyancy module buoy type.
+
+        Returns:
+            List of attachment dictionaries.
+        """
+        if not self.spec.equipment.buoyancy_modules:
+            return []
+
+        bm_config = self.spec.equipment.buoyancy_modules
+        positions = self.spec.get_buoyancy_module_positions()
+
+        attachments = []
+        for i, arc_length in enumerate(positions):
+            attachment = {
+                "AttachmentType": bm_buoy_name,
+                "AttachmentName": f"Attached 6D buoy{i + 3}",  # Start from 3
+                "AttachmentPosition": [
+                    -1.25,  # X offset from line centerline
+                    0,  # Y offset
+                    arc_length,  # Arc length from End A
+                    "End A",  # Reference point
+                ],
+                "AttachmentOrientation": [0, 0, 0],
+            }
+            attachments.append(attachment)
+
+        return attachments
+
+    def _build_winch_wire_line(
+        self,
+        end_buoy_name: str,
+        pipeline_length: float,
+    ) -> dict[str, Any]:
+        """Build a winch wire line from end buoy to fixed vessel point.
+
+        For floating installations, the winch wire provides End B restraint
+        by connecting the 6D buoy at the vessel end to a fixed point
+        beyond the pipeline end. Without this, statics will not converge.
+
+        Args:
+            end_buoy_name: Name of the 6D buoy (e.g., "6D buoy1").
+            pipeline_length: Total pipeline length (m) for positioning fixed end.
+
+        Returns:
+            Dictionary representing an OrcaFlex Line definition for winch wire.
+        """
+        fixed_x = pipeline_length + 60  # Fixed point beyond pipeline end
+
+        return {
+            "Name": "Winch wire",
+            "IncludeTorsion": "No",
+            "TopEnd": "End A",
+            "LengthAndEndOrientations": "Explicit",
+            "Representation": "Finite element",
+            "PyModel": "(none)",
+            "PreBendSpecifiedBy": "Bend angle",
+            "DragFormulation": "Standard",
+            "StaticsVIV": "None",
+            "DynamicsVIV": "None",
+            "WaveCalculationMethod": "Specified by environment",
+            # Connection: 9-column header, 8-value rows (ConnectionzRelativeTo implicit null)
+            # End A Gamma=-5.75° aligns wire with 6D buoy orientation for statics convergence
+            "Connection, ConnectionX, ConnectionY, ConnectionZ, "
+            "ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, "
+            "ConnectionReleaseStage, ConnectionzRelativeTo": [
+                [end_buoy_name, 0, 0, 0, 0, 0, -5.753732922130843, None],
+                ["Fixed", fixed_x, 0, 2, 0, 0, 180, None],
+            ],
+            "ConnectionxBendingStiffness, ConnectionyBendingStiffness": [
+                [0, 0],
+                [0, None],
+            ],
+            "ConnectionInitialArclength, ConnectionPayoutRate, "
+            "ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, "
+            "ConnectionUseSmoothGrowth": [
+                [None, 0, 0.001],
+                [None, 0, 0.001],
+            ],
+            "LineType, Length, TargetSegmentLength": [
+                ["Winch wire_LT", 165, 5],
+            ],
+            "StaticsStep1": "User specified",
+            "ContentsMethod": "Uniform",
+            "ContentsDensity": 0,
+        }

@@ -1,0 +1,98 @@
+%YAML 1.1
+# SALM (Single Anchor Leg Mooring) Base Model - Hybrid Template
+# Uses library components via IncludeFile for reusable line types
+#
+# Configuration: Single anchor leg mooring buoy
+# Water depth: 50m
+# Mooring: Single near-vertical chain leg
+#
+# SALM configuration (side view):
+#
+#                         ╔════════╗
+#                         ║  SALM  ║ Buoy at surface
+#                         ║  Buoy  ║
+#                         ╚════╦═══╝
+#                              ║
+#                              ║  Single chain leg
+#                              ║  (near-vertical)
+#                              ║
+# ─────────────────────────────╨───────────────────── Seabed
+#                           Anchor
+#
+# Usage:
+#   1. Use directly for basic analysis
+#   2. Use with BaseFile + variation for parametric studies
+---
+General:
+  UnitsSystem: SI
+  StageDuration: [10, 100]
+  StaticsMinDamping: 5
+  DynamicsSolutionMethod: Implicit time domain
+  ImplicitConstantTimeStep: 0.1
+
+Environment:
+  WaterDepth: 50
+  WaterSurfaceZ: 0
+  Density: 1025
+  KinematicViscosity: 1.35e-6
+  # Seabed
+  SeabedType: Flat
+  SeabedModel: Elastic
+  SeabedNormalStiffness: 100
+  SeabedShearStiffness: 50
+  # Waves
+  WaveTrains:
+    - Name: Wave1
+      WaveType: Dean stream
+      WaveDirection: 180
+      WaveHeight: 4.0
+      WavePeriod: 9.0
+      WaveOrigin: [0, 0]
+  # Current
+  CurrentModel: Variation scheme
+  RefCurrentSpeed: 0.8
+  RefCurrentDirection: 180
+  VerticalCurrentVariationMethod: Interpolated
+  CurrentDepth, CurrentFactor, CurrentRotation:
+    - [0, 1.0, 0]
+    - [25, 0.8, 0]
+    - [50, 0.5, 0]
+  # Wind
+  WindType: Constant
+  WindSpeed: 10
+  WindDirection: 180
+  IncludeBuoyWindLoads: Yes
+
+LineTypes:
+  # Mooring chain - 84mm R4
+  - Name: SALM_Chain
+    Category: General
+    IncludeFile: ../../../../library/line_types/chain_84mm_r4.yml
+
+3DBuoys:
+  # SALM Buoy - surface buoy (3DOF: X, Y, Z translation only)
+  - Name: SALM_Buoy
+    Connection: Free
+    InitialX: 0
+    InitialY: 0
+    InitialZ: -1.5
+    Mass: 45000
+    Volume: 250
+    Height: 5
+
+Lines:
+  # Single anchor leg - chain from seabed anchor to buoy
+  # Anchor offset slightly from buoy center to avoid purely vertical line
+  - Name: Anchor_Leg
+    EndAConnection: Anchored
+    EndAX: 15
+    EndAY: 0
+    EndAZ: -50
+    EndBConnection: SALM_Buoy
+    EndBX: 0
+    EndBY: 0
+    EndBZ: -4
+    IncludedInStatics: Yes
+    StaticsStep1: Catenary
+    LineType, Length, TargetSegmentLength:
+      - [SALM_Chain, 55, 2]

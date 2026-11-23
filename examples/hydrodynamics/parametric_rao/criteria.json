@@ -1,0 +1,9 @@
+{
+  "benchmark": "Merged open-source no-lid box heave at the three recorded sample frequencies, head seas; identical dimensions, mesh, gravity, density, depth, centre of mass and gyradii",
+  "convergence_absolute_tolerance_m_per_m": 0.02,
+  "criterion_basis": "Beforehand pilot screening inputs, not a standard-derived allowance or experimental uncertainty. Each benchmark response must satisfy absolute difference <= absolute tolerance + relative tolerance * abs(reference). Finest-pair head-sea heave change must satisfy the convergence absolute tolerance.",
+  "heave_absolute_tolerance_m_per_m": 0.002,
+  "heave_relative_tolerance": 0.02,
+  "revision": 0,
+  "scope": "Reproduction of an already-merged open-source calculation and limited panel sensitivity, not independent experimental validation"
+}

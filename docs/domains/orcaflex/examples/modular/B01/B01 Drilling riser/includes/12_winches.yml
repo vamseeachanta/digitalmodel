@@ -1,0 +1,31 @@
+# Winches Configuration
+# Generated from: B01 Drilling riser.yml
+# Date: 2026-01-18 22:18:02
+Winches:
+- Name: drill string support
+  WinchType: Simple
+  Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo:
+  - - Semisub
+    - 0
+    - 0
+    - 45
+  - - Drill String
+    - 0
+    - 0
+    - 0
+    - End A
+  Stiffness: 10e6
+  Damping: 0.01
+  ReleaseStage: ~
+  WinchControlType: By stage
+  StageMode, StageValue:
+  - - Specified length
+    - 10
+  - - Specified tension change
+    - 0
+  - - Specified tension change
+    - 0
+  Pen:
+  - 1
+  - Solid
+  - Blue

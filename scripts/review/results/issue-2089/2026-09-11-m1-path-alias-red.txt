@@ -1,0 +1,109 @@
+................................FFFFFF.F.                                [100%]
+=================================== FAILURES ===================================
+__________ test_runtime_directory_alias_rejected[C:/Synthetic Work/.] __________
+
+path = 'C:/Synthetic Work/.'
+
+    @pytest.mark.parametrize('path',[
+        'C:/Synthetic Work/.','C:/Synthetic Work.', 'C:/Synthetic Work ',
+        'C:/Synthetic Work/child./other','C:/Synthetic Work/child /other',
+        'C:/Synthetic Work/', 'c:\\synthetic work', 'C:/Synthetic Work//'])
+    def test_runtime_directory_alias_rejected(path):
+        args=inputs();args[1]['temp_dir']=path
+>       with pytest.raises(ValueError):c.prepare_canary(*args)
+E       Failed: DID NOT RAISE <class 'ValueError'>
+
+tests/solvers/ghs/test_contracts.py:117: Failed
+__________ test_runtime_directory_alias_rejected[C:/Synthetic Work.] ___________
+
+path = 'C:/Synthetic Work.'
+
+    @pytest.mark.parametrize('path',[
+        'C:/Synthetic Work/.','C:/Synthetic Work.', 'C:/Synthetic Work ',
+        'C:/Synthetic Work/child./other','C:/Synthetic Work/child /other',
+        'C:/Synthetic Work/', 'c:\\synthetic work', 'C:/Synthetic Work//'])
+    def test_runtime_directory_alias_rejected(path):
+        args=inputs();args[1]['temp_dir']=path
+>       with pytest.raises(ValueError):c.prepare_canary(*args)
+E       Failed: DID NOT RAISE <class 'ValueError'>
+
+tests/solvers/ghs/test_contracts.py:117: Failed
+__________ test_runtime_directory_alias_rejected[C:/Synthetic Work ] ___________
+
+path = 'C:/Synthetic Work '
+
+    @pytest.mark.parametrize('path',[
+        'C:/Synthetic Work/.','C:/Synthetic Work.', 'C:/Synthetic Work ',
+        'C:/Synthetic Work/child./other','C:/Synthetic Work/child /other',
+        'C:/Synthetic Work/', 'c:\\synthetic work', 'C:/Synthetic Work//'])
+    def test_runtime_directory_alias_rejected(path):
+        args=inputs();args[1]['temp_dir']=path
+>       with pytest.raises(ValueError):c.prepare_canary(*args)
+E       Failed: DID NOT RAISE <class 'ValueError'>
+
+tests/solvers/ghs/test_contracts.py:117: Failed
+____ test_runtime_directory_alias_rejected[C:/Synthetic Work/child./other] _____
+
+path = 'C:/Synthetic Work/child./other'
+
+    @pytest.mark.parametrize('path',[
+        'C:/Synthetic Work/.','C:/Synthetic Work.', 'C:/Synthetic Work ',
+        'C:/Synthetic Work/child./other','C:/Synthetic Work/child /other',
+        'C:/Synthetic Work/', 'c:\\synthetic work', 'C:/Synthetic Work//'])
+    def test_runtime_directory_alias_rejected(path):
+        args=inputs();args[1]['temp_dir']=path
+>       with pytest.raises(ValueError):c.prepare_canary(*args)
+E       Failed: DID NOT RAISE <class 'ValueError'>
+
+tests/solvers/ghs/test_contracts.py:117: Failed
+____ test_runtime_directory_alias_rejected[C:/Synthetic Work/child /other] _____
+
+path = 'C:/Synthetic Work/child /other'
+
+    @pytest.mark.parametrize('path',[
+        'C:/Synthetic Work/.','C:/Synthetic Work.', 'C:/Synthetic Work ',
+        'C:/Synthetic Work/child./other','C:/Synthetic Work/child /other',
+        'C:/Synthetic Work/', 'c:\\synthetic work', 'C:/Synthetic Work//'])
+    def test_runtime_directory_alias_rejected(path):
+        args=inputs();args[1]['temp_dir']=path
+>       with pytest.raises(ValueError):c.prepare_canary(*args)
+E       Failed: DID NOT RAISE <class 'ValueError'>
+
+tests/solvers/ghs/test_contracts.py:117: Failed
+__________ test_runtime_directory_alias_rejected[C:/Synthetic Work/] ___________
+
+path = 'C:/Synthetic Work/'
+
+    @pytest.mark.parametrize('path',[
+        'C:/Synthetic Work/.','C:/Synthetic Work.', 'C:/Synthetic Work ',
+        'C:/Synthetic Work/child./other','C:/Synthetic Work/child /other',
+        'C:/Synthetic Work/', 'c:\\synthetic work', 'C:/Synthetic Work//'])
+    def test_runtime_directory_alias_rejected(path):
+        args=inputs();args[1]['temp_dir']=path
+>       with pytest.raises(ValueError):c.prepare_canary(*args)
+E       Failed: DID NOT RAISE <class 'ValueError'>
+
+tests/solvers/ghs/test_contracts.py:117: Failed
+__________ test_runtime_directory_alias_rejected[C:/Synthetic Work//] __________
+
+path = 'C:/Synthetic Work//'
+
+    @pytest.mark.parametrize('path',[
+        'C:/Synthetic Work/.','C:/Synthetic Work.', 'C:/Synthetic Work ',
+        'C:/Synthetic Work/child./other','C:/Synthetic Work/child /other',
+        'C:/Synthetic Work/', 'c:\\synthetic work', 'C:/Synthetic Work//'])
+    def test_runtime_directory_alias_rejected(path):
+        args=inputs();args[1]['temp_dir']=path
+>       with pytest.raises(ValueError):c.prepare_canary(*args)
+E       Failed: DID NOT RAISE <class 'ValueError'>
+
+tests/solvers/ghs/test_contracts.py:117: Failed
+=========================== short test summary info ============================
+FAILED tests/solvers/ghs/test_contracts.py::test_runtime_directory_alias_rejected[C:/Synthetic Work/.]
+FAILED tests/solvers/ghs/test_contracts.py::test_runtime_directory_alias_rejected[C:/Synthetic Work.]
+FAILED tests/solvers/ghs/test_contracts.py::test_runtime_directory_alias_rejected[C:/Synthetic Work ]
+FAILED tests/solvers/ghs/test_contracts.py::test_runtime_directory_alias_rejected[C:/Synthetic Work/child./other]
+FAILED tests/solvers/ghs/test_contracts.py::test_runtime_directory_alias_rejected[C:/Synthetic Work/child /other]
+FAILED tests/solvers/ghs/test_contracts.py::test_runtime_directory_alias_rejected[C:/Synthetic Work/]
+FAILED tests/solvers/ghs/test_contracts.py::test_runtime_directory_alias_rejected[C:/Synthetic Work//]
+7 failed, 34 passed in 7.28s

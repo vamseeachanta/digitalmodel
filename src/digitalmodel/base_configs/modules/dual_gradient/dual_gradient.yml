@@ -1,0 +1,10 @@
+basename: dual_gradient
+
+default:
+  log_level: INFO
+  config:
+    generate_plots: false
+    overwrite:
+      output: true
+
+dual_gradient: {}

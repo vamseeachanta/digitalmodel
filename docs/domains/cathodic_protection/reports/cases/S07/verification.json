@@ -1,0 +1,19 @@
+{
+  "calculation_result": "PASS",
+  "children": [],
+  "engineering_review": "pending",
+  "fixture": "anode_bank.yml",
+  "id": "S07",
+  "pack_state": "verified",
+  "report": "cases/S07/report.html",
+  "route": "DNV_RP_F103_anode_bank",
+  "source_class": "synthetic_repository_regression",
+  "source_revision": "bf638ed1",
+  "title": "Terminal-bank flowline",
+  "use_status": "engineering-validation-required",
+  "verification": {
+    "passed": true,
+    "scope": "citation resolution, comment binding, child links and file checksums"
+  },
+  "visual_review": "deferred_by_owner"
+}

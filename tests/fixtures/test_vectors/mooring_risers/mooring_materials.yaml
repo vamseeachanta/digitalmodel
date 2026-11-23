@@ -1,0 +1,107 @@
+source_type: python
+source_description: "Mooring line material library and safety factor constants from models.py and test_mooring_analysis_unit.py"
+extracted_date: "2026-03-16"
+legal_scan_passed: true
+category: "mooring_risers"
+subcategory: "mooring_materials"
+equations:
+  - name: "Safety factor"
+    latex: "SF = MBL / T_{max}"
+    description: "Safety factor is minimum breaking load divided by maximum tension"
+  - name: "Utilization"
+    latex: "U = T_{max} / MBL"
+    description: "Utilization is inverse of safety factor"
+inputs:
+  - name: "Chain diameter"
+    symbol: "d"
+    unit: "mm"
+    test_value: 84.0
+  - name: "Chain MBL"
+    symbol: "MBL"
+    unit: "kN"
+    test_value: 8500.0
+outputs:
+  - name: "Chain weight in water"
+    symbol: "w_water"
+    unit: "kg/m"
+    test_expected: 145.0
+    tolerance: 0.1
+  - name: "Chain axial stiffness"
+    symbol: "EA"
+    unit: "kN"
+    test_expected: 850000.0
+    tolerance: 1.0
+worked_examples:
+  - description: "R3 grade studlink chain 84mm properties"
+    inputs:
+      line_type: "chain"
+      diameter_mm: 84.0
+    outputs:
+      mbl_kN: 8500.0
+      weight_water_kg_per_m: 145.0
+      ea_kN: 850000.0
+      drag_coeff: 2.4
+    use_as_test: true
+  - description: "R3 grade studlink chain 102mm properties"
+    inputs:
+      line_type: "chain"
+      diameter_mm: 102.0
+    outputs:
+      mbl_kN: 12200.0
+      weight_water_kg_per_m: 210.0
+      ea_kN: 1050000.0
+    use_as_test: true
+  - description: "R4 grade studlink chain 84mm properties"
+    inputs:
+      line_type: "chain"
+      diameter_mm: 84.0
+    outputs:
+      mbl_kN: 9800.0
+      weight_water_kg_per_m: 145.0
+      ea_kN: 850000.0
+    use_as_test: true
+  - description: "Wire rope 76mm properties"
+    inputs:
+      line_type: "wire"
+      diameter_mm: 76.0
+    outputs:
+      mbl_kN: 4950.0
+      weight_water_kg_per_m: 27.5
+      ea_kN: 550000.0
+      drag_coeff: 1.2
+    use_as_test: true
+  - description: "Polyester rope 140mm properties (buoyant)"
+    inputs:
+      line_type: "polyester"
+      diameter_mm: 140.0
+    outputs:
+      mbl_kN: 7200.0
+      weight_water_kg_per_m: -8.0
+      ea_kN: 180000.0
+      drag_coeff: 1.6
+    use_as_test: true
+  - description: "Polyester rope 180mm properties (buoyant)"
+    inputs:
+      line_type: "polyester"
+      diameter_mm: 180.0
+    outputs:
+      mbl_kN: 12000.0
+      weight_water_kg_per_m: -13.0
+      ea_kN: 280000.0
+    use_as_test: true
+  - description: "DNV-OS-E301 safety factors for dynamic analysis"
+    inputs:
+      condition: "all_conditions"
+    outputs:
+      intact_dynamic_sf: 1.67
+      damaged_dynamic_sf: 1.25
+      transient_dynamic_sf: 1.05
+    use_as_test: true
+assumptions:
+  - "Material properties represent typical offshore grades"
+  - "Safety factors per DNV-OS-E301 for dynamic analysis"
+  - "Negative weight_water indicates buoyant material"
+references:
+  - "digitalmodel/src/digitalmodel/subsea/mooring_analysis/models.py"
+  - "digitalmodel/tests/subsea/mooring_analysis/test_mooring_analysis_unit.py"
+  - "DNV-OS-E301 Position Mooring"

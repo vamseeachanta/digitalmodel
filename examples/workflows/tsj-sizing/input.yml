@@ -1,0 +1,29 @@
+basename: tsj_sizing
+
+tsj_sizing:
+  effective_tension_N: 2500000.0
+  internal_pressure_Pa: 12000000.0
+  external_pressure_Pa: 1000000.0
+  SMYS_Pa: 552000000.0
+  design_factor: 0.67
+  taper:
+    - position_m: 0.0
+      outer_diameter_mm: 508.0
+      wall_thickness_mm: 38.0
+    - position_m: 10.0
+      outer_diameter_mm: 457.0
+      wall_thickness_mm: 32.0
+    - position_m: 20.0
+      outer_diameter_mm: 406.0
+      wall_thickness_mm: 25.0
+    - position_m: 30.0
+      outer_diameter_mm: 356.0
+      wall_thickness_mm: 20.0
+  output_dir: results
+
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: true
+

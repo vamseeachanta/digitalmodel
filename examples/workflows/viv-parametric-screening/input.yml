@@ -1,0 +1,25 @@
+basename: viv_parametric_screening
+
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: true
+
+# Synthetic DNV-RP-C205 VIV parametric screening base case (C-lockin).
+# All numbers are SYNTHETIC (no client/geometry data); only public DNV citations
+# enter the payload. This base case is the one the #1505 pilot exact-replays:
+# D=0.2032 m, V=1.0 m/s, span=60 m -> cross-flow lock-in at mode 2, A/D ~= 0.98.
+# The >=3 "parametric" variations are EXTERNAL run_workflow(..., params=...) calls.
+# write_viv_outputs runs with timestamp=None so meta.generated_at is omitted
+# (byte-stable results.json for the reference golden).
+viv_parametric_screening:
+  n_modes: 10
+  input:
+    outer_diameter: 0.2032      # m (hydrodynamic diameter)
+    current_speed: 1.0          # m/s
+  beam:
+    length: 60.0                # m span
+    outer_diameter: 0.2032      # m
+    inner_diameter: 0.15        # m
+    mass_per_length: 60.0       # kg/m (incl. added mass)

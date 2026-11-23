@@ -1,0 +1,571 @@
+# Illustrative regression-case geometry; calculation areas are unchanged.
+basename: cathodic_protection
+
+inputs:
+  calculation_type: DNV_RP_B401_offshore
+
+  design_data:
+    design_life: 25.0
+    structure_type: jacket
+
+  structure:
+    report_geometry:
+      basis: illustrative_regression_case
+      datum: still-water level
+      waterline_m: 0.0
+      mudline_m: -70.0
+      zones:
+        - { name: buried, lower_m: -74.0, upper_m: -70.0 }
+        - { name: submerged, lower_m: -70.0, upper_m: -3.0 }
+        - { name: splash, lower_m: -3.0, upper_m: 3.0 }
+        - { name: atmospheric, lower_m: 3.0, upper_m: 7.0 }
+      legs:
+        - {
+            name: leg-1,
+            start: [-10.000000000, 7],
+            end: [-16.000000000, -74],
+            diameter_m: 2,
+          }
+        - {
+            name: leg-2,
+            start: [-3.333333333, 7],
+            end: [-5.333333333, -74],
+            diameter_m: 2,
+          }
+        - {
+            name: leg-3,
+            start: [3.333333333, 7],
+            end: [5.333333333, -74],
+            diameter_m: 2,
+          }
+        - {
+            name: leg-4,
+            start: [10.000000000, 7],
+            end: [16.000000000, -74],
+            diameter_m: 2,
+          }
+      brace_levels:
+        - elevation_m: -70
+          members:
+            - {
+                name: horizontal-1-1,
+                start: [-15.703703704, -70],
+                end: [-5.234567901, -70],
+                diameter_m: 0.6,
+              }
+            - {
+                name: horizontal-1-2,
+                start: [-5.234567901, -70],
+                end: [5.234567901, -70],
+                diameter_m: 0.6,
+              }
+            - {
+                name: horizontal-1-3,
+                start: [5.234567901, -70],
+                end: [15.703703704, -70],
+                diameter_m: 0.6,
+              }
+        - elevation_m: -60
+          members:
+            - {
+                name: horizontal-2-1,
+                start: [-14.962962963, -60],
+                end: [-4.987654321, -60],
+                diameter_m: 0.6,
+              }
+            - {
+                name: horizontal-2-2,
+                start: [-4.987654321, -60],
+                end: [4.987654321, -60],
+                diameter_m: 0.6,
+              }
+            - {
+                name: horizontal-2-3,
+                start: [4.987654321, -60],
+                end: [14.962962963, -60],
+                diameter_m: 0.6,
+              }
+        - elevation_m: -50
+          members:
+            - {
+                name: horizontal-3-1,
+                start: [-14.222222222, -50],
+                end: [-4.740740741, -50],
+                diameter_m: 0.6,
+              }
+            - {
+                name: horizontal-3-2,
+                start: [-4.740740741, -50],
+                end: [4.740740741, -50],
+                diameter_m: 0.6,
+              }
+            - {
+                name: horizontal-3-3,
+                start: [4.740740741, -50],
+                end: [14.222222222, -50],
+                diameter_m: 0.6,
+              }
+        - elevation_m: -40
+          members:
+            - {
+                name: horizontal-4-1,
+                start: [-13.481481481, -40],
+                end: [-4.493827160, -40],
+                diameter_m: 0.6,
+              }
+            - {
+                name: horizontal-4-2,
+                start: [-4.493827160, -40],
+                end: [4.493827160, -40],
+                diameter_m: 0.6,
+              }
+            - {
+                name: horizontal-4-3,
+                start: [4.493827160, -40],
+                end: [13.481481481, -40],
+                diameter_m: 0.6,
+              }
+        - elevation_m: -30
+          members:
+            - {
+                name: horizontal-5-1,
+                start: [-12.740740741, -30],
+                end: [-4.246913580, -30],
+                diameter_m: 0.6,
+              }
+            - {
+                name: horizontal-5-2,
+                start: [-4.246913580, -30],
+                end: [4.246913580, -30],
+                diameter_m: 0.6,
+              }
+            - {
+                name: horizontal-5-3,
+                start: [4.246913580, -30],
+                end: [12.740740741, -30],
+                diameter_m: 0.6,
+              }
+        - elevation_m: -20
+          members:
+            - {
+                name: horizontal-6-1,
+                start: [-12.000000000, -20],
+                end: [-4.000000000, -20],
+                diameter_m: 0.6,
+              }
+            - {
+                name: horizontal-6-2,
+                start: [-4.000000000, -20],
+                end: [4.000000000, -20],
+                diameter_m: 0.6,
+              }
+            - {
+                name: horizontal-6-3,
+                start: [4.000000000, -20],
+                end: [12.000000000, -20],
+                diameter_m: 0.6,
+              }
+        - elevation_m: -10
+          members:
+            - {
+                name: horizontal-7-1,
+                start: [-11.259259259, -10],
+                end: [-3.753086420, -10],
+                diameter_m: 0.6,
+              }
+            - {
+                name: horizontal-7-2,
+                start: [-3.753086420, -10],
+                end: [3.753086420, -10],
+                diameter_m: 0.6,
+              }
+            - {
+                name: horizontal-7-3,
+                start: [3.753086420, -10],
+                end: [11.259259259, -10],
+                diameter_m: 0.6,
+              }
+        - elevation_m: 0
+          members:
+            - {
+                name: horizontal-8-1,
+                start: [-10.518518519, 0],
+                end: [-3.506172840, 0],
+                diameter_m: 0.6,
+              }
+            - {
+                name: horizontal-8-2,
+                start: [-3.506172840, 0],
+                end: [3.506172840, 0],
+                diameter_m: 0.6,
+              }
+            - {
+                name: horizontal-8-3,
+                start: [3.506172840, 0],
+                end: [10.518518519, 0],
+                diameter_m: 0.6,
+              }
+        - elevation_m: 7
+          members:
+            - {
+                name: horizontal-9-1,
+                start: [-10.000000000, 7],
+                end: [-3.333333333, 7],
+                diameter_m: 0.6,
+              }
+            - {
+                name: horizontal-9-2,
+                start: [-3.333333333, 7],
+                end: [3.333333333, 7],
+                diameter_m: 0.6,
+              }
+            - {
+                name: horizontal-9-3,
+                start: [3.333333333, 7],
+                end: [10.000000000, 7],
+                diameter_m: 0.6,
+              }
+      diagonals:
+        - {
+            name: diagonal-1-1-1,
+            start: [-15.703703704, -70],
+            end: [-4.987654321, -60],
+            diameter_m: 1.598,
+          }
+        - {
+            name: diagonal-1-1-2,
+            start: [-5.234567901, -70],
+            end: [-14.962962963, -60],
+            diameter_m: 1.598,
+          }
+        - {
+            name: diagonal-1-2-1,
+            start: [-5.234567901, -70],
+            end: [4.987654321, -60],
+            diameter_m: 1.598,
+          }
+        - {
+            name: diagonal-1-2-2,
+            start: [5.234567901, -70],
+            end: [-4.987654321, -60],
+            diameter_m: 1.598,
+          }
+        - {
+            name: diagonal-1-3-1,
+            start: [5.234567901, -70],
+            end: [14.962962963, -60],
+            diameter_m: 1.598,
+          }
+        - {
+            name: diagonal-1-3-2,
+            start: [15.703703704, -70],
+            end: [4.987654321, -60],
+            diameter_m: 1.598,
+          }
+        - {
+            name: diagonal-2-1-1,
+            start: [-14.962962963, -60],
+            end: [-4.740740741, -50],
+            diameter_m: 1.598,
+          }
+        - {
+            name: diagonal-2-1-2,
+            start: [-4.987654321, -60],
+            end: [-14.222222222, -50],
+            diameter_m: 1.598,
+          }
+        - {
+            name: diagonal-2-2-1,
+            start: [-4.987654321, -60],
+            end: [4.740740741, -50],
+            diameter_m: 1.598,
+          }
+        - {
+            name: diagonal-2-2-2,
+            start: [4.987654321, -60],
+            end: [-4.740740741, -50],
+            diameter_m: 1.598,
+          }
+        - {
+            name: diagonal-2-3-1,
+            start: [4.987654321, -60],
+            end: [14.222222222, -50],
+            diameter_m: 1.598,
+          }
+        - {
+            name: diagonal-2-3-2,
+            start: [14.962962963, -60],
+            end: [4.740740741, -50],
+            diameter_m: 1.598,
+          }
+        - {
+            name: diagonal-3-1-1,
+            start: [-14.222222222, -50],
+            end: [-4.493827160, -40],
+            diameter_m: 1.598,
+          }
+        - {
+            name: diagonal-3-1-2,
+            start: [-4.740740741, -50],
+            end: [-13.481481481, -40],
+            diameter_m: 1.598,
+          }
+        - {
+            name: diagonal-3-2-1,
+            start: [-4.740740741, -50],
+            end: [4.493827160, -40],
+            diameter_m: 1.598,
+          }
+        - {
+            name: diagonal-3-2-2,
+            start: [4.740740741, -50],
+            end: [-4.493827160, -40],
+            diameter_m: 1.598,
+          }
+        - {
+            name: diagonal-3-3-1,
+            start: [4.740740741, -50],
+            end: [13.481481481, -40],
+            diameter_m: 1.598,
+          }
+        - {
+            name: diagonal-3-3-2,
+            start: [14.222222222, -50],
+            end: [4.493827160, -40],
+            diameter_m: 1.598,
+          }
+        - {
+            name: diagonal-4-1-1,
+            start: [-13.481481481, -40],
+            end: [-4.246913580, -30],
+            diameter_m: 1.598,
+          }
+        - {
+            name: diagonal-4-1-2,
+            start: [-4.493827160, -40],
+            end: [-12.740740741, -30],
+            diameter_m: 1.598,
+          }
+        - {
+            name: diagonal-4-2-1,
+            start: [-4.493827160, -40],
+            end: [4.246913580, -30],
+            diameter_m: 1.598,
+          }
+        - {
+            name: diagonal-4-2-2,
+            start: [4.493827160, -40],
+            end: [-4.246913580, -30],
+            diameter_m: 1.598,
+          }
+        - {
+            name: diagonal-4-3-1,
+            start: [4.493827160, -40],
+            end: [12.740740741, -30],
+            diameter_m: 1.598,
+          }
+        - {
+            name: diagonal-4-3-2,
+            start: [13.481481481, -40],
+            end: [4.246913580, -30],
+            diameter_m: 1.598,
+          }
+        - {
+            name: diagonal-5-1-1,
+            start: [-12.740740741, -30],
+            end: [-4.000000000, -20],
+            diameter_m: 1.598,
+          }
+        - {
+            name: diagonal-5-1-2,
+            start: [-4.246913580, -30],
+            end: [-12.000000000, -20],
+            diameter_m: 1.598,
+          }
+        - {
+            name: diagonal-5-2-1,
+            start: [-4.246913580, -30],
+            end: [4.000000000, -20],
+            diameter_m: 1.598,
+          }
+        - {
+            name: diagonal-5-2-2,
+            start: [4.246913580, -30],
+            end: [-4.000000000, -20],
+            diameter_m: 1.598,
+          }
+        - {
+            name: diagonal-5-3-1,
+            start: [4.246913580, -30],
+            end: [12.000000000, -20],
+            diameter_m: 1.598,
+          }
+        - {
+            name: diagonal-5-3-2,
+            start: [12.740740741, -30],
+            end: [4.000000000, -20],
+            diameter_m: 1.598,
+          }
+        - {
+            name: diagonal-6-1-1,
+            start: [-12.000000000, -20],
+            end: [-3.753086420, -10],
+            diameter_m: 1.598,
+          }
+        - {
+            name: diagonal-6-1-2,
+            start: [-4.000000000, -20],
+            end: [-11.259259259, -10],
+            diameter_m: 1.598,
+          }
+        - {
+            name: diagonal-6-2-1,
+            start: [-4.000000000, -20],
+            end: [3.753086420, -10],
+            diameter_m: 1.598,
+          }
+        - {
+            name: diagonal-6-2-2,
+            start: [4.000000000, -20],
+            end: [-3.753086420, -10],
+            diameter_m: 1.598,
+          }
+        - {
+            name: diagonal-6-3-1,
+            start: [4.000000000, -20],
+            end: [11.259259259, -10],
+            diameter_m: 1.598,
+          }
+        - {
+            name: diagonal-6-3-2,
+            start: [12.000000000, -20],
+            end: [3.753086420, -10],
+            diameter_m: 1.598,
+          }
+        - {
+            name: diagonal-7-1-1,
+            start: [-11.259259259, -10],
+            end: [-3.506172840, 0],
+            diameter_m: 0.633,
+          }
+        - {
+            name: diagonal-7-1-2,
+            start: [-3.753086420, -10],
+            end: [-10.518518519, 0],
+            diameter_m: 0.633,
+          }
+        - {
+            name: diagonal-7-2-1,
+            start: [-3.753086420, -10],
+            end: [3.506172840, 0],
+            diameter_m: 0.633,
+          }
+        - {
+            name: diagonal-7-2-2,
+            start: [3.753086420, -10],
+            end: [-3.506172840, 0],
+            diameter_m: 0.633,
+          }
+        - {
+            name: diagonal-7-3-1,
+            start: [3.753086420, -10],
+            end: [10.518518519, 0],
+            diameter_m: 0.633,
+          }
+        - {
+            name: diagonal-7-3-2,
+            start: [11.259259259, -10],
+            end: [3.506172840, 0],
+            diameter_m: 0.633,
+          }
+        - {
+            name: diagonal-8-1-1,
+            start: [-10.518518519, 0],
+            end: [-3.333333333, 7],
+            diameter_m: 0.346,
+          }
+        - {
+            name: diagonal-8-1-2,
+            start: [-3.506172840, 0],
+            end: [-10.000000000, 7],
+            diameter_m: 0.346,
+          }
+        - {
+            name: diagonal-8-2-1,
+            start: [-3.506172840, 0],
+            end: [3.333333333, 7],
+            diameter_m: 0.346,
+          }
+        - {
+            name: diagonal-8-2-2,
+            start: [3.506172840, 0],
+            end: [-3.333333333, 7],
+            diameter_m: 0.346,
+          }
+        - {
+            name: diagonal-8-3-1,
+            start: [3.506172840, 0],
+            end: [10.000000000, 7],
+            diameter_m: 0.346,
+          }
+        - {
+            name: diagonal-8-3-2,
+            start: [10.518518519, 0],
+            end: [3.333333333, 7],
+            diameter_m: 0.346,
+          }
+      conductors:
+        - {
+            name: conductor-1,
+            start: [-2.000000000, 7],
+            end: [-2.000000000, -70],
+            diameter_m: 0.5,
+          }
+        - {
+            name: conductor-2,
+            start: [-0.666666667, 7],
+            end: [-0.666666667, -70],
+            diameter_m: 0.5,
+          }
+        - {
+            name: conductor-3,
+            start: [0.666666667, 7],
+            end: [0.666666667, -70],
+            diameter_m: 0.5,
+          }
+        - {
+            name: conductor-4,
+            start: [2.000000000, 7],
+            end: [2.000000000, -70],
+            diameter_m: 0.5,
+          }
+      risers: []
+    zones:
+      - zone: submerged
+        area_m2: 5000.0
+        coating_category: III
+      - zone: splash
+        area_m2: 300.0
+        coating_category: III
+      - zone: atmospheric
+        area_m2: 200.0
+        coating_category: III
+
+  environment:
+    seawater_temperature_C: 10.0
+    seawater_resistivity_ohm_m: 0.30
+
+  anode:
+    material: aluminium
+    type: stand_off
+    individual_anode_mass_kg: 200.0
+    utilization_factor: 0.85
+    length_m: 1.0
+    radius_m: 0.05
+
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: true
+    cfg_sensitivities: false

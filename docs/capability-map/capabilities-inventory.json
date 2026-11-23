@@ -1,0 +1,367 @@
+{
+  "card_gaps": [],
+  "clusters": [
+    {
+      "key": "structures-ffs",
+      "label": "Structures & Fitness-for-Service",
+      "sections": [
+        "structural",
+        "fatigue",
+        "ffs",
+        "cathodic",
+        "validation"
+      ],
+      "value_statement": "Strength, fatigue and remaining-life decisions for plates, panels and aging assets — field measurement to code verdict, with the validation table anchoring every engine to a published golden case."
+    },
+    {
+      "key": "pipelines-risers",
+      "label": "Pipelines & Risers",
+      "sections": [
+        "risers",
+        "wall-thickness",
+        "viv"
+      ],
+      "value_statement": "Wall sizing, code checks and vortex-induced-vibration screening for flowlines, pipelines and riser systems across 10+ design codes."
+    },
+    {
+      "key": "moorings-stationkeeping",
+      "label": "Moorings, Anchors & Subsea",
+      "sections": [
+        "subsea",
+        "geotechnical"
+      ],
+      "value_statement": "Stationkeeping design and subsea hardware — mooring strength and fatigue, anchor holding capacity, and foundation geotechnics."
+    },
+    {
+      "key": "hydro-naval",
+      "label": "Hydrodynamics & Naval Architecture",
+      "sections": [
+        "hydro",
+        "cfd",
+        "manoeuvring",
+        "naval-architecture"
+      ],
+      "value_statement": "Vessel and floating-body behaviour — diffraction, seakeeping, CFD, manoeuvring and ship-form performance from hull lines to RAOs."
+    },
+    {
+      "key": "wells-drilling-production",
+      "label": "Wells, Drilling & Production",
+      "sections": [
+        "well",
+        "drilling-engineering",
+        "artificial-lift",
+        "production-engineering",
+        "corrosion-production"
+      ],
+      "value_statement": "The well axis end-to-end — casing and drilling engineering, pore pressure, artificial lift, production chemistry and flow assurance."
+    },
+    {
+      "key": "field-dev-economics",
+      "label": "Field Development & Economics",
+      "sections": [
+        "field-development",
+        "wind"
+      ],
+      "value_statement": "Concept-to-cashflow screening — field development options, floating wind TOTEX/LCOE and NPV levers over real project structures."
+    },
+    {
+      "key": "installation-ops",
+      "label": "Installation & Marine Operations",
+      "sections": [
+        "installation"
+      ],
+      "value_statement": "Getting hardware to the seabed safely — installability screening, lifting/lowering dynamics and weather-windowed marine operations."
+    }
+  ],
+  "recent": [
+    {
+      "date": "2026-09-26",
+      "id": "ffs",
+      "pr": 2204
+    },
+    {
+      "date": "2026-07-06",
+      "id": "cfd",
+      "pr": 1442
+    },
+    {
+      "date": "2026-07-04",
+      "id": "fatigue",
+      "pr": 1396
+    },
+    {
+      "date": "2026-07-04",
+      "id": "wall-thickness",
+      "pr": 1389
+    },
+    {
+      "date": "2026-07-04",
+      "id": "viv",
+      "pr": 1396
+    },
+    {
+      "date": "2026-07-04",
+      "id": "field-development",
+      "pr": 1396
+    },
+    {
+      "date": "2026-07-04",
+      "id": "naval-architecture",
+      "pr": 1394
+    },
+    {
+      "date": "2026-07-04",
+      "id": "geotechnical",
+      "pr": 1394
+    }
+  ],
+  "schema_version": "1.0",
+  "sections": [
+    {
+      "added": {
+        "date": "2026-09-26",
+        "pr": 2204
+      },
+      "card_id": "sec-ffs",
+      "cluster": "structures-ffs",
+      "explorers": [
+        "docs/api/ffs/riser-joint-acceptance-explorer.html"
+      ],
+      "id": "ffs",
+      "title": "Fitness-for-service"
+    },
+    {
+      "added": "unknown",
+      "card_id": "sec-structural",
+      "cluster": "structures-ffs",
+      "explorers": [],
+      "id": "structural",
+      "title": "Ship structural strength"
+    },
+    {
+      "added": {
+        "date": "2026-07-04",
+        "pr": 1396
+      },
+      "card_id": "sec-fatigue",
+      "cluster": "structures-ffs",
+      "explorers": [],
+      "id": "fatigue",
+      "title": "Fatigue & fracture — S-N life and crack growth"
+    },
+    {
+      "added": "unknown",
+      "card_id": "sec-hydro",
+      "cluster": "hydro-naval",
+      "explorers": [
+        "docs/api/hydro/ocimf-coefficient-explorer.html"
+      ],
+      "id": "hydro",
+      "title": "Hydrodynamics & diffraction"
+    },
+    {
+      "added": {
+        "date": "2026-07-06",
+        "pr": 1442
+      },
+      "card_id": "sec-cfd",
+      "cluster": "hydro-naval",
+      "explorers": [
+        "docs/api/structural/sloshing-explorer.html"
+      ],
+      "id": "cfd",
+      "title": "Computational fluid dynamics (CFD)"
+    },
+    {
+      "added": "unknown",
+      "card_id": "sec-risers",
+      "cluster": "pipelines-risers",
+      "explorers": [
+        "docs/api/drilling/drilling-riser-operability-explorer.html"
+      ],
+      "id": "risers",
+      "title": "Risers & pipelines"
+    },
+    {
+      "added": {
+        "date": "2026-07-04",
+        "pr": 1389
+      },
+      "card_id": "sec-wall-thickness",
+      "cluster": "pipelines-risers",
+      "explorers": [
+        "docs/api/structural/wall-thickness-explorer.html"
+      ],
+      "id": "wall-thickness",
+      "title": "Wall thickness — sizing & code checks"
+    },
+    {
+      "added": "unknown",
+      "card_id": "sec-subsea",
+      "cluster": "moorings-stationkeeping",
+      "explorers": [],
+      "id": "subsea",
+      "title": "Subsea"
+    },
+    {
+      "added": {
+        "date": "2026-07-04",
+        "pr": 1396
+      },
+      "card_id": "sec-viv",
+      "cluster": "pipelines-risers",
+      "explorers": [
+        "docs/api/structural/viv-explorer.html"
+      ],
+      "id": "viv",
+      "title": "Vortex-induced vibration — screening, frequency & fatigue"
+    },
+    {
+      "added": "unknown",
+      "card_id": "sec-installation",
+      "cluster": "installation-ops",
+      "explorers": [
+        "docs/api/installation/installation-heading-explorer.html"
+      ],
+      "id": "installation",
+      "title": "Installation"
+    },
+    {
+      "added": "unknown",
+      "card_id": "sec-wind",
+      "cluster": "field-dev-economics",
+      "explorers": [],
+      "id": "wind",
+      "title": "Floating wind"
+    },
+    {
+      "added": {
+        "date": "2026-07-04",
+        "pr": 1396
+      },
+      "card_id": "sec-field-development",
+      "cluster": "field-dev-economics",
+      "explorers": [
+        "docs/api/structural/field-economics-explorer.html"
+      ],
+      "id": "field-development",
+      "title": "Field development — concept screening, cost & economics"
+    },
+    {
+      "added": "unknown",
+      "card_id": "sec-manoeuvring",
+      "cluster": "hydro-naval",
+      "explorers": [
+        "docs/api/hydro/rudder-maneuvering-explorer.html"
+      ],
+      "id": "manoeuvring",
+      "title": "Manoeuvring & station-keeping"
+    },
+    {
+      "added": {
+        "date": "2026-07-04",
+        "pr": 1394
+      },
+      "card_id": "sec-naval-architecture",
+      "cluster": "hydro-naval",
+      "explorers": [
+        "docs/api/structural/ship-resistance-explorer.html"
+      ],
+      "id": "naval-architecture",
+      "title": "Naval architecture — stability, resistance & hull strength"
+    },
+    {
+      "added": {
+        "date": "2026-07-04",
+        "pr": 1394
+      },
+      "card_id": "sec-geotechnical",
+      "cluster": "moorings-stationkeeping",
+      "explorers": [
+        "docs/api/structural/anchor-holding-explorer.html"
+      ],
+      "id": "geotechnical",
+      "title": "Geotechnical — pile, anchor & foundation capacity"
+    },
+    {
+      "added": "unknown",
+      "card_id": "sec-artificial-lift",
+      "cluster": "wells-drilling-production",
+      "explorers": [],
+      "id": "artificial-lift",
+      "title": "Artificial lift — rod-pump diagnostics"
+    },
+    {
+      "added": {
+        "date": "2026-07-04",
+        "pr": 1396
+      },
+      "card_id": "sec-production-engineering",
+      "cluster": "wells-drilling-production",
+      "explorers": [
+        "docs/api/structural/ipr-explorer.html"
+      ],
+      "id": "production-engineering",
+      "title": "Production engineering — nodal analysis & well deliverability"
+    },
+    {
+      "added": "unknown",
+      "card_id": "sec-well",
+      "cluster": "wells-drilling-production",
+      "explorers": [
+        "docs/api/well/casing-design-explorer.html"
+      ],
+      "id": "well",
+      "title": "Well construction — casing & tubulars"
+    },
+    {
+      "added": {
+        "date": "2026-07-04",
+        "pr": 1396
+      },
+      "card_id": "sec-drilling-engineering",
+      "cluster": "wells-drilling-production",
+      "explorers": [
+        "docs/api/structural/pore-pressure-explorer.html"
+      ],
+      "id": "drilling-engineering",
+      "title": "Drilling engineering — pore pressure, hydraulics & well control"
+    },
+    {
+      "added": {
+        "date": "2026-07-04",
+        "pr": 1389
+      },
+      "card_id": "sec-cathodic",
+      "cluster": "structures-ffs",
+      "explorers": [
+        "docs/api/structural/cathodic-protection-explorer.html"
+      ],
+      "id": "cathodic",
+      "title": "Cathodic protection"
+    },
+    {
+      "added": "unknown",
+      "card_id": "sec-corrosion-production",
+      "cluster": "wells-drilling-production",
+      "explorers": [
+        "docs/api/corrosion/galvanic-compatibility-explorer.html",
+        "docs/api/production/scale-si-explorer.html"
+      ],
+      "id": "corrosion-production",
+      "title": "Corrosion & production chemistry"
+    },
+    {
+      "added": "unknown",
+      "card_id": "sec-validation",
+      "cluster": "structures-ffs",
+      "explorers": [],
+      "id": "validation",
+      "title": "Validated against published references"
+    }
+  ],
+  "source": "docs/capability-map/capabilities-sections.yml",
+  "unlinked_explorers": [
+    "docs/api/structural/wall-thickness-3d-explorer.html"
+  ]
+}

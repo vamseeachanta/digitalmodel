@@ -1,0 +1,377 @@
+{
+  "schema_version": 1,
+  "issue": 1794,
+  "parent_file": "field-development-source-evidence-1794.json",
+  "records": [
+    {
+      "record": "Mad Dog Phase 2 / Argos",
+      "host": "semi-submersible host",
+      "evidence": [
+        {
+          "row": 32,
+          "quantity": "Operator and partners at sanction",
+          "value_as_stated": "BP operator 60.5%; BHP 23.9%; Chevron 15.6%",
+          "quote_cell": "\"the sanction of the Mad Dog Phase 2 project in the Gulf of Mexico (BP operator, 60.5%, BHP 23.9%, and Chevron 15.6%).\"",
+          "ref": "S8",
+          "class": "filing",
+          "unverified": false
+        },
+        {
+          "row": 33,
+          "quantity": "Sanctioned cost",
+          "value_as_stated": "$9-billion",
+          "quote_cell": "\"BP has approved the $9-billion Mad Dog Phase 2 project in the deepwater Gulf of Mexico.\"",
+          "ref": "S9",
+          "class": "secondary",
+          "unverified": false
+        },
+        {
+          "row": 34,
+          "quantity": "Capacity and production wells",
+          "value_as_stated": "up to 140,000 b/d; up to 14 production wells",
+          "quote_cell": "\"with the capacity to produce up to 140,000 b/d of crude oil from up to 14 production wells\"",
+          "ref": "S9",
+          "class": "secondary",
+          "unverified": false
+        },
+        {
+          "row": 35,
+          "quantity": "Water depth",
+          "value_as_stated": "4,500 ft (1,372 m)",
+          "quote_cell": "\"located in 4,500 ft (1,372 m) of water about 190 mi (306 km) south of New Orleans\"",
+          "ref": "S9",
+          "class": "secondary",
+          "unverified": false
+        },
+        {
+          "row": 36,
+          "quantity": "Separation from existing spar (host to host, not a tieback)",
+          "value_as_stated": "about 6 mi (10 km)",
+          "quote_cell": "\"about 6 mi (10 km) southwest of the existing Mad Dog platform\"",
+          "ref": "S9",
+          "class": "secondary",
+          "unverified": false
+        },
+        {
+          "row": 37,
+          "quantity": "First oil expected at sanction",
+          "value_as_stated": "late 2021",
+          "quote_cell": "\"Oil production is expected to begin in late 2021.\"",
+          "ref": "S9",
+          "class": "secondary",
+          "unverified": false
+        },
+        {
+          "row": 38,
+          "quantity": "Location and water depth (2013, before the redesign)",
+          "value_as_stated": "150 miles (240 kilometers) south of New Orleans; about 5,100 feet (1,550 meters)",
+          "quote_cell": "\"150 miles (240 kilometers) south of New Orleans in about 5,100 feet (1,550 meters) of water\"",
+          "ref": "S10",
+          "class": "contractor",
+          "unverified": false
+        },
+        {
+          "row": 39,
+          "quantity": "Subsea scope, 2013 contract (no counts)",
+          "value_as_stated": "subsea trees, manifolds, jumper equipment",
+          "quote_cell": "\"Under the initial contract, FMC Technologies will supply subsea trees, manifolds, and jumper equipment.\"",
+          "ref": "S10",
+          "class": "contractor",
+          "unverified": false
+        },
+        {
+          "row": 40,
+          "quantity": "Subsea production system scope, 2017 contract (no counts)",
+          "value_as_stated": "subsea manifolds, trees, control system",
+          "quote_cell": "\"The scope of this supplier-led solution includes subsea manifolds, trees, control system\"",
+          "ref": "S11",
+          "class": "contractor",
+          "unverified": false
+        },
+        {
+          "row": 41,
+          "quantity": "Water injection wells",
+          "value_as_stated": "eight",
+          "quote_cell": "UNVERIFIED: snippet of a 2018 operator release; that URL now redirects to a listing page",
+          "ref": null,
+          "class": "unverified",
+          "unverified": true
+        },
+        {
+          "row": 42,
+          "quantity": "Co-owner share of cost",
+          "value_as_stated": "US$2.2 billion",
+          "quote_cell": "UNVERIFIED: snippet of the co-owner release of 9 February 2017; page returned HTTP 403",
+          "ref": null,
+          "class": "unverified",
+          "unverified": true
+        },
+        {
+          "row": 43,
+          "quantity": "Start-up",
+          "value_as_stated": "April 2023; up to 140,000 barrels of crude oil per day",
+          "quote_cell": "UNVERIFIED: co-owner release of 14 April 2023 is a PDF that could not be parsed here",
+          "ref": null,
+          "class": "unverified",
+          "unverified": true
+        }
+      ],
+      "no_primary_source_found": "Two different water depths are stated (rows 35 and 38) and neither matches the provisional 1,800 m. No primary source found: tree count, manifold count, drill-centre-to-host distance. Rows 33 to 37 are trade press reporting the operator's statement; the operator's own release could not be opened."
+    },
+    {
+      "record": "Perdido",
+      "host": "spar host",
+      "evidence": [
+        {
+          "row": 44,
+          "quantity": "Water depth",
+          "value_as_stated": "approximately 2450 m (8000 ft)",
+          "quote_cell": "\"The facility sits in approximately 2450 m (8000 ft) of water\"",
+          "ref": "S12",
+          "class": "secondary",
+          "unverified": false
+        },
+        {
+          "row": 45,
+          "quantity": "Wells over field life",
+          "value_as_stated": "perhaps as many as 35 wells",
+          "quote_cell": "\"requiring perhaps as many as 35 wells over the life of the fields.\"",
+          "ref": "S12",
+          "class": "secondary",
+          "unverified": false
+        },
+        {
+          "row": 46,
+          "quantity": "Ownership",
+          "value_as_stated": "Shell 35%; Chevron 37.5%; BP 27.5%",
+          "quote_cell": "\"which is jointly owned by Shell (35%), Chevron (37.5%) and BP (27.5%).\"",
+          "ref": "S12",
+          "class": "secondary",
+          "unverified": false
+        },
+        {
+          "row": 47,
+          "quantity": "Peak production",
+          "value_as_stated": "more than 100 000 bpd of oil equivalent",
+          "quote_cell": "\"will ramp up to annual peak production of more than 100 000 bpd of oil equivalent.\"",
+          "ref": "S12",
+          "class": "secondary",
+          "unverified": false
+        },
+        {
+          "row": 48,
+          "quantity": "Fields served",
+          "value_as_stated": "Great White, Silvertip, Tobago",
+          "quote_cell": "\"The facility will produce from the Great White, Silvertip and Tobago offshore fields,\"",
+          "ref": "S12",
+          "class": "secondary",
+          "unverified": false
+        },
+        {
+          "row": 49,
+          "quantity": "Contractor subsea scope (earlier statement)",
+          "value_as_stated": "17 subsea trees; two subsea manifolds; five subsea caisson separation and boosting systems",
+          "quote_cell": "UNVERIFIED: trade-press snippet; contractor archive page not located",
+          "ref": null,
+          "class": "unverified",
+          "unverified": true
+        },
+        {
+          "row": 50,
+          "quantity": "Contractor subsea scope (later statement)",
+          "value_as_stated": "25 subsea trees; two subsea manifolds; five caisson systems",
+          "quote_cell": "UNVERIFIED: trade-press snippet of a contractor release; the trade page did not load the article",
+          "ref": null,
+          "class": "unverified",
+          "unverified": true
+        },
+        {
+          "row": 51,
+          "quantity": "Well split",
+          "value_as_stated": "22 wells from the spar; 13 offset wells tied back",
+          "quote_cell": "UNVERIFIED: trade-press snippet",
+          "ref": null,
+          "class": "unverified",
+          "unverified": true
+        }
+      ],
+      "no_primary_source_found": "No primary source opened for any Perdido quantity. Tried: shell.com project page (script-only), contractor archive (slug guess returned 404; archive search returned nothing), OnePetro JPT/OTC pages (HTTP 403). Rows 49 and 50 disagree on tree count and are the best leads for a manifold count of two."
+    },
+    {
+      "record": "Stones",
+      "host": "FPSO host",
+      "evidence": [
+        {
+          "row": 52,
+          "quantity": "Subsea trees (contract scope)",
+          "value_as_stated": "eight",
+          "quote_cell": "\"scope of supply includes eight subsea trees, a subsea manifold, topside and subsea controls and associated equipment.\"",
+          "ref": "S13",
+          "class": "contractor",
+          "unverified": false
+        },
+        {
+          "row": 53,
+          "quantity": "Subsea manifolds (contract scope)",
+          "value_as_stated": "a subsea manifold (one)",
+          "quote_cell": "same sentence as row 52",
+          "ref": "S13",
+          "class": "contractor",
+          "unverified": false
+        },
+        {
+          "row": 54,
+          "quantity": "Water depth (contractor, 2013)",
+          "value_as_stated": "approximately 9,600 feet (2,926 meters)",
+          "quote_cell": "\"coast in approximately 9,600 feet (2,926 meters) of water.\"",
+          "ref": "S13",
+          "class": "contractor",
+          "unverified": false
+        },
+        {
+          "row": 55,
+          "quantity": "Distance offshore",
+          "value_as_stated": "approximately 200 miles (322 kilometers) off the Louisiana coast",
+          "quote_cell": "\"approximately 200 miles (322 kilometers) off the Louisiana coast\"",
+          "ref": "S13",
+          "class": "contractor",
+          "unverified": false
+        },
+        {
+          "row": 56,
+          "quantity": "Water depth (FPSO contractor, 2016)",
+          "value_as_stated": "2,900 metres (9,500 feet)",
+          "quote_cell": "\"At 2,900 metres (9,500 feet), it is the deepest production unit ever installed\"",
+          "ref": "S14",
+          "class": "contractor",
+          "unverified": false
+        },
+        {
+          "row": 57,
+          "quantity": "Topsides oil capacity",
+          "value_as_stated": "60,000 barrels of oil per day",
+          "quote_cell": "\"processing facility capacity of 60,000 barrels of oil per day (bopd)\"",
+          "ref": "S14",
+          "class": "contractor",
+          "unverified": false
+        },
+        {
+          "row": 58,
+          "quantity": "Riser type",
+          "value_as_stated": "steel lazy-wave risers, disconnectable system",
+          "quote_cell": "\"the first disconnectable system with steel lazy-wave risers to go into use\"",
+          "ref": "S14",
+          "class": "contractor",
+          "unverified": false
+        },
+        {
+          "row": 59,
+          "quantity": "FPSO contract term",
+          "value_as_stated": "initial 10 years, extensions up to 20 years",
+          "quote_cell": "\"an initial period of 10 years with future extension options up to a total of 20 years.\"",
+          "ref": "S14",
+          "class": "contractor",
+          "unverified": false
+        },
+        {
+          "row": 60,
+          "quantity": "First oil",
+          "value_as_stated": "announced 9 September 2016",
+          "quote_cell": "\"has achieved first oil.\"",
+          "ref": "S14",
+          "class": "contractor",
+          "unverified": false
+        },
+        {
+          "row": 61,
+          "quantity": "Well phasing and peak rate",
+          "value_as_stated": "two subsea production wells, then six more; around 50,000 boe/d",
+          "quote_cell": "UNVERIFIED: snippets of trade reprints of the operator releases",
+          "ref": null,
+          "class": "unverified",
+          "unverified": true
+        }
+      ],
+      "no_primary_source_found": "No primary source found: well-to-FPSO tieback distance, project cost. Two water depths stated (rows 54 and 56). Tried: OnePetro OTC page from the provisional record (HTTP 403), shell.com (script-only), archived operator investor handbook (redirects away)."
+    },
+    {
+      "record": "Lucius",
+      "host": "truss spar host",
+      "evidence": [
+        {
+          "row": 62,
+          "quantity": "First production and operator",
+          "value_as_stated": "January 2015; Anadarko-operated",
+          "quote_cell": "\"The Company realized first production at the Anadarko-operated Lucius Spar in January 2015\"",
+          "ref": "S15",
+          "class": "filing",
+          "unverified": false
+        },
+        {
+          "row": 63,
+          "quantity": "Wells at start-up",
+          "value_as_stated": "three wells initially, additional three expected",
+          "quote_cell": "\"bringing on three wells initially and ramping up production with an additional three wells expected to come online\"",
+          "ref": "S15",
+          "class": "filing",
+          "unverified": false
+        },
+        {
+          "row": 64,
+          "quantity": "Capacity, block, water depth",
+          "value_as_stated": "80-MBbls/d; Keathley Canyon Block 875; 7,100 feet",
+          "quote_cell": "\"The 80-MBbls/d spar resides in Keathley Canyon Block 875 with a water depth of 7,100 feet.\"",
+          "ref": "S15",
+          "class": "filing",
+          "unverified": false
+        },
+        {
+          "row": 65,
+          "quantity": "Operator working interest",
+          "value_as_stated": "23.8%",
+          "quote_cell": "\"the Company holds a 23.8% working interest in Lucius.\"",
+          "ref": "S15",
+          "class": "filing",
+          "unverified": false
+        },
+        {
+          "row": 66,
+          "quantity": "Schedule",
+          "value_as_stated": "start-up three years from sanction",
+          "quote_cell": "\"developed with production startup only three years from sanction\"",
+          "ref": "S15",
+          "class": "filing",
+          "unverified": false
+        },
+        {
+          "row": 67,
+          "quantity": "Subsea trees and manifolds (contract scope)",
+          "value_as_stated": "five subsea production trees; two manifolds",
+          "quote_cell": "\"FMC's scope of supply includes five subsea production trees and two manifolds.\"",
+          "ref": "S16",
+          "class": "contractor",
+          "unverified": false
+        },
+        {
+          "row": 68,
+          "quantity": "Location and water depth (contractor)",
+          "value_as_stated": "approximately 275 miles southeast of Galveston; approximately 7,100 feet (2,160 meters)",
+          "quote_cell": "\"in Keathley Canyon Block 875, in water depths of approximately 7,100 feet (2,160 meters).\"",
+          "ref": "S16",
+          "class": "contractor",
+          "unverified": false
+        },
+        {
+          "row": 69,
+          "quantity": "Water depth in the following year's 10-K",
+          "value_as_stated": "7,000 feet",
+          "quote_cell": "UNVERIFIED: search snippet of the fiscal 2015 10-K",
+          "ref": null,
+          "class": "unverified",
+          "unverified": true
+        }
+      ],
+      "no_primary_source_found": "Rows 63 and 67 differ: six wells brought on (filing) against five production trees in the 2012 contract scope (contractor). Both are kept. No primary source found: well-to-spar tieback distance, project cost."
+    }
+  ]
+}

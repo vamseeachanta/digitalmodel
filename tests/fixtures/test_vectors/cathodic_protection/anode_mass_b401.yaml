@@ -1,0 +1,78 @@
+source_type: standard
+source_description: "DNV-RP-B401 anode mass requirement calculations verified against hybrid riser CP design report"
+extracted_date: "2026-03-16"
+legal_scan_passed: true
+category: "cathodic_protection"
+subcategory: "anode_mass"
+equations:
+  - name: "Anode Mass Requirement"
+    latex: "M_a = \\frac{I_{cm} \\cdot t_f \\cdot 8760}{u \\cdot \\varepsilon}"
+    description: "Total net anode mass requirement per DNV-RP-B401 section 7.7.1"
+inputs:
+  - name: "Mean current demand"
+    symbol: "I_cm"
+    unit: "A"
+    test_value: 24.70
+  - name: "Design life"
+    symbol: "t_f"
+    unit: "years"
+    test_value: 22.0
+  - name: "Utilization factor"
+    symbol: "u"
+    unit: "dimensionless"
+    test_value: 0.90
+  - name: "Electrochemical capacity"
+    symbol: "epsilon"
+    unit: "A-h/kg"
+    test_value: 2000.0
+outputs:
+  - name: "Net anode mass"
+    symbol: "M_a"
+    unit: "kg"
+    test_expected: 2644.5
+    tolerance: 26.4
+worked_examples:
+  - description: "Buoyancy tank anode mass (I_cm=24.70 A, T=22 yr, u=0.90, epsilon=2000)"
+    inputs:
+      I_mean_A: 24.70
+      T_design_years: 22.0
+      E_capacity: 2000.0
+      u_f: 0.90
+    outputs:
+      anode_mass_kg: 2644.5
+    use_as_test: true
+  - description: "URA anode mass (I_cm=9.62 A, T=22 yr, u=0.90, epsilon=2000)"
+    inputs:
+      I_mean_A: 9.62
+      T_design_years: 22.0
+      E_capacity: 2000.0
+      u_f: 0.90
+    outputs:
+      anode_mass_kg: 1030.0
+    use_as_test: true
+  - description: "Line pipe anode mass (I_cm=1.48 A, T=22 yr, u=0.90, epsilon=2000)"
+    inputs:
+      I_mean_A: 1.48
+      T_design_years: 22.0
+      E_capacity: 2000.0
+      u_f: 0.90
+    outputs:
+      anode_mass_kg: 158.5
+    use_as_test: true
+  - description: "Ballast box anode mass (I_cm=17.38 A, T=22 yr, u=0.90, epsilon=2000)"
+    inputs:
+      I_mean_A: 17.38
+      T_design_years: 22.0
+      E_capacity: 2000.0
+      u_f: 0.90
+    outputs:
+      anode_mass_kg: 1860.8
+    use_as_test: true
+assumptions:
+  - "Al-Zn-In anode material with electrochemical capacity of 2000 A-h/kg"
+  - "Utilization factor 0.90 for stand-off structural anodes (DNV-RP-B401 Table 10-8)"
+  - "8760 hours per year conversion factor"
+references:
+  - "DNV-RP-B401 (2005/2017), Section 7.7.1, Eq 2"
+  - "DNV-RP-B401, Table 10-6 (anode properties)"
+  - "DNV-RP-B401, Table 10-8 (utilization factors)"

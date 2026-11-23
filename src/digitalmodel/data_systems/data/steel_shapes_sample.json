@@ -1,0 +1,178 @@
+{
+  "schema": "aisc-shapes/1",
+  "synthetic": true,
+  "units": {
+    "length": "in",
+    "area": "in^2"
+  },
+  "source": {
+    "kind": "synthetic",
+    "catalog_id": "synthetic-steel-shapes",
+    "publication": "Hand-written synthetic test profiles",
+    "access_note": "Written by hand for tests only; not derived from any publisher table. No publisher data is redistributed."
+  },
+  "sections": [
+    {
+      "name": "SYN-W",
+      "metric_name": "SYN-METRIC-W",
+      "aliases": [
+        "SYN-WXDEMO"
+      ],
+      "family": "W",
+      "synthetic": true,
+      "area": 20.21603652549288,
+      "dimensions": {
+        "d": 10,
+        "bf": 8,
+        "tw": 0.5,
+        "tf": 1,
+        "kdes": 1.5
+      },
+      "source": {
+        "kind": "synthetic",
+        "derivation": "Area in square inches = _construct_geometry(library, family, dimensions).geom.area; sectionproperties 3.10.2. Hand-written inch dimensions; tests only."
+      }
+    },
+    {
+      "name": "SYN-HP",
+      "metric_name": "SYN-METRIC-HP",
+      "aliases": [
+        "SYN-HPXDEMO"
+      ],
+      "family": "HP",
+      "synthetic": true,
+      "area": 17.0910365254929,
+      "dimensions": {
+        "d": 8,
+        "bf": 8,
+        "tw": 0.75,
+        "tf": 0.75,
+        "kdes": 1.25
+      },
+      "source": {
+        "kind": "synthetic",
+        "derivation": "Area in square inches = _construct_geometry(library, family, dimensions).geom.area; sectionproperties 3.10.2. Hand-written inch dimensions; tests only."
+      }
+    },
+    {
+      "name": "SYN-S",
+      "metric_name": "SYN-METRIC-S",
+      "aliases": [
+        "SYN-SXDEMO"
+      ],
+      "family": "S",
+      "synthetic": true,
+      "area": 12.006311171217941,
+      "dimensions": {
+        "d": 10,
+        "bf": 5,
+        "tw": 0.5,
+        "tf": 0.75,
+        "kdes": 1.5
+      },
+      "source": {
+        "kind": "synthetic",
+        "derivation": "Area in square inches = _construct_geometry(library, family, dimensions).geom.area; sectionproperties 3.10.2. Hand-written inch dimensions; tests only."
+      }
+    },
+    {
+      "name": "SYN-C",
+      "metric_name": "SYN-METRIC-C",
+      "aliases": [
+        "SYN-CXDEMO"
+      ],
+      "family": "C",
+      "synthetic": true,
+      "area": 7.784456097092346,
+      "dimensions": {
+        "d": 8,
+        "bf": 3,
+        "tw": 0.5,
+        "tf": 0.75,
+        "kdes": 1.25
+      },
+      "source": {
+        "kind": "synthetic",
+        "derivation": "Area in square inches = _construct_geometry(library, family, dimensions).geom.area; sectionproperties 3.10.2. Hand-written inch dimensions; tests only."
+      }
+    },
+    {
+      "name": "SYN-L",
+      "metric_name": "SYN-METRIC-L",
+      "aliases": [
+        "SYN-LXDEMO"
+      ],
+      "family": "L",
+      "synthetic": true,
+      "area": 6.9915091313732285,
+      "dimensions": {
+        "d": 5,
+        "b": 5,
+        "t": 0.75,
+        "kdes": 1.25
+      },
+      "source": {
+        "kind": "synthetic",
+        "derivation": "Area in square inches = _construct_geometry(library, family, dimensions).geom.area; sectionproperties 3.10.2. Hand-written inch dimensions; tests only."
+      }
+    },
+    {
+      "name": "SYN-HSS_RECT",
+      "metric_name": "SYN-METRIC-HSS_RECT",
+      "aliases": [
+        "SYN-HSS_RECTXDEMO"
+      ],
+      "family": "HSS_RECT",
+      "synthetic": true,
+      "area": 14.351890423522114,
+      "dimensions": {
+        "d": 10,
+        "b": 6,
+        "t": 0.5,
+        "tnom": 0.5
+      },
+      "source": {
+        "kind": "synthetic",
+        "derivation": "Area in square inches = _construct_geometry(library, family, dimensions).geom.area; sectionproperties 3.10.2. Hand-written inch dimensions; tests only."
+      }
+    },
+    {
+      "name": "SYN-HSS_ROUND",
+      "metric_name": "SYN-METRIC-HSS_ROUND",
+      "aliases": [
+        "SYN-HSS_ROUNDXDEMO"
+      ],
+      "family": "HSS_ROUND",
+      "synthetic": true,
+      "area": 7.057234103729325,
+      "dimensions": {
+        "d": 5,
+        "t": 0.5,
+        "tnom": 0.5
+      },
+      "source": {
+        "kind": "synthetic",
+        "derivation": "Area in square inches = _construct_geometry(library, family, dimensions).geom.area; sectionproperties 3.10.2. Hand-written inch dimensions; tests only."
+      }
+    },
+    {
+      "name": "SYN-PIPE",
+      "metric_name": "SYN-METRIC-PIPE",
+      "aliases": [
+        "SYN-PIPEXDEMO"
+      ],
+      "family": "PIPE",
+      "synthetic": true,
+      "area": 2.940514209885892,
+      "dimensions": {
+        "d": 4,
+        "t": 0.25,
+        "tnom": 0.25
+      },
+      "source": {
+        "kind": "synthetic",
+        "derivation": "Area in square inches = _construct_geometry(library, family, dimensions).geom.area; sectionproperties 3.10.2. Hand-written inch dimensions; tests only."
+      }
+    }
+  ]
+}

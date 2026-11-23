@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SEPD Decline Curve — Unconventional Well Forecast — CALC-004</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.6/dist/chart.umd.min.js"></script>
+<style>
+:root {
+  --bg:         #f3efe6;
+  --panel:      #fffdf8;
+  --ink:        #172126;
+  --muted:      #55636b;
+  --accent:     #0f766e;
+  --accent-2:   #8a5a2b;
+  --line:       #d9d0c0;
+  --shadow:     0 16px 40px rgba(20,33,38,0.08);
+  --good:       #166534;
+  --warn:       #b45309;
+  --bad:        #b91c1c;
+}
+*{box-sizing:border-box;}
+body{font-family:Georgia,"Times New Roman",serif;
+  background:radial-gradient(circle at top,#fffaf0 0,var(--bg) 48%,#ebe5d7 100%);
+  color:var(--ink);line-height:1.55;margin:0;padding:0;}
+a{color:var(--accent);text-decoration:none;}
+a:hover{text-decoration:underline;}
+code{font-family:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;
+  background:rgba(27,31,35,0.06);padding:.2em .4em;border-radius:3px;font-size:.88em;}
+
+.hero{padding:28px 24px 20px;border-bottom:1px solid rgba(23,33,38,0.08);
+  background:linear-gradient(135deg,rgba(15,118,110,0.07),rgba(138,90,43,0.09));}
+.hero-inner{max-width:1100px;margin:0 auto;}
+.eyebrow{text-transform:uppercase;letter-spacing:.12em;font-size:.68rem;
+  color:var(--accent);font-weight:700;margin:0 0 6px;}
+h1.report-title{margin:0 0 8px;font-size:clamp(1.6rem,3vw,2.4rem);line-height:1.1;}
+.lede{color:var(--muted);font-size:.92rem;margin:0 0 14px;max-width:72ch;}
+
+.meta-chips{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 2px;}
+.meta-chip{background:var(--panel);border:1px solid var(--line);border-radius:8px;
+  padding:5px 10px;font-size:.8rem;}
+.meta-chip strong{font-size:.65rem;text-transform:uppercase;letter-spacing:.07em;
+  color:var(--accent-2);display:block;margin-bottom:1px;}
+
+.content{max-width:1100px;margin:0 auto;padding:24px 24px 56px;}
+.card{background:var(--panel);padding:26px;border-radius:18px;
+  box-shadow:var(--shadow);border:1px solid var(--line);margin-bottom:20px;}
+.card h2{border-bottom:1px solid var(--line);padding-bottom:.3em;margin-top:0;
+  color:var(--accent-2);letter-spacing:.02em;font-size:1.2rem;}
+.card p,.card li,.card td,.card th{color:var(--muted);}
+.card strong,.card code{color:var(--ink);}
+
+table{border-collapse:collapse;width:100%;margin:14px 0;font-size:.9rem;}
+thead th{background:var(--panel);border-bottom:2px solid var(--accent);
+  font-weight:700;text-transform:uppercase;letter-spacing:.06em;
+  font-size:.78rem;padding:8px 10px;text-align:left;color:var(--ink);}
+tbody td{border-bottom:1px solid var(--line);padding:7px 10px;
+  color:var(--muted);vertical-align:top;}
+tbody tr:last-child td{border-bottom:none;}
+tbody td strong,tbody td code{color:var(--ink);}
+tbody tr:hover>td{background:rgba(15,118,110,.03);}
+
+.badge{display:inline-block;padding:2px 8px;border-radius:999px;
+  font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;
+  white-space:nowrap;}
+.badge-pass{background:#dcfce7;color:var(--good);}
+.badge-fail{background:#fee2e2;color:var(--bad);}
+.badge-draft{background:#fef3c7;color:var(--warn);}
+.badge-reviewed{background:#dbeafe;color:#1d4ed8;}
+.badge-approved{background:#dcfce7;color:var(--good);}
+
+.equation-block{background:#f8f9fa;border:1px solid var(--line);border-radius:10px;
+  padding:16px 20px;margin:12px 0;position:relative;}
+.equation-block .eq-number{position:absolute;right:16px;top:50%;transform:translateY(-50%);
+  font-size:.82rem;color:var(--muted);font-weight:700;}
+.equation-name{font-size:.85rem;font-weight:700;color:var(--accent);margin-bottom:6px;}
+.equation-desc{font-size:.85rem;color:var(--muted);margin-top:8px;}
+.variable-list{margin:8px 0 0;padding:0 0 0 18px;font-size:.82rem;}
+.variable-list li{margin:2px 0;color:var(--muted);}
+.variable-list li .var-sym{color:var(--ink);font-weight:600;}
+
+.chart-container{margin:16px 0;position:relative;}
+.chart-container canvas{max-height:400px;width:100%;}
+.chart-title{font-size:.9rem;font-weight:700;color:var(--accent-2);margin-bottom:8px;}
+
+details{margin:8px 0;}
+details summary{cursor:pointer;font-weight:700;color:var(--accent);
+  font-size:.9rem;padding:4px 0;}
+details summary:hover{text-decoration:underline;}
+details[open] summary{margin-bottom:8px;}
+
+.report-footer{text-align:center;padding:20px;font-size:.75rem;color:var(--muted);
+  border-top:1px solid var(--line);margin-top:40px;}
+
+@media print{
+  body{background:#fff;}
+  .card{box-shadow:none;border:1px solid #ccc;break-inside:avoid;}
+  .hero{background:#f8f8f8;border-bottom:2px solid #333;}
+  .chart-container canvas{max-height:300px;}
+}
+
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">CALC-004</div>
+    <h1 class="report-title">SEPD Decline Curve — Unconventional Well Forecast</h1>
+    <div class="meta-chips">
+      <div class="meta-chip"><strong>Status</strong><span class="badge badge-draft">DRAFT</span></div>
+      <div class="meta-chip"><strong>Revision</strong>1</div>
+      <div class="meta-chip"><strong>Date</strong>2026-03-14</div>
+      <div class="meta-chip"><strong>Author</strong>Vamsee Achanta</div>
+        <div class="meta-chip"><strong>Reviewer</strong>Independent Reviewer</div>
+        <div class="meta-chip"><strong>Project</strong>Generic Unconventional Production Forecast</div>
+      <div class="meta-chip"><strong>Standard</strong>Valko &amp; Lee (2010), SPE 134231</div>
+    </div>
+  </div>
+</div>
+
+<div class="content">
+<div class="card">
+  <h2>Inputs</h2>
+  <table>
+    <thead><tr><th>Name</th><th>Symbol</th><th>Value</th><th>Unit</th><th>Source</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>Initial Production Rate</strong></td>
+        <td class="katex-inline">$q_i$</td>
+        <td>1000.0</td>
+        <td>bbl/day</td>
+        <td>IP30 average from completion report</td>
+      </tr>
+      <tr>
+        <td><strong>Characteristic Time Constant</strong></td>
+        <td class="katex-inline">$\tau$</td>
+        <td>365.0</td>
+        <td>days</td>
+        <td>Type-curve match to analogous Permian wells</td>
+      </tr>
+      <tr>
+        <td><strong>Stretching Exponent</strong></td>
+        <td class="katex-inline">$n$</td>
+        <td>0.5</td>
+        <td>-</td>
+        <td>Best-fit to 12-month production history</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="card">
+  <h2>Methodology</h2>
+  <p>Stretched Exponential Production Decline (SEPD) model applied to an
+unconventional (shale) well. Unlike Arps hyperbolic decline, SEPD
+avoids the over-prediction of late-life reserves by using a stretched
+exponential kernel that naturally converges to finite EUR without an
+arbitrary b-factor switch. The model is fitted to early production
+history and extrapolated for long-term forecasting.</p>
+  <p><strong>Standard:</strong> Valko &amp; Lee (2010), SPE 134231</p>
+  <div class="equation-block">
+    <div class="equation-name">Equation 1: SEPD Rate</div>
+    <div class="katex-display">$$q(t) = q_i \exp\!\left(-\left(\frac{t}{\tau}\right)^n\right)$$</div>
+    <div class="equation-desc">Production rate at time t.</div>
+    <span class="eq-number">(1)</span>
+    <ul class="variable-list">
+<li><span class="var-sym">$q_i$</span> — Initial production rate [bbl/day]</li>
+<li><span class="var-sym">$\tau$</span> — Characteristic time constant [days]</li>
+<li><span class="var-sym">$n$</span> — Stretching exponent (0 &lt; n &lt;= 1) [-]</li>
+</ul>
+  </div>
+  <div class="equation-block">
+    <div class="equation-name">Equation 2: SEPD Cumulative Production</div>
+    <div class="katex-display">$$Q(t) = \frac{q_i \tau}{n}\,\Gamma\!\left(\frac{1}{n}\right)\,P\!\left(\frac{1}{n},\left(\frac{t}{\tau}\right)^n\right)$$</div>
+    <div class="equation-desc">Cumulative production from 0 to t using the lower regularised incomplete gamma function P(a,x).</div>
+    <span class="eq-number">(2)</span>
+    <ul class="variable-list">
+<li><span class="var-sym">$Q(t)$</span> — Cumulative production [bbl]</li>
+<li><span class="var-sym">$\Gamma$</span> — Complete gamma function [-]</li>
+<li><span class="var-sym">$P(a,x)$</span> — Lower regularised incomplete gamma function [-]</li>
+</ul>
+  </div>
+</div>
+
+<div class="card">
+  <h2>Outputs</h2>
+  <table>
+    <thead><tr><th>Name</th><th>Symbol</th><th>Value</th><th>Unit</th><th>Pass/Fail</th><th>Limit</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>Rate at 1 Year</strong></td>
+        <td class="katex-inline">$q(365)$</td>
+        <td>367.88</td>
+        <td>bbl/day</td>
+        <td>—</td>
+        <td>—</td>
+      </tr>
+      <tr>
+        <td><strong>Rate at 5 Years</strong></td>
+        <td class="katex-inline">$q(1825)$</td>
+        <td>106.88</td>
+        <td>bbl/day</td>
+        <td>—</td>
+        <td>—</td>
+      </tr>
+      <tr>
+        <td><strong>Cumulative at 1 Year</strong></td>
+        <td class="katex-inline">$Q(365)$</td>
+        <td>192896</td>
+        <td>bbl</td>
+        <td>—</td>
+        <td>—</td>
+      </tr>
+      <tr>
+        <td><strong>Cumulative at 5 Years</strong></td>
+        <td class="katex-inline">$Q(1825)$</td>
+        <td>477519</td>
+        <td>bbl</td>
+        <td>—</td>
+        <td>—</td>
+      </tr>
+      <tr>
+        <td><strong>Estimated Ultimate Recovery</strong></td>
+        <td class="katex-inline">$EUR$</td>
+        <td>729635</td>
+        <td>bbl</td>
+        <td>—</td>
+        <td>—</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="card">
+  <h2>Charts</h2>
+  <div class="chart-container">
+    <div class="chart-title">SEPD Rate Forecast</div>
+    <canvas id="chart-rate_forecast" height="300"></canvas>
+  </div>
+  <div class="chart-container">
+    <div class="chart-title">SEPD Cumulative Production</div>
+    <canvas id="chart-cumulative_forecast" height="300"></canvas>
+  </div>
+</div>
+
+<div class="card">
+  <h2>Data Tables</h2>
+  <h3>Production Forecast Summary</h3>
+  <table>
+    <thead><tr><th>Time (days)</th><th>Rate (bbl/day)</th><th>Cumulative (bbl)</th></tr></thead>
+    <tbody>
+      <tr><td>0</td><td>1000.0</td><td>0</td></tr>
+      <tr><td>365</td><td>367.88</td><td>192896</td></tr>
+      <tr><td>730</td><td>221.14</td><td>328368</td></tr>
+      <tr><td>1095</td><td>157.43</td><td>408812</td></tr>
+      <tr><td>1825</td><td>106.88</td><td>477519</td></tr>
+      <tr><td>3650</td><td>63.4</td><td>606244</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="card">
+  <details open>
+    <summary>Assumptions</summary>
+    <ol>
+    <li>Single-phase oil flow; no gas lift or ESP interference</li>
+    <li>Constant bottomhole pressure throughout forecast period</li>
+    <li>No refracturing or well intervention modelled</li>
+    <li>Stretching exponent n is constant over the well life</li>
+    <li>Type-curve parameters from analogous Permian Basin completions</li>
+    </ol>
+  </details>
+</div>
+<div class="card">
+  <details open>
+    <summary>References</summary>
+    <ol>
+    <li>Valko, P.P. &amp; Lee, W.J. (2010). A Better Way to Forecast Production from Unconventional Gas Wells. SPE 134231.</li>
+    <li>Ilk, D. et al. (2008). Exponential vs. Hyperbolic Decline in Tight Gas Sands. SPE 116731.</li>
+    </ol>
+  </details>
+</div>
+
+<div class="card">
+  <h2>Change Log</h2>
+  <table>
+    <thead><tr><th>Rev</th><th>Date</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>2026-03-14</td><td>Initial calculation</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="report-footer">
+  Generated by calculation-report skill &middot; CALC-004 Rev 1
+</div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  renderMathInElement(document.body, {
+    delimiters: [
+      {left: "$$", right: "$$", display: true},
+      {left: "$", right: "$", display: false}
+    ],
+    throwOnError: false
+  });
+});
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+new Chart(document.getElementById("chart-rate_forecast"), {"type":"line","data":{"datasets":[{"label":"SEPD (n=0.5)","data":[{"x": 0, "y": 1000}, {"x": 30, "y": 811}, {"x": 90, "y": 636}, {"x": 180, "y": 492}, {"x": 365, "y": 368}, {"x": 730, "y": 221}, {"x": 1095, "y": 157}, {"x": 1460, "y": 124}, {"x": 1825, "y": 107}, {"x": 2555, "y": 84}, {"x": 3650, "y": 63}],"borderColor":"#0f766e","fill":false,"tension":0.1}]},"options":{"responsive":true,"scales":{"x":{"type":"linear","title":{"display":true,"text":"Time"}},"y":{"type":"linear","title":{"display":true,"text":"Production Rate"}}}}});
+new Chart(document.getElementById("chart-cumulative_forecast"), {"type":"line","data":{"datasets":[{"label":"Cumulative","data":[{"x": 0, "y": 0}, {"x": 365, "y": 192896}, {"x": 730, "y": 328368}, {"x": 1095, "y": 408812}, {"x": 1825, "y": 477519}, {"x": 3650, "y": 606244}, {"x": 7300, "y": 680693}],"borderColor":"#1e40af","fill":false,"tension":0.1}]},"options":{"responsive":true,"scales":{"x":{"type":"linear","title":{"display":true,"text":"Time"}},"y":{"type":"linear","title":{"display":true,"text":"Cumulative Production"}}}}});
+});
+</script>
+</body>
+</html>

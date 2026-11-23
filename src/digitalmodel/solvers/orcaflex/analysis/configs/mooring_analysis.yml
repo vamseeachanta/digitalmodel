@@ -1,0 +1,57 @@
+# OrcaFlex Mooring Analysis Configuration
+# Compatible with OrcaFlex mooring module configuration format
+
+# File management block (OrcaFlex mooring module format)
+file_management:
+  flag: true
+  # Input directory for CSV files (relative to config location)
+  input_directory: ./output/.csv
+  # Output directory for results (relative to config location)
+  output_directory: ./output
+
+# Pattern for file selection
+pattern: "*_analysis.csv"
+
+# Analysis configuration
+analysis:
+  # Pretension analysis
+  pretension:
+    enabled: true
+    tolerance: 0.01  # Convergence tolerance
+    
+  # Stiffness analysis
+  stiffness:
+    enabled: true
+    include_coupling: true  # Include off-diagonal terms
+    
+  # Line groups analysis
+  line_groups:
+    enabled: true
+    group_by: ["Group", "Type"]  # Grouping columns
+    
+  # Fender forces analysis
+  fender_forces:
+    enabled: true
+    threshold: 0.0  # Minimum force to include
+
+# Output paths
+output:
+  # Markdown report location
+  report: ./output/report/comparative_analysis.md
+  
+  # Visualizations directory
+  visualizations: ./output/comparative_analysis
+  
+# Report configuration
+report:
+  title: "Mooring System Comparative Analysis"
+  author: "OrcaFlex Analysis Module"
+  include_sections:
+    - executive_summary
+    - pretension_analysis
+    - stiffness_analysis
+    - natural_periods
+    - line_groups
+    - fender_forces
+    - conclusions
+    - recommendations

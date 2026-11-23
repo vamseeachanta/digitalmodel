@@ -1,0 +1,7 @@
+<ul class="nav nav-tabs nav-fill flex-sm-column">
+{% for menu_item in context.menu_items %}
+    <li class="nav-item">
+        <a class="nav-link" href="{{ menu_item.id }}">{{ menu_item.alias }}</a>
+    </li>
+{% endfor %}
+</ul>

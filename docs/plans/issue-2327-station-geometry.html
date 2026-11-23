@@ -1,0 +1,8 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><title>Riser station geometry — issue 2327</title>
+<h1>Riser station geometry</h1>
+<p>Scope: <a href="https://github.com/vamseeachanta/digitalmodel/issues/2327">issue 2327</a>, follow-up to <a href="https://github.com/vamseeachanta/digitalmodel/pull/2292">PR 2292</a>, owner dispatch sr2292. Execution will use one lane.</p>
+<p>The shared geometry helper will validate nonempty, finite, positive section lengths and a finite, strictly increasing cumulative axis. Conversion failures will become ValueError. Coupling generation and station classification will use the same validated geometry, and CR-10 will return NOT_EVALUATED on invalid geometry.</p>
+<p>Interior coupling identity will be separated from station coincidence tolerance. A final section shorter than 0.1 mm, including one shorter than the arc-axis tolerance, will still require an upper-side sample at its preceding boundary. Actual End B and explicit exclusion boundaries will retain their exterior-side exemptions; rounded on-coupling samples will remain valid.</p>
+<p>Tests will first demonstrate invalid geometry across direct coupling, classification and regular/irregular CR-10 callers, and missing upper-side sampling near End B with implicit and explicit endpoint selection. Verification will run only focused postprocess tests through uv run and lint changed Python files. A draft PR will preserve the owner merge boundary.</p>
+<p>Plan defect review: Codex inline review identified that substituting the arc-axis tolerance would still lose very short sections; final geometry identity will govern instead. Gemini authentication failed; external review availability will be recorded separately. No external approval is inferred.</p>
+</html>

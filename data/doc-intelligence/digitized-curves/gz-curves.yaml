@@ -1,0 +1,120 @@
+source_type: shared_digitized_curve_artifact
+source_description: >
+  Shared GZ curve corpus bridged from the naval architecture validation fixtures.
+  This artifact standardizes heel-angle and righting-arm arrays for downstream
+  document-intelligence and fixture consumers under WRK-1381.
+generated_from: tests/fixtures/test_vectors/naval_architecture/gz_curves.yaml
+generated_date: "2026-03-23"
+category: naval_architecture
+subcategory: gz_curves
+
+curves:
+  - id: ddg51_full_load
+    description: "DDG-51 at 8600 LT displacement, KG=23.84 ft"
+    vessel: DDG-51
+    provenance_type: tabulated_transcription
+    source_reference: "USNA EN400 Chapter 4"
+    source_locator: "DDG-51 cross curves worked example, full load condition"
+    unit_system: imperial
+    gz_unit: ft
+    heel_angles_deg: [0, 10, 20, 30, 40, 50, 60, 70, 80, 90]
+    gz_values: [0.0, 0.940, 1.946, 3.100, 4.346, 4.718, 3.774, 1.328, -2.248, -6.640]
+
+  - id: ddg51_light
+    description: "DDG-51 at 8600 LT displacement, KG=21.0 ft (light condition)"
+    vessel: DDG-51
+    provenance_type: tabulated_transcription
+    source_reference: "USNA EN400 Chapter 4"
+    source_locator: "DDG-51 cross curves worked example, light condition"
+    unit_system: imperial
+    gz_unit: ft
+    heel_angles_deg: [0, 10, 20, 30, 40, 50, 60, 70, 80, 90]
+    gz_values: [0.0, 1.433, 2.918, 4.520, 6.172, 6.893, 6.234, 3.997, 0.549, -3.800]
+
+  - id: generic_tanker_cb080
+    description: "Generic tanker Cb=0.80, B=45m, T=12m, KG=8.5m"
+    vessel: generic_tanker
+    provenance_type: tabulated_transcription
+    source_reference: "Rawson & Tupper Basic Ship Theory Ch 5"
+    source_locator: "Typical full-form tanker KN values with KG=8.5 m"
+    unit_system: metric
+    gz_unit: m
+    heel_angles_deg: [0, 10, 20, 30, 40, 50, 60, 70, 80, 90]
+    gz_values: [0.0, 2.374, 4.643, 6.570, 7.786, 7.989, 7.239, 5.813, 3.829, 1.600]
+
+  - id: ddg51_medium_load
+    description: "DDG-51 at 8600 LT displacement, KG=22.5 ft"
+    vessel: DDG-51
+    provenance_type: tabulated_transcription
+    source_reference: "USNA EN400 Chapter 4"
+    source_locator: "DDG-51 cross curves, interpolated medium-load KG variant"
+    unit_system: imperial
+    gz_unit: ft
+    heel_angles_deg: [0, 10, 20, 30, 40, 50, 60, 70, 80, 90]
+    gz_values: [0.0, 1.173, 2.405, 3.770, 5.207, 5.744, 4.934, 2.587, -0.928, -5.300]
+
+  - id: ddg51_high_kg
+    description: "DDG-51 at 8600 LT displacement, KG=24.5 ft"
+    vessel: DDG-51
+    provenance_type: tabulated_transcription
+    source_reference: "USNA EN400 Chapter 4"
+    source_locator: "DDG-51 cross curves, higher-KG sensitivity variant"
+    unit_system: imperial
+    gz_unit: ft
+    heel_angles_deg: [0, 10, 20, 30, 40, 50, 60, 70, 80, 90]
+    gz_values: [0.0, 0.826, 1.721, 2.770, 3.922, 4.212, 3.202, 0.708, -2.898, -7.300]
+
+  - id: ddg51_extreme_kg
+    description: "DDG-51 at 8600 LT displacement, KG=25.5 ft"
+    vessel: DDG-51
+    provenance_type: tabulated_transcription
+    source_reference: "USNA EN400 Chapter 4"
+    source_locator: "DDG-51 cross curves, extreme-KG sensitivity variant"
+    unit_system: imperial
+    gz_unit: ft
+    heel_angles_deg: [0, 10, 20, 30, 40, 50, 60, 70, 80, 90]
+    gz_values: [0.0, 0.652, 1.378, 2.270, 3.279, 3.446, 2.336, -0.232, -3.883, -8.300]
+
+  - id: generic_tanker_cb080_ballast
+    description: "Generic tanker Cb=0.80, KG=7.0m ballast-like condition"
+    vessel: generic_tanker
+    provenance_type: tabulated_transcription
+    source_reference: "Rawson & Tupper Basic Ship Theory Ch 5"
+    source_locator: "Typical full-form tanker KN values with KG=7.0 m"
+    unit_system: metric
+    gz_unit: m
+    heel_angles_deg: [0, 10, 20, 30, 40, 50, 60, 70, 80, 90]
+    gz_values: [0.0, 2.634, 5.156, 7.320, 8.750, 9.138, 8.538, 7.222, 5.306, 3.100]
+
+  - id: generic_tanker_cb080_light
+    description: "Generic tanker Cb=0.80, KG=7.5m light condition"
+    vessel: generic_tanker
+    provenance_type: tabulated_transcription
+    source_reference: "Rawson & Tupper Basic Ship Theory Ch 5"
+    source_locator: "Typical full-form tanker KN values with KG=7.5 m"
+    unit_system: metric
+    gz_unit: m
+    heel_angles_deg: [0, 10, 20, 30, 40, 50, 60, 70, 80, 90]
+    gz_values: [0.0, 2.548, 4.985, 7.070, 8.429, 8.755, 8.105, 6.752, 4.814, 2.600]
+
+  - id: generic_tanker_cb080_loaded
+    description: "Generic tanker Cb=0.80, KG=8.0m loaded condition"
+    vessel: generic_tanker
+    provenance_type: tabulated_transcription
+    source_reference: "Rawson & Tupper Basic Ship Theory Ch 5"
+    source_locator: "Typical full-form tanker KN values with KG=8.0 m"
+    unit_system: metric
+    gz_unit: m
+    heel_angles_deg: [0, 10, 20, 30, 40, 50, 60, 70, 80, 90]
+    gz_values: [0.0, 2.461, 4.814, 6.820, 8.108, 8.372, 7.672, 6.282, 4.322, 2.100]
+
+  - id: generic_tanker_cb080_high_kg
+    description: "Generic tanker Cb=0.80, KG=9.0m high-KG condition"
+    vessel: generic_tanker
+    provenance_type: tabulated_transcription
+    source_reference: "Rawson & Tupper Basic Ship Theory Ch 5"
+    source_locator: "Typical full-form tanker KN values with KG=9.0 m"
+    unit_system: metric
+    gz_unit: m
+    heel_angles_deg: [0, 10, 20, 30, 40, 50, 60, 70, 80, 90]
+    gz_values: [0.0, 2.287, 4.472, 6.320, 7.465, 7.606, 6.806, 5.343, 3.337, 1.100]

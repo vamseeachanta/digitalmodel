@@ -1,0 +1,34 @@
+atlas_id: c00e2cfda4f9
+basename: esp_pump_hydraulics
+physics: utilization_threshold
+response: governing_utilisation
+axes:
+- name: flow_rate_m3_per_day
+  scale: linear
+  grid:
+  - 700.0
+  - 1000.0
+  - 1300.0
+  - 1600.0
+  - 1900.0
+- name: dynamic_fluid_level_m
+  scale: linear
+  grid:
+  - 1200.0
+  - 1500.0
+  - 1800.0
+  - 2100.0
+  - 2400.0
+validation:
+  metric: max_rel_error
+  max_rel_error: 0.0026737967914437933
+  threshold: 0.1
+  passes: true
+provenance:
+  basename: esp_pump_hydraulics
+  code_version: 385e674f
+  standards: []
+  response_kwargs: {}
+  workflow_id: esp-pump-hydraulics
+  content_fingerprint: c00e2cfda4f9e74cec1935309d5fa5906d7f411e84a432fe27830d477c728902
+  input_template_sha256: 0bf1d31d8382b38abfd35dd6cd1e37c974e3db04ff71fcb04227ec1e280e086d

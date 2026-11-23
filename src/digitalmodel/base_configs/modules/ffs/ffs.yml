@@ -1,0 +1,11 @@
+# Packaged base config for the `ffs` engine basename (workspace-hub#3285).
+# Minimal skeleton -- the durable example fixture (examples/workflows/ffs-metal-loss/
+# input.yml) supplies the `ffs_assessment` component + grid, which deep-merge over
+# this base (custom wins).
+basename: ffs
+
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: true

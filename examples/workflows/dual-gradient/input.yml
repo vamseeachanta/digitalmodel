@@ -1,0 +1,39 @@
+basename: dual_gradient
+
+# Deepwater dual-gradient / narrow-window drilling screen (issue #1037).
+# Closed-form, license-free:
+#   uv run python -m digitalmodel examples/workflows/dual-gradient/input.yml
+#
+# Conventional single-gradient (one mud column from the rig floor) vs
+# dual-gradient drilling (seawater above the mud line, heavy mud below). In a
+# narrow deepwater pore/fracture window DGD widens the effective window
+# (window_dgd = window_conv * D / (D - Dml)) and needs fewer casing strings.
+# All depths are TVD from the rig floor (RKB); gradients are EMW in ppg.
+dual_gradient:
+  case:
+    id: registry_dual_gradient
+    description: 2000 m water depth, narrow-window frontier-basin deepwater well
+
+  geometry:
+    water_depth_ft: 6561.7        # ~2000 m sea level -> mud line
+    air_gap_ft: 75.0             # rig floor above mean sea level
+    seawater_emw_ppg: 8.55       # seawater equivalent mud weight
+
+  # Pore-pressure / fracture-gradient profile (EMW ppg referenced to RKB).
+  # Razor-thin near the seabed (fracture barely above seawater), widening with
+  # depth as geopressure climbs. Supply explicit arrays or a 'gradients' block.
+  window:
+    depths_ft:        [6611.7, 8561.7, 11561.7, 14561.7, 17561.7]
+    pore_emw_ppg:     [8.6,    9.2,    10.6,    12.4,    13.8]
+    fracture_emw_ppg: [9.6,    11.4,   12.9,    14.4,    15.6]
+
+  margins:
+    kick_margin_ppg: 0.3         # EMW kept above pore by this much
+    fracture_margin_ppg: 0.3     # EMW kept below fracture by this much
+
+  step_ft: 250.0                 # open-hole sampling step for the casing screen
+  mud_weight_ppg: 12.4           # operating deep mud weight for the riser-margin check
+
+  outputs:
+    directory: results/dual_gradient
+    summary_json: dual_gradient_summary.json

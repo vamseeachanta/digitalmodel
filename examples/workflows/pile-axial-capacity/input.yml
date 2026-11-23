@@ -1,0 +1,28 @@
+basename: geotechnical
+
+default:
+  log_level: INFO
+  config:
+    generate_plots: false
+    overwrite:
+      output: true
+
+geotechnical:
+  calculation: pile_axial_capacity
+  pile_axial_capacity:
+    case:
+      id: registry_pile_axial_capacity
+      description: API RP 2GEO alpha-method axial capacity for an open-ended steel pile in clay
+    pile:
+      diameter_m: 1.8
+      embedded_length_m: 40.0
+      Nc: 9.0
+    soil:
+      Su_kpa: 80.0
+      sigma_v_kpa: 200.0
+    design:
+      factor_of_safety: 2.0
+      applied_load_kn: 5000.0
+    outputs:
+      directory: results/pile_axial_capacity
+      summary_json: pile_axial_capacity_summary.json

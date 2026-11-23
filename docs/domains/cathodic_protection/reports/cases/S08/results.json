@@ -1,0 +1,1100 @@
+{
+  "anode_families": {
+    "foundation_flush": {
+      "adequacy_ratios": {
+        "final": 0.4629629629629629,
+        "initial": 0.3846153846153845,
+        "mass": 0.5496470588235294
+      },
+      "anode_count": 10,
+      "anode_surface_temperature_C": 30.0,
+      "anode_type": "flush_mount",
+      "capacity_Ah_kg": 1500.0,
+      "checks": {
+        "final": true,
+        "initial": true,
+        "mass": true
+      },
+      "citations": [
+        "dnv-rp-b401 2021-05 Table 8-6",
+        "dnv-rp-b401 2021-05 Table 8-6 with [2.4.2] (design protective potential)",
+        "dnv-rp-b401 2021-05 Table 8-7"
+      ],
+      "closed_circuit_potential_V": -1.0,
+      "continuity_checks": {
+        "foundation": {
+          "host_life_check": true,
+          "life_check": true,
+          "minimum_edge_availability_years": null,
+          "protected_life_years": 20.0
+        }
+      },
+      "continuity_paths": {
+        "foundation": [
+          "foundation"
+        ]
+      },
+      "count_by_final_current": 5,
+      "count_by_initial_current": 4,
+      "count_by_mass": 6,
+      "count_source": "input",
+      "current_demand_A": {
+        "final": 1.0,
+        "initial": 1.0,
+        "mean": 1.0
+      },
+      "current_output_final_A": 0.21600000000000003,
+      "current_output_initial_A": 0.26000000000000006,
+      "driving_voltage_V": 0.2,
+      "electrolyte_resistivity_ohm_m": 1.0,
+      "environment": "sediments",
+      "equivalent_radius_final_m": 0.019018826981554555,
+      "equivalent_radius_initial_m": 0.04910640010930738,
+      "governing_case": "mass",
+      "governing_ratio": 0.5496470588235294,
+      "individual_mass_kg": 25.0,
+      "installed_on_component": "foundation",
+      "material": "Al-based",
+      "mean_current_years_A_year": 20.0,
+      "name": "foundation_flush",
+      "protected_components": [
+        "foundation"
+      ],
+      "recommended_anode_count": 6,
+      "required_mass_kg": 137.41176470588235,
+      "resistance_final_ohm": 0.9259259259259258,
+      "resistance_initial_ohm": 0.7692307692307692,
+      "total_output_final_A": 2.16,
+      "total_output_initial_A": 2.6000000000000005,
+      "utilization_factor": 0.85,
+      "utilization_factor_source": "input"
+    },
+    "lower_bracelet": {
+      "adequacy_ratios": {
+        "final": 0.43106918470240957,
+        "initial": 0.35281799954083976,
+        "mass": 1.505625
+      },
+      "anode_count": 10,
+      "anode_surface_temperature_C": 30.0,
+      "anode_type": "bracelet",
+      "capacity_Ah_kg": 2000.0,
+      "checks": {
+        "final": true,
+        "initial": true,
+        "mass": false
+      },
+      "citations": [
+        "dnv-rp-b401 2021-05 Table 8-6",
+        "dnv-rp-b401 2021-05 Table 8-6 with [2.4.2] (design protective potential)",
+        "dnv-rp-b401 2021-05 Table 8-7"
+      ],
+      "closed_circuit_potential_V": -1.05,
+      "continuity_checks": {
+        "bottom_assembly": {
+          "host_life_check": true,
+          "life_check": true,
+          "minimum_edge_availability_years": null,
+          "protected_life_years": 20.0
+        },
+        "flexible_end_fittings": {
+          "host_life_check": true,
+          "life_check": true,
+          "minimum_edge_availability_years": 20.0,
+          "protected_life_years": 10.0
+        }
+      },
+      "continuity_paths": {
+        "bottom_assembly": [
+          "bottom_assembly"
+        ],
+        "flexible_end_fittings": [
+          "bottom_assembly",
+          "flexible_end_fittings"
+        ]
+      },
+      "count_by_final_current": 5,
+      "count_by_initial_current": 4,
+      "count_by_mass": 16,
+      "count_source": "input",
+      "current_demand_A": {
+        "final": 5.1000000000000005,
+        "initial": 6.6000000000000005,
+        "mean": 3.3000000000000003
+      },
+      "current_output_final_A": 1.1831047499998886,
+      "current_output_initial_A": 1.8706528602818717,
+      "driving_voltage_V": 0.25,
+      "electrolyte_resistivity_ohm_m": 0.3,
+      "environment": "seawater",
+      "equivalent_radius_final_m": 0.0340219119864505,
+      "equivalent_radius_initial_m": 0.07607530792621822,
+      "governing_case": "mass",
+      "governing_ratio": 1.505625,
+      "individual_mass_kg": 20.0,
+      "installed_on_component": "bottom_assembly",
+      "material": "Al-based",
+      "mean_current_years_A_year": 55.0,
+      "name": "lower_bracelet",
+      "protected_components": [
+        "bottom_assembly",
+        "flexible_end_fittings"
+      ],
+      "recommended_anode_count": 16,
+      "required_mass_kg": 301.125,
+      "resistance_final_ohm": 0.21130842387373014,
+      "resistance_initial_ohm": 0.13364318164425748,
+      "total_output_final_A": 11.831047499998885,
+      "total_output_initial_A": 18.706528602818718,
+      "utilization_factor": 0.8,
+      "utilization_factor_source": "input"
+    },
+    "upper_standoff": {
+      "adequacy_ratios": {
+        "final": 0.28042005449664786,
+        "initial": 0.03256510852289615,
+        "mass": 0.5451700833333334
+      },
+      "anode_count": 4,
+      "anode_surface_temperature_C": 30.0,
+      "anode_type": "stand_off",
+      "capacity_Ah_kg": 2000.0,
+      "checks": {
+        "final": true,
+        "initial": true,
+        "mass": true
+      },
+      "citations": [
+        "dnv-rp-b401 2021-05 Table 8-6",
+        "dnv-rp-b401 2021-05 Table 8-6 with [2.4.2] (design protective potential)",
+        "dnv-rp-b401 2021-05 Table 8-7"
+      ],
+      "closed_circuit_potential_V": -1.05,
+      "continuity_checks": {
+        "buoyancy_tank": {
+          "host_life_check": true,
+          "life_check": true,
+          "minimum_edge_availability_years": 25.0,
+          "protected_life_years": 20.0
+        },
+        "riser_joints": {
+          "host_life_check": true,
+          "life_check": true,
+          "minimum_edge_availability_years": 20.0,
+          "protected_life_years": 15.0
+        }
+      },
+      "continuity_paths": {
+        "buoyancy_tank": [
+          "top_assembly",
+          "buoyancy_tank"
+        ],
+        "riser_joints": [
+          "top_assembly",
+          "riser_joints"
+        ]
+      },
+      "count_by_final_current": 2,
+      "count_by_initial_current": 1,
+      "count_by_mass": 3,
+      "count_source": "input",
+      "current_demand_A": {
+        "final": 3.1093,
+        "initial": 0.484,
+        "mean": 1.1269500000000001
+      },
+      "current_output_final_A": 2.772002171511211,
+      "current_output_initial_A": 3.7156332494616526,
+      "driving_voltage_V": 0.25,
+      "electrolyte_resistivity_ohm_m": 0.25,
+      "environment": "seawater",
+      "equivalent_radius_final_m": 0.03162277660168379,
+      "equivalent_radius_initial_m": 0.1,
+      "governing_case": "mass",
+      "governing_ratio": 0.5451700833333334,
+      "individual_mass_kg": 50.0,
+      "installed_on_component": "top_assembly",
+      "material": "Al-based",
+      "mean_current_years_A_year": 22.40425,
+      "name": "upper_standoff",
+      "protected_components": [
+        "buoyancy_tank",
+        "riser_joints"
+      ],
+      "recommended_anode_count": 3,
+      "required_mass_kg": 109.03401666666667,
+      "resistance_final_ohm": 0.09018751953708161,
+      "resistance_initial_ohm": 0.06728328207209949,
+      "total_output_final_A": 11.088008686044844,
+      "total_output_initial_A": 14.86253299784661,
+      "utilization_factor": 0.9,
+      "utilization_factor_source": "input"
+    }
+  },
+  "anode_requirements": {
+    "installed_anode_count": 24,
+    "installed_anode_mass_kg": 650.0,
+    "required_anode_count": 25,
+    "total_required_mass_kg": 547.570781372549
+  },
+  "citations": [
+    "dnv-rp-b401 2021-05 Table 8-1",
+    "dnv-rp-b401 2021-05 Table 8-2",
+    "dnv-rp-b401 2021-05 Table 8-4",
+    "dnv-rp-b401 2021-05 Table 8-6",
+    "dnv-rp-b401 2021-05 Table 8-6 with [2.4.2] (design protective potential)",
+    "dnv-rp-b401 2021-05 Table 8-7",
+    "dnv-rp-b401 2021-05 [3.3.8] (buried surfaces)",
+    "dnv-rp-f103 2010 Table A.1"
+  ],
+  "components": {
+    "bottom_assembly": {
+      "allocation_checks": {
+        "lower_bracelet": {
+          "adequacy_ratios": {
+            "final": 0.9579315215609101,
+            "initial": 0.784039998979644,
+            "mass": 4.015
+          },
+          "allocated_final_output_A": 3.5493142499996657,
+          "allocated_initial_output_A": 5.611958580845615,
+          "allocated_mass_kg": 60.0,
+          "capacity_fraction": 0.3,
+          "checks": {
+            "final": true,
+            "initial": true,
+            "mass": false
+          },
+          "governing_case": "mass",
+          "governing_ratio": 4.015,
+          "required_anode_count": 13,
+          "required_mass_kg": 240.9
+        }
+      },
+      "coverage": "PASS",
+      "current_demand_A": {
+        "final": 3.4000000000000004,
+        "initial": 4.4,
+        "mean": 2.2
+      },
+      "design_life_years": 20.0,
+      "environment": {
+        "anode_environment": "seawater",
+        "anode_surface_temperature_C": 30.0,
+        "electrolyte_resistivity_ohm_m": 0.3,
+        "seawater_temperature_C": 5.0
+      },
+      "hosted_anode_count": 10,
+      "hosted_anode_families": [
+        "lower_bracelet"
+      ],
+      "name": "bottom_assembly",
+      "required_anode_count": 13,
+      "required_mass_kg": 240.9,
+      "status": {
+        "governing_case": "mass",
+        "governing_family": "lower_bracelet",
+        "governing_ratio": 4.015,
+        "result": "FAIL"
+      },
+      "type": "bottom_assembly",
+      "zone_dispositions": [
+        "designed"
+      ],
+      "zones": {
+        "submerged": {
+          "I_final_A": 3.4000000000000004,
+          "I_initial_A": 4.4,
+          "I_mean_A": 2.2,
+          "anode_family": "lower_bracelet",
+          "area_basis": "steel_surface",
+          "area_m2": 20.0,
+          "coating_breakdown": {
+            "a": 1.0,
+            "b_per_yr": 0.0,
+            "citations": [],
+            "coating_category": "bare",
+            "depth_band": ">300",
+            "f_cf": 1.0,
+            "f_ci": 1.0,
+            "f_cm": 1.0
+          },
+          "current_densities_A_m2": {
+            "base_zone": "submerged",
+            "citations": [
+              "dnv-rp-b401 2021-05 Table 8-1",
+              "dnv-rp-b401 2021-05 Table 8-2"
+            ],
+            "climate": "arctic",
+            "depth_band": ">300",
+            "exposure_zone": "submerged",
+            "i_final_A_m2": 0.17,
+            "i_initial_A_m2": 0.22,
+            "i_mean_A_m2": 0.11,
+            "seawater_temperature_C": 5.0
+          },
+          "disposition": "designed"
+        }
+      }
+    },
+    "buoyancy_tank": {
+      "allocation_checks": {
+        "upper_standoff": {
+          "adequacy_ratios": {
+            "final": 0.3066375664260775,
+            "initial": 0.03289404901302642,
+            "mass": 0.5948148148148148
+          },
+          "allocated_final_output_A": 9.97920781744036,
+          "allocated_initial_output_A": 13.37627969806195,
+          "allocated_mass_kg": 180.0,
+          "capacity_fraction": 0.9,
+          "checks": {
+            "final": true,
+            "initial": true,
+            "mass": true
+          },
+          "governing_case": "mass",
+          "governing_ratio": 0.5948148148148148,
+          "required_anode_count": 3,
+          "required_mass_kg": 107.06666666666666
+        }
+      },
+      "coverage": "PASS",
+      "current_demand_A": {
+        "final": 3.06,
+        "initial": 0.44,
+        "mean": 1.1
+      },
+      "design_life_years": 20.0,
+      "environment": {
+        "anode_environment": "seawater",
+        "anode_surface_temperature_C": 30.0,
+        "electrolyte_resistivity_ohm_m": 0.3,
+        "seawater_temperature_C": 5.0
+      },
+      "hosted_anode_count": 0,
+      "hosted_anode_families": [],
+      "name": "buoyancy_tank",
+      "required_anode_count": 3,
+      "required_mass_kg": 107.06666666666666,
+      "status": {
+        "governing_case": "mass",
+        "governing_family": "upper_standoff",
+        "governing_ratio": 0.5948148148148148,
+        "result": "PASS"
+      },
+      "type": "buoyancy_tank",
+      "zone_dispositions": [
+        "designed"
+      ],
+      "zones": {
+        "submerged": {
+          "I_final_A": 3.06,
+          "I_initial_A": 0.44,
+          "I_mean_A": 1.1,
+          "anode_family": "upper_standoff",
+          "area_basis": "steel_surface",
+          "area_m2": 100.0,
+          "coating_breakdown": {
+            "a": 0.02,
+            "b_per_yr": 0.008,
+            "citations": [
+              "dnv-rp-b401 2021-05 Table 8-4"
+            ],
+            "coating_category": "III",
+            "depth_band": ">300",
+            "f_cf": 0.18,
+            "f_ci": 0.02,
+            "f_cm": 0.1
+          },
+          "current_densities_A_m2": {
+            "base_zone": "submerged",
+            "citations": [
+              "dnv-rp-b401 2021-05 Table 8-1",
+              "dnv-rp-b401 2021-05 Table 8-2"
+            ],
+            "climate": "arctic",
+            "depth_band": ">300",
+            "exposure_zone": "submerged",
+            "i_final_A_m2": 0.17,
+            "i_initial_A_m2": 0.22,
+            "i_mean_A_m2": 0.11,
+            "seawater_temperature_C": 5.0
+          },
+          "disposition": "designed"
+        }
+      }
+    },
+    "flexible_end_fittings": {
+      "allocation_checks": {
+        "lower_bracelet": {
+          "adequacy_ratios": {
+            "final": 0.20527104033448074,
+            "initial": 0.1680085712099237,
+            "mass": 0.43017857142857147
+          },
+          "allocated_final_output_A": 8.28173324999922,
+          "allocated_initial_output_A": 13.094570021973102,
+          "allocated_mass_kg": 140.0,
+          "capacity_fraction": 0.7,
+          "checks": {
+            "final": true,
+            "initial": true,
+            "mass": true
+          },
+          "governing_case": "mass",
+          "governing_ratio": 0.43017857142857147,
+          "required_anode_count": 4,
+          "required_mass_kg": 60.225
+        }
+      },
+      "coverage": "PASS",
+      "current_demand_A": {
+        "final": 1.7000000000000002,
+        "initial": 2.2,
+        "mean": 1.1
+      },
+      "design_life_years": 10.0,
+      "environment": {
+        "anode_environment": "seawater",
+        "anode_surface_temperature_C": 30.0,
+        "electrolyte_resistivity_ohm_m": 0.3,
+        "seawater_temperature_C": 5.0
+      },
+      "hosted_anode_count": 0,
+      "hosted_anode_families": [],
+      "name": "flexible_end_fittings",
+      "required_anode_count": 4,
+      "required_mass_kg": 60.225,
+      "status": {
+        "governing_case": "mass",
+        "governing_family": "lower_bracelet",
+        "governing_ratio": 0.43017857142857147,
+        "result": "PASS"
+      },
+      "type": "flexible_jumper_end_fittings",
+      "zone_dispositions": [
+        "designed"
+      ],
+      "zones": {
+        "submerged": {
+          "I_final_A": 1.7000000000000002,
+          "I_initial_A": 2.2,
+          "I_mean_A": 1.1,
+          "anode_family": "lower_bracelet",
+          "area_basis": "steel_surface",
+          "area_m2": 10.0,
+          "coating_breakdown": {
+            "a": 1.0,
+            "b_per_yr": 0.0,
+            "citations": [],
+            "coating_category": "bare",
+            "depth_band": ">300",
+            "f_cf": 1.0,
+            "f_ci": 1.0,
+            "f_cm": 1.0
+          },
+          "current_densities_A_m2": {
+            "base_zone": "submerged",
+            "citations": [
+              "dnv-rp-b401 2021-05 Table 8-1",
+              "dnv-rp-b401 2021-05 Table 8-2"
+            ],
+            "climate": "arctic",
+            "depth_band": ">300",
+            "exposure_zone": "submerged",
+            "i_final_A_m2": 0.17,
+            "i_initial_A_m2": 0.22,
+            "i_mean_A_m2": 0.11,
+            "seawater_temperature_C": 5.0
+          },
+          "disposition": "designed"
+        }
+      }
+    },
+    "foundation": {
+      "allocation_checks": {
+        "foundation_flush": {
+          "adequacy_ratios": {
+            "final": 0.4629629629629629,
+            "initial": 0.3846153846153845,
+            "mass": 0.5496470588235294
+          },
+          "allocated_final_output_A": 2.16,
+          "allocated_initial_output_A": 2.6000000000000005,
+          "allocated_mass_kg": 250.0,
+          "capacity_fraction": 1.0,
+          "checks": {
+            "final": true,
+            "initial": true,
+            "mass": true
+          },
+          "governing_case": "mass",
+          "governing_ratio": 0.5496470588235294,
+          "required_anode_count": 6,
+          "required_mass_kg": 137.41176470588235
+        }
+      },
+      "coverage": "PASS",
+      "current_demand_A": {
+        "final": 1.0,
+        "initial": 1.0,
+        "mean": 1.0
+      },
+      "design_life_years": 20.0,
+      "environment": {
+        "anode_environment": "sediment",
+        "anode_surface_temperature_C": 30.0,
+        "electrolyte_resistivity_ohm_m": 1.0,
+        "seawater_temperature_C": 5.0
+      },
+      "hosted_anode_count": 10,
+      "hosted_anode_families": [
+        "foundation_flush"
+      ],
+      "name": "foundation",
+      "required_anode_count": 6,
+      "required_mass_kg": 137.41176470588235,
+      "status": {
+        "governing_case": "mass",
+        "governing_family": "foundation_flush",
+        "governing_ratio": 0.5496470588235294,
+        "result": "PASS"
+      },
+      "type": "suction_pile",
+      "zone_dispositions": [
+        "designed"
+      ],
+      "zones": {
+        "buried": {
+          "I_final_A": 1.0,
+          "I_initial_A": 1.0,
+          "I_mean_A": 1.0,
+          "anode_family": "foundation_flush",
+          "area_basis": "steel_surface",
+          "area_m2": 50.0,
+          "coating_breakdown": {
+            "a": 1.0,
+            "b_per_yr": 0.0,
+            "citations": [],
+            "coating_category": "bare",
+            "depth_band": "0-30",
+            "f_cf": 1.0,
+            "f_ci": 1.0,
+            "f_cm": 1.0
+          },
+          "current_densities_A_m2": {
+            "base_zone": "buried",
+            "citations": [
+              "dnv-rp-b401 2021-05 [3.3.8] (buried surfaces)"
+            ],
+            "climate": "arctic",
+            "depth_band": "0-30",
+            "exposure_zone": "buried_mudline",
+            "i_final_A_m2": 0.02,
+            "i_initial_A_m2": 0.02,
+            "i_mean_A_m2": 0.02,
+            "seawater_temperature_C": 5.0
+          },
+          "disposition": "designed"
+        }
+      }
+    },
+    "riser_joints": {
+      "allocation_checks": {
+        "upper_standoff": {
+          "adequacy_ratios": {
+            "final": 0.04446244713178123,
+            "initial": 0.029604644111723775,
+            "mass": 0.0983675
+          },
+          "allocated_final_output_A": 1.1088008686044846,
+          "allocated_initial_output_A": 1.4862532997846611,
+          "allocated_mass_kg": 20.0,
+          "capacity_fraction": 0.1,
+          "checks": {
+            "final": true,
+            "initial": true,
+            "mass": true
+          },
+          "governing_case": "mass",
+          "governing_ratio": 0.0983675,
+          "required_anode_count": 1,
+          "required_mass_kg": 1.96735
+        }
+      },
+      "coverage": "PASS",
+      "current_demand_A": {
+        "final": 0.0493,
+        "initial": 0.044,
+        "mean": 0.026949999999999998
+      },
+      "design_life_years": 15.0,
+      "environment": {
+        "anode_environment": "seawater",
+        "anode_surface_temperature_C": 30.0,
+        "electrolyte_resistivity_ohm_m": 0.3,
+        "seawater_temperature_C": 5.0
+      },
+      "hosted_anode_count": 0,
+      "hosted_anode_families": [],
+      "name": "riser_joints",
+      "required_anode_count": 1,
+      "required_mass_kg": 1.96735,
+      "status": {
+        "governing_case": "mass",
+        "governing_family": "upper_standoff",
+        "governing_ratio": 0.0983675,
+        "result": "PASS"
+      },
+      "type": "riser_pipe_joints",
+      "zone_dispositions": [
+        "designed"
+      ],
+      "zones": {
+        "submerged": {
+          "I_final_A": 0.0493,
+          "I_initial_A": 0.044,
+          "I_mean_A": 0.026949999999999998,
+          "anode_family": "upper_standoff",
+          "area_basis": "steel_surface",
+          "area_m2": 200.0,
+          "coating_breakdown": {
+            "a": 0.001,
+            "applicability": "PASS",
+            "b_per_yr": 3e-05,
+            "basis": "f103_linepipe",
+            "citations": [
+              "dnv-rp-f103 2010 Table A.1"
+            ],
+            "concrete_weight_coating": false,
+            "edition": "2010",
+            "f_cf": 0.00145,
+            "f_ci": 0.001,
+            "f_cm": 0.001225,
+            "max_temperature_C": 110.0,
+            "operating_temperature_C": 60.0,
+            "system": "three_layer_fbe_pp"
+          },
+          "current_densities_A_m2": {
+            "base_zone": "submerged",
+            "citations": [
+              "dnv-rp-b401 2021-05 Table 8-1",
+              "dnv-rp-b401 2021-05 Table 8-2"
+            ],
+            "climate": "arctic",
+            "depth_band": ">300",
+            "exposure_zone": "submerged",
+            "i_final_A_m2": 0.17,
+            "i_initial_A_m2": 0.22,
+            "i_mean_A_m2": 0.11,
+            "seawater_temperature_C": 5.0
+          },
+          "disposition": "designed"
+        }
+      }
+    },
+    "top_assembly": {
+      "allocation_checks": {},
+      "coverage": "PASS",
+      "current_demand_A": {
+        "final": 0.0,
+        "initial": 0.0,
+        "mean": 0.0
+      },
+      "design_life_years": 25.0,
+      "environment": {
+        "anode_environment": "seawater",
+        "anode_surface_temperature_C": 30.0,
+        "electrolyte_resistivity_ohm_m": 0.25,
+        "seawater_temperature_C": 5.0
+      },
+      "hosted_anode_count": 4,
+      "hosted_anode_families": [
+        "upper_standoff"
+      ],
+      "name": "top_assembly",
+      "required_anode_count": 0,
+      "required_mass_kg": 0,
+      "status": {
+        "governing_case": null,
+        "governing_family": null,
+        "governing_ratio": 0.0,
+        "result": "NO_CP_DEMAND"
+      },
+      "type": "top_assembly",
+      "zone_dispositions": [
+        "no_cp_demand"
+      ],
+      "zones": {
+        "atmospheric": {
+          "I_final_A": 0.0,
+          "I_initial_A": 0.0,
+          "I_mean_A": 0.0,
+          "anode_family": null,
+          "area_basis": "steel_surface",
+          "area_m2": 10.0,
+          "coating_breakdown": {
+            "a": 1.0,
+            "b_per_yr": 0.0,
+            "citations": [],
+            "coating_category": "bare",
+            "depth_band": "0-30",
+            "f_cf": 1.0,
+            "f_ci": 1.0,
+            "f_cm": 1.0
+          },
+          "current_densities_A_m2": {
+            "base_zone": "atmospheric",
+            "citations": [],
+            "climate": "N/A",
+            "depth_band": "0-30",
+            "exposure_zone": "atmospheric",
+            "i_final_A_m2": 0.0,
+            "i_initial_A_m2": 0.0,
+            "i_mean_A_m2": 0.0,
+            "note": "B401 CP design current densities apply to seawater-exposed and buried surfaces only; this zone draws no CP current",
+            "seawater_temperature_C": 5.0
+          },
+          "disposition": "no_cp_demand"
+        }
+      }
+    }
+  },
+  "current_demand_A": {
+    "final": 9.2093,
+    "initial": 8.084,
+    "mean": 5.42695
+  },
+  "current_output_verification": {
+    "checks": {
+      "foundation_flush": {
+        "final": true,
+        "initial": true,
+        "mass": true
+      },
+      "lower_bracelet": {
+        "final": true,
+        "initial": true,
+        "mass": false
+      },
+      "upper_standoff": {
+        "final": true,
+        "initial": true,
+        "mass": true
+      }
+    },
+    "families": {
+      "foundation_flush": {
+        "adequacy_ratios": {
+          "final": 0.4629629629629629,
+          "initial": 0.3846153846153845,
+          "mass": 0.5496470588235294
+        },
+        "anode_count": 10,
+        "anode_surface_temperature_C": 30.0,
+        "anode_type": "flush_mount",
+        "capacity_Ah_kg": 1500.0,
+        "checks": {
+          "final": true,
+          "initial": true,
+          "mass": true
+        },
+        "citations": [
+          "dnv-rp-b401 2021-05 Table 8-6",
+          "dnv-rp-b401 2021-05 Table 8-6 with [2.4.2] (design protective potential)",
+          "dnv-rp-b401 2021-05 Table 8-7"
+        ],
+        "closed_circuit_potential_V": -1.0,
+        "continuity_checks": {
+          "foundation": {
+            "host_life_check": true,
+            "life_check": true,
+            "minimum_edge_availability_years": null,
+            "protected_life_years": 20.0
+          }
+        },
+        "continuity_paths": {
+          "foundation": [
+            "foundation"
+          ]
+        },
+        "count_by_final_current": 5,
+        "count_by_initial_current": 4,
+        "count_by_mass": 6,
+        "count_source": "input",
+        "current_demand_A": {
+          "final": 1.0,
+          "initial": 1.0,
+          "mean": 1.0
+        },
+        "current_output_final_A": 0.21600000000000003,
+        "current_output_initial_A": 0.26000000000000006,
+        "driving_voltage_V": 0.2,
+        "electrolyte_resistivity_ohm_m": 1.0,
+        "environment": "sediments",
+        "equivalent_radius_final_m": 0.019018826981554555,
+        "equivalent_radius_initial_m": 0.04910640010930738,
+        "governing_case": "mass",
+        "governing_ratio": 0.5496470588235294,
+        "individual_mass_kg": 25.0,
+        "installed_on_component": "foundation",
+        "material": "Al-based",
+        "mean_current_years_A_year": 20.0,
+        "name": "foundation_flush",
+        "protected_components": [
+          "foundation"
+        ],
+        "recommended_anode_count": 6,
+        "required_mass_kg": 137.41176470588235,
+        "resistance_final_ohm": 0.9259259259259258,
+        "resistance_initial_ohm": 0.7692307692307692,
+        "total_output_final_A": 2.16,
+        "total_output_initial_A": 2.6000000000000005,
+        "utilization_factor": 0.85,
+        "utilization_factor_source": "input"
+      },
+      "lower_bracelet": {
+        "adequacy_ratios": {
+          "final": 0.43106918470240957,
+          "initial": 0.35281799954083976,
+          "mass": 1.505625
+        },
+        "anode_count": 10,
+        "anode_surface_temperature_C": 30.0,
+        "anode_type": "bracelet",
+        "capacity_Ah_kg": 2000.0,
+        "checks": {
+          "final": true,
+          "initial": true,
+          "mass": false
+        },
+        "citations": [
+          "dnv-rp-b401 2021-05 Table 8-6",
+          "dnv-rp-b401 2021-05 Table 8-6 with [2.4.2] (design protective potential)",
+          "dnv-rp-b401 2021-05 Table 8-7"
+        ],
+        "closed_circuit_potential_V": -1.05,
+        "continuity_checks": {
+          "bottom_assembly": {
+            "host_life_check": true,
+            "life_check": true,
+            "minimum_edge_availability_years": null,
+            "protected_life_years": 20.0
+          },
+          "flexible_end_fittings": {
+            "host_life_check": true,
+            "life_check": true,
+            "minimum_edge_availability_years": 20.0,
+            "protected_life_years": 10.0
+          }
+        },
+        "continuity_paths": {
+          "bottom_assembly": [
+            "bottom_assembly"
+          ],
+          "flexible_end_fittings": [
+            "bottom_assembly",
+            "flexible_end_fittings"
+          ]
+        },
+        "count_by_final_current": 5,
+        "count_by_initial_current": 4,
+        "count_by_mass": 16,
+        "count_source": "input",
+        "current_demand_A": {
+          "final": 5.1000000000000005,
+          "initial": 6.6000000000000005,
+          "mean": 3.3000000000000003
+        },
+        "current_output_final_A": 1.1831047499998886,
+        "current_output_initial_A": 1.8706528602818717,
+        "driving_voltage_V": 0.25,
+        "electrolyte_resistivity_ohm_m": 0.3,
+        "environment": "seawater",
+        "equivalent_radius_final_m": 0.0340219119864505,
+        "equivalent_radius_initial_m": 0.07607530792621822,
+        "governing_case": "mass",
+        "governing_ratio": 1.505625,
+        "individual_mass_kg": 20.0,
+        "installed_on_component": "bottom_assembly",
+        "material": "Al-based",
+        "mean_current_years_A_year": 55.0,
+        "name": "lower_bracelet",
+        "protected_components": [
+          "bottom_assembly",
+          "flexible_end_fittings"
+        ],
+        "recommended_anode_count": 16,
+        "required_mass_kg": 301.125,
+        "resistance_final_ohm": 0.21130842387373014,
+        "resistance_initial_ohm": 0.13364318164425748,
+        "total_output_final_A": 11.831047499998885,
+        "total_output_initial_A": 18.706528602818718,
+        "utilization_factor": 0.8,
+        "utilization_factor_source": "input"
+      },
+      "upper_standoff": {
+        "adequacy_ratios": {
+          "final": 0.28042005449664786,
+          "initial": 0.03256510852289615,
+          "mass": 0.5451700833333334
+        },
+        "anode_count": 4,
+        "anode_surface_temperature_C": 30.0,
+        "anode_type": "stand_off",
+        "capacity_Ah_kg": 2000.0,
+        "checks": {
+          "final": true,
+          "initial": true,
+          "mass": true
+        },
+        "citations": [
+          "dnv-rp-b401 2021-05 Table 8-6",
+          "dnv-rp-b401 2021-05 Table 8-6 with [2.4.2] (design protective potential)",
+          "dnv-rp-b401 2021-05 Table 8-7"
+        ],
+        "closed_circuit_potential_V": -1.05,
+        "continuity_checks": {
+          "buoyancy_tank": {
+            "host_life_check": true,
+            "life_check": true,
+            "minimum_edge_availability_years": 25.0,
+            "protected_life_years": 20.0
+          },
+          "riser_joints": {
+            "host_life_check": true,
+            "life_check": true,
+            "minimum_edge_availability_years": 20.0,
+            "protected_life_years": 15.0
+          }
+        },
+        "continuity_paths": {
+          "buoyancy_tank": [
+            "top_assembly",
+            "buoyancy_tank"
+          ],
+          "riser_joints": [
+            "top_assembly",
+            "riser_joints"
+          ]
+        },
+        "count_by_final_current": 2,
+        "count_by_initial_current": 1,
+        "count_by_mass": 3,
+        "count_source": "input",
+        "current_demand_A": {
+          "final": 3.1093,
+          "initial": 0.484,
+          "mean": 1.1269500000000001
+        },
+        "current_output_final_A": 2.772002171511211,
+        "current_output_initial_A": 3.7156332494616526,
+        "driving_voltage_V": 0.25,
+        "electrolyte_resistivity_ohm_m": 0.25,
+        "environment": "seawater",
+        "equivalent_radius_final_m": 0.03162277660168379,
+        "equivalent_radius_initial_m": 0.1,
+        "governing_case": "mass",
+        "governing_ratio": 0.5451700833333334,
+        "individual_mass_kg": 50.0,
+        "installed_on_component": "top_assembly",
+        "material": "Al-based",
+        "mean_current_years_A_year": 22.40425,
+        "name": "upper_standoff",
+        "protected_components": [
+          "buoyancy_tank",
+          "riser_joints"
+        ],
+        "recommended_anode_count": 3,
+        "required_mass_kg": 109.03401666666667,
+        "resistance_final_ohm": 0.09018751953708161,
+        "resistance_initial_ohm": 0.06728328207209949,
+        "total_output_final_A": 11.088008686044844,
+        "total_output_initial_A": 14.86253299784661,
+        "utilization_factor": 0.9,
+        "utilization_factor_source": "input"
+      }
+    },
+    "governing_case": "mass",
+    "governing_family": "lower_bracelet",
+    "governing_ratio": 1.505625,
+    "result": "FAIL"
+  },
+  "edition": "2021",
+  "mode": "b401_components",
+  "provenance": "verified-2021-tables",
+  "reconciliation": {
+    "allocated_final_output_A_by_family": {
+      "foundation_flush": 2.16,
+      "lower_bracelet": 11.831047499998887,
+      "upper_standoff": 11.088008686044844
+    },
+    "allocated_fraction_by_family": {
+      "foundation_flush": 1.0,
+      "lower_bracelet": 1.0,
+      "upper_standoff": 1.0
+    },
+    "allocated_initial_output_A_by_family": {
+      "foundation_flush": 2.6000000000000005,
+      "lower_bracelet": 18.706528602818715,
+      "upper_standoff": 14.86253299784661
+    },
+    "allocated_mass_kg_by_family": {
+      "foundation_flush": 250.0,
+      "lower_bracelet": 200.0,
+      "upper_standoff": 200.0
+    },
+    "final_output_A_checks": {
+      "foundation_flush": true,
+      "lower_bracelet": true,
+      "upper_standoff": true
+    },
+    "hosted_anode_count": 24,
+    "initial_output_A_checks": {
+      "foundation_flush": true,
+      "lower_bracelet": true,
+      "upper_standoff": true
+    },
+    "mass_kg_checks": {
+      "foundation_flush": true,
+      "lower_bracelet": true,
+      "upper_standoff": true
+    },
+    "physical_final_output_A_by_family": {
+      "foundation_flush": 2.16,
+      "lower_bracelet": 11.831047499998885,
+      "upper_standoff": 11.088008686044844
+    },
+    "physical_initial_output_A_by_family": {
+      "foundation_flush": 2.6000000000000005,
+      "lower_bracelet": 18.706528602818718,
+      "upper_standoff": 14.86253299784661
+    },
+    "physical_mass_kg_by_family": {
+      "foundation_flush": 250.0,
+      "lower_bracelet": 200.0,
+      "upper_standoff": 200.0
+    }
+  },
+  "standard": "DNV-RP-B401 (May 2021)",
+  "status": {
+    "checks": {
+      "allocation_reconciliation": true,
+      "bottom_assembly": false,
+      "buoyancy_tank": true,
+      "flexible_end_fittings": true,
+      "foundation": true,
+      "riser_joints": true,
+      "top_assembly": true
+    },
+    "governing_case": "mass",
+    "governing_component": "bottom_assembly",
+    "governing_family": "lower_bracelet",
+    "governing_ratio": 4.015,
+    "reason": "bottom_assembly:lower_bracelet:mass governs at adequacy ratio 4.015",
+    "result": "FAIL",
+    "use_status": "client-use-with-eor-check"
+  }
+}

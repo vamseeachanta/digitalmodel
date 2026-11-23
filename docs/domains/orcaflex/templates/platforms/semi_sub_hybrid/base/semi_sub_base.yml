@@ -1,0 +1,242 @@
+%YAML 1.1
+# Semi-Submersible Base Model - Hybrid Template
+# Uses library components via IncludeFile for reusable line types
+#
+# Configuration: 4-column semi-submersible with catenary mooring
+# Water depth: 500m
+# Mooring: 8 chain legs in spread configuration
+# Station-keeping: Fixed heading (no weathervaning)
+#
+# Platform arrangement (plan view):
+#
+#        +-----+           +-----+
+#        |Col 1|           |Col 2|
+#        +--+--+           +--+--+
+#           |                 |
+#           +-----------------+
+#                   |
+#           +-----------------+
+#           |                 |
+#        +--+--+           +--+--+
+#        |Col 3|           |Col 4|
+#        +-----+           +-----+
+#
+# Mooring pattern (plan view):
+#         315   0   45
+#           \   |   /
+#            \  |  /
+#             \ | /
+#   270  ---[SEMI]---  90
+#             / | \
+#            /  |  \
+#           /   |   \
+#         225  180  135
+#
+# Usage:
+#   1. Use directly for basic analysis
+#   2. Use with BaseFile + variation for parametric studies
+---
+General:
+  UnitsSystem: SI
+  StageDuration: [30, 300]
+  StaticsMinDamping: 10
+  DynamicsSolutionMethod: Implicit time domain
+  ImplicitConstantTimeStep: 0.1
+
+Environment:
+  WaterDepth: 500
+  WaterSurfaceZ: 0
+  Density: 1025
+  KinematicViscosity: 1.35e-6
+  # Seabed
+  SeabedType: Flat
+  SeabedModel: Elastic
+  SeabedNormalStiffness: 100
+  SeabedShearStiffness: 50
+  # Waves
+  WaveTrains:
+    - Name: Wave1
+      WaveType: Dean stream
+      WaveDirection: 180
+      WaveHeight: 8.0
+      WavePeriod: 12.0
+      WaveOrigin: [0, 0]
+  # Current
+  CurrentModel: Variation scheme
+  RefCurrentSpeed: 1.0
+  RefCurrentDirection: 180
+  VerticalCurrentVariationMethod: Interpolated
+  CurrentDepth, CurrentFactor, CurrentRotation:
+    - [0, 1.0, 0]
+    - [125, 0.8, 0]
+    - [250, 0.5, 0]
+    - [375, 0.3, 0]
+    - [500, 0.15, 0]
+
+LineTypes:
+  # 84mm R4 studless chain for mooring
+  - Name: Chain_84mm_R4
+    Category: General
+    IncludeFile: ../../../../../library/line_types/chain_84mm_r4.yml
+
+VesselTypes:
+  - Name: SemiSub_Type
+    Length: 80
+    RAOResponseUnits: degrees
+    RAOWaveUnit: amplitude
+    WavesReferredToBy: period (s)
+    RAOPhaseConvention: lags
+    RAOPhaseUnitsConvention: degrees
+    SurgePositive: forward
+    SwayPositive: port
+    HeavePositive: up
+    Symmetry: xz plane
+
+Vessels:
+  - Name: SemiSub
+    VesselType: SemiSub_Type
+    Connection: Free
+    InitialPosition: [0, 0, 0]
+    Orientation: [0, 0, 0]
+    IncludedInStatics: None
+    PrimaryMotion: None
+    SuperimposedMotion: None
+
+3DBuoys:
+  # Central connection point for mooring lines
+  - Name: MooringHub
+    BuoyType: Towed fish
+    Connection: SemiSub
+    InitialX: 0
+    InitialY: 0
+    InitialZ: -20
+    Mass: 500000
+    Volume: 500
+    Height: 5
+    Diameter: 10
+    DragAreaX: 0
+    DragAreaY: 0
+    DragAreaZ: 78.5
+    DragCoefficient: 0.8
+    AddedMassCoefficient: 0.5
+
+Lines:
+  # Mooring Line 1 - 0 degrees (bow)
+  - Name: Mooring_L1
+    EndAConnection: Anchored
+    EndAX: 1200
+    EndAY: 0
+    EndAZ: -500
+    EndBConnection: MooringHub
+    EndBX: 0
+    EndBY: 0
+    EndBZ: 0
+    IncludedInStatics: Yes
+    StaticsStep1: Catenary
+    LineType, Length, TargetSegmentLength:
+      - [Chain_84mm_R4, 1500, 15]
+
+  # Mooring Line 2 - 45 degrees
+  - Name: Mooring_L2
+    EndAConnection: Anchored
+    EndAX: 849
+    EndAY: 849
+    EndAZ: -500
+    EndBConnection: MooringHub
+    EndBX: 0
+    EndBY: 0
+    EndBZ: 0
+    IncludedInStatics: Yes
+    StaticsStep1: Catenary
+    LineType, Length, TargetSegmentLength:
+      - [Chain_84mm_R4, 1500, 15]
+
+  # Mooring Line 3 - 90 degrees (starboard)
+  - Name: Mooring_L3
+    EndAConnection: Anchored
+    EndAX: 0
+    EndAY: 1200
+    EndAZ: -500
+    EndBConnection: MooringHub
+    EndBX: 0
+    EndBY: 0
+    EndBZ: 0
+    IncludedInStatics: Yes
+    StaticsStep1: Catenary
+    LineType, Length, TargetSegmentLength:
+      - [Chain_84mm_R4, 1500, 15]
+
+  # Mooring Line 4 - 135 degrees
+  - Name: Mooring_L4
+    EndAConnection: Anchored
+    EndAX: -849
+    EndAY: 849
+    EndAZ: -500
+    EndBConnection: MooringHub
+    EndBX: 0
+    EndBY: 0
+    EndBZ: 0
+    IncludedInStatics: Yes
+    StaticsStep1: Catenary
+    LineType, Length, TargetSegmentLength:
+      - [Chain_84mm_R4, 1500, 15]
+
+  # Mooring Line 5 - 180 degrees (stern)
+  - Name: Mooring_L5
+    EndAConnection: Anchored
+    EndAX: -1200
+    EndAY: 0
+    EndAZ: -500
+    EndBConnection: MooringHub
+    EndBX: 0
+    EndBY: 0
+    EndBZ: 0
+    IncludedInStatics: Yes
+    StaticsStep1: Catenary
+    LineType, Length, TargetSegmentLength:
+      - [Chain_84mm_R4, 1500, 15]
+
+  # Mooring Line 6 - 225 degrees
+  - Name: Mooring_L6
+    EndAConnection: Anchored
+    EndAX: -849
+    EndAY: -849
+    EndAZ: -500
+    EndBConnection: MooringHub
+    EndBX: 0
+    EndBY: 0
+    EndBZ: 0
+    IncludedInStatics: Yes
+    StaticsStep1: Catenary
+    LineType, Length, TargetSegmentLength:
+      - [Chain_84mm_R4, 1500, 15]
+
+  # Mooring Line 7 - 270 degrees (port)
+  - Name: Mooring_L7
+    EndAConnection: Anchored
+    EndAX: 0
+    EndAY: -1200
+    EndAZ: -500
+    EndBConnection: MooringHub
+    EndBX: 0
+    EndBY: 0
+    EndBZ: 0
+    IncludedInStatics: Yes
+    StaticsStep1: Catenary
+    LineType, Length, TargetSegmentLength:
+      - [Chain_84mm_R4, 1500, 15]
+
+  # Mooring Line 8 - 315 degrees
+  - Name: Mooring_L8
+    EndAConnection: Anchored
+    EndAX: 849
+    EndAY: -849
+    EndAZ: -500
+    EndBConnection: MooringHub
+    EndBX: 0
+    EndBY: 0
+    EndBZ: 0
+    IncludedInStatics: Yes
+    StaticsStep1: Catenary
+    LineType, Length, TargetSegmentLength:
+      - [Chain_84mm_R4, 1500, 15]

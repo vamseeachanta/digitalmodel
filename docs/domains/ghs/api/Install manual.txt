@@ -1,0 +1,26 @@
+<0> Unblock a single file
+1. Open Windows File Explorer and go to the folder where you saved the file.
+2. Right-click the file and choose Properties from the context menu.
+3. At the bottom of the General tab, select the Unblock checkbox and select OK .
+
+<1> Import Jsonconverter
+1. Go to the VBA-JSON GitHub page: https://github.com/VBA-tools/VBA-JSON
+2. Download "JsonConverter.bas"
+3. Add JsonConverter to Excel, Open Excel -> Alt+F11 -> File -> Import File -> Choose the JsonConverter.bas
+
+
+<2> Add References in VBA Editor
+1. In Excel, open VBA Editor (Alt+F11)
+2. Tools -> References -> select ("Microsoft Scripting Runtime", "Microsoft XML, v6.0", "Microsoft Forms 2.0 Object Library")
+
+
+<3>Enabling Macros in Excel
+1. Open Excel
+2. Go to the "File" Tab
+3. Choose "Options"
+4. Select Trust Center
+5. Click on Trust Center Settings.
+6. Select Macro Settings
+7. Choose Enable all macros
+
+

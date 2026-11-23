@@ -1,0 +1,541 @@
+{
+  "_template_info": {
+    "name": "Stress Analysis Template - Von Mises and Multi-axial",
+    "version": "1.0.0",
+    "description": "Comprehensive template for stress analysis including von Mises stress calculations, principal stress analysis, and multi-axial stress evaluation",
+    "created_date": "2025-01-15",
+    "engineering_standards": [
+      "ASME VIII Div 1 & 2",
+      "API 579-1/ASME FFS-1",
+      "EN 13445",
+      "AISC 360",
+      "DNV-GL-ST-F101"
+    ],
+    "analysis_type": "stress_analysis"
+  },
+
+  "basename": "stress_analysis",
+
+  "analysis_type": "von_mises_stress",
+
+  "default": {
+    "units": {
+      "stress": "MPa",
+      "force": "N",
+      "length": "m",
+      "pressure": "Pa",
+      "temperature": "C",
+      "time": "s"
+    },
+    "conversion_factors": {
+      "MPa_to_psi": 145.038,
+      "Pa_to_psi": 0.000145038,
+      "m_to_ft": 3.28084,
+      "m_to_in": 39.3701,
+      "C_to_F": [1.8, 32]
+    },
+    "log_level": "DEBUG",
+    "config": {
+      "overwrite": {
+        "output": true
+      },
+      "save_intermediate": true,
+      "generate_plots": true
+    }
+  },
+
+  "material_properties": {
+    "steel_grades": {
+      "ASTM_A36": {
+        "yield_strength": 250,
+        "ultimate_strength": 400,
+        "elastic_modulus": 200000,
+        "poisson_ratio": 0.26,
+        "shear_modulus": 80000,
+        "density": 7850,
+        "thermal_expansion": 1.2e-5,
+        "reference": "ASTM A36/A36M"
+      },
+      "ASTM_A572_Grade_50": {
+        "yield_strength": 345,
+        "ultimate_strength": 450,
+        "elastic_modulus": 200000,
+        "poisson_ratio": 0.30,
+        "shear_modulus": 80000,
+        "density": 7850,
+        "thermal_expansion": 1.2e-5,
+        "reference": "ASTM A572/A572M"
+      },
+      "API_5L_X65": {
+        "yield_strength": 448,
+        "ultimate_strength": 531,
+        "elastic_modulus": 207000,
+        "poisson_ratio": 0.30,
+        "shear_modulus": 80000,
+        "density": 7850,
+        "thermal_expansion": 1.17e-5,
+        "reference": "API 5L"
+      },
+      "S355": {
+        "yield_strength": 355,
+        "ultimate_strength": 510,
+        "elastic_modulus": 210000,
+        "poisson_ratio": 0.30,
+        "shear_modulus": 81000,
+        "density": 7850,
+        "thermal_expansion": 1.2e-5,
+        "reference": "EN 10025-2"
+      },
+      "316L_Stainless": {
+        "yield_strength": 290,
+        "ultimate_strength": 580,
+        "elastic_modulus": 200000,
+        "poisson_ratio": 0.30,
+        "shear_modulus": 77000,
+        "density": 8000,
+        "thermal_expansion": 1.6e-5,
+        "reference": "ASTM A240"
+      }
+    },
+
+    "aluminum_alloys": {
+      "6061_T6": {
+        "yield_strength": 276,
+        "ultimate_strength": 310,
+        "elastic_modulus": 69000,
+        "poisson_ratio": 0.33,
+        "shear_modulus": 26000,
+        "density": 2700,
+        "thermal_expansion": 2.4e-5,
+        "reference": "ASTM B221"
+      }
+    }
+  },
+
+  "stress_components": [
+    {
+      "component_id": "C001",
+      "description": "Primary structural member - beam under combined loading",
+      "component_type": "beam",
+      "location": "midspan",
+
+      "geometry": {
+        "section_type": "I_beam",
+        "depth": 0.500,
+        "width": 0.200,
+        "web_thickness": 0.012,
+        "flange_thickness": 0.020,
+        "length": 6.000,
+        "area": 0.0086,
+        "moment_of_inertia": {
+          "Ixx": 1.78e-4,
+          "Iyy": 5.33e-6,
+          "Izz": 1.78e-4
+        },
+        "section_modulus": {
+          "Sxx": 7.12e-4,
+          "Syy": 5.33e-5
+        }
+      },
+
+      "material": {
+        "grade": "S355",
+        "yield_strength": 355,
+        "ultimate_strength": 510,
+        "elastic_modulus": 210000,
+        "poisson_ratio": 0.30,
+        "shear_modulus": 81000
+      },
+
+      "loading": {
+        "axial_force": 150000,
+        "bending_moment": {
+          "Mx": 85000,
+          "My": 15000,
+          "Mz": 85000
+        },
+        "shear_force": {
+          "Vy": 25000,
+          "Vz": 25000
+        },
+        "torsional_moment": 10000,
+        "distributed_load": 5000,
+        "point_loads": [
+          {
+            "magnitude": 50000,
+            "location": 3.0,
+            "direction": "vertical"
+          }
+        ]
+      },
+
+      "stress_state": {
+        "normal_stress": {
+          "sigma_x": 120.5,
+          "sigma_y": -15.2,
+          "sigma_z": 85.3
+        },
+        "shear_stress": {
+          "tau_xy": 45.6,
+          "tau_xz": 32.1,
+          "tau_yz": 28.9
+        }
+      },
+
+      "analysis_points": [
+        {
+          "point_id": "P1",
+          "description": "Top fiber, maximum moment location",
+          "coordinates": [3.0, 0.0, 0.250],
+          "stress_type": "combined_bending_axial"
+        },
+        {
+          "point_id": "P2",
+          "description": "Neutral axis, shear critical",
+          "coordinates": [3.0, 0.0, 0.0],
+          "stress_type": "pure_shear"
+        },
+        {
+          "point_id": "P3",
+          "description": "Bottom fiber, tension critical",
+          "coordinates": [3.0, 0.0, -0.250],
+          "stress_type": "combined_bending_axial"
+        }
+      ]
+    },
+
+    {
+      "component_id": "C002",
+      "description": "Pressure vessel - cylindrical shell under internal pressure",
+      "component_type": "cylindrical_shell",
+      "location": "mid_length",
+
+      "geometry": {
+        "section_type": "circular_hollow",
+        "outer_diameter": 1.200,
+        "wall_thickness": 0.025,
+        "length": 5.000,
+        "inner_diameter": 1.150,
+        "mean_radius": 0.5875
+      },
+
+      "material": {
+        "grade": "API_5L_X65",
+        "yield_strength": 448,
+        "ultimate_strength": 531,
+        "elastic_modulus": 207000,
+        "poisson_ratio": 0.30,
+        "shear_modulus": 80000
+      },
+
+      "loading": {
+        "internal_pressure": 15.0,
+        "external_pressure": 0.5,
+        "axial_force": 75000,
+        "bending_moment": {
+          "Mx": 45000,
+          "My": 45000
+        },
+        "temperature_gradient": {
+          "inner_surface": 120,
+          "outer_surface": 80,
+          "average": 100
+        }
+      },
+
+      "stress_state": {
+        "hoop_stress": 345.0,
+        "longitudinal_stress": 172.5,
+        "radial_stress": -7.5,
+        "thermal_stress": {
+          "hoop": 25.0,
+          "longitudinal": 25.0,
+          "radial": 0.0
+        }
+      },
+
+      "analysis_points": [
+        {
+          "point_id": "P1",
+          "description": "Inner surface, maximum hoop stress",
+          "coordinates": [0.0, 0.575, 0.0],
+          "stress_type": "biaxial_pressure"
+        },
+        {
+          "point_id": "P2",
+          "description": "Outer surface, combined stress",
+          "coordinates": [0.0, 0.600, 0.0],
+          "stress_type": "biaxial_thermal"
+        }
+      ]
+    }
+  ],
+
+  "analysis_methods": {
+    "stress_theories": {
+      "von_mises": {
+        "description": "Von Mises equivalent stress theory",
+        "formula": "sqrt(0.5*((σ1-σ2)² + (σ2-σ3)² + (σ3-σ1)²))",
+        "applicable_materials": ["ductile"],
+        "safety_factor": 1.5
+      },
+      "tresca": {
+        "description": "Maximum shear stress theory",
+        "formula": "max(|σ1-σ2|, |σ2-σ3|, |σ3-σ1|)/2",
+        "applicable_materials": ["ductile"],
+        "safety_factor": 1.5
+      },
+      "principal_stress": {
+        "description": "Maximum principal stress theory",
+        "formula": "max(σ1, σ2, σ3)",
+        "applicable_materials": ["brittle"],
+        "safety_factor": 2.0
+      },
+      "mohr_coulomb": {
+        "description": "Mohr-Coulomb failure criterion",
+        "applicable_materials": ["soil", "rock", "concrete"],
+        "parameters": {
+          "friction_angle": 30,
+          "cohesion": 50000
+        }
+      }
+    },
+
+    "stress_calculations": {
+      "beam_theory": {
+        "normal_stress": "M*y/I + P/A",
+        "shear_stress": "V*Q/(I*t)",
+        "torsional_stress": "T*r/J"
+      },
+      "pressure_vessel": {
+        "hoop_stress": "p*r/t",
+        "longitudinal_stress": "p*r/(2*t)",
+        "radial_stress": "-p (inner surface)"
+      },
+      "thermal_stress": {
+        "free_expansion": "α*ΔT*E",
+        "constrained": "α*ΔT*E/(1-ν)"
+      }
+    }
+  },
+
+  "load_combinations": {
+    "ASME_VIII": {
+      "design_condition": {
+        "pressure": 1.0,
+        "mechanical": 1.0,
+        "thermal": 1.0,
+        "description": "Normal operating conditions"
+      },
+      "test_condition": {
+        "pressure": 1.3,
+        "mechanical": 0.0,
+        "thermal": 0.0,
+        "description": "Hydrostatic test condition"
+      }
+    },
+
+    "AISC_360": {
+      "LRFD": {
+        "dead_load": 1.2,
+        "live_load": 1.6,
+        "wind_load": 1.0,
+        "seismic_load": 1.0,
+        "description": "Load and Resistance Factor Design"
+      },
+      "ASD": {
+        "dead_load": 1.0,
+        "live_load": 1.0,
+        "wind_load": 0.6,
+        "seismic_load": 0.7,
+        "description": "Allowable Stress Design"
+      }
+    },
+
+    "API_579": {
+      "level_1": {
+        "primary": 1.0,
+        "secondary": 1.0,
+        "description": "Screening assessment"
+      },
+      "level_2": {
+        "primary": 1.0,
+        "secondary": 1.0,
+        "local": 1.0,
+        "description": "Detailed assessment"
+      }
+    }
+  },
+
+  "stress_limits": {
+    "ASME_VIII_Div_1": {
+      "design_stress": "S (tabulated allowable stress)",
+      "general_membrane": "S",
+      "local_membrane": "1.5*S",
+      "membrane_plus_bending": "1.5*S",
+      "shear": "0.8*S"
+    },
+
+    "ASME_VIII_Div_2": {
+      "design_stress_intensity": "2/3 * yield_strength",
+      "primary_membrane": "Sm",
+      "primary_membrane_plus_bending": "1.5*Sm",
+      "primary_plus_secondary": "3*Sm",
+      "fatigue": "Sa (alternating stress)"
+    },
+
+    "API_579": {
+      "remaining_strength_factor": 0.9,
+      "partial_safety_factors": {
+        "material": 1.25,
+        "geometry": 1.1,
+        "loading": 1.25
+      }
+    }
+  },
+
+  "environmental_effects": {
+    "temperature": {
+      "range": [-40, 200],
+      "effects": [
+        "thermal_expansion",
+        "material_property_degradation",
+        "thermal_stress"
+      ]
+    },
+    "corrosion": {
+      "environment": "marine",
+      "rate": 0.1,
+      "allowance": 3.0,
+      "protection": "coating_and_cp"
+    },
+    "fatigue": {
+      "environment": "seawater",
+      "cathodic_protection": true,
+      "stress_concentration": 2.5
+    }
+  },
+
+  "analysis_options": {
+    "nonlinear_effects": {
+      "geometric_nonlinearity": false,
+      "material_nonlinearity": false,
+      "contact_nonlinearity": false
+    },
+    "dynamic_effects": {
+      "include_dynamics": false,
+      "natural_frequency": null,
+      "damping_ratio": 0.05
+    },
+    "stress_concentration": {
+      "include_stress_risers": true,
+      "fillet_radii": true,
+      "hole_effects": true,
+      "weld_effects": true
+    }
+  },
+
+  "output_requirements": {
+    "stress_results": [
+      "von_mises_stress",
+      "principal_stresses",
+      "maximum_shear_stress",
+      "stress_intensity",
+      "hydrostatic_stress"
+    ],
+    "safety_factors": [
+      "yield_safety_factor",
+      "ultimate_safety_factor",
+      "fatigue_safety_factor",
+      "buckling_safety_factor"
+    ],
+    "compliance_checks": [
+      "code_compliance",
+      "stress_limits",
+      "material_limits",
+      "geometric_limits"
+    ],
+    "plots_and_visualizations": [
+      "stress_contours",
+      "deformation_plots",
+      "safety_factor_distribution",
+      "critical_locations"
+    ]
+  },
+
+  "quality_assurance": {
+    "verification_methods": [
+      "hand_calculations",
+      "benchmark_problems",
+      "code_verification",
+      "experimental_validation"
+    ],
+    "documentation": {
+      "calculation_notes": true,
+      "assumptions": true,
+      "limitations": true,
+      "references": true
+    }
+  },
+
+  "validation_rules": {
+    "geometry_limits": {
+      "min_thickness": 0.001,
+      "max_thickness": 1.0,
+      "min_diameter": 0.01,
+      "max_diameter": 10.0,
+      "aspect_ratio_limit": 100
+    },
+    "material_limits": {
+      "min_yield_strength": 100,
+      "max_yield_strength": 2000,
+      "min_elastic_modulus": 50000,
+      "max_elastic_modulus": 500000,
+      "poisson_ratio_range": [0.1, 0.5]
+    },
+    "loading_limits": {
+      "max_stress_ratio": 0.95,
+      "min_safety_factor": 1.5,
+      "max_temperature": 1000,
+      "pressure_range": [-10, 200]
+    },
+    "required_fields": [
+      "stress_components[].material.grade",
+      "stress_components[].geometry",
+      "stress_components[].loading",
+      "stress_components[].stress_state"
+    ]
+  },
+
+  "calculation_examples": {
+    "simple_beam": {
+      "description": "Simply supported beam with point load",
+      "max_moment": "P*L/4",
+      "max_stress": "M/S",
+      "deflection": "P*L³/(48*E*I)"
+    },
+    "pressure_vessel": {
+      "description": "Thin-walled cylinder under internal pressure",
+      "hoop_stress": "p*D/(2*t)",
+      "longitudinal_stress": "p*D/(4*t)",
+      "von_mises": "sqrt(σh² - σh*σl + σl²)"
+    },
+    "combined_loading": {
+      "description": "Member under axial force and bending",
+      "interaction": "P/Pallow + M/Mallow ≤ 1.0"
+    }
+  },
+
+  "references": [
+    "ASME Boiler and Pressure Vessel Code, Section VIII, Divisions 1 and 2",
+    "API 579-1/ASME FFS-1, Fitness-For-Service",
+    "AISC 360, Specification for Structural Steel Buildings",
+    "EN 13445, Unfired pressure vessels",
+    "DNV-GL-ST-F101, Submarine pipeline systems",
+    "Peterson's Stress Concentration Factors",
+    "Roark's Formulas for Stress and Strain",
+    "Theory of Elasticity by Timoshenko and Goodier"
+  ],
+
+  "usage_notes": "This template provides comprehensive configuration for stress analysis calculations including von Mises stress, principal stress analysis, and multi-axial stress evaluation. Key features: 1) Multiple failure theories (von Mises, Tresca, Principal stress), 2) Comprehensive material database, 3) Various load combination methods, 4) Code compliance checking (ASME, API, AISC), 5) Environmental effects consideration, 6) Quality assurance protocols. To use: 1) Define component geometry and materials, 2) Specify loading conditions, 3) Select appropriate failure theory, 4) Choose relevant design code, 5) Run analysis and verify results, 6) Check code compliance and safety factors."
+}

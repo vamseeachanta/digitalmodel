@@ -1,0 +1,338 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>FFS Program Decisions</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --bg:#F5F6F4; --surface:#FFFFFF; --surface-2:#EDF0EE; --ink:#1E2A38; --muted:#5F6B79; --line:#D5DAD6;
+  --accent:#2C6E9C; --accent-ink:#FFFFFF; --ok:#2C7A57; --warn:#A6710F; --pending:#8A6D1E;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#131920; --surface:#1B232D; --surface-2:#222C38; --ink:#E4E9EE; --muted:#9AA6B3; --line:#33404D;
+    --accent:#5FA3D6; --accent-ink:#0F1720; --ok:#5DBA8E; --warn:#D9A441; --pending:#D0A83E; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#131920; --surface:#1B232D; --surface-2:#222C38; --ink:#E4E9EE; --muted:#9AA6B3; --line:#33404D;
+  --accent:#5FA3D6; --accent-ink:#0F1720; --ok:#5DBA8E; --warn:#D9A441; --pending:#D0A83E; color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 var(--sans)}
+body{padding-block:0 6rem}
+a{color:var(--accent)}
+code,.mono{font-family:var(--mono);font-size:.92em}
+.wrap{max-width:1180px;margin:0 auto;padding:0 16px;display:grid;grid-template-columns:240px minmax(0,1fr);gap:28px}
+header.top{grid-column:1/-1;padding-block:28px 8px;border-bottom:1px solid var(--line)}
+header.top h1{margin:0 0 6px;font-size:1.65rem;font-weight:600;letter-spacing:-.01em;text-wrap:balance}
+header.top p{margin:0;color:var(--muted);max-width:70ch}
+.eyebrow{font-family:var(--mono);font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+nav.rail{position:sticky;top:16px;align-self:start;display:flex;flex-direction:column;gap:4px}
+nav.rail a{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 10px;border-radius:6px;text-decoration:none;color:var(--ink);font-size:.92rem}
+nav.rail a:hover{background:var(--surface-2)}
+nav.rail .dot{width:10px;height:10px;border-radius:50%;background:var(--line);flex:none}
+nav.rail a.done .dot{background:var(--ok)}
+nav.rail .progress{margin-top:10px;padding:10px;border-top:1px solid var(--line);font-size:.85rem;color:var(--muted)}
+main{display:flex;flex-direction:column;gap:22px;min-width:0}
+section.decision{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:20px 22px;display:grid;gap:14px}
+section.decision.done{border-color:var(--ok)}
+.dhead{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+.dhead .id{font-family:var(--mono);font-weight:500;color:var(--accent)}
+.dhead h2{margin:0;font-size:1.15rem;font-weight:600;text-wrap:balance}
+.dhead .state{margin-left:auto;font-size:.78rem;padding:2px 8px;border-radius:999px;border:1px solid var(--line);color:var(--muted)}
+section.done .dhead .state{border-color:var(--ok);color:var(--ok)}
+.context{color:var(--muted);margin:0;max-width:78ch}
+.context b{color:var(--ink);font-weight:500}
+.opts{display:grid;gap:8px}
+.opt{display:grid;grid-template-columns:20px 1fr;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:6px;cursor:pointer;background:var(--surface)}
+.opt:has(input:checked){border-color:var(--accent);background:color-mix(in srgb,var(--accent) 8%,var(--surface))}
+.opt input{margin:4px 0 0}
+.opt .lab{font-weight:500}
+.opt .why{color:var(--muted);font-size:.9rem}
+.opt .rec{font-family:var(--mono);font-size:.72rem;color:var(--ok);margin-left:6px;letter-spacing:.04em}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+label.small{font-size:.85rem;color:var(--muted)}
+textarea,input[type=text],input[type=date]{width:100%;font:inherit;color:var(--ink);background:var(--surface-2);border:1px solid var(--line);border-radius:6px;padding:8px 10px}
+textarea{min-height:64px;resize:vertical}
+input[type=date],input[type=text].short{width:auto}
+.consequence{font-size:.9rem;color:var(--muted);border-left:3px solid var(--line);padding:4px 10px;margin:0}
+.consequence b{color:var(--ink);font-weight:500}
+ol.order{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+ol.order li{display:grid;grid-template-columns:28px 1fr auto;gap:10px;align-items:center;padding:8px 10px;border:1px solid var(--line);border-radius:6px;background:var(--surface-2)}
+ol.order .n{font-family:var(--mono);color:var(--muted)}
+ol.order .issue{font-family:var(--mono);font-size:.85rem;color:var(--muted)}
+ol.order button{padding:2px 8px}
+button{font:inherit;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:6px;padding:6px 12px;cursor:pointer}
+button:hover{background:var(--surface-2)}
+button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+button:focus-visible,.opt:focus-within,input:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.bar{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:1px solid var(--line);padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px))}
+.bar .in{max-width:1180px;margin:0 auto;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.bar .status{color:var(--muted);font-size:.9rem;margin-right:auto}
+.bar .toast{font-size:.85rem;color:var(--ok)}
+#out{display:none}
+section.export pre{margin:0;background:var(--surface-2);border:1px solid var(--line);border-radius:6px;padding:12px;overflow:auto;font-family:var(--mono);font-size:.82rem;line-height:1.45;max-height:420px}
+.approval .opts{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+@media (max-width:820px){.wrap{grid-template-columns:1fr}nav.rail{position:static;flex-direction:row;flex-wrap:wrap}nav.rail .progress{display:none}}
+@media (prefers-reduced-motion:no-preference){section.decision{transition:border-color .2s}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="eyebrow">digitalmodel · epic #1057 · plan r1.2 · PR #2204</div>
+    <h1>FFS Program Decisions</h1>
+    <p>Six owner decisions gate the fitness-for-service offering plan. Pick an option, add a note where the default is wrong, then export the record as Markdown for the epic. Choices are kept in this browser until you clear them.</p>
+  </header>
+
+  <nav class="rail" id="rail" aria-label="Decisions">
+    <a href="#D1" data-nav="D1"><span>D1 Verdict vocabulary</span><span class="dot"></span></a>
+    <a href="#D2" data-nav="D2"><span>D2 Level 3 solver</span><span class="dot"></span></a>
+    <a href="#D3" data-nav="D3"><span>D3 API 579 L2 curve</span><span class="dot"></span></a>
+    <a href="#D4" data-nav="D4"><span>D4 Wave 2 order</span><span class="dot"></span></a>
+    <a href="#D5" data-nav="D5"><span>D5 Subsea screens</span><span class="dot"></span></a>
+    <a href="#D6" data-nav="D6"><span>D6 Review coverage</span><span class="dot"></span></a>
+    <a href="#APPROVAL" data-nav="APPROVAL"><span>Plan approval</span><span class="dot"></span></a>
+    <div class="progress" id="progress">0 of 7 decided</div>
+  </nav>
+
+  <main>
+
+    <section class="decision" id="D1" data-id="D1">
+      <div class="dhead"><span class="id">D1</span><h2>One verdict vocabulary across asset classes?</h2><span class="state">open</span></div>
+      <p class="context"><b>Today</b> <code>ffs_decision</code> speaks pressure equipment only: ACCEPT / MONITOR / RE_RATE / REPAIR / REPLACE, inch and psi, re-rate as a reduced MAWP. Mooring chain needs CONTINUE / SHORTEN INTERVAL / REPLACE SEGMENT against a discard criterion; hull plating needs ACCEPT / SUBSTANTIAL CORROSION / RENEW; jacket members need ACCEPT / MITIGATE / REPAIR. The mooring screener already emits GREEN / AMBER / RED. Issue #2205 holds the work.</p>
+      <div class="opts">
+        <label class="opt"><input type="radio" name="D1" value="A"><span><span class="lab">One shared vocabulary with a per-class action map</span><span class="rec">recommended</span><br><span class="why">Generalize <code>decide()</code> to margin, allowable, remaining life and asset class; RE_RATE becomes DERATE with a class-specific function. Reports read the same everywhere. Blocks Wave 2 verdicts until #2205 lands.</span></span></label>
+        <label class="opt"><input type="radio" name="D1" value="B"><span><span class="lab">Per-class vocabularies with a shared severity ordering</span><br><span class="why">Each asset class keeps its native words; a severity rank lets dashboards sort across classes. Faster for Wave 2, more report templates to maintain.</span></span></label>
+        <label class="opt"><input type="radio" name="D1" value="C"><span><span class="lab">Defer until a Wave 2 engine forces the question</span><br><span class="why">Ship tank settlement (#2172) on the existing vocabulary and decide when moorings or hulls arrive. Cheapest now, likely rework later.</span></span></label>
+      </div>
+      <p class="consequence" data-conseq></p>
+      <label class="small" for="D1-note">Note for the record (optional)</label>
+      <textarea id="D1-note" data-note placeholder="Why, or what to change"></textarea>
+    </section>
+
+    <section class="decision" id="D2" data-id="D2">
+      <div class="dhead"><span class="id">D2</span><h2>Which solver carries the unlicensed Level 3 chain?</h2><span class="state">open</span></div>
+      <p class="context"><b>Today</b> the CalculiX wrapper does linear static solids only; ccx is not installed on the Windows hosts. ANSYS APDL generators exist but need the licensed host. Issue #253 already asks about Code_Aster for large topside FEA. Tank settlement Level 3 (#2174) needs shells, plasticity, buckling and a collapse step; crack Level 3 needs a driving-force integral.</p>
+      <div class="opts">
+        <label class="opt"><input type="radio" name="D2" value="A"><span><span class="lab">Spike first (#2178), then choose</span><span class="rec">recommended</span><br><span class="why">One benchmark on each candidate before #2173 scales. Costs a spike; avoids building the shell chain on the wrong solver.</span></span></label>
+        <label class="opt"><input type="radio" name="D2" value="B"><span><span class="lab">Commit to CalculiX now</span><br><span class="why">Extends the wrapper we have. Crack driving force is unverified in CalculiX and may force a second solver later.</span></span></label>
+        <label class="opt"><input type="radio" name="D2" value="C"><span><span class="lab">Commit to Code_Aster now</span><br><span class="why">Mature contour integrals and nonlinear shells; nothing in the repo wraps it yet, so #2173 restarts from zero.</span></span></label>
+        <label class="opt"><input type="radio" name="D2" value="D"><span><span class="lab">Licensed ANSYS only for Level 3</span><br><span class="why">No open-chain work; every T3 job runs on the licensed host. Cheapest engineering, but T3 stays a bottleneck and cannot run in Deckhand.</span></span></label>
+      </div>
+      <p class="consequence" data-conseq></p>
+      <label class="small" for="D2-note">Note for the record (optional)</label>
+      <textarea id="D2-note" data-note></textarea>
+    </section>
+
+    <section class="decision" id="D3" data-id="D3">
+      <div class="dhead"><span class="id">D3</span><h2>How is the API 579 Level 2 FAD equation confirmed?</h2><span class="state">open</span></div>
+      <p class="context"><b>Today</b> <code>crack_fad.py</code> uses the BS 7910 Option 1 curve labelled as API 579 Level 2. The licensed 2016 copy is FileOpen-protected and no viewer on the Windows host opens it (#2157 board card R01). #2175 and #2157 both need the confirmed equation.</p>
+      <div class="opts">
+        <label class="opt"><input type="radio" name="D3" value="A"><span><span class="lab">I will confirm it in an authorised viewer by a date</span><span class="rec">recommended</span><br><span class="why">Unblocks #2175 and #2157. Record the date below.</span></span></label>
+        <label class="opt"><input type="radio" name="D3" value="B"><span><span class="lab">Keep the BS 7910 Option 1 label until confirmed</span><br><span class="why">Honest today; the Part 9 workflows ship as BS 7910 assessments, not API 579 Level 2.</span></span></label>
+        <label class="opt"><input type="radio" name="D3" value="C"><span><span class="lab">Acquire a readable 2021 edition</span><br><span class="why">Also gives the current Annex 2D / 9B–9F numbering the crosswalk (llm-wiki #913) needs. Cost and lead time.</span></span></label>
+      </div>
+      <div class="row"><label class="small" for="D3-date">Target date</label><input type="date" id="D3-date" data-extra="date"></div>
+      <p class="consequence" data-conseq></p>
+      <label class="small" for="D3-note">Note for the record (optional)</label>
+      <textarea id="D3-note" data-note></textarea>
+    </section>
+
+    <section class="decision" id="D4" data-id="D4">
+      <div class="dhead"><span class="id">D4</span><h2>In what order do the Wave 2 asset classes land?</h2><span class="state">open</span></div>
+      <p class="context"><b>Today</b> six new T1/T2 screens are filed. Order them by prospect demand; the top two start first in parallel worktrees. Use the arrows.</p>
+      <ol class="order" id="D4-order"></ol>
+      <div class="row"><button type="button" id="D4-reset">Reset to catalog default</button><button type="button" id="D4-confirm" class="primary">Confirm this order</button></div>
+      <p class="consequence" data-conseq></p>
+      <label class="small" for="D4-note">Note for the record (optional)</label>
+      <textarea id="D4-note" data-note placeholder="Which prospect drives the top pick"></textarea>
+    </section>
+
+    <section class="decision" id="D5" data-id="D5">
+      <div class="dhead"><span class="id">D5</span><h2>Do the subsea design screens stay in the FFS catalog?</h2><span class="state">open</span></div>
+      <p class="context"><b>Today</b> free-span VIV onset (DNV-RP-F105) and on-bottom stability (DNV-RP-F109) are routed workflows, but they are design checks, not fitness-for-service verdicts. They sit in the catalog as <code>routed</code> rows flagged "not an FFS verdict".</p>
+      <div class="opts">
+        <label class="opt"><input type="radio" name="D5" value="A"><span><span class="lab">Stay, flagged as design screens</span><span class="rec">recommended</span><br><span class="why">Pipeline prospects see the whole subsea surface in one table. The flag keeps the FFS claim honest.</span></span></label>
+        <label class="opt"><input type="radio" name="D5" value="B"><span><span class="lab">Move to a separate design-screen catalog</span><br><span class="why">Keeps the FFS catalog strictly to damage assessment. Adds a second catalog to maintain in #2197.</span></span></label>
+        <label class="opt"><input type="radio" name="D5" value="C"><span><span class="lab">Remove from the offering catalog</span><br><span class="why">Two fewer routed rows; the readiness count drops to three routed.</span></span></label>
+      </div>
+      <p class="consequence" data-conseq></p>
+      <label class="small" for="D5-note">Note for the record (optional)</label>
+      <textarea id="D5-note" data-note></textarea>
+    </section>
+
+    <section class="decision" id="D6" data-id="D6">
+      <div class="dhead"><span class="id">D6</span><h2>Is a two-provider review enough for this T4 plan?</h2><span class="state">open</span></div>
+      <p class="context"><b>Today</b> the plan has Claude r1 MAJOR, Codex r1 MAJOR and Codex r1.1 MAJOR, all applied in r1.2. The Gemini run was stopped by the host under memory pressure and left empty artifacts. The routing policy defaults to three providers.</p>
+      <div class="opts">
+        <label class="opt"><input type="radio" name="D6" value="A"><span><span class="lab">Re-run Gemini on a host with headroom before approval</span><span class="rec">recommended</span><br><span class="why">Meets the policy default. Delays approval by one review cycle.</span></span></label>
+        <label class="opt"><input type="radio" name="D6" value="B"><span><span class="lab">Accept the two-provider review now</span><br><span class="why">Record the exception on the epic. Approval can happen today.</span></span></label>
+        <label class="opt"><input type="radio" name="D6" value="C"><span><span class="lab">Approve now, Gemini pass required before Wave 1 starts</span><br><span class="why">Wave 0 hygiene work proceeds; the third review lands before new offerings are wired.</span></span></label>
+      </div>
+      <p class="consequence" data-conseq></p>
+      <label class="small" for="D6-note">Note for the record (optional)</label>
+      <textarea id="D6-note" data-note></textarea>
+    </section>
+
+    <section class="decision approval" id="APPROVAL" data-id="APPROVAL">
+      <div class="dhead"><span class="id">GATE</span><h2>Plan r1.2 approval</h2><span class="state">open</span></div>
+      <p class="context">The repo contract requires the owner to apply <code>status:plan-approved</code>; nobody else may. Wave 0 starts on approval: #2160, #2171, #1094, #2205, #2197, #2180 in parallel worktrees.</p>
+      <div class="opts">
+        <label class="opt"><input type="radio" name="APPROVAL" value="APPROVE"><span><span class="lab">Approve r1.2 as is</span><br><span class="why">Export includes the label command.</span></span></label>
+        <label class="opt"><input type="radio" name="APPROVAL" value="CHANGES"><span><span class="lab">Approve with the changes noted below</span><br><span class="why">Decisions above are folded into r1.3 first; label applied after.</span></span></label>
+        <label class="opt"><input type="radio" name="APPROVAL" value="HOLD"><span><span class="lab">Not yet</span><br><span class="why">Say what is missing in the note.</span></span></label>
+      </div>
+      <label class="small" for="APPROVAL-note">Changes required or reasons to hold</label>
+      <textarea id="APPROVAL-note" data-note></textarea>
+    </section>
+
+    <section class="decision export" id="EXPORT">
+      <div class="dhead"><span class="id">OUT</span><h2>Decision record</h2></div>
+      <p class="context">Markdown for the epic comment. The <code>gh</code> lines at the end post it and, if approved, apply the label.</p>
+      <pre id="preview" aria-live="polite"></pre>
+      <div class="row">
+        <button type="button" class="primary" id="copy">Copy Markdown</button>
+        <button type="button" id="download-md">Download .md</button>
+        <button type="button" id="download-json">Download .json</button>
+        <label class="small" for="import-json">Load a saved .json</label><input type="file" id="import-json" accept="application/json">
+        <button type="button" id="clear">Clear all choices</button>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div class="bar"><div class="in">
+  <span class="status" id="barstatus">0 of 7 decided</span>
+  <span class="toast" id="toast" aria-live="polite"></span>
+  <button type="button" class="primary" id="copy2">Copy Markdown</button>
+</div></div>
+
+<script>
+(function(){
+  const KEY='ffs-1057-decisions-v1';
+  const DECISIONS=['D1','D2','D3','D4','D5','D6','APPROVAL'];
+  const TITLES={D1:'Verdict vocabulary',D2:'Level 3 solver',D3:'API 579 Level 2 curve confirmation',D4:'Wave 2 asset-class order',D5:'Subsea design screens in the FFS catalog',D6:'Review coverage',APPROVAL:'Plan r1.2 approval'};
+  const LABELS={
+    D1:{A:'One shared vocabulary with a per-class action map (#2205)',B:'Per-class vocabularies with a shared severity ordering',C:'Defer until a Wave 2 engine forces the question'},
+    D2:{A:'Spike first (#2178), then choose',B:'Commit to CalculiX',C:'Commit to Code_Aster',D:'Licensed ANSYS only for Level 3'},
+    D3:{A:'Owner confirms the equation in an authorised viewer',B:'Keep the BS 7910 Option 1 label until confirmed',C:'Acquire a readable 2021 edition'},
+    D5:{A:'Stay, flagged as design screens',B:'Move to a separate design-screen catalog',C:'Remove from the offering catalog'},
+    D6:{A:'Re-run Gemini on a host with headroom before approval',B:'Accept the two-provider review',C:'Approve now; Gemini pass before Wave 1'},
+    APPROVAL:{APPROVE:'Approve r1.2 as is',CHANGES:'Approve with changes',HOLD:'Not yet'}
+  };
+  const CONSEQ={
+    D1:{A:'#2205 becomes a Wave 0 serialization point ahead of #2172, #2198, #2199, #2202.',B:'#2205 is rescoped to a severity-ordering shim; each Wave 2 issue owns its verdict words.',C:'#2205 moves to Wave 2; plan risk table gains a rework item.'},
+    D2:{A:'#2178 runs before #2173 scales; #2174 waits on the verdict.',B:'#2178 closes as decided; #2173 proceeds; crack Level 3 may need a second solver later.',C:'#2173 is rewritten for Code_Aster; #253 closes as decided.',D:'#2173, #2178 close; #2174 targets the ANSYS APDL path on the licensed host; T3 not offered through Deckhand.'},
+    D3:{A:'#2175 and #2157 unblock on the date given; curves relabelled when confirmed.',B:'Part 9 workflows ship as BS 7910 assessments; catalog rows say so.',C:'Procurement item; llm-wiki #913 crosswalk uses the 2021 numbering directly.'},
+    D5:{A:'No change.',B:'#2197 gains a second catalog file; rows move.',C:'Catalog drops two rows; readiness count changes to 3 routed.'},
+    D6:{A:'Approval waits for the Gemini artifact.',B:'Exception recorded on #1057; approval may proceed.',C:'Wave 0 starts on approval; Wave 1 issues carry a "Gemini pass on plan" prerequisite.'}
+  };
+  const WAVE2_DEFAULT=[
+    {id:'2172',name:'Storage tank settlement screen (API 653 Annex B)'},
+    {id:'2199',name:'Mooring chain degradation (API RP 2MIM)'},
+    {id:'2198',name:'Fixed-platform damaged members (API RP 2SIM)'},
+    {id:'2202',name:'Ship hull wastage (IACS CSR Ch 13)'},
+    {id:'2201',name:'Casing wear remaining capacity (API TR 5C3)'},
+    {id:'2200',name:'Flexible pipe integrity (API RP 17B)'}
+  ];
+  let state={choices:{},notes:{},extra:{},order:WAVE2_DEFAULT.map(x=>x.id),orderConfirmed:false};
+
+  function load(){ try{ const s=localStorage.getItem(KEY); if(s){ const p=JSON.parse(s); state=Object.assign(state,p); if(!Array.isArray(state.order)||state.order.length!==6) state.order=WAVE2_DEFAULT.map(x=>x.id);} }catch(e){} }
+  function save(){ try{ localStorage.setItem(KEY,JSON.stringify(state)); }catch(e){} }
+
+  function decided(id){ return id==='D4' ? state.orderConfirmed : !!state.choices[id]; }
+
+  function renderOrder(){
+    const ol=document.getElementById('D4-order'); ol.innerHTML='';
+    state.order.forEach((id,i)=>{
+      const item=WAVE2_DEFAULT.find(x=>x.id===id);
+      const li=document.createElement('li');
+      li.innerHTML=`<span class="n">${i+1}</span><span>${item.name} <span class="issue">#${id}</span></span><span class="row"><button type="button" data-up="${i}" aria-label="Move up" ${i===0?'disabled':''}>↑</button><button type="button" data-down="${i}" aria-label="Move down" ${i===5?'disabled':''}>↓</button></span>`;
+      ol.appendChild(li);
+    });
+  }
+
+  function markdown(){
+    const today=new Date().toISOString().slice(0,10);
+    let md=`## Owner decisions on plan r1.2 (${today})\n\nPlan: \`docs/plans/2026-09-25-issue-1057-ffs-offering-program.md\` (PR #2204).\n\n`;
+    DECISIONS.forEach(id=>{
+      const t=TITLES[id];
+      if(id==='D4'){
+        md+=`**D4 ${t}:** `+(state.orderConfirmed? state.order.map((x,i)=>`${i+1}. #${x}`).join(', ') : '_undecided_')+'\n';
+      }else{
+        const c=state.choices[id];
+        md+=`**${id==='APPROVAL'?'Approval':id} ${t}:** `+(c? `${c} — ${LABELS[id][c]}` : '_undecided_');
+        if(id==='D3'&&state.extra.D3date) md+=` (target ${state.extra.D3date})`;
+        md+='\n';
+        if(id!=='APPROVAL'&&c&&CONSEQ[id]&&CONSEQ[id][c]) md+=`  - consequence: ${CONSEQ[id][c]}\n`;
+      }
+      if(state.notes[id]&&state.notes[id].trim()) md+=`  - note: ${state.notes[id].trim().replace(/\n+/g,' ')}\n`;
+    });
+    const n=DECISIONS.filter(decided).length;
+    md+=`\n_${n} of ${DECISIONS.length} decided._\n\n`;
+    md+='```bash\n# post this record on the epic (save as decisions.md first)\ngh issue comment 1057 -R vamseeachanta/digitalmodel -F decisions.md\n';
+    if(state.choices.APPROVAL==='APPROVE') md+='gh issue edit 1057 -R vamseeachanta/digitalmodel --remove-label status:plan-review --add-label status:plan-approved\n';
+    if(state.choices.APPROVAL==='CHANGES') md+='# label after r1.3 lands with the changes above\n';
+    md+='```\n';
+    return md;
+  }
+
+  function render(){
+    let n=0;
+    DECISIONS.forEach(id=>{
+      const sec=document.getElementById(id); const d=decided(id); if(d) n++;
+      sec.classList.toggle('done',d);
+      sec.querySelector('.state').textContent=d?'decided':'open';
+      const nav=document.querySelector(`[data-nav="${id}"]`); nav.classList.toggle('done',d);
+      const conseq=sec.querySelector('[data-conseq]');
+      if(conseq){ const c=state.choices[id]; conseq.innerHTML = (id!=='D4'&&c&&CONSEQ[id]) ? `<b>Consequence:</b> ${CONSEQ[id][c]}` : (id==='D4'&&state.orderConfirmed ? `<b>Consequence:</b> #${state.order[0]} and #${state.order[1]} start first.` : ''); conseq.hidden=!conseq.innerHTML; }
+    });
+    const txt=`${n} of ${DECISIONS.length} decided`;
+    document.getElementById('progress').textContent=txt; document.getElementById('barstatus').textContent=txt;
+    document.getElementById('preview').textContent=markdown();
+  }
+
+  function hydrate(){
+    Object.entries(state.choices).forEach(([id,v])=>{ const el=document.querySelector(`input[name="${id}"][value="${v}"]`); if(el) el.checked=true; });
+    Object.entries(state.notes).forEach(([id,v])=>{ const el=document.getElementById(`${id}-note`); if(el) el.value=v; });
+    if(state.extra.D3date) document.getElementById('D3-date').value=state.extra.D3date;
+    renderOrder(); render();
+  }
+
+  function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; setTimeout(()=>{ if(t.textContent===msg) t.textContent=''; },2500); }
+  function download(name,text,type){ const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([text],{type})); a.download=name; document.body.appendChild(a); a.click(); setTimeout(()=>{URL.revokeObjectURL(a.href); a.remove();},500); }
+  async function copy(){ const md=markdown(); try{ await navigator.clipboard.writeText(md); toast('Markdown copied'); }catch(e){ const pre=document.getElementById('preview'); const r=document.createRange(); r.selectNodeContents(pre); const s=getSelection(); s.removeAllRanges(); s.addRange(r); toast('Select-all done; press Ctrl+C'); } }
+
+  document.addEventListener('change',e=>{
+    const t=e.target;
+    if(t.matches('input[type=radio]')){ state.choices[t.name]=t.value; save(); render(); }
+    if(t.id==='D3-date'){ state.extra.D3date=t.value; save(); render(); }
+  });
+  document.addEventListener('input',e=>{ const t=e.target; if(t.matches('[data-note]')){ state.notes[t.id.replace('-note','')]=t.value; save(); render(); } });
+  document.getElementById('D4-order').addEventListener('click',e=>{
+    const up=e.target.getAttribute('data-up'), down=e.target.getAttribute('data-down');
+    if(up!==null){ const i=+up; [state.order[i-1],state.order[i]]=[state.order[i],state.order[i-1]]; }
+    else if(down!==null){ const i=+down; [state.order[i+1],state.order[i]]=[state.order[i],state.order[i+1]]; }
+    else return;
+    state.orderConfirmed=false; save(); renderOrder(); render();
+  });
+  document.getElementById('D4-reset').onclick=()=>{ state.order=WAVE2_DEFAULT.map(x=>x.id); state.orderConfirmed=false; save(); renderOrder(); render(); };
+  document.getElementById('D4-confirm').onclick=()=>{ state.orderConfirmed=true; save(); render(); toast('Order confirmed'); };
+  document.getElementById('copy').onclick=copy; document.getElementById('copy2').onclick=copy;
+  document.getElementById('download-md').onclick=()=>download('decisions.md',markdown(),'text/markdown');
+  document.getElementById('download-json').onclick=()=>download('ffs-1057-decisions.json',JSON.stringify(state,null,2),'application/json');
+  document.getElementById('import-json').onchange=e=>{ const f=e.target.files[0]; if(!f) return; const r=new FileReader(); r.onload=()=>{ try{ state=Object.assign(state,JSON.parse(r.result)); save(); document.querySelectorAll('input[type=radio]').forEach(x=>x.checked=false); hydrate(); toast('Loaded'); }catch(err){ toast('That file is not a saved decision record'); } }; r.readAsText(f); };
+  document.getElementById('clear').onclick=()=>{ state={choices:{},notes:{},extra:{},order:WAVE2_DEFAULT.map(x=>x.id),orderConfirmed:false}; save(); document.querySelectorAll('input[type=radio]').forEach(x=>x.checked=false); document.querySelectorAll('[data-note]').forEach(x=>x.value=''); document.getElementById('D3-date').value=''; hydrate(); toast('Cleared'); };
+
+  load(); hydrate();
+})();
+</script>
+</body>
+</html>

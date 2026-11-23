@@ -1,0 +1,16 @@
+basename: riser_fatigue
+
+riser_fatigue:
+  # Case inputs remain unset; packaged settings must not supply a verdict basis.
+  design_life_years: null
+  # Remove this key to request cited resolution, or supply an explicit case DFF.
+  dff: null
+  sn_curve: null
+  output_dir: results
+  segments: []
+
+default:
+  log_level: DEBUG
+  config:
+    overwrite:
+      output: True

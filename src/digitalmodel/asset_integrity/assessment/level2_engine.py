@@ -1,0 +1,330 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
+"""FFS Level 2 detailed assessment — RSF and Folias-factor calculations.
+
+Implements API 579-1/ASME FFS-1 Level 2 acceptance criterion:
+
+  RSF >= RSFa  →  ACCEPT
+  RSF <  RSFa  →  FAIL_LEVEL_2
+
+Two assessment paths:
+
+GML (General Metal Loss, Part 4):
+  RSF = t_am / t_c
+  where t_am = area-averaged measured thickness over the assessment region,
+        t_c  = future thickness (= t_min for conservatism at current FCA = 0).
+  Simplified per API 579 Part 4 Level 2 Section 4.4.2.
+
+LML (Local Metal Loss, Part 5):
+  RSF = t_mm / (t_c * (1 - (1 - Rt) / Mt))     [equivalent to Part 5 eq.]
+  where Rt  = (t_mm) / t_c                       (thickness ratio)
+        Mt  = Folias (bulging) factor (Eq. 4.20 / Table 4.4)
+        L_a = longitudinal flaw length (derived from flaw bounding box)
+
+The Folias factor M_t for a cylindrical shell.  This uses the *simplified*
+Table 4.4 closed form, sqrt(1 + 0.48*lambda^2); the API 579-1 2021 main
+relation (Eq. 4.20) is a higher-order polynomial in lambda — the simplified
+form is a conservative approximation valid over the tabulated range:
+  For lambda <= 0.354:   M_t = 1.0
+  For lambda in (0.354, 20]:
+      M_t = sqrt(1 + 0.48 * lambda^2)
+  For lambda > 20:        M_t = sqrt(1 + 0.48 * 20^2)   (frozen at the
+      lambda = 20 table limit; the simplified form is not extrapolated)
+
+  lambda = 1.285 * L_a / sqrt(D * t_c)
+  where D = nominal inside diameter = OD - 2*t_c (approximately OD - 2*t_min)
+
+RSFa default = 0.9 per API 579 Annex 2B.
+
+References:
+  API 579-1/ASME FFS-1 2021 Edition, Part 4 §4.4, Part 5 §5.4
+"""
+
+from __future__ import annotations
+
+import math
+
+import numpy as np
+import pandas as pd
+
+from digitalmodel.asset_integrity.applicability import (
+    API579_FOLIAS_LAMBDA_FLAG,
+    Applicability,
+    check_upper_limit,
+)
+from .screening_report import finite_number
+
+_SUPPORTED_TYPES = {"GML", "LML"}
+
+# Folias factor breakpoints per API 579 Table 4.4 simplified cylindrical column
+_LAMBDA_LOWER = 0.354
+_LAMBDA_UPPER = 20.0
+# Existing flaw-identification heuristic; not a code acceptance criterion.
+_FLAW_THRESHOLD_RATIO = 0.9
+
+
+class Level2Engine:
+    """Perform a Level 2 FFS assessment against RSFa.
+
+    Args:
+        assessment_type: ``'GML'`` or ``'LML'``.
+        nominal_od_in: Nominal outside diameter (inches).
+        nominal_wt_in: Nominal wall thickness (inches).
+        t_min_in: Code-required minimum wall thickness (inches).
+        rsf_a: Allowable remaining strength factor (default 0.9).
+        row_spacing_in: Explicit axial pitch, overriding inferred index gaps.
+
+    Raises:
+        ValueError: If assessment_type is not ``'GML'`` or ``'LML'``.
+    """
+
+    def __init__(
+        self,
+        assessment_type: str,
+        nominal_od_in: float,
+        nominal_wt_in: float,
+        t_min_in: float,
+        rsf_a: float = 0.9,
+        *,
+        row_spacing_in: float | None = None,
+    ) -> None:
+        normalised = assessment_type.strip().upper()
+        if normalised not in _SUPPORTED_TYPES:
+            raise ValueError(
+                f"assessment_type '{assessment_type}' is not supported.  "
+                f"Choose from: {sorted(_SUPPORTED_TYPES)}"
+            )
+        self._type = normalised
+        self._od = nominal_od_in
+        self._nominal_wt = nominal_wt_in
+        self._t_min = t_min_in
+        self._rsf_a = rsf_a
+        self._row_spacing = (
+            finite_number({"row_spacing_in": row_spacing_in}, "row_spacing_in")
+            if row_spacing_in is not None else None
+        )
+
+    # ------------------------------------------------------------------
+    # Public interface
+    # ------------------------------------------------------------------
+
+    def evaluate(self, grid_df: pd.DataFrame) -> dict:
+        """Run the Level 2 assessment on the parsed wall-thickness grid.
+
+        Args:
+            grid_df: Normalised wall-thickness DataFrame (inches).
+
+        Returns:
+            dict with keys:
+                verdict (str): ``'ACCEPT'`` or ``'FAIL_LEVEL_2'``
+                rsf (float): Computed remaining strength factor
+                rsf_a (float): Allowable RSF threshold
+                t_am_in (float): Area-averaged thickness (inches)
+                t_mm_in (float): Minimum measured thickness (inches)
+                assessment_type (str): ``'GML'`` or ``'LML'``
+                folias_factor (float): M_t (always present; 1.0 for pure GML)
+                applicability (Applicability): validity record; LML raises
+                    ``API579_FOLIAS_LAMBDA_GT_20`` when the shell parameter
+                    exceeds the Table 4.4 range and M_t was frozen (#1094)
+        """
+        if self._type == "GML":
+            return self._evaluate_gml(grid_df)
+        return self._evaluate_lml(grid_df)
+
+    def local_loss_projection_domain(self, grid_df: pd.DataFrame):
+        """Lambda-range wall interval when only current minima decrease.
+
+        Geometry is checked without evaluating an unsupported strength result.
+        The existing Table 4.4 cap and Rt=1 exception govern this interval;
+        remaining-thickness ratio and minimum-wall limits are not checked.
+        Zero is a mathematical endpoint, not a qualified perforated wall.
+        ``None`` means the current geometry is outside that lambda range.
+        """
+        values = grid_df.to_numpy(dtype=float)
+        present = values[~np.isnan(values)]
+        dimensions = (self._od, self._nominal_wt, self._t_min)
+        if (self._type != "LML" or not present.size
+                or not np.isfinite(present).all() or (present <= 0).any()
+                or not all(math.isfinite(v) and v > 0 for v in dimensions)
+                or self._od <= 2 * self._t_min):
+            raise ValueError("Local-loss projection requires positive finite geometry")
+        upper = float(present.min())
+        projected = grid_df.copy()
+        projected[grid_df == upper] = 0.0  # Geometry only; no strength calculation.
+        _, projected_lam, _ = self._lml_geometry(projected)
+        if projected_lam <= _LAMBDA_UPPER:
+            return 0.0, upper
+        lower = self._t_min  # Rt=1 remains supported by the existing engine.
+        _, current_lam, _ = self._lml_geometry(grid_df)
+        threshold = self._nominal_wt * _FLAW_THRESHOLD_RATIO
+        if current_lam <= _LAMBDA_UPPER and upper >= threshold:
+            lower = min(lower, threshold)
+        return (lower, upper) if lower <= upper else None
+
+    # ------------------------------------------------------------------
+    # GML assessment (Part 4 Level 2)
+    # ------------------------------------------------------------------
+
+    def _evaluate_gml(self, grid_df: pd.DataFrame) -> dict:
+        """Part 4 Level 2: area-averaged RSF for general metal loss.
+
+        RSF = t_am / t_c  (t_c = t_min for current assessment)
+        """
+        # True area-average over all valid cells.  ``df.mean().mean()`` averages
+        # the column means and is biased when columns hold unequal NaN counts.
+        t_am = float(np.nanmean(grid_df.to_numpy(dtype=float)))
+        t_mm = float(grid_df.min(skipna=True).min())
+        t_c = self._t_min  # conservative: use t_min as the reference
+
+        rsf = t_am / t_c if t_c > 0 else float("inf")
+        rsf = min(rsf, 1.0)  # RSF cannot exceed 1.0
+
+        verdict = "ACCEPT" if rsf >= self._rsf_a else "FAIL_LEVEL_2"
+
+        return {
+            "verdict": verdict,
+            "rsf": rsf,
+            "rsf_a": self._rsf_a,
+            "t_am_in": t_am,
+            "t_mm_in": t_mm,
+            "assessment_type": "GML",
+            "folias_factor": 1.0,  # not used for GML area-averaging
+            "applicability": Applicability(),  # no lambda cap in the GML path
+        }
+
+    # ------------------------------------------------------------------
+    # LML assessment (Part 5 Level 2)
+    # ------------------------------------------------------------------
+
+    def _evaluate_lml(self, grid_df: pd.DataFrame) -> dict:
+        """Part 5 Level 2: localised RSF with Folias factor.
+
+        1. Identify the flaw bounding box (cells below threshold).
+        2. Compute flaw longitudinal length L_a from bounding box rows.
+        3. Compute Folias factor M_t.
+        4. Compute RSF = Rt / (1 - (1 - Rt) / M_t).
+        """
+        t_mm = float(grid_df.min(skipna=True).min())
+        # True area-average over all valid cells (unbiased vs df.mean().mean()).
+        t_am = float(np.nanmean(grid_df.to_numpy(dtype=float)))
+
+        # t_c: future thickness outside the flaw = t_min (conservative)
+        t_c = self._t_min
+
+        l_a, lam, mt = self._lml_geometry(grid_df)
+
+        # Thickness ratio Rt = t_mm / t_c
+        rt = t_mm / t_c if t_c > 0 else 1.0
+        rt = min(rt, 1.0)  # cap at 1.0
+
+        # Applicability (finding #1094-11): beyond lambda = 20 M_t is frozen at
+        # the Table 4.4 limit.  That is flagged rather than returned silently --
+        # but only when M_t actually enters the RSF (Rt < 1).  At Rt = 1 the
+        # RSF is identically 1.0 whatever M_t is, so nothing was extrapolated.
+        applicability = Applicability()
+        if rt < 1.0:
+            applicability = check_upper_limit(
+                lam, _LAMBDA_UPPER, flag=API579_FOLIAS_LAMBDA_FLAG,
+                quantity="lambda", method="API 579-1 Table 4.4 Folias",
+                advice="M_t frozen at the lambda = 20 value; Level 3 or a "
+                       "long-flaw method is required")
+
+        # RSF per API 579 Part 5 Level 2 Eq. (5.13)
+        denominator = 1.0 - (1.0 - rt) / mt
+        if denominator <= 0:
+            rsf = 0.0
+        else:
+            rsf = rt / denominator
+        rsf = min(rsf, 1.0)
+
+        verdict = "ACCEPT" if rsf >= self._rsf_a else "FAIL_LEVEL_2"
+
+        return {
+            "verdict": verdict,
+            "rsf": rsf,
+            "rsf_a": self._rsf_a,
+            "t_am_in": t_am,
+            "t_mm_in": t_mm,
+            "assessment_type": "LML",
+            "folias_factor": mt,
+            "flaw_length_in": l_a,
+            "rt": rt,
+            "lambda": lam,
+            "applicability": applicability,
+        }
+
+    def _lml_geometry(self, grid_df: pd.DataFrame):
+        """Shared geometry for assessment and projection-domain qualification."""
+        flaw_mask = grid_df < self._nominal_wt * _FLAW_THRESHOLD_RATIO
+        flaw_row_count = int(flaw_mask.any(axis=1).sum())
+        spacing = (self._row_spacing if self._row_spacing is not None
+                   else self._infer_spacing(grid_df.index))
+        length = max(flaw_row_count * spacing, spacing)
+        nominal_id = self._od - 2.0 * self._t_min
+        return (length, self._shell_parameter(length, nominal_id, self._t_min),
+                self._folias_factor(length, nominal_id, self._t_min))
+
+    # ------------------------------------------------------------------
+    # Static helpers
+    # ------------------------------------------------------------------
+
+    @staticmethod
+    def _folias_factor(l_a: float, nominal_id: float, t_c: float) -> float:
+        """Compute the Folias bulging factor M_t per API 579 Table 4.4.
+
+        lambda = 1.285 * L_a / sqrt(D * t_c)
+
+        For lambda <= 0.354:          M_t = 1.0
+        For lambda in (0.354, 20]:    M_t = sqrt(1 + 0.48 * lambda**2)
+        For lambda > 20:              M_t = sqrt(1 + 0.48 * 20**2)
+                                      (frozen at the lambda = 20 table limit;
+                                      the simplified form is not extrapolated)
+
+        Args:
+            l_a: Flaw longitudinal extent (inches).
+            nominal_id: Nominal inside diameter (inches).
+            t_c: Reference thickness (inches).
+
+        Returns:
+            Folias factor M_t (always >= 1.0).
+        """
+        if nominal_id <= 0 or t_c <= 0:
+            return 1.0
+
+        lam = Level2Engine._shell_parameter(l_a, nominal_id, t_c)
+
+        if lam <= _LAMBDA_LOWER:
+            mt = 1.0
+        elif lam <= _LAMBDA_UPPER:
+            mt = math.sqrt(1.0 + 0.48 * lam ** 2)
+        else:
+            # Long flaw: use upper-bound approximation
+            mt = math.sqrt(1.0 + 0.48 * _LAMBDA_UPPER ** 2)
+
+        return max(mt, 1.0)
+
+    @staticmethod
+    def _shell_parameter(l_a: float, nominal_id: float, t_c: float) -> float:
+        """API 579 shell parameter ``lambda = 1.285 L_a / sqrt(D t_c)``.
+
+        Returns 0.0 for a degenerate geometry (M_t is then 1.0).
+        """
+        if nominal_id <= 0 or t_c <= 0:
+            return 0.0
+        return 1.285 * l_a / math.sqrt(nominal_id * t_c)
+
+    @staticmethod
+    def _infer_spacing(index: pd.Index) -> float:
+        """Infer the row spacing from a numeric index, defaulting to 1.0."""
+        try:
+            idx_vals = [float(v) for v in index]
+        except (TypeError, ValueError):
+            return 1.0
+        if len(idx_vals) < 2:
+            return 1.0
+        gaps = [idx_vals[i + 1] - idx_vals[i] for i in range(len(idx_vals) - 1)]
+        positive_gaps = [g for g in gaps if g > 0]
+        if not positive_gaps:
+            return 1.0
+        return min(positive_gaps)

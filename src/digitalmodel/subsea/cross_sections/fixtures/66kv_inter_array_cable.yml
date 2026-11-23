@@ -1,0 +1,53 @@
+id: 66kv-inter-array-cable
+name: Representative 66 kV inter-array cable cross-section
+family: offshore_wind_inter_array_cable
+duty: static
+description: Source-backed schema fixture for an offshore wind inter-array cable.
+design_metadata:
+  voltage_class:
+    value: 66
+    unit: kV
+  notes: Representative dimensions for schema validation only.
+provenance:
+  - source_id: wiki-cross-section-recon-2026-04-26
+    source_type: wiki
+    citation: Offshore cable/umbilical cross-section reconnaissance, 2026-04-26
+    url_or_path: knowledge/wikis/marine-engineering/wiki/sources/offshore-cable-umbilical-cross-section-recon-2026-04-26.md
+  - source_id: project-assumption-2514
+    source_type: project_assumption
+    citation: Issue #2514 representative fixture assumptions
+    note: Representative layer dimensions are examples for schema validation, not design defaults.
+  - source_id: prysmian-66kv-example
+    source_type: vendor_catalogue
+    citation: Prysmian 66 kV cable example noted in recon page
+    url_or_path: knowledge/wikis/marine-engineering/wiki/sources/offshore-cable-umbilical-cross-section-recon-2026-04-26.md
+  - source_id: guide-floating-offshore-wind-66kv
+    source_type: wiki
+    citation: Guide to Floating Offshore Wind 66 kV values noted in recon page
+    url_or_path: knowledge/wikis/marine-engineering/wiki/sources/offshore-cable-umbilical-cross-section-recon-2026-04-26.md
+radial_layers:
+  - name: conductor core
+    role: conductor
+    material: copper
+    inner_diameter: {value: 0, unit: mm}
+    outer_diameter: {value: 35, unit: mm}
+    provenance: {source_id: prysmian-66kv-example, source_type: vendor_catalogue}
+  - name: xlpe insulation
+    role: insulation
+    material: XLPE
+    inner_diameter: {value: 35, unit: mm}
+    outer_diameter: {value: 75, unit: mm}
+    provenance: {source_id: guide-floating-offshore-wind-66kv, source_type: wiki}
+  - name: metallic screen and armour
+    role: armour
+    material: steel wire
+    inner_diameter: {value: 75, unit: mm}
+    outer_diameter: {value: 115, unit: mm}
+    provenance: {source_id: project-assumption-2514, source_type: project_assumption, note: Representative armour envelope.}
+  - name: outer jacket
+    role: jacket
+    material: polyethylene
+    inner_diameter: {value: 115, unit: mm}
+    outer_diameter: {value: 130, unit: mm}
+    provenance: {source_id: project-assumption-2514, source_type: project_assumption, note: Representative jacket thickness.}
+packed_components: []

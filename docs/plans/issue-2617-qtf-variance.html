@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><title>Issue 2617: QTF variance plan</title>
+<style>body{font:16px/1.5 sans-serif;max-width:960px;margin:40px auto;padding:0 20px}code{background:#eee}td,th{border:1px solid #bbb;padding:8px}table{border-collapse:collapse}</style>
+<h1>Issue 2617: difference-frequency force variance</h1>
+<p>The change will address <a href="https://github.com/vamseeachanta/digitalmodel/issues/2617">issue 2617</a>
+on a fresh worktree from <code>c5e4ac33</code>. Complexity will be T2; execution will use one writer and parallel read-only plan/code reviews.
+The user request will authorize implementation, one public draft PR and its issue summary; merge and deployment will remain outside scope.</p>
+<h2>Resource intelligence and reproduction</h2>
+<p>The implementation will be checked against <code>src/digitalmodel/orcawave/drift_forces.py</code>,
+the existing tests in <code>tests/orcawave/test_drift_forces.py</code>, the issue criteria, and
+<a href="https://www.orcina.com/webhelp/OrcaFlex/Content/html/Vesseltheory,Wavedriftandsumfrequencyloads.htm">Orcina's second-order load theory</a>.
+The derivation will distinguish conjugate-paired terms and the constant diagonal from fluctuation variance.</p>
+<p>The pre-change runtime evidence will be retained in the verification report:</p>
+<pre>seed=2617; narrow-band JONSWAP Hs=2 m, Tp=2*pi/0.8 s, gamma=10
+omega=linspace(0.2,1.224,2049) rad/s; Q=10 kN/m^2
+2048 random-phase records; 8192 samples/record; 12566.370614 s/record
+repository full-QTF variance = 50.005839732175204 kN^2
+Monte Carlo force variance   = 24.926308458002424 kN^2
+repository / Monte Carlo    = 2.0061470320175374
+95% CI relative half-width  = 0.0029835655035290666</pre>
+<p>Registry discovery will remain bounded to the hub's standards-transfer ledger, code registry and online-resource registry.
+No standards-derived coefficients will be introduced. The available online registry will supply context for Orcina L07;
+no licensed/client files will be consumed. The absent sibling wiki catalogs and claim helper will be recorded as coverage gaps;
+the isolated worktree will avoid shared implementation paths.</p>
+<h2>Proposed calculation and scope</h2>
+<p>For fixed-amplitude random-phase waves, <code>a_i=sqrt(2 S_i dw)</code> and a Hermitian difference-frequency QTF,
+the two ordered terms will combine into a real sinusoid of amplitude <code>2 a_i a_j |Q_ij|</code>.
+Its phase-ensemble variance will be <code>2 a_i^2 a_j^2 |Q_ij|^2 = 8 S_i S_j dw^2 |Q_ij|^2</code>.
+Summation will therefore visit only <code>i&lt;j</code>. The diagonal will contribute mean load, not slowly-varying variance.</p>
+<p><code>full_qtf_slowly_varying</code> will use the unique-pair sum, retain its scalar standard-deviation API and document the derivation.
+<code>newman_approximation</code> will retain its array API and positive-lag values, with its zero-lag bin set to zero to exclude mean load.
+Its documentation will specify <code>mu=k*dw</code> and discrete variance <code>sum(S_sv)*dw</code>, including full endpoint-bin weights.
+This discrete interpretation will be explicit; the positive-frequency continuum limit will remain the usual factor-eight convolution.</p>
+<p>Uniform increasing frequency grids and Hermitian full QTF matrices will remain the stated supported physical case.
+Nonuniform quadrature, directional seas, QTF interpolation and nonlinear/mooring qualification will remain outside this correction.
+Input validation will not be expanded; unsupported non-Hermitian/triangular-only matrices and nonuniform integration grids will be identified as limitations.
+A single component will return zero fluctuation. The existing positive-std fixture will use a complete QTF on a uniform grid.</p>
+<h2>TDD and acceptance</h2>
+<ol>
+<li>A reproducible synthetic reference harness will call the actual public APIs before any production edit.
+The recorded baseline will precede implementation; random-phase force histories will be formed independently from wave amplitudes.</li>
+<li>Failing tests will cover a bichromatic known variance (including a complex Hermitian QTF), a single component/diagonal-only zero fluctuation,
+and Newman/full variance agreement within 1%. These will fail against the old implementation.</li>
+<li>A narrow-band JONSWAP ensemble will use fixed seed 2617 and independent records. The 95% confidence half-width of the mean
+time-history variance will be below 1%; full-QTF and Monte Carlo variances will agree within 1%.</li>
+<li>A linear surge oscillator will use synthetic mass, stiffness and damping. A time-domain ODE response will be compared to the repository full-QTF
+standard deviation using a QTF weighted by the oscillator transfer magnitude at each difference frequency.
+The case will use a bichromatic force with mass 10000 kN*s^2/m, damping 200 kN*s/m and stiffness 100 kN/m
+(natural frequency 0.1 rad/s, damping ratio 0.1). Four random-phase records will use 256 samples per beat cycle,
+discard 64 cycles and measure 128 complete cycles. Standard deviation will remove the static offset.
+Whole-cycle averaging will eliminate phase sampling error in this one-beat case, and standard deviations will agree within 5%.</li>
+<li>The existing drift, spectrum, motion-statistics and relevant package tests will be run. Every tracked reference/import/call to both functions
+will be inspected, and the PR will list every full-QTF caller plus the package re-export and new tests.</li>
+<li>Adversarial plan and code reviews will use frozen SHA-256 packets with verification before verdict acceptance.
+Any unavailable provider will be recorded without treating it as approval. No-MAJOR findings will precede publication.</li>
+</ol>
+<h2>Artifacts and retention</h2>
+<table><tr><th>Purpose</th><th>Proposed artifact</th></tr>
+<tr><td>Implementation</td><td>src/digitalmodel/orcawave/drift_forces.py</td></tr>
+<tr><td>Regression/reference harness</td><td>tests/orcawave/test_drift_force_variance.py</td></tr>
+<tr><td>Calculation evidence</td><td>docs/verification/issue-2617-qtf-variance.html</td></tr>
+<tr><td>Frozen review evidence</td><td>scripts/review/results/2617/</td></tr></table>
+<p>Only synthetic inputs, compact metrics and reproducible generation code will be retained in Git. Full time arrays and QTF matrices will be generated
+in memory and discarded. Input units and criteria will be pinned in the harness/report; no external dataset ownership will be implied.</p>
+<p>Newman/full equality on identical grids will be checked at relative tolerance 1e-12. A mean-force test will bind the QTF convention
+to <code>compute_mean_drift_force</code>. Exact bichromatic and diagonal tests will guard mean-load exclusion independently of the fine-grid ensemble tolerance.
+NumPy 1.26.4 will match the repository's declared NumPy &lt;2 dependency.</p>
+<h2>Review, publication and closeout</h2>
+<p>Claude and Gemini/Agy reviews will be requested alongside the main-session Codex adversarial check at both stages.
+Changed reviewed bytes will invalidate the corresponding verdict. Review transcripts will record actual provider availability.
+The public outgoing bundle will be checked for secrets, client data and source rights. The cleanup audit will classify retained worktree/evidence as expected.
+The verified changes will be committed and pushed without force or hook bypass; one draft PR will reference the issue and carry the result and caller audit.</p>
+</html>

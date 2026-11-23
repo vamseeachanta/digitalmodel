@@ -1,0 +1,55 @@
+schema: basefile-goldens/1
+captured_on: '2026-09-11'
+producer:
+  module: digitalmodel.solvers.orcaflex.template_generator
+  callable: TemplateGenerator.generate(..., as_reference=True) -> TemplateGenerator._generate_reference
+  source_lines: src/digitalmodel/solvers/orcaflex/template_generator.py:380-418
+  repo_commit: b2b462d53c0829414bb29ae0ba4cb1ba93f93b20
+comparator_class: cross-solver
+covers:
+- BaseFile
+does_not_cover:
+- override sections emitted inline by the writer
+cases:
+- case_id: calm_buoy_deep_water
+  base_file: docs/domains/orcaflex/templates/mooring_systems/calm_buoy_hybrid/base/calm_buoy_base.yml
+  variation_file: docs/domains/orcaflex/templates/mooring_systems/calm_buoy_hybrid/variations/deep_water_200m.yml
+  output_file: docs/domains/orcaflex/templates/mooring_systems/calm_buoy_hybrid/cases/case_deep_water_golden.yml
+  golden: tests/solvers/orcaflex/modular_generator/goldens/basefile/cases/calm_buoy_deep_water.yml
+  captured_base_file_value: ../base/calm_buoy_base.yml
+  captured_include_file_value: ../variations/deep_water_200m.yml
+- case_id: spread_mooring_twelve_leg
+  base_file: docs/domains/orcaflex/templates/mooring_systems/spread_mooring_hybrid/base/spread_mooring_base.yml
+  variation_file: docs/domains/orcaflex/templates/mooring_systems/spread_mooring_hybrid/variations/twelve_leg.yml
+  output_file: docs/domains/orcaflex/templates/mooring_systems/spread_mooring_hybrid/cases/case_twelve_leg_golden.yml
+  golden: tests/solvers/orcaflex/modular_generator/goldens/basefile/cases/spread_mooring_twelve_leg.yml
+  captured_base_file_value: ../base/spread_mooring_base.yml
+  captured_include_file_value: ../variations/twelve_leg.yml
+- case_id: salm_wire_rope
+  base_file: docs/domains/orcaflex/templates/mooring_systems/salm_hybrid/base/salm_base.yml
+  variation_file: docs/domains/orcaflex/templates/mooring_systems/salm_hybrid/variations/wire_rope_leg.yml
+  output_file: docs/domains/orcaflex/templates/mooring_systems/salm_hybrid/cases/case_wire_rope_golden.yml
+  golden: tests/solvers/orcaflex/modular_generator/goldens/basefile/cases/salm_wire_rope.yml
+  captured_base_file_value: ../base/salm_base.yml
+  captured_include_file_value: ../variations/wire_rope_leg.yml
+- case_id: turret_external
+  base_file: docs/domains/orcaflex/templates/mooring_systems/turret_mooring_hybrid/base/turret_mooring_base.yml
+  variation_file: docs/domains/orcaflex/templates/mooring_systems/turret_mooring_hybrid/variations/external_turret.yml
+  output_file: docs/domains/orcaflex/templates/mooring_systems/turret_mooring_hybrid/cases/case_external_turret_golden.yml
+  golden: tests/solvers/orcaflex/modular_generator/goldens/basefile/cases/turret_external.yml
+  captured_base_file_value: ../base/turret_mooring_base.yml
+  captured_include_file_value: ../variations/external_turret.yml
+- case_id: dat_base_sibling
+  base_file: tests/solvers/orcaflex/modular_generator/goldens/basefile/fixtures/base_model.dat
+  variation_file: tests/solvers/orcaflex/modular_generator/goldens/basefile/fixtures/variation.yml
+  output_file: tests/solvers/orcaflex/modular_generator/goldens/basefile/fixtures/out/case_dat_base.yml
+  golden: tests/solvers/orcaflex/modular_generator/goldens/basefile/cases/dat_base_sibling.yml
+  captured_base_file_value: ../base_model.dat
+  captured_include_file_value: ../variation.yml
+- case_id: base_below_output
+  base_file: tests/solvers/orcaflex/modular_generator/goldens/basefile/fixtures/sub/base_model.yml
+  variation_file: tests/solvers/orcaflex/modular_generator/goldens/basefile/fixtures/variation.yml
+  output_file: tests/solvers/orcaflex/modular_generator/goldens/basefile/fixtures/case_base_below.yml
+  golden: tests/solvers/orcaflex/modular_generator/goldens/basefile/cases/base_below_output.yml
+  captured_base_file_value: sub/base_model.yml
+  captured_include_file_value: variation.yml

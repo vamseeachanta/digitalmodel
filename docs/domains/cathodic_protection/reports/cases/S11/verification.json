@@ -1,0 +1,19 @@
+{
+  "calculation_result": "PASS",
+  "children": [],
+  "engineering_review": "pending",
+  "fixture": "mixed_family.yml",
+  "id": "S11",
+  "pack_state": "verified",
+  "report": "cases/S11/report.html",
+  "route": "DNV_RP_B401_offshore",
+  "source_class": "synthetic_repository_regression",
+  "source_revision": "bf638ed1",
+  "title": "Concrete, buried and seawater families",
+  "use_status": "client-use-with-eor-check",
+  "verification": {
+    "passed": true,
+    "scope": "citation resolution, comment binding, child links and file checksums"
+  },
+  "visual_review": "deferred_by_owner"
+}

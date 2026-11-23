@@ -1,0 +1,57 @@
+# General Configuration
+# Generated from: C06 CALM Buoy.yml
+# Date: 2026-01-18 22:19:50
+General:
+  UnitsSystem: SI
+  LineResetRepresentation: Quick
+  JacobianBufferingPolicy: 1
+  JacobianPerturbationFactor: 0
+  BuoysIncludedInStatics: All
+  LineStaticsStep1Policy: Parent lines excluded
+  LineStaticsStep2Policy: Parent lines excluded
+  WholeSystemStaticsEnabled: Yes
+  DynamicsSolutionMethod: Implicit time domain
+  ImplicitUseVariableTimeStep: No
+  ImplicitConstantTimeStep: 0.1
+  LogPrecision: Single
+  TargetLogSampleInterval: 0.1
+  LogStartTime: ~
+  StartTime: ~
+  FirstStage: ~
+  RampStartTime: ~
+  RampFinishTime: ~
+  TimeHistoryImportFrom: ~
+  TimeHistoryImportTo: ~
+  StageDuration:
+  - 10
+  - 100
+  RestartStateRecordingPeriodicCount: 0
+  RestartStateRecordingTest: ~
+  DefaultViewMode: Shaded
+  DefaultShadedFillMode: Solid
+  DefaultViewSize: 73.58091341126321
+  DefaultViewCentre:
+  - -1.6808518768141896
+  - 14.873621419951126
+  - -2.1138103018224945
+  DefaultViewAzimuth: 324.79999999999956
+  DefaultViewElevation: 17.699999999999996
+Groups:
+  Structure:
+    Vessel: Model
+    Loadhose: Model
+    Hawser: Model
+    CALM Buoy: Model
+    CALM Top: CALM Buoy
+    CALM Base: CALM Buoy
+    Pivot1: CALM Buoy
+    Pivot2: CALM Buoy
+    Moorings: Model
+    Mooring1: Moorings
+    Mooring2: Moorings
+    Mooring3: Moorings
+    Mooring4: Moorings
+    Mooring5: Moorings
+    Mooring6: Moorings
+  State:
+    Collapsed: []

@@ -1,0 +1,19 @@
+basename: opex_estimate
+
+default:
+  log_level: INFO
+  config:
+    generate_plots: false
+    overwrite:
+      output: true
+
+opex_estimate:
+  case:
+    id: registry_opex_estimate
+    description: Semi-submersible annual OPEX estimate from GoM benchmarks
+  host_type: Semi
+  production_capacity_bopd: 150000.0
+  field_age_years: 5
+  outputs:
+    directory: results/opex_estimate
+    summary_json: opex_estimate_summary.json

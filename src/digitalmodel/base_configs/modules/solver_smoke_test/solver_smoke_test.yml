@@ -1,0 +1,24 @@
+basename: solver_smoke_test
+
+# End-to-end solver licence-checkout probe. Defaults probe both solvers and fail
+# closed, so an input that only sets `basename` still answers the real question
+# ("can this host solve?") rather than silently degrading to a readiness check.
+solver_smoke_test:
+  solvers:
+    - orcaflex
+    - aqwa
+  # null => write the report straight into Analysis.result_folder. Setting this
+  # to "results" would nest a second results/ inside it.
+  output_directory: null
+  require_all: True
+  keep_scratch: False
+
+file_management:
+  flag: False
+
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: True
+    cfg_sensitivities: False

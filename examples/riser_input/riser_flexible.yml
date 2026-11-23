@@ -1,0 +1,18 @@
+# Unified riser input schema (#809) - Flexible Riser example
+riser_type: flexible
+name: flexible_lazy_wave_example
+geometry:
+  water_depth: 1200.0
+material:
+  outer_diameter: 0.30
+  wall_thickness: 0.02
+  grade: X65
+analysis:
+  run_statics: true
+buoyancy_od: 0.6
+buoyancy_density: 450.0
+hog_bend_depth: 650.0
+sag_bend_clearance: 40.0
+hang_off_angle_deg: 10.0
+min_bend_radius: 4.0
+bend_stiffener: true

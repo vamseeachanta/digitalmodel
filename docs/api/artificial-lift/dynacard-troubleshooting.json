@@ -1,0 +1,347 @@
+{
+  "seed": 711,
+  "well": {
+    "rod": {
+      "diameter": 1.0,
+      "length": 5000.0
+    },
+    "pump": {
+      "diameter": 1.75,
+      "depth": 5000.0
+    },
+    "surface_unit": {
+      "manufacturer": "Sim",
+      "unit_type": "Test",
+      "stroke_length": 144.0,
+      "gear_box_rating": 640000.0
+    },
+    "spm": 10.0
+  },
+  "cases": [
+    {
+      "mode": "NORMAL",
+      "seed": 711,
+      "title": "Healthy baseline",
+      "severity": "normal",
+      "symptom": "Full, smooth parallelogram-shaped card. Steady production, loads well inside rod and gearbox ratings. This is the reference shape every other case is compared against.",
+      "actions": [
+        "No intervention \u2014 record the card as the well's healthy reference",
+        "Trend fillage and peak/minimum load for early drift detection"
+      ],
+      "classification": "NORMAL",
+      "confidence": 1.0,
+      "differential": [
+        {
+          "mode": "NORMAL",
+          "probability": 1.0
+        },
+        {
+          "mode": "PARAFFIN_RESTRICTION",
+          "probability": 0.0
+        },
+        {
+          "mode": "SAND_ABRASION",
+          "probability": 0.0
+        }
+      ],
+      "model_version": "1.0",
+      "metrics": {
+        "fluid_load_lbs": 9660.0,
+        "peak_load_lbs": 15679.0,
+        "min_load_lbs": 4225.0,
+        "card_area_inlb": 1130246.0,
+        "area_vs_healthy_pct": 100.0
+      },
+      "n_points": 100
+    },
+    {
+      "mode": "GAS_INTERFERENCE",
+      "seed": 711,
+      "title": "Gas interference",
+      "severity": "warning",
+      "symptom": "Rounded lower-right corner: the traveling valve opens late on the downstroke because free gas in the barrel must compress before the load can transfer. Production is down while the pump card looks \u201cspongy\u201d.",
+      "actions": [
+        "Lower the pump intake below the perforations if the completion allows",
+        "Install or service a downhole gas separator (gas anchor)",
+        "Reduce SPM to give the annulus time to separate gas"
+      ],
+      "classification": "GAS_INTERFERENCE",
+      "confidence": 1.0,
+      "differential": [
+        {
+          "mode": "GAS_INTERFERENCE",
+          "probability": 1.0
+        },
+        {
+          "mode": "NORMAL",
+          "probability": 0.0
+        },
+        {
+          "mode": "BENT_BARREL",
+          "probability": 0.0
+        }
+      ],
+      "model_version": "1.0",
+      "metrics": {
+        "fluid_load_lbs": 11350.0,
+        "peak_load_lbs": 13411.0,
+        "min_load_lbs": 830.0,
+        "card_area_inlb": 835155.0,
+        "area_vs_healthy_pct": 73.9
+      },
+      "n_points": 100
+    },
+    {
+      "mode": "FLUID_POUND",
+      "seed": 711,
+      "title": "Fluid pound (pumped-off well)",
+      "severity": "warning",
+      "symptom": "Abrupt load drop partway down the downstroke: the plunger strikes the fluid level in a partially filled barrel. Audible pounding, shock loading on rods, tubing and gearbox.",
+      "actions": [
+        "Slow the unit or shorten the stroke to match pump displacement to inflow",
+        "Install a pump-off controller or variable-speed drive",
+        "Verify fluid level and inflow before resizing the pump"
+      ],
+      "classification": "FLUID_POUND",
+      "confidence": 1.0,
+      "differential": [
+        {
+          "mode": "FLUID_POUND",
+          "probability": 1.0
+        },
+        {
+          "mode": "PARAFFIN_RESTRICTION",
+          "probability": 0.0
+        },
+        {
+          "mode": "BENT_BARREL",
+          "probability": 0.0
+        }
+      ],
+      "model_version": "1.0",
+      "metrics": {
+        "fluid_load_lbs": 8726.0,
+        "peak_load_lbs": 15291.0,
+        "min_load_lbs": 4679.0,
+        "card_area_inlb": 463079.0,
+        "area_vs_healthy_pct": 41.0
+      },
+      "n_points": 100
+    },
+    {
+      "mode": "VALVE_LEAK_TV",
+      "seed": 711,
+      "title": "Traveling valve leak (worn pump)",
+      "severity": "warning",
+      "symptom": "Load picks up slowly and decays on the upstroke: fluid slips back past the traveling valve or plunger fit, so the rods never carry the full fluid load. Gradual production decline.",
+      "actions": [
+        "Confirm with a standing-valve / traveling-valve dynamometer check",
+        "Pull the pump; repair or replace the traveling valve, seat and plunger",
+        "Review produced-solids and corrosion history before re-running"
+      ],
+      "classification": "VALVE_LEAK_TV",
+      "confidence": 1.0,
+      "differential": [
+        {
+          "mode": "VALVE_LEAK_TV",
+          "probability": 1.0
+        },
+        {
+          "mode": "NORMAL",
+          "probability": 0.0
+        },
+        {
+          "mode": "DELAYED_TV_CLOSURE",
+          "probability": 0.0
+        }
+      ],
+      "model_version": "1.0",
+      "metrics": {
+        "fluid_load_lbs": 9116.0,
+        "peak_load_lbs": 15334.0,
+        "min_load_lbs": 4572.0,
+        "card_area_inlb": 1048606.0,
+        "area_vs_healthy_pct": 92.8
+      },
+      "n_points": 100
+    },
+    {
+      "mode": "PUMP_TAGGING_UP",
+      "seed": 711,
+      "title": "Pump tagging up (spacing too long)",
+      "severity": "critical",
+      "symptom": "Sharp load spike at the top of the stroke: the plunger strikes the top of the barrel or the pull tube. Audible metallic tag; risk of plunger and rod damage every stroke.",
+      "actions": [
+        "Stop and re-space the plunger DOWN, away from the top of the pump",
+        "Re-check spacing after the well reaches operating temperature",
+        "Verify the surface stroke setting matches the pump design"
+      ],
+      "classification": "PUMP_TAGGING_UP",
+      "confidence": 1.0,
+      "differential": [
+        {
+          "mode": "PUMP_TAGGING_UP",
+          "probability": 1.0
+        },
+        {
+          "mode": "VALVE_LEAK_SV",
+          "probability": 0.0
+        },
+        {
+          "mode": "SAND_ABRASION",
+          "probability": 0.0
+        }
+      ],
+      "model_version": "1.0",
+      "metrics": {
+        "fluid_load_lbs": 11137.0,
+        "peak_load_lbs": 18798.0,
+        "min_load_lbs": 4522.0,
+        "card_area_inlb": 1136223.0,
+        "area_vs_healthy_pct": 100.5
+      },
+      "n_points": 100
+    },
+    {
+      "mode": "PUMP_TAGGING_DOWN",
+      "seed": 711,
+      "title": "Pump tagging down (spacing too close)",
+      "severity": "critical",
+      "symptom": "Sharp load drop at the bottom of the stroke, below the downstroke load line: the plunger lands on the standing valve and drives the rods into compression once per stroke.",
+      "actions": [
+        "Stop and re-space the plunger UP, off bottom",
+        "Re-check spacing after the well reaches operating temperature",
+        "Inspect the standing valve cage and seat for impact damage"
+      ],
+      "classification": "PUMP_TAGGING_DOWN",
+      "confidence": 1.0,
+      "differential": [
+        {
+          "mode": "PUMP_TAGGING_DOWN",
+          "probability": 1.0
+        },
+        {
+          "mode": "BENT_BARREL",
+          "probability": 0.0
+        },
+        {
+          "mode": "NORMAL",
+          "probability": 0.0
+        }
+      ],
+      "model_version": "1.0",
+      "metrics": {
+        "fluid_load_lbs": 11244.0,
+        "peak_load_lbs": 16884.0,
+        "min_load_lbs": 3057.0,
+        "card_area_inlb": 1237473.0,
+        "area_vs_healthy_pct": 109.5
+      },
+      "n_points": 100
+    },
+    {
+      "mode": "ROD_PARTING",
+      "seed": 711,
+      "title": "Parted rod string",
+      "severity": "failure",
+      "symptom": "Card collapses to a thin, low-load band with near-zero area: the pump no longer carries fluid load because the rod string is parted. Production stops; polished-rod load drops sharply.",
+      "actions": [
+        "Stop the unit immediately to avoid compounding downhole damage",
+        "Fish the parted rod string and inspect the break face",
+        "Review rod loading, corrosion program and service factor before re-running"
+      ],
+      "classification": "ROD_PARTING",
+      "confidence": 1.0,
+      "differential": [
+        {
+          "mode": "ROD_PARTING",
+          "probability": 1.0
+        },
+        {
+          "mode": "BENT_BARREL",
+          "probability": 0.0
+        },
+        {
+          "mode": "SAND_ABRASION",
+          "probability": 0.0
+        }
+      ],
+      "model_version": "1.0",
+      "metrics": {
+        "fluid_load_lbs": 271.0,
+        "peak_load_lbs": 1823.0,
+        "min_load_lbs": 1398.0,
+        "card_area_inlb": 27013.0,
+        "area_vs_healthy_pct": 2.4
+      },
+      "n_points": 100
+    },
+    {
+      "mode": "GAS_LOCK",
+      "seed": 711,
+      "title": "Gas-locked pump",
+      "severity": "failure",
+      "symptom": "Near-zero card area with a gas-cushion signature: gas trapped between the valves compresses and re-expands each stroke, so neither valve cycles and the pump stops delivering.",
+      "actions": [
+        "Re-space the pump to raise the compression ratio and break the lock",
+        "Install a gas separator or relocate the intake below the perforations",
+        "Consider a variable slippage or gas-lock-resistant pump design"
+      ],
+      "classification": "GAS_LOCK",
+      "confidence": 1.0,
+      "differential": [
+        {
+          "mode": "GAS_LOCK",
+          "probability": 1.0
+        },
+        {
+          "mode": "SAND_ABRASION",
+          "probability": 0.0
+        },
+        {
+          "mode": "EXCESSIVE_VIBRATION",
+          "probability": 0.0
+        }
+      ],
+      "model_version": "1.0",
+      "metrics": {
+        "fluid_load_lbs": 1479.0,
+        "peak_load_lbs": 2629.0,
+        "min_load_lbs": 580.0,
+        "card_area_inlb": 153452.0,
+        "area_vs_healthy_pct": 13.6
+      },
+      "n_points": 100
+    }
+  ],
+  "library_summary": {
+    "n_cards": 346,
+    "phenomena": [
+      "BENT_BARREL",
+      "BUTTERFLY",
+      "DELAYED_TV_CLOSURE",
+      "EXCESSIVE_FRICTION",
+      "EXCESSIVE_VIBRATION",
+      "FILLAGE_COLLAPSE",
+      "FLUID_POUND",
+      "FULL_CARD",
+      "GAS_INTERFERENCE",
+      "GAS_LOCK",
+      "INCOMPLETE_FILLAGE",
+      "NORMAL",
+      "PARAFFIN_RESTRICTION",
+      "PLUNGER_OUT_OF_BARREL",
+      "PLUNGER_UNDERTRAVEL",
+      "PUMPED_OFF",
+      "PUMP_TAGGING_DOWN",
+      "PUMP_TAGGING_UP",
+      "ROD_PARTING",
+      "SAND_ABRASION",
+      "STUCK_PUMP",
+      "TUBING_MOVEMENT",
+      "VALVE_LEAK_SV",
+      "VALVE_LEAK_TV",
+      "WORN_BARREL"
+    ]
+  }
+}

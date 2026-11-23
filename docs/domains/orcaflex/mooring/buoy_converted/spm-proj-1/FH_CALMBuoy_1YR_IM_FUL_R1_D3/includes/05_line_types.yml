@@ -1,0 +1,475 @@
+# LineTypes Configuration
+# Generated from: FH_CALMBuoy_1YR_IM_FUL_R1_D3.yml
+# Date: 2026-01-18 21:53:23
+LineTypes:
+- Name: Chain
+  Category: General
+  OD: 0.171
+  ID: 0
+  CentreOfMass:
+  - 0
+  - 0
+  BulkModulus: Infinity
+  MassPerUnitLength: 0.1795975
+  CompressionIsLimited: Yes
+  AllowableTension: ~
+  MinRadius:
+  - ~
+  - ~
+  EI:
+  - 0
+  - ~
+  EA: 770.735e3
+  PoissonRatio: 0
+  ExpansionTable: None
+  GJ: 10
+  TensionTorqueCoupling: 0
+  OuterContactDiameter: 0.31825000000000003
+  InnerContactDiameter: ~
+  ClashStiffness: 0
+  Ca:
+  - 1
+  - ~
+  - 0.5
+  Cm:
+  - ~
+  - ~
+  - ~
+  Cs: 0
+  Ce: 0
+  Cd:
+  - 2.4
+  - ~
+  - 1.15
+  Cl: 0
+  NormalDragLiftDiameter: 0.095
+  AxialDragLiftDiameter: 0.030239439187460117
+  StressOD: ~
+  StressID: ~
+  AllowableStress: ~
+  TensileStressLoadingFactor: 1
+  BendingStressLoadingFactor: 1
+  ShearStressLoadingFactor: 1
+  TorsionalStressLoadingFactor: 1
+  SeabedLateralFrictionCoefficient: 0.5
+  SeabedAxialFrictionCoefficient: ~
+  RayleighDampingCoefficients: (no damping)
+  Pen:
+  - 1
+  - Solid
+  - Lime
+- Name: HawserLine
+  Category: General
+  OD: 0.0765
+  ID: 0
+  CentreOfMass:
+  - 0
+  - 0
+  BulkModulus: Infinity
+  MassPerUnitLength: 0.005245559999999999
+  CompressionIsLimited: Yes
+  AllowableTension: ~
+  MinRadius:
+  - ~
+  - ~
+  EI:
+  - 0
+  - ~
+  EA: HawserStiffness
+  PoissonRatio: 0.5
+  ExpansionTable: None
+  GJ: 0
+  TensionTorqueCoupling: 0
+  OuterContactDiameter: ~
+  InnerContactDiameter: ~
+  ClashStiffness: 0
+  Ca:
+  - 1
+  - ~
+  - 0.009999999999999998
+  Cm:
+  - ~
+  - ~
+  - ~
+  Cs: 0
+  Ce: 0
+  Cd:
+  - Generic Drag
+  - ~
+  - 0.008
+  Cl: 0
+  NormalDragLiftDiameter: ~
+  AxialDragLiftDiameter: ~
+  StressOD: ~
+  StressID: ~
+  AllowableStress: ~
+  TensileStressLoadingFactor: 1
+  BendingStressLoadingFactor: 1
+  ShearStressLoadingFactor: 1
+  TorsionalStressLoadingFactor: 1
+  SeabedLateralFrictionCoefficient: 0.5
+  SeabedAxialFrictionCoefficient: ~
+  RayleighDampingCoefficients: (no damping)
+  Pen:
+  - 1
+  - Solid
+  - White
+- Name: FH_16inTail_RP
+  Category: General
+  OD: 0.781
+  ID: 0.4
+  CentreOfMass:
+  - 0
+  - 0
+  BulkModulus: Infinity
+  MassPerUnitLength: 0.291
+  CompressionIsLimited: No
+  AllowableTension: ~
+  MinRadius:
+  - ~
+  - ~
+  EI:
+  - 218
+  - ~
+  EA: 27.913e3
+  PoissonRatio: 0.5
+  ExpansionTable: None
+  GJ: 635
+  TensionTorqueCoupling: 0
+  OuterContactDiameter: ~
+  InnerContactDiameter: ~
+  ClashStiffness: 0
+  Ca:
+  - 1
+  - ~
+  - 0
+  Cm:
+  - ~
+  - ~
+  - ~
+  Cs: 0
+  Ce: 0
+  Cd:
+  - Generic Drag
+  - ~
+  - 0.008
+  Cl: 0
+  NormalDragLiftDiameter: ~
+  AxialDragLiftDiameter: ~
+  StressOD: ~
+  StressID: ~
+  AllowableStress: ~
+  TensileStressLoadingFactor: 1
+  BendingStressLoadingFactor: 1
+  ShearStressLoadingFactor: 1
+  TorsionalStressLoadingFactor: 1
+  SeabedLateralFrictionCoefficient: 0.5
+  SeabedAxialFrictionCoefficient: ~
+  RayleighDampingCoefficients: (no damping)
+  Pen:
+  - 1
+  - Solid
+  - $C08000
+- Name: FH_20-16Reducer_RP
+  Category: General
+  OD: 0.794
+  ID: 0.5
+  CentreOfMass:
+  - 0
+  - 0
+  BulkModulus: Infinity
+  MassPerUnitLength: 0.3
+  CompressionIsLimited: No
+  AllowableTension: ~
+  MinRadius:
+  - ~
+  - ~
+  EI:
+  - 210
+  - ~
+  EA: 23.606e3
+  PoissonRatio: 0.5
+  ExpansionTable: None
+  GJ: 615
+  TensionTorqueCoupling: 0
+  OuterContactDiameter: ~
+  InnerContactDiameter: ~
+  ClashStiffness: 0
+  Ca:
+  - 1
+  - ~
+  - 0
+  Cm:
+  - ~
+  - ~
+  - ~
+  Cs: 0
+  Ce: 0
+  Cd:
+  - Generic Drag
+  - ~
+  - 0.008
+  Cl: 0
+  NormalDragLiftDiameter: ~
+  AxialDragLiftDiameter: ~
+  StressOD: ~
+  StressID: ~
+  AllowableStress: ~
+  TensileStressLoadingFactor: 1
+  BendingStressLoadingFactor: 1
+  ShearStressLoadingFactor: 1
+  TorsionalStressLoadingFactor: 1
+  SeabedLateralFrictionCoefficient: 0.5
+  SeabedAxialFrictionCoefficient: ~
+  RayleighDampingCoefficients: (no damping)
+  Pen:
+  - 1
+  - Solid
+  - $C08000
+- Name: FH_24-20Reducer_RP
+  Category: General
+  OD: 0.929
+  ID: 0.55
+  CentreOfMass:
+  - 0
+  - 0
+  BulkModulus: Infinity
+  MassPerUnitLength: 0.412
+  CompressionIsLimited: No
+  AllowableTension: ~
+  MinRadius:
+  - ~
+  - ~
+  EI:
+  - 409
+  - ~
+  EA: 34.726e3
+  PoissonRatio: 0.5
+  ExpansionTable: None
+  GJ: 1196
+  TensionTorqueCoupling: 0
+  OuterContactDiameter: ~
+  InnerContactDiameter: ~
+  ClashStiffness: 0
+  Ca:
+  - 1
+  - ~
+  - 0
+  Cm:
+  - ~
+  - ~
+  - ~
+  Cs: 0
+  Ce: 0
+  Cd:
+  - Generic Drag
+  - ~
+  - 0.008
+  Cl: 0
+  NormalDragLiftDiameter: ~
+  AxialDragLiftDiameter: ~
+  StressOD: ~
+  StressID: ~
+  AllowableStress: ~
+  TensileStressLoadingFactor: 1
+  BendingStressLoadingFactor: 1
+  ShearStressLoadingFactor: 1
+  TorsionalStressLoadingFactor: 1
+  SeabedLateralFrictionCoefficient: 0.5
+  SeabedAxialFrictionCoefficient: ~
+  RayleighDampingCoefficients: (no damping)
+  Pen:
+  - 1
+  - Solid
+  - $C08000
+- Name: FH_24inFirst_Thin_RP
+  Category: General
+  OD: 0.95
+  ID: 0.6
+  CentreOfMass:
+  - 0
+  - 0
+  BulkModulus: Infinity
+  MassPerUnitLength: 0.544
+  CompressionIsLimited: No
+  AllowableTension: ~
+  MinRadius:
+  - ~
+  - ~
+  EI:
+  - 545
+  - ~
+  EA: 33.657e3
+  PoissonRatio: 0.5
+  ExpansionTable: None
+  GJ: 1591
+  TensionTorqueCoupling: 0
+  OuterContactDiameter: ~
+  InnerContactDiameter: ~
+  ClashStiffness: 0
+  Ca:
+  - 1
+  - ~
+  - 0
+  Cm:
+  - ~
+  - ~
+  - ~
+  Cs: 0
+  Ce: 0
+  Cd:
+  - 1.2
+  - ~
+  - 0.008
+  Cl: 0
+  NormalDragLiftDiameter: ~
+  AxialDragLiftDiameter: ~
+  StressOD: ~
+  StressID: ~
+  AllowableStress: ~
+  TensileStressLoadingFactor: 1
+  BendingStressLoadingFactor: 1
+  ShearStressLoadingFactor: 1
+  TorsionalStressLoadingFactor: 1
+  SeabedLateralFrictionCoefficient: 0.5
+  SeabedAxialFrictionCoefficient: ~
+  RayleighDampingCoefficients: (no damping)
+  Pen:
+  - 1
+  - Solid
+  - $C08000
+- Name: FH_24inML_RP
+  Category: General
+  OD: 1.113
+  ID: 0.6
+  CentreOfMass:
+  - 0
+  - 0
+  BulkModulus: Infinity
+  MassPerUnitLength: 0.478
+  CompressionIsLimited: No
+  AllowableTension: ~
+  MinRadius:
+  - ~
+  - ~
+  EI:
+  - 882
+  - ~
+  EA: 54.502e3
+  PoissonRatio: 0.5
+  ExpansionTable: None
+  GJ: 2576
+  TensionTorqueCoupling: 0
+  OuterContactDiameter: ~
+  InnerContactDiameter: ~
+  ClashStiffness: 0
+  Ca:
+  - 1
+  - ~
+  - 0
+  Cm:
+  - ~
+  - ~
+  - ~
+  Cs: 0
+  Ce: 0
+  Cd:
+  - Generic Drag
+  - ~
+  - 0.008
+  Cl: 0
+  NormalDragLiftDiameter: ~
+  AxialDragLiftDiameter: ~
+  StressOD: ~
+  StressID: ~
+  AllowableStress: ~
+  TensileStressLoadingFactor: 1
+  BendingStressLoadingFactor: 1
+  ShearStressLoadingFactor: 1
+  TorsionalStressLoadingFactor: 1
+  SeabedLateralFrictionCoefficient: 0.5
+  SeabedAxialFrictionCoefficient: ~
+  RayleighDampingCoefficients: (no damping)
+  Pen:
+  - 1
+  - Solid
+  - $C08000
+- Name: Hose Flange
+  Category: General
+  OD: 0.8
+  ID: 0.5
+  CentreOfMass:
+  - 0
+  - 0
+  BulkModulus: Infinity
+  MassPerUnitLength: 0.94
+  CompressionIsLimited: No
+  AllowableTension: ~
+  MinRadius:
+  - ~
+  - ~
+  EI:
+  - 1.2e6
+  - ~
+  EA: 28e6
+  PoissonRatio: 0.3
+  ExpansionTable: None
+  GJ: 933e3
+  TensionTorqueCoupling: 0
+  OuterContactDiameter: ~
+  InnerContactDiameter: ~
+  ClashStiffness: 0
+  Ca:
+  - 1
+  - ~
+  - 1.1
+  Cm:
+  - ~
+  - ~
+  - ~
+  Cs: 0
+  Ce: 0
+  Cd:
+  - 1.2
+  - ~
+  - 1.2
+  Cl: 0
+  NormalDragLiftDiameter: ~
+  AxialDragLiftDiameter: ~
+  StressOD: ~
+  StressID: ~
+  AllowableStress: ~
+  TensileStressLoadingFactor: 1
+  BendingStressLoadingFactor: 1
+  ShearStressLoadingFactor: 1
+  TorsionalStressLoadingFactor: 1
+  SeabedLateralFrictionCoefficient: 0.5
+  SeabedAxialFrictionCoefficient: ~
+  RayleighDampingCoefficients: (no damping)
+  Pen:
+  - 4
+  - Solid
+  - $804000
+- Name: MBC
+  Category: Homogeneous pipe
+  OD: 0.647
+  ID: 0.577
+  MaterialDensity: 7.85
+  E: 212e6
+  PoissonRatio: 0.293
+  ExpansionTable: None
+  Cdn: 1.2
+  Cdz: 0.008
+  Cl: 0
+  Can: 1
+  Caz: 0
+  Cs: 0
+  Ce: 0
+  SeabedLateralFrictionCoefficient: 0.5
+  SeabedAxialFrictionCoefficient: ~
+  ClashStiffness: 0
+  AllowableStress: ~
+  RayleighDampingCoefficients: (no damping)
+  CoatingThickness: 0
+  LiningThickness: 0
+  AdditionalEI: 0

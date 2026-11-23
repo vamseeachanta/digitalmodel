@@ -1,0 +1,53 @@
+---
+parameters:
+  file_io_01: &file_io_01 tests\data\compare_tool_vertical_riser_stack_up_properties_5000ft_064pcf.csv
+  label_01: &label_01 8.6 ppg Density
+  file_io_02: &file_io_02 tests\data\compare_tool_vertical_riser_stack_up_properties_5000ft_120pcf.csv
+  label_02: &label_02 16 ppg Density
+
+default:
+  log_level: DEBUG
+  config:
+    overwrite:
+      output: True
+
+files:
+  -
+    file_type: csv
+    io: *file_io_01
+    label: *label_01
+    data_type: DataFrame
+    columns:
+      - component_bottom_effective_tension
+      - component_bottom_elevation_above_mudline
+  -
+    file_type: csv
+    io: *file_io_02
+    label: *label_02
+    data_type: DataFrame
+    columns:
+      - component_bottom_effective_tension
+      - component_bottom_elevation_above_mudline
+
+plot:
+  -
+    file_suffix: QA_effective_tension
+    suptitle: Effective Tension Comparison
+    size: default
+    orientation: portrait
+    plt_kind: line
+    title: " "
+    grid: True
+    legend: True
+    legend_location: best
+    marker: NULL
+    ylim: NULL
+    xlabel: Effective Tension (kN)
+    ylabel: Elevation Above Mudline (m)
+    x_reverse: False
+    y_reverse: True
+    text_fields:
+      -
+        x : 2000
+        y: 11400
+        text: more records obtained by engine with query of bit_on_bottom = 1

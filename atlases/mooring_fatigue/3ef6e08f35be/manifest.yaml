@@ -1,0 +1,58 @@
+atlas_id: 3ef6e08f35be
+basename: mooring_fatigue
+physics: log_log
+response: damage
+axes:
+- name: stress_MPa
+  scale: log
+  grid:
+  - 11.0
+  - 14.0
+  - 18.0
+  - 22.0
+  - 27.0
+  - 33.0
+  - 40.0
+  - 50.0
+  - 62.0
+  - 78.0
+  - 98.0
+  - 122.0
+  - 150.0
+  derived:
+    fn: stress_from_tension_area
+    inputs:
+    - tension_range_kN
+    - area_mm2
+- name: n_cycles
+  scale: log
+  grid:
+  - 10000.0
+  - 100000.0
+  - 1000000.0
+- name: sn_curve
+  values:
+  - B1
+  - B2
+  - C
+  - C1
+  - C2
+  - D
+  - E
+  - F
+validation:
+  metric: max_rel_error
+  max_rel_error: 0.07426632932863315
+  threshold: 0.1
+  passes: true
+provenance:
+  basename: mooring_fatigue
+  code_version: a3a67b4b
+  standards:
+  - id: DNV-RP-C203
+    edition: 2021-09
+  response_kwargs:
+    environment: seawater_cp
+  workflow_id: mooring-fatigue
+  content_fingerprint: 3ef6e08f35beb8af2148e1570a5a867a10744930f6a50c022484ce71cabdaeac
+  input_template_sha256: e707539680f132ac6d050199900a952dde34cdc1e85fb8cb84e10961a85a0351

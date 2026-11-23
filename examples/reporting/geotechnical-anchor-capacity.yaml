@@ -1,0 +1,76 @@
+metadata:
+  title: "Suction Anchor Capacity — DNV-RP-E303"
+  doc_id: "CALC-GEO-003"
+  revision: "A"
+  date: "2026-03-14"
+  author: "ACE Engineering"
+  status: draft
+inputs:
+  - name: "Caisson diameter"
+    symbol: "D"
+    value: 5.0
+    unit: "m"
+  - name: "Embedded length"
+    symbol: "L"
+    value: 15.0
+    unit: "m"
+  - name: "Undrained shear strength"
+    symbol: "S_u"
+    value: 30.0
+    unit: "kPa"
+    source: "Site investigation"
+  - name: "Adhesion factor"
+    symbol: "\\alpha"
+    value: 0.65
+    unit: "-"
+  - name: "Bearing capacity factor"
+    symbol: "N_c"
+    value: 9.0
+    unit: "-"
+  - name: "Wall thickness"
+    symbol: "t"
+    value: 0.04
+    unit: "m"
+methodology:
+  description: "Suction anchor (caisson) capacity in clay using skin friction + reverse end bearing per DNV-RP-E303"
+  standard: "DNV-RP-E303"
+  equations:
+    - id: eq1
+      name: "Outer skin friction"
+      latex: "Q_{f,outer} = \\alpha \\cdot S_u \\cdot \\pi \\cdot D \\cdot L"
+      description: "Outer wall adhesion capacity"
+    - id: eq2
+      name: "Inner skin friction"
+      latex: "Q_{f,inner} = \\alpha \\cdot S_u \\cdot \\pi \\cdot (D - 2t) \\cdot L"
+      description: "Inner wall adhesion capacity (soil plug)"
+    - id: eq3
+      name: "Reverse end bearing"
+      latex: "Q_p = N_c \\cdot S_u \\cdot \\frac{\\pi D^2}{4}"
+      description: "Reverse end bearing at caisson tip"
+    - id: eq4
+      name: "Total capacity"
+      latex: "Q_{total} = Q_{f,outer} + Q_{f,inner} + Q_p"
+      description: "Sum of skin friction and reverse end bearing"
+outputs:
+  - name: "Total capacity"
+    symbol: "Q_{total}"
+    value: 14417.08
+    unit: "kN"
+    notes: "Computed via digitalmodel.geotechnical.anchors.suction_anchor_capacity"
+  - name: "Skin friction (outer + inner)"
+    symbol: "Q_f"
+    value: 9115.65
+    unit: "kN"
+  - name: "Reverse end bearing"
+    symbol: "Q_p"
+    value: 5301.44
+    unit: "kN"
+assumptions:
+  - "Uniform clay profile over embedded length"
+  - "Constant undrained shear strength with depth"
+  - "Alpha factor applied equally to inner and outer walls"
+  - "Wall thickness t = 40 mm (typical for 5 m diameter caisson)"
+  - "No degradation for cyclic loading"
+references:
+  - "DNV-RP-E303, Geotechnical Design and Installation of Suction Anchors in Clay"
+  - "API RP 2SK, Design and Analysis of Stationkeeping Systems for Floating Structures"

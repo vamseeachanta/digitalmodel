@@ -1,0 +1,98 @@
+[
+  {
+    "vessel_name": "Thialf",
+    "owner": "Heerema",
+    "crane_capacity_tonnes": 14200,
+    "crane_capacity_basis": "combined",
+    "deck_area_m2": null,
+    "dp_class": "DP-3",
+    "bollard_pull_tonnes": null,
+    "source_url": "https://www.heerema.com/heerema-marine-contractors/fleet/thialf",
+    "retrieved_utc": "2026-10-11T19:45:35.937998+00:00",
+    "field_sources": {
+      "vessel_name": "https://www.heerema.com/heerema-marine-contractors/fleet/thialf",
+      "owner": "https://www.heerema.com/heerema-marine-contractors/fleet/thialf",
+      "crane_capacity_tonnes": "https://www.heerema.com/heerema-marine-contractors/fleet/thialf",
+      "crane_capacity_basis": "https://www.heerema.com/hubfs/HMC%20Equipment%20Folder%20-%20Thialf.pdf",
+      "dp_class": "https://www.heerema.com/hubfs/HMC%20Equipment%20Folder%20-%20Thialf.pdf",
+      "dp_notation_source": "https://www.heerema.com/hubfs/HMC%20Equipment%20Folder%20-%20Thialf.pdf"
+    },
+    "dp_notation_source": "DP-3; printed page 3"
+  },
+  {
+    "vessel_name": "Sleipnir",
+    "owner": "Heerema",
+    "crane_capacity_tonnes": 20000,
+    "crane_capacity_basis": "combined",
+    "deck_area_m2": null,
+    "dp_class": null,
+    "bollard_pull_tonnes": null,
+    "source_url": "https://www.heerema.com/heerema-marine-contractors/fleet/sleipnir",
+    "retrieved_utc": "2026-10-11T19:45:39.198394+00:00",
+    "field_sources": {
+      "vessel_name": "https://www.heerema.com/heerema-marine-contractors/fleet/sleipnir",
+      "owner": "https://www.heerema.com/heerema-marine-contractors/fleet/sleipnir",
+      "crane_capacity_tonnes": "https://www.heerema.com/heerema-marine-contractors/fleet/sleipnir",
+      "crane_capacity_basis": "https://www.heerema.com/heerema-marine-contractors/fleet/sleipnir"
+    },
+    "dp_notation_source": null
+  },
+  {
+    "vessel_name": "Les Alizés",
+    "owner": "Jan De Nul",
+    "crane_capacity_tonnes": 5000,
+    "crane_capacity_basis": "individual",
+    "deck_area_m2": 9300,
+    "dp_class": "DP-2",
+    "bollard_pull_tonnes": null,
+    "source_url": "https://www.jandenul.com/sites/default/files/public/Les%20Aliz%C3%A9s%20%28EN%29_2026_0.pdf",
+    "retrieved_utc": "2026-11-14T02:33:31.761309+00:00",
+    "field_sources": {
+      "vessel_name": "https://www.jandenul.com/fleet/heavy-lift-vessels",
+      "owner": "https://www.jandenul.com/fleet/heavy-lift-vessels",
+      "crane_capacity_tonnes": "https://www.jandenul.com/sites/default/files/public/Les%20Aliz%C3%A9s%20%28EN%29_2026_0.pdf",
+      "crane_capacity_basis": "https://www.jandenul.com/sites/default/files/public/Les%20Aliz%C3%A9s%20%28EN%29_2026_0.pdf",
+      "deck_area_m2": "https://www.jandenul.com/sites/default/files/public/Les%20Aliz%C3%A9s%20%28EN%29_2026_0.pdf",
+      "dp_class": "https://www.jandenul.com/sites/default/files/public/Les%20Aliz%C3%A9s%20%28EN%29_2026_0.pdf"
+    },
+    "dp_notation_source": null
+  },
+  {
+    "vessel_name": "Orion",
+    "owner": "DEME",
+    "crane_capacity_tonnes": 5000,
+    "crane_capacity_basis": "individual",
+    "deck_area_m2": 8000,
+    "dp_class": "DP-3",
+    "bollard_pull_tonnes": null,
+    "source_url": "https://www.deme-group.com/technologies/orion",
+    "retrieved_utc": "2026-11-14T02:33:36.006388+00:00",
+    "field_sources": {
+      "vessel_name": "https://www.deme-group.com/technologies/orion",
+      "owner": "https://www.deme-group.com/technologies/orion",
+      "crane_capacity_tonnes": "https://www.deme-group.com/technologies/orion",
+      "crane_capacity_basis": "https://www.deme-group.com/technologies/orion",
+      "deck_area_m2": "https://www.deme-group.com/technologies/orion",
+      "dp_class": "https://www.deme-group.com/technologies/orion"
+    },
+    "dp_notation_source": null
+  },
+  {
+    "vessel_name": "Gulliver",
+    "owner": "DEME",
+    "crane_capacity_tonnes": 4000,
+    "crane_capacity_basis": "combined",
+    "deck_area_m2": null,
+    "dp_class": null,
+    "bollard_pull_tonnes": null,
+    "source_url": "https://www.deme-group.com/technologies/gulliver",
+    "retrieved_utc": "2026-11-14T02:33:39.672597+00:00",
+    "field_sources": {
+      "vessel_name": "https://www.deme-group.com/technologies/gulliver",
+      "owner": "https://www.deme-group.com/technologies/gulliver",
+      "crane_capacity_tonnes": "https://www.deme-group.com/technologies/gulliver",
+      "crane_capacity_basis": "https://www.deme-group.com/technologies/gulliver"
+    },
+    "dp_notation_source": null
+  }
+]

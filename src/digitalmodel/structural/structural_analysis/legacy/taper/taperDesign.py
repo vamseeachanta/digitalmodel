@@ -1,0 +1,13 @@
+"""Tapered structural member design and optimization."""
+
+import yaml
+
+with open("taper.yml", 'r') as ymlfile:
+    cfg = yaml.safe_load(ymlfile)
+
+print(cfg)
+
+print(cfg['material'])
+
+print(cfg['material']['E'])
+print(cfg['material']['rho'])

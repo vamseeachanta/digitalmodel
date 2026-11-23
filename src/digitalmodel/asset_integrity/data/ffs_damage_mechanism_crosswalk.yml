@@ -1,0 +1,90 @@
+# ABOUTME: API RP 571 damage-mechanism NAMES mapped to the API 579-1/ASME FFS-1 part(s) that assess the
+# ABOUTME: resulting flaw. Names and part numbers only (public knowledge); no descriptions, no clause text. #2197
+#
+# Purpose: route an inspection finding, named in the API RP 571 vocabulary, to the API 579 part whose
+# assessment procedure applies. Part numbers must exist in ffs_offering_catalog.yml `codes.api-579-1.parts`
+# (enforced by tests/asset_integrity/test_offering_catalog_render.py). Categories follow the RP 571 grouping.
+# A mechanism that leaves more than one kind of flaw lists every applicable part, most common first.
+# Rights: publisher identifiers and mechanism names only. Susceptibility criteria, temperature bands and
+# thresholds stay out; the assessment inputs live in each engine's rights card.
+
+schema_version: 1
+generated: 2026-09-26
+taxonomy: api-rp-571
+target: api-579-1
+source_catalog: ffs_offering_catalog.yml
+
+categories:
+  - name: Mechanical and metallurgical failure mechanisms
+    mechanisms:
+      - {name: Graphitization, parts: [10]}
+      - {name: Softening (spheroidization), parts: [10]}
+      - {name: Temper embrittlement, parts: [3]}
+      - {name: Strain aging, parts: [3]}
+      - {name: 885F embrittlement, parts: [3]}
+      - {name: Sigma phase embrittlement, parts: [3]}
+      - {name: Brittle fracture, parts: [3, 9]}
+      - {name: Creep and stress rupture, parts: [10]}
+      - {name: Thermal fatigue, parts: [14, 9]}
+      - {name: Short-term overheating / stress rupture, parts: [10, 8]}
+      - {name: Steam blanketing, parts: [10, 8]}
+      - {name: Dissimilar metal weld cracking, parts: [9]}
+      - {name: Thermal shock, parts: [9]}
+      - {name: Erosion / erosion-corrosion, parts: [4, 5]}
+      - {name: Cavitation, parts: [5, 6]}
+      - {name: Mechanical fatigue, parts: [14, 9]}
+      - {name: Vibration-induced fatigue, parts: [14, 9]}
+      - {name: Reheat cracking, parts: [9]}
+
+  - name: Uniform or localized loss of thickness
+    mechanisms:
+      - {name: Galvanic corrosion, parts: [4, 5]}
+      - {name: Atmospheric corrosion, parts: [4, 5]}
+      - {name: Corrosion under insulation (CUI), parts: [4, 5, 6]}
+      - {name: Cooling water corrosion, parts: [4, 5, 6]}
+      - {name: Boiler water condensate corrosion, parts: [4, 5]}
+      - {name: CO2 corrosion, parts: [4, 5, 6]}
+      - {name: Flue-gas dew-point corrosion, parts: [4, 5, 6]}
+      - {name: Microbiologically influenced corrosion (MIC), parts: [6, 5]}
+      - {name: Soil corrosion, parts: [4, 5, 6]}
+      - {name: Caustic corrosion, parts: [5]}
+      - {name: Dealloying, parts: [5]}
+      - {name: Graphitic corrosion, parts: [5]}
+      - {name: Amine corrosion, parts: [4, 5]}
+      - {name: Ammonium bisulfide corrosion (alkaline sour water), parts: [4, 5]}
+      - {name: Ammonium chloride corrosion, parts: [5, 6]}
+      - {name: Hydrochloric acid (HCl) corrosion, parts: [4, 5]}
+      - {name: High-temperature H2/H2S corrosion, parts: [4]}
+      - {name: Hydrofluoric (HF) acid corrosion, parts: [4, 5, 6]}
+      - {name: Naphthenic acid corrosion, parts: [4, 5]}
+      - {name: Phenol (carbolic acid) corrosion, parts: [4, 5]}
+      - {name: Phosphoric acid corrosion, parts: [4, 5]}
+      - {name: Sour water corrosion (acidic), parts: [4, 5]}
+      - {name: Sulfuric acid corrosion, parts: [4, 5]}
+      - {name: Aqueous organic acid corrosion, parts: [4, 5]}
+
+  - name: High-temperature corrosion
+    mechanisms:
+      - {name: Oxidation, parts: [4]}
+      - {name: Sulfidation, parts: [4]}
+      - {name: Carburization, parts: [4, 10]}
+      - {name: Decarburization, parts: [4]}
+      - {name: Metal dusting, parts: [5]}
+      - {name: Fuel ash corrosion, parts: [4, 5]}
+      - {name: Nitriding, parts: [4]}
+
+  - name: Environment-assisted cracking
+    mechanisms:
+      - {name: Chloride stress corrosion cracking, parts: [9]}
+      - {name: Corrosion fatigue, parts: [9, 14]}
+      - {name: Caustic stress corrosion cracking (caustic embrittlement), parts: [9]}
+      - {name: Ammonia stress corrosion cracking, parts: [9]}
+      - {name: Hydrogen embrittlement, parts: [3, 9]}
+      - {name: Ethanol stress corrosion cracking, parts: [9]}
+      - {name: Sulfate stress corrosion cracking, parts: [9]}
+      - {name: Wet H2S damage (blistering, HIC, SOHIC, SSC), parts: [7, 9]}
+      - {name: Hydrogen stress cracking in HF, parts: [9]}
+      - {name: Carbonate stress corrosion cracking, parts: [9]}
+      - {name: Amine stress corrosion cracking, parts: [9]}
+      - {name: Polythionic acid stress corrosion cracking, parts: [9]}
+      - {name: High-temperature hydrogen attack (HTHA), parts: [7, 9]}

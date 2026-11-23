@@ -1,0 +1,74 @@
+{
+  "citations": [
+    {
+      "code_id": "dnv-rp-b401",
+      "note": "DNV-RP-B401 (May 2021): verified-2021-tables",
+      "publisher": "DNV",
+      "revision": "2021-05",
+      "section": "Table 8-1",
+      "source_project": null,
+      "source_sibling": "generic",
+      "wiki_path": "wikis/engineering-standards/wiki/standards/dnv-rp-b401-2021.md"
+    },
+    {
+      "code_id": "dnv-rp-b401",
+      "note": "DNV-RP-B401 (May 2021): verified-2021-tables",
+      "publisher": "DNV",
+      "revision": "2021-05",
+      "section": "Table 8-2",
+      "source_project": null,
+      "source_sibling": "generic",
+      "wiki_path": "wikis/engineering-standards/wiki/standards/dnv-rp-b401-2021.md"
+    },
+    {
+      "code_id": "dnv-rp-b401",
+      "note": "DNV-RP-B401 (May 2021): verified-2021-tables",
+      "publisher": "DNV",
+      "revision": "2021-05",
+      "section": "Table 8-3",
+      "source_project": null,
+      "source_sibling": "generic",
+      "wiki_path": "wikis/engineering-standards/wiki/standards/dnv-rp-b401-2021.md"
+    },
+    {
+      "code_id": "dnv-rp-b401",
+      "note": "DNV-RP-B401 (May 2021): verified-2021-tables",
+      "publisher": "DNV",
+      "revision": "2021-05",
+      "section": "Table 8-6",
+      "source_project": null,
+      "source_sibling": "generic",
+      "wiki_path": "wikis/engineering-standards/wiki/standards/dnv-rp-b401-2021.md"
+    },
+    {
+      "code_id": "dnv-rp-b401",
+      "note": "DNV-RP-B401 (May 2021): verified-2021-tables",
+      "publisher": "DNV",
+      "revision": "2021-05",
+      "section": "Table 8-6 with [2.4.2] (design protective potential)",
+      "source_project": null,
+      "source_sibling": "generic",
+      "wiki_path": "wikis/engineering-standards/wiki/standards/dnv-rp-b401-2021.md"
+    },
+    {
+      "code_id": "dnv-rp-b401",
+      "note": "DNV-RP-B401 (May 2021): verified-2021-tables",
+      "publisher": "DNV",
+      "revision": "2021-05",
+      "section": "Table 8-7",
+      "source_project": null,
+      "source_sibling": "generic",
+      "wiki_path": "wikis/engineering-standards/wiki/standards/dnv-rp-b401-2021.md"
+    },
+    {
+      "code_id": "dnv-rp-b401",
+      "note": "DNV-RP-B401 (May 2021): verified-2021-tables",
+      "publisher": "DNV",
+      "revision": "2021-05",
+      "section": "[3.3.8] (buried surfaces)",
+      "source_project": null,
+      "source_sibling": "generic",
+      "wiki_path": "wikis/engineering-standards/wiki/standards/dnv-rp-b401-2021.md"
+    }
+  ]
+}

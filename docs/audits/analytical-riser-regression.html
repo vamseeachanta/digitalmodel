@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><title>Analytical riser regression analysis</title><style>body{font:1rem system-ui;max-width:75rem;margin:2rem auto;padding:1rem}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#f4f6f8;padding:1rem}</style><h1>Analytical riser regression analysis</h1><h2>Summary</h2><p>Analytical regression status: PASS. Native acceptance and production optimisation remain BLOCKED-IF-MISSING.</p><pre>{
+  &quot;assumed_attempted&quot;: 4,
+  &quot;assumed_completed&quot;: 4,
+  &quot;assumed_passed&quot;: 4,
+  &quot;comparisons_attempted&quot;: 2,
+  &quot;comparisons_completed&quot;: 2,
+  &quot;comparisons_passed&quot;: 2,
+  &quot;native_runs&quot;: 0,
+  &quot;qualified_results&quot;: 0
+}</pre><h2>Revision history</h2><pre>[
+  {
+    &quot;revision&quot;: 0,
+    &quot;date&quot;: &quot;2026-10-25&quot;,
+    &quot;change&quot;: &quot;Initial source-bound analytical replay to separate regression evidence from native qualification.&quot;
+  },
+  {
+    &quot;revision&quot;: 1,
+    &quot;date&quot;: &quot;2026-10-25&quot;,
+    &quot;change&quot;: &quot;Check every local arc, requested sag/hog elevation and interface continuity to reject compensating errors and stale geometry; use maintainer terminology.&quot;
+  }
+]</pre><h2>Criteria</h2><pre>{
+  &quot;depth&quot;: {
+    &quot;limit&quot;: 1e-06,
+    &quot;units&quot;: &quot;m&quot;,
+    &quot;form&quot;: &quot;absolute&quot;,
+    &quot;citation&quot;: &quot;REPORT&quot;
+  },
+  &quot;angle&quot;: {
+    &quot;limit&quot;: 1e-09,
+    &quot;units&quot;: &quot;deg&quot;,
+    &quot;form&quot;: &quot;absolute&quot;,
+    &quot;citation&quot;: &quot;REPORT&quot;
+  },
+  &quot;global_force&quot;: {
+    &quot;limit&quot;: 1e-12,
+    &quot;units&quot;: &quot;1&quot;,
+    &quot;form&quot;: &quot;relative&quot;,
+    &quot;citation&quot;: &quot;REPORT&quot;
+  },
+  &quot;force_consistency&quot;: {
+    &quot;limit&quot;: 1e-12,
+    &quot;units&quot;: &quot;1&quot;,
+    &quot;form&quot;: &quot;relative&quot;,
+    &quot;citation&quot;: &quot;REPORT&quot;
+  },
+  &quot;segment_arc&quot;: {
+    &quot;limit&quot;: 1e-09,
+    &quot;units&quot;: &quot;1&quot;,
+    &quot;form&quot;: &quot;relative&quot;,
+    &quot;citation&quot;: &quot;REPORT: numerical geometry band; OpenStax, Calculus Volume 1, 2016 edition, section 6.9&quot;,
+    &quot;basis&quot;: &quot;Each vertex-to-interface arc is R*sinh(X/R)&quot;,
+    &quot;source&quot;: &quot;https://openstax.org/books/calculus-volume-1/pages/6-9-calculus-of-the-hyperbolic-functions&quot;
+  },
+  &quot;wave_elevation&quot;: {
+    &quot;limit&quot;: 1e-06,
+    &quot;units&quot;: &quot;m&quot;,
+    &quot;form&quot;: &quot;absolute&quot;,
+    &quot;citation&quot;: &quot;REPORT: depth closure band; OpenStax, Calculus Volume 1, 2016 edition, section 6.9&quot;,
+    &quot;basis&quot;: &quot;Sag and hog are elevations above seabed from signed segment drops&quot;
+  },
+  &quot;interface_continuity&quot;: {
+    &quot;limit&quot;: 1e-12,
+    &quot;units&quot;: &quot;1&quot;,
+    &quot;form&quot;: &quot;relative&quot;,
+    &quot;citation&quot;: &quot;REPORT: force equilibrium band; OpenStax, University Physics Volume 1, 2016 edition, section 12.1, equation 12.2&quot;,
+    &quot;basis&quot;: &quot;Continuous vertical tension at each bare/buoyed interface: abs(w_left)*S_left = abs(w_right)*S_right&quot;,
+    &quot;source&quot;: &quot;https://openstax.org/books/university-physics-volume-1/pages/12-1-conditions-for-static-equilibrium&quot;
+  },
+  &quot;closed_tension&quot;: {
+    &quot;limit&quot;: 5.0,
+    &quot;units&quot;: &quot;%&quot;,
+    &quot;form&quot;: &quot;relative&quot;,
+    &quot;citation&quot;: &quot;CLOSED/BASIS&quot;
+  },
+  &quot;closed_angle&quot;: {
+    &quot;limit&quot;: 1.0,
+    &quot;units&quot;: &quot;deg&quot;,
+    &quot;form&quot;: &quot;absolute&quot;,
+    &quot;citation&quot;: &quot;CLOSED/BASIS&quot;
+  },
+  &quot;closed_touchdown&quot;: {
+    &quot;limit&quot;: 5.0,
+    &quot;units&quot;: &quot;%&quot;,
+    &quot;form&quot;: &quot;relative&quot;,
+    &quot;citation&quot;: &quot;CLOSED/BASIS&quot;
+  }
+}</pre><h2>Analytical outcomes</h2><pre>[
+  {
+    &quot;id&quot;: &quot;scr-shallow&quot;,
+    &quot;status&quot;: &quot;PASS&quot;,
+    &quot;family&quot;: &quot;SCR&quot;,
+    &quot;criteria_status&quot;: {
+      &quot;depth&quot;: &quot;PASS&quot;,
+      &quot;angle&quot;: &quot;PASS&quot;,
+      &quot;global_force&quot;: &quot;PASS&quot;,
+      &quot;tension&quot;: &quot;PASS&quot;,
+      &quot;segment_weights&quot;: &quot;PASS&quot;,
+      &quot;horizontal_balance&quot;: &quot;PASS&quot;,
+      &quot;segment_1_arc&quot;: &quot;PASS&quot;
+    }
+  },
+  {
+    &quot;id&quot;: &quot;scr-deep&quot;,
+    &quot;status&quot;: &quot;PASS&quot;,
+    &quot;family&quot;: &quot;SCR&quot;,
+    &quot;criteria_status&quot;: {
+      &quot;depth&quot;: &quot;PASS&quot;,
+      &quot;angle&quot;: &quot;PASS&quot;,
+      &quot;global_force&quot;: &quot;PASS&quot;,
+      &quot;tension&quot;: &quot;PASS&quot;,
+      &quot;segment_weights&quot;: &quot;PASS&quot;,
+      &quot;horizontal_balance&quot;: &quot;PASS&quot;,
+      &quot;segment_1_arc&quot;: &quot;PASS&quot;
+    }
+  },
+  {
+    &quot;id&quot;: &quot;slwr-shallow&quot;,
+    &quot;status&quot;: &quot;PASS&quot;,
+    &quot;family&quot;: &quot;SLWR&quot;,
+    &quot;criteria_status&quot;: {
+      &quot;depth&quot;: &quot;PASS&quot;,
+      &quot;angle&quot;: &quot;PASS&quot;,
+      &quot;global_force&quot;: &quot;PASS&quot;,
+      &quot;tension&quot;: &quot;PASS&quot;,
+      &quot;segment_weights&quot;: &quot;PASS&quot;,
+      &quot;horizontal_balance&quot;: &quot;PASS&quot;,
+      &quot;segment_1_arc&quot;: &quot;PASS&quot;,
+      &quot;segment_2_arc&quot;: &quot;PASS&quot;,
+      &quot;segment_3_arc&quot;: &quot;PASS&quot;,
+      &quot;segment_4_arc&quot;: &quot;PASS&quot;,
+      &quot;segment_5_arc&quot;: &quot;PASS&quot;,
+      &quot;sag_elevation&quot;: &quot;PASS&quot;,
+      &quot;hog_elevation&quot;: &quot;PASS&quot;,
+      &quot;rising_interface&quot;: &quot;PASS&quot;,
+      &quot;falling_interface&quot;: &quot;PASS&quot;
+    }
+  },
+  {
+    &quot;id&quot;: &quot;slwr-deep&quot;,
+    &quot;status&quot;: &quot;PASS&quot;,
+    &quot;family&quot;: &quot;SLWR&quot;,
+    &quot;criteria_status&quot;: {
+      &quot;depth&quot;: &quot;PASS&quot;,
+      &quot;angle&quot;: &quot;PASS&quot;,
+      &quot;global_force&quot;: &quot;PASS&quot;,
+      &quot;tension&quot;: &quot;PASS&quot;,
+      &quot;segment_weights&quot;: &quot;PASS&quot;,
+      &quot;horizontal_balance&quot;: &quot;PASS&quot;,
+      &quot;segment_1_arc&quot;: &quot;PASS&quot;,
+      &quot;segment_2_arc&quot;: &quot;PASS&quot;,
+      &quot;segment_3_arc&quot;: &quot;PASS&quot;,
+      &quot;segment_4_arc&quot;: &quot;PASS&quot;,
+      &quot;segment_5_arc&quot;: &quot;PASS&quot;,
+      &quot;sag_elevation&quot;: &quot;PASS&quot;,
+      &quot;hog_elevation&quot;: &quot;PASS&quot;,
+      &quot;rising_interface&quot;: &quot;PASS&quot;,
+      &quot;falling_interface&quot;: &quot;PASS&quot;
+    }
+  }
+]</pre><h2>Integration comparisons</h2><pre>[
+  {
+    &quot;id&quot;: &quot;C1&quot;,
+    &quot;status&quot;: &quot;PASS&quot;,
+    &quot;form&quot;: &quot;plain&quot;,
+    &quot;criteria_status&quot;: {
+      &quot;top_tension_kN&quot;: &quot;PASS&quot;,
+      &quot;top_angle_deg_from_vertical&quot;: &quot;PASS&quot;,
+      &quot;touchdown_horizontal_distance_from_top_m&quot;: &quot;PASS&quot;
+    }
+  },
+  {
+    &quot;id&quot;: &quot;C2&quot;,
+    &quot;status&quot;: &quot;PASS&quot;,
+    &quot;form&quot;: &quot;elastic&quot;,
+    &quot;criteria_status&quot;: {
+      &quot;top_tension_kN&quot;: &quot;PASS&quot;,
+      &quot;top_angle_deg_from_vertical&quot;: &quot;PASS&quot;,
+      &quot;touchdown_horizontal_distance_from_top_m&quot;: &quot;PASS&quot;
+    }
+  }
+]</pre><h2>Qualification gaps and next inputs</h2><pre>[
+  {
+    &quot;id&quot;: &quot;catenary_manifest&quot;,
+    &quot;status&quot;: &quot;BLOCKED-IF-MISSING&quot;,
+    &quot;next_input&quot;: &quot;Accepted maintainer manifest for the first qualified catenary result, with source/run identities, solver version, input/output digests, units, criteria and accepted review.&quot;
+  },
+  {
+    &quot;id&quot;: &quot;lazy_wave_manifest&quot;,
+    &quot;status&quot;: &quot;BLOCKED-IF-MISSING&quot;,
+    &quot;next_input&quot;: &quot;Accepted maintainer manifest establishing lazy-wave provenance, governing criteria, accepted review and installation applicability.&quot;
+  },
+  {
+    &quot;id&quot;: &quot;public_reuse&quot;,
+    &quot;status&quot;: &quot;BLOCKED-IF-MISSING&quot;,
+    &quot;next_input&quot;: &quot;Source-specific public reuse decisions for third-party inputs and result payloads; reusable results remain with the existing private result maintainer.&quot;
+  }
+]</pre><h2>Source identities</h2><pre>{
+  &quot;REPORT&quot;: {
+    &quot;path&quot;: &quot;docs/domains/risers/scr-slwr-coverage-2026-10.md&quot;,
+    &quot;sha256&quot;: &quot;e62d49cbaa8a35ab77a90378548da6ee7291fd1f6a2222e479c77734a5febae9&quot;,
+    &quot;bytes&quot;: 30230,
+    &quot;freshness&quot;: &quot;Pinned bytes verified at replay; upstream freshness unverified&quot;
+  },
+  &quot;FIXTURE&quot;: {
+    &quot;path&quot;: &quot;tests/fixtures/test_vectors/mooring_risers/scr_slwr_generic_cases.json&quot;,
+    &quot;sha256&quot;: &quot;0bec18e98cafd840a898b7e23da15e0eb2bbf96b7a4fd1518e16b79e0a231459&quot;,
+    &quot;bytes&quot;: 12266,
+    &quot;freshness&quot;: &quot;Pinned bytes verified at replay; upstream freshness unverified&quot;
+  },
+  &quot;CLOSED&quot;: {
+    &quot;path&quot;: &quot;docs/benchmarks/catenary_closed_form/benchmark.json&quot;,
+    &quot;sha256&quot;: &quot;33d652a450b54f1a955a2e284dd3258b64b96fc70a908161b7d67bf2762f9765&quot;,
+    &quot;bytes&quot;: 3970,
+    &quot;freshness&quot;: &quot;Pinned bytes verified at replay; upstream freshness unverified&quot;
+  },
+  &quot;BASIS&quot;: {
+    &quot;path&quot;: &quot;docs/benchmarks/catenary_closed_form/README.md&quot;,
+    &quot;sha256&quot;: &quot;c91d4224550021e315f779223b1138008a50548667838212d0f366b999ac476a&quot;,
+    &quot;bytes&quot;: 12073,
+    &quot;freshness&quot;: &quot;Pinned bytes verified at replay; upstream freshness unverified&quot;
+  },
+  &quot;MANIFEST&quot;: {
+    &quot;path&quot;: &quot;docs/benchmarks/catenary_closed_form/inputs/MANIFEST.json&quot;,
+    &quot;sha256&quot;: &quot;b8fa51937f9eb97ffafa32d236b2d709e82d9afd2dbd0586e3c7ecac935fba61&quot;,
+    &quot;bytes&quot;: 656,
+    &quot;freshness&quot;: &quot;Pinned bytes verified at replay; upstream freshness unverified&quot;
+  },
+  &quot;PLAIN&quot;: {
+    &quot;path&quot;: &quot;docs/benchmarks/catenary_closed_form/inputs/catenary_c1_plain.yml&quot;,
+    &quot;sha256&quot;: &quot;4ce6ad1d6ff54202a002e11cea15fd09125d27fe5bcef655032e2bac77425ffe&quot;,
+    &quot;bytes&quot;: 2891,
+    &quot;freshness&quot;: &quot;Pinned bytes verified at replay; upstream freshness unverified&quot;
+  },
+  &quot;ELASTIC&quot;: {
+    &quot;path&quot;: &quot;docs/benchmarks/catenary_closed_form/inputs/catenary_c2_elastic.yml&quot;,
+    &quot;sha256&quot;: &quot;5588487fb36e425acebb521ac5b925446b3207d87a52d50d6d5eb837e6cfd560&quot;,
+    &quot;bytes&quot;: 2890,
+    &quot;freshness&quot;: &quot;Pinned bytes verified at replay; upstream freshness unverified&quot;
+  },
+  &quot;LICENSE&quot;: {
+    &quot;path&quot;: &quot;LICENSE&quot;,
+    &quot;sha256&quot;: &quot;abe9282066701ba45ec516e77329e14f5e27e5ae462fd1fd23fe9f62e27d4d91&quot;,
+    &quot;bytes&quot;: 1071,
+    &quot;freshness&quot;: &quot;Pinned bytes verified at replay; upstream freshness unverified&quot;
+  },
+  &quot;SCR_INTERFACE&quot;: {
+    &quot;path&quot;: &quot;src/digitalmodel/marine_ops/marine_analysis/catenary/simplified.py&quot;,
+    &quot;sha256&quot;: &quot;5a0e89d7f4b07f70bb78fd90ed9dc621fae49c7e079c6b43ed81045ab4b5c969&quot;,
+    &quot;bytes&quot;: 13763,
+    &quot;freshness&quot;: &quot;Pinned bytes verified at replay; upstream freshness unverified&quot;
+  },
+  &quot;SLWR_INTERFACE&quot;: {
+    &quot;path&quot;: &quot;src/digitalmodel/marine_ops/marine_analysis/catenary/lazy_wave.py&quot;,
+    &quot;sha256&quot;: &quot;a22950e6640006721649df7db82e686bfce4037c7895469d5b23d01c4a37a17b&quot;,
+    &quot;bytes&quot;: 29277,
+    &quot;freshness&quot;: &quot;Pinned bytes verified at replay; upstream freshness unverified&quot;
+  },
+  &quot;INTEGRATION_INTERFACE&quot;: {
+    &quot;path&quot;: &quot;docs/benchmarks/catenary_closed_form/catenary_hand_values.py&quot;,
+    &quot;sha256&quot;: &quot;ec0a7c5262873566d28c77fa0271086f3f22d83d0a7f5c4b09e65ecfe14a1197&quot;,
+    &quot;bytes&quot;: 10319,
+    &quot;freshness&quot;: &quot;Pinned bytes verified at replay; upstream freshness unverified&quot;
+  },
+  &quot;WEIGHT_MAPPING&quot;: {
+    &quot;path&quot;: &quot;src/digitalmodel/orcaflex/riser_config.py&quot;,
+    &quot;sha256&quot;: &quot;4fa1bf445420b62a1a19d2081bbcc13f7f1fb5c0f60189e4e46bb9a47dfd6acd&quot;,
+    &quot;bytes&quot;: 18020,
+    &quot;freshness&quot;: &quot;Pinned bytes verified at replay; upstream freshness unverified&quot;
+  }
+}</pre><h2>Known limits</h2><pre>[
+  &quot;Assumed source cases; no measured or qualified installation result.&quot;,
+  &quot;Four distinct assumed cases and two separate integration comparisons; no native solver was executed.&quot;,
+  &quot;Segment arcs, signed depth, requested sag/hog elevations, interface continuity and global force are recomputed without solver pass flags or prepared geometry.&quot;,
+  &quot;Pipe mass uses the nominal section and the inspected weight mapping; steel density and gravity are assumed mapping defaults.&quot;,
+  &quot;Historical aggregate statics flags do not establish governing mesh criteria, accepted review or installation applicability.&quot;,
+  &quot;Third-party rights and source-specific payload publication approval remain UNVERIFIED; numerical readbacks stay in scratch.&quot;,
+  &quot;No dynamics, bending, fatigue, costing, buoyancy ranking or production optimisation is established.&quot;
+]</pre><p>SCR angle geometry and complementary-angle forces; five-segment SLWR; independent RK4 shooting against stored closed forms, C1 inextensible and C2 elastic. N internally, m and degrees; kN comparison boundary. Source revision identifies the last commit affecting pinned analytical sources; digests identify the replayed bytes.</p></html>

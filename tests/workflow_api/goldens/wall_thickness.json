@@ -1,0 +1,12 @@
+{
+  "stable_files": {
+    "wall_thickness_quickcheck.csv": {
+      "sha256": "574ef0286378de422fd06cea2ff214ff62fcf97271d2000f9faa42d72c91880a",
+      "size": 312
+    },
+    "wall_thickness_quickcheck.json": {
+      "sha256": "2ad6acd9120aa509cec5f00e7c2876665649569020ddc51dd0ef93675ddf12f4",
+      "size": 42003
+    }
+  }
+}

@@ -1,0 +1,298 @@
+{
+  "anode_families": {
+    "sea": {
+      "adequacy_ratios": {
+        "final": 0.09523802063115817,
+        "initial": 0.10980631634166636,
+        "mass": 0.019466666666666667
+      },
+      "anode_count": 5,
+      "anode_surface_temperature_C": 30.0,
+      "anode_type": "stand_off",
+      "capacity_Ah_kg": 2000.0,
+      "checks": {
+        "final": true,
+        "initial": true,
+        "mass": true
+      },
+      "citations": [
+        "dnv-rp-b401 2021-05 Table 8-6",
+        "dnv-rp-b401 2021-05 Table 8-6 with [2.4.2] (design protective potential)",
+        "dnv-rp-b401 2021-05 Table 8-7"
+      ],
+      "closed_circuit_potential_V": -1.05,
+      "count_by_final_current": 1,
+      "count_by_initial_current": 1,
+      "count_by_mass": 1,
+      "count_source": "input",
+      "current_demand_A": {
+        "final": 1.1,
+        "initial": 1.7000000000000002,
+        "mean": 0.8
+      },
+      "current_output_final_A": 2.310001809592676,
+      "current_output_initial_A": 3.0963610412180445,
+      "driving_voltage_V": 0.25,
+      "electrolyte_resistivity_ohm_m": 0.3,
+      "environment": "seawater",
+      "equivalent_radius_final_m": 0.03162277660168379,
+      "equivalent_radius_initial_m": 0.1,
+      "governing_case": "initial",
+      "governing_ratio": 0.10980631634166636,
+      "individual_mass_kg": 20.0,
+      "material": "Al-based",
+      "mean_current_years_A_year": 0.4,
+      "name": "sea",
+      "recommended_anode_count": 1,
+      "required_mass_kg": 1.9466666666666668,
+      "resistance_final_ohm": 0.10822502344449793,
+      "resistance_initial_ohm": 0.08073993848651938,
+      "total_output_final_A": 11.550009047963382,
+      "total_output_initial_A": 15.481805206090222,
+      "utilization_factor": 0.9,
+      "utilization_factor_source": "input"
+    }
+  },
+  "anode_requirements": {
+    "recommended_anode_count": 1,
+    "total_mass_kg": 1.9466666666666668
+  },
+  "citations": [
+    "dnv-rp-b401 2021 [3.2.1] (active pre-operation time)",
+    "dnv-rp-b401 2021 [3.3.12]-[3.3.13] / Table 8-3 (concrete current drain)",
+    "dnv-rp-b401 2021 [3.3.8] (buried surfaces)",
+    "dnv-rp-b401 2021 [3.9.3] (mudmats, skirts, piles and suction anchors)",
+    "dnv-rp-b401 2021 [4.7.1] Eq. (4.2) (anode mass)",
+    "dnv-rp-b401 2021 [4.8.1]-[4.8.5] / Eq. (4.3), Eqs. (4.5)-(4.7) (output adequacy)",
+    "dnv-rp-b401 2021 [4.9.2] (fresh/depleted resistance)",
+    "dnv-rp-b401 2021 [7.4.1], [7.5.3] (retrofit evidence)",
+    "dnv-rp-b401 2021-05 Table 8-1",
+    "dnv-rp-b401 2021-05 Table 8-2",
+    "dnv-rp-b401 2021-05 Table 8-6",
+    "dnv-rp-b401 2021-05 Table 8-6 with [2.4.2] (design protective potential)",
+    "dnv-rp-b401 2021-05 Table 8-7"
+  ],
+  "coating_breakdown": {
+    "base::frame": {
+      "a": 1.0,
+      "b_per_yr": 0.0,
+      "citations": [],
+      "coating_category": "bare",
+      "depth_band": ">30-100",
+      "f_cf": 1.0,
+      "f_ci": 1.0,
+      "f_cm": 1.0
+    }
+  },
+  "current_demand_A": {
+    "base::frame": {
+      "I_final_A": 1.1,
+      "I_initial_A": 1.7000000000000002,
+      "I_mean_A": 0.8,
+      "anode_family": "sea",
+      "area_basis": "steel_surface",
+      "area_m2": 10.0,
+      "f_cf": 1.0,
+      "f_ci": 1.0,
+      "f_cm": 1.0,
+      "i_final_A_m2": 0.11,
+      "i_initial_A_m2": 0.17,
+      "i_mean_A_m2": 0.08
+    },
+    "total_final_A": 1.1,
+    "total_initial_A": 1.7000000000000002,
+    "total_mean_A": 0.8
+  },
+  "current_densities_A_m2": {
+    "base::frame": {
+      "base_zone": "submerged",
+      "citations": [
+        "dnv-rp-b401 2021-05 Table 8-1",
+        "dnv-rp-b401 2021-05 Table 8-2"
+      ],
+      "climate": "temperate",
+      "depth_band": ">30-100",
+      "exposure_zone": "submerged",
+      "i_final_A_m2": 0.11,
+      "i_initial_A_m2": 0.17,
+      "i_mean_A_m2": 0.08,
+      "seawater_temperature_C": 10.0
+    }
+  },
+  "current_output_verification": {
+    "checks": {
+      "sea": {
+        "final": true,
+        "initial": true,
+        "mass": true
+      }
+    },
+    "families": {
+      "sea": {
+        "adequacy_ratios": {
+          "final": 0.09523802063115817,
+          "initial": 0.10980631634166636,
+          "mass": 0.019466666666666667
+        },
+        "anode_count": 5,
+        "anode_surface_temperature_C": 30.0,
+        "anode_type": "stand_off",
+        "capacity_Ah_kg": 2000.0,
+        "checks": {
+          "final": true,
+          "initial": true,
+          "mass": true
+        },
+        "citations": [
+          "dnv-rp-b401 2021-05 Table 8-6",
+          "dnv-rp-b401 2021-05 Table 8-6 with [2.4.2] (design protective potential)",
+          "dnv-rp-b401 2021-05 Table 8-7"
+        ],
+        "closed_circuit_potential_V": -1.05,
+        "count_by_final_current": 1,
+        "count_by_initial_current": 1,
+        "count_by_mass": 1,
+        "count_source": "input",
+        "current_demand_A": {
+          "final": 1.1,
+          "initial": 1.7000000000000002,
+          "mean": 0.8
+        },
+        "current_output_final_A": 2.310001809592676,
+        "current_output_initial_A": 3.0963610412180445,
+        "driving_voltage_V": 0.25,
+        "electrolyte_resistivity_ohm_m": 0.3,
+        "environment": "seawater",
+        "equivalent_radius_final_m": 0.03162277660168379,
+        "equivalent_radius_initial_m": 0.1,
+        "governing_case": "initial",
+        "governing_ratio": 0.10980631634166636,
+        "individual_mass_kg": 20.0,
+        "material": "Al-based",
+        "mean_current_years_A_year": 0.4,
+        "name": "sea",
+        "recommended_anode_count": 1,
+        "required_mass_kg": 1.9466666666666668,
+        "resistance_final_ohm": 0.10822502344449793,
+        "resistance_initial_ohm": 0.08073993848651938,
+        "total_output_final_A": 11.550009047963382,
+        "total_output_initial_A": 15.481805206090222,
+        "utilization_factor": 0.9,
+        "utilization_factor_source": "input"
+      }
+    },
+    "governing_case": "initial",
+    "governing_family": "sea",
+    "governing_ratio": 0.10980631634166636,
+    "reason": "sea:initial governs at adequacy ratio 0.110",
+    "result": "PASS",
+    "use_status": "client-use-with-eor-check"
+  },
+  "design_life_years": 0.5,
+  "edition": "2021",
+  "provenance": "verified-2021-tables",
+  "riser_base_assessment": {
+    "accepted_output_shortfalls": [],
+    "components": {
+      "base": {
+        "anode_families": [
+          "sea"
+        ],
+        "area_m2": 10.0,
+        "composition_basis": "project_practice",
+        "composition_reason": "Generic round-area test composition.",
+        "current_demand_A": {
+          "final": 1.1,
+          "initial": 1.7000000000000002,
+          "mean": 0.8
+        },
+        "type": "riser_base",
+        "zones": [
+          "base::frame"
+        ]
+      }
+    },
+    "phases": [
+      {
+        "basis": {
+          "reason": "Synthetic half-year temporary service interval.",
+          "source": "project_practice"
+        },
+        "families": {
+          "sea": {
+            "additional_anode_count": 0,
+            "additional_gross_mass_kg": 0.0,
+            "basis": {
+              "reason": "Rounded phase demand for hand calculation.",
+              "source": "project_practice"
+            },
+            "consumed_mass_kg": 4.38,
+            "mass_shortfall_kg": 0.0,
+            "mean_current_A": 2.0,
+            "output_checks": {
+              "final_output": {
+                "demand_A": 2.0,
+                "output_A": 11.550009047963382,
+                "ratio": 0.17316003751119666,
+                "result": "PASS"
+              },
+              "initial_output": {
+                "demand_A": 2.0,
+                "output_A": 15.481805206090222,
+                "ratio": 0.12918390157843102,
+                "result": "PASS"
+              }
+            },
+            "over_consumption_kg": 0.0,
+            "physical_mass_end_kg": 95.62,
+            "physical_mass_start_kg": 100.0,
+            "raw_physical_balance_kg": 95.62,
+            "raw_usable_balance_kg": 85.62,
+            "usable_mass_end_kg": 85.62,
+            "usable_mass_start_kg": 90.0
+          }
+        },
+        "life_years": 0.5,
+        "name": "installation",
+        "type": "temporary"
+      }
+    ],
+    "project_practice_inputs": [
+      "component composition and grouping",
+      "phase segmentation, duration and demand allocation",
+      "retrofit history, condition and remaining-mass inference",
+      "accepted output shortfall disposition"
+    ],
+    "retrofit": null,
+    "rule_citations": [
+      "dnv-rp-b401 2021 [3.2.1] (active pre-operation time)",
+      "dnv-rp-b401 2021 [3.3.8] (buried surfaces)",
+      "dnv-rp-b401 2021 [3.3.12]-[3.3.13] / Table 8-3 (concrete current drain)",
+      "dnv-rp-b401 2021 [3.9.3] (mudmats, skirts, piles and suction anchors)",
+      "dnv-rp-b401 2021 [4.7.1] Eq. (4.2) (anode mass)",
+      "dnv-rp-b401 2021 [4.8.1]-[4.8.5] / Eq. (4.3), Eqs. (4.5)-(4.7) (output adequacy)",
+      "dnv-rp-b401 2021 [4.9.2] (fresh/depleted resistance)",
+      "dnv-rp-b401 2021 [7.4.1], [7.5.3] (retrofit evidence)"
+    ]
+  },
+  "standard": "DNV-RP-B401 (May 2021)",
+  "status": {
+    "checks": {
+      "sea": {
+        "final": true,
+        "initial": true,
+        "mass": true
+      }
+    },
+    "governing_case": "initial",
+    "governing_family": "sea",
+    "governing_ratio": 0.10980631634166636,
+    "reason": "sea:initial governs at adequacy ratio 0.110",
+    "result": "PASS",
+    "use_status": "client-use-with-eor-check"
+  },
+  "surface_areas_m2": {
+    "base::frame": 10.0,
+    "total_m2": 10.0
+  }
+}

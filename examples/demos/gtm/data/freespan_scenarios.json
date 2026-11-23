@@ -1,0 +1,86 @@
+{
+  "_description": "Freespan and VIV assessment scenario parameters for GTM demo 1. Defines environmental conditions, span ranges, and soil properties for parametric screening of pipeline and jumper freespans.",
+  "_version": "1.0",
+  "_references": [
+    "DNV-RP-F105 (2006) - Free Spanning Pipelines",
+    "DNV-RP-F105 (2017) - Free Spanning Pipelines (updated edition)",
+    "DNV-RP-C205 (2010) - Environmental Conditions and Environmental Loads"
+  ],
+  "environment": {
+    "current_velocities_ms": [0.3, 0.5, 0.7, 1.0, 1.5],
+    "current_direction_description": "Perpendicular to pipe axis (worst case for VIV)",
+    "current_profile": "Near-bottom, assumed uniform over pipe diameter",
+    "turbulence_intensity": 0.05,
+    "_note": "Velocities represent 100-year near-bottom current speeds at various locations. Range covers benign (GoM deepwater) to severe (North Sea, current-dominated straits)."
+  },
+  "span_lengths": {
+    "pipelines_m": [10, 20, 30, 40, 50, 60, 70, 80],
+    "jumpers_m": [5, 10, 15, 20, 25, 30, 35, 40],
+    "_note": "Pipeline spans assessed per DNV-RP-F105. Jumper spans are unsupported lengths between bends or supports."
+  },
+  "seabed_gap_ratios": {
+    "values": [0.0, 0.5, 1.0, 2.0],
+    "definition": "e/D where e = gap between pipe bottom and seabed, D = pipe outer diameter",
+    "_note": "e/D = 0 means pipe resting on seabed at span shoulders. Higher e/D indicates erosion or irregular seabed. Stability parameter per DNV-RP-F105 Sec 4.2."
+  },
+  "soil_properties": {
+    "soft_clay": {
+      "type": "soft_clay",
+      "description": "Soft marine clay typical of GoM, West Africa",
+      "undrained_shear_strength_kpa": 1.0,
+      "submerged_unit_weight_kn_m3": 4.0,
+      "lateral_soil_stiffness_kn_m2": 100,
+      "axial_soil_stiffness_kn_m2": 50,
+      "boundary_condition_factor": 1.0,
+      "_note": "Low stiffness leads to lower natural frequency and potentially shorter allowable spans"
+    },
+    "stiff_clay": {
+      "type": "stiff_clay",
+      "description": "Stiff overconsolidated clay typical of North Sea, Mediterranean",
+      "undrained_shear_strength_kpa": 10.0,
+      "submerged_unit_weight_kn_m3": 8.0,
+      "lateral_soil_stiffness_kn_m2": 1000,
+      "axial_soil_stiffness_kn_m2": 500,
+      "boundary_condition_factor": 2.0,
+      "_note": "Moderate stiffness. Most common assessment scenario."
+    },
+    "sand": {
+      "type": "sand",
+      "description": "Medium dense to dense sand",
+      "friction_angle_deg": 35.0,
+      "submerged_unit_weight_kn_m3": 10.0,
+      "lateral_soil_stiffness_kn_m2": 5000,
+      "axial_soil_stiffness_kn_m2": 2500,
+      "boundary_condition_factor": 3.0,
+      "_note": "High stiffness increases natural frequency, generally allows longer spans"
+    }
+  },
+  "viv_screening_criteria": {
+    "crossflow_viv": {
+      "onset_reduced_velocity": 3.0,
+      "lock_in_reduced_velocity_range": [4.0, 8.0],
+      "_note": "V_R = U / (f_n * D). Onset at V_R ~ 3.0 per DNV-RP-F105 Sec 4.3. Lock-in range 4-8."
+    },
+    "inline_viv": {
+      "onset_reduced_velocity": 1.0,
+      "lock_in_reduced_velocity_range": [1.0, 3.5],
+      "_note": "Inline VIV onset at lower V_R. Often less critical for fatigue than crossflow."
+    },
+    "stability_parameter": {
+      "definition": "K_s = 2 * m_e * zeta_T / (rho * D^2)",
+      "_note": "m_e = effective mass per unit length, zeta_T = total damping ratio (structural + soil + hydrodynamic). Higher K_s suppresses VIV amplitude."
+    },
+    "safety_factors": {
+      "screening_level": 1.0,
+      "fatigue_viv": {
+        "safety_class_low": 3.0,
+        "safety_class_medium": 5.0,
+        "safety_class_high": 10.0
+      },
+      "_note": "Per DNV-RP-F105 Table 2-2"
+    }
+  },
+  "assessment_pipeline_sizes": ["8in", "12in", "16in"],
+  "assessment_jumper_sizes": ["Jumper-20m", "Jumper-40m", "Jumper-60m", "Jumper-80m", "Jumper-100m"],
+  "_note": "Full parametric sweep: 5 currents x 8 span lengths x 4 gap ratios x 3 soil types x 3 pipe sizes = 1440 pipeline cases; 5 x 8 x 4 x 3 x 5 = 2400 jumper cases."
+}

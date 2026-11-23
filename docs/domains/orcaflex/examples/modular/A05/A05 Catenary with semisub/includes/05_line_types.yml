@@ -1,0 +1,151 @@
+# LineTypes Configuration
+# Generated from: A05 Catenary with semisub.yml
+# Date: 2026-01-18 22:18:00
+LineTypes:
+- Name: Flexjoint
+  Category: Homogeneous pipe
+  OD: 0.760416666666667
+  ID: 0.59375
+  MaterialDensity: 490.059490522736
+  E: 4.42771205742783e6
+  PoissonRatio: 0.3
+  ExpansionTable: None
+  Cdn: Generic Drag
+  Cdz: 0
+  Cl: 0
+  Can: 1
+  Caz: 0
+  Cs: 0
+  Ce: 0
+  SeabedLateralFrictionCoefficient: 1.26
+  SeabedAxialFrictionCoefficient: 0.73
+  ClashStiffness: 0
+  AllowableStress: 9144
+  RayleighDampingCoefficients: (no damping)
+  CoatingThickness: 0
+  LiningThickness: 0
+  AdditionalEI: 0
+  APIRP2RDTcorr: 0.00333333333333337
+  APIRP2RDSMYS: 9360
+  Pen:
+  - 3
+  - Solid
+  - Lime
+- Name: TSJ
+  Category: Homogeneous pipe
+  OD: TSJ Profile
+  ID: 0.59375
+  MaterialDensity: 490.059490522736
+  E: 4.42771205742783e6
+  PoissonRatio: 0.3
+  ExpansionTable: None
+  Cdn: Generic Drag
+  Cdz: 0
+  Cl: 0
+  Can: 1
+  Caz: 0
+  Cs: 0
+  Ce: 0
+  SeabedLateralFrictionCoefficient: 1.26
+  SeabedAxialFrictionCoefficient: 0.73
+  ClashStiffness: 0
+  AllowableStress: 9144
+  RayleighDampingCoefficients: (no damping)
+  CoatingThickness: 0
+  LiningThickness: 0
+  AdditionalEI: 0
+  APIRP2RDTcorr: 0.00333333333333337
+  APIRP2RDSMYS: 9360
+  Pen:
+  - 3
+  - Solid
+  - Lime
+- Name: Straked
+  Category: Homogeneous pipe
+  OD: 0.760416666666667
+  ID: 0.59375
+  MaterialDensity: 490.059490522736
+  E: 4.42771205742783e6
+  PoissonRatio: 0.3
+  ExpansionTable: None
+  Cdn: 1.6
+  Cdz: 0.25
+  Cl: 0
+  Can: 1
+  Caz: 0
+  Cs: 0
+  Ce: 0
+  SeabedLateralFrictionCoefficient: 1.26
+  SeabedAxialFrictionCoefficient: 0.73
+  ClashStiffness: 0
+  AllowableStress: 9144
+  RayleighDampingCoefficients: (no damping)
+  CoatingThickness: Coating and Strake
+  LiningThickness: 0
+  AdditionalEI: 0
+  APIRP2RDTcorr: 0.00333333333333337
+  APIRP2RDSMYS: 9360
+  Pen:
+  - 3
+  - Solid
+  - Blue
+- Name: Riser Pipe
+  Category: Homogeneous pipe
+  OD: 0.760416666666667
+  ID: 0.59375
+  MaterialDensity: 490.059490522736
+  E: 4.42771205742783e6
+  PoissonRatio: 0.3
+  ExpansionTable: None
+  Cdn: Generic Drag
+  Cdz: 0
+  Cl: 0
+  Can: 1
+  Caz: 0
+  Cs: 0
+  Ce: 0
+  SeabedLateralFrictionCoefficient: 1.26
+  SeabedAxialFrictionCoefficient: 0.73
+  ClashStiffness: 0
+  AllowableStress: 9144
+  RayleighDampingCoefficients: (no damping)
+  CoatingThickness: 0.019685
+  CoatingMaterialDensity: 57.6
+  LiningThickness: 0
+  AdditionalEI: 0
+  APIRP2RDTcorr: 0.00333333333333337
+  APIRP2RDSMYS: 9360
+  Pen:
+  - 2
+  - Solid
+  - Red
+- Name: Flowline
+  Category: Homogeneous pipe
+  OD: 0.760416666666667
+  ID: 0.625083333333333
+  MaterialDensity: 490.059490522736
+  E: 4.42771205742783e6
+  PoissonRatio: 0.3
+  ExpansionTable: None
+  Cdn: Generic Drag
+  Cdz: 0
+  Cl: 0
+  Can: 1
+  Caz: 0
+  Cs: 0
+  Ce: 0
+  SeabedLateralFrictionCoefficient: 1.26
+  SeabedAxialFrictionCoefficient: 0.73
+  ClashStiffness: 0
+  AllowableStress: 9144
+  RayleighDampingCoefficients: (no damping)
+  CoatingThickness: 0.019685
+  CoatingMaterialDensity: 57.6
+  LiningThickness: 0
+  AdditionalEI: 0
+  APIRP2RDTcorr: 0.0036666666666666
+  APIRP2RDSMYS: 9360
+  Pen:
+  - 3
+  - Solid
+  - $0080FF

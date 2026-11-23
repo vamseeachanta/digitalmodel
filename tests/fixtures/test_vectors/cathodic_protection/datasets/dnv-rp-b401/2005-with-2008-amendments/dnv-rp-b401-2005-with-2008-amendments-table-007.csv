@@ -1,0 +1,39 @@
+Table 10-7 Recommended Anode Resistance Formulae for CP Design Calculations.,,,
+Anode Type,Resistance Formula,,
+"Long slender stand-off 1) 2)
+L ≥ 4r","ρ ⎛ 4⋅L ⎞
+R = ⎜ln −1⎟
+a ⎜
+2⋅π⋅L⎝ r ⎠",,
+,"ρ ⎛ 4⋅L ⎞
+R = ⎜ln −1⎟
+a ⎜
+2⋅π⋅L⎝ r ⎠",,
+"Short slender stand-off 1) 2)
+L< 4r","⎡ ⎧ ⎛ 2 ⎞⎫ 2 ⎤
+ρ ⎢ ⎪2L⎜ ⎛ r ⎞ ⎟⎪ r ⎛ r ⎞ ⎥
+R a = ⎢ ln⎨ ⎜ 1+ 1+⎜ ⎟ ⎟⎬+ − 1+⎜ ⎟ ⎥
+2⋅π⋅L ⎢ ⎣ ⎪ ⎩ r ⎜ ⎝ ⎝2L⎠ ⎟ ⎠ ⎪ ⎭ 2L ⎝2L⎠ ⎥ ⎦",,
+"Long flush mounted 2)
+L ≥ 4 · width and
+L ≥ 4 · thickness","ρ
+R =
+a
+2⋅S",,
+,"ρ
+R =
+a
+2⋅S",,
+"Short flush-mounted, bracelet and
+other types","0.315⋅ρ
+R =
+a
+A",,
+,"0.315⋅ρ
+R =
+a
+A",,
+,,A,
+"1) The equation is valid for anodes with minimum distance 0.30 m from protection object. For anode-to-object distance less than 0.30 m but
+minimum 0.15 m the same equation may be applied with a correction factor of 1.3
+2) For non-cylindrical anodes: r = c/ 2 π where c (m) is the anode cross sectional periphery",,,

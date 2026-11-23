@@ -1,0 +1,77 @@
+# ABOUTME: demo_03 Sweep Config — Baseline Run encoding today's exact 180-case matrix.
+# ABOUTME: COMPLETE source of truth for ALL config (ADR-0005); axes are LISTS, engine crosses them.
+#
+# Per ADR-0005, this yaml is the COMPLETE reviewable source of truth for ALL config: the
+# sweep axes (vessels / depths / mudmats / Hs), the engineering constants (DAFs, wire MBL
+# safety factor, tilt limit, operating radius, reference Hs, Tp coefficient, go/no-go bands),
+# the fundamental physical constants (seawater density, gravity, steel density), the soil
+# bearing-capacity parameters (su / Nc / shape+depth factors / FS feeding q_ult), the catalog
+# locations, and the artifact paths. No compute-path config is hardcoded in the demo module.
+#
+# Baseline-defining values (BD-*):
+#   BD-1: the 180 live cases keep their EXACT 11-key schema and values, byte-for-byte.
+#   B1:   depths are INTEGERS, Hs are FLOATS — the loader preserves the types (no coercion).
+#   B2:   PHASE_NAMES emit the exact display strings, including hyphens ("Lift-off", "In-air",
+#         "Splash zone", "Lowering", "Landing"). Two flatten transforms (phases_flat keeps the
+#         hyphen, util_* columns drop it) are DELIBERATELY different — see the demo module.
+#   N2:   submerged weight is RECOMPUTED (mass_air - rho*displaced_vol), not read from the
+#         catalog's precomputed submerged_weight_kn (they disagree at 0.01).
+#
+# Cross-product nesting (must match the frozen golden order):
+#   vessel (outer) -> depth -> structure -> hs (inner)  => 2 x 6 x 3 x 5 = 180 cases.
+
+meta:
+  demo_id: demo_03
+  code_ref: "DNV-RP-H103 (2011) / DNV-ST-N001 (2021) / DNV-RP-C205 (2010)"
+
+sweep:
+  # The 2 vessels, identified by the catalog "name" label the demo loop uses.
+  vessels: ["Large CSV", "Medium CSV"]
+  # 6 water depths — INTEGERS (B1: kept as int, never coerced to float).
+  depths: [500, 1000, 1500, 2000, 2500, 3000]
+  # The 3 mudmat structures, identified by the catalog "name" label.
+  mudmats: ["Mudmat-S-50te", "Mudmat-M-100te", "Mudmat-L-200te"]
+  # 5 significant wave heights — FLOATS (B1).
+  hs: [1.0, 1.5, 2.0, 2.5, 3.0]
+
+# Engineering constants — frozen at today's Baseline values.
+constants:
+  daf_liftoff: 1.10            # DAF lift-off per DNV-ST-N001 / DNV-RP-H103
+  daf_splash: 1.30             # DAF splash zone
+  wire_mbl_sf: 0.85            # max cable tension / wire MBL
+  tilt_limit_deg: 5.0          # max tilt during in-air transit (deg)
+  operating_radius_m: 40.0     # derated overboard-lift radius (crane SWL derated here)
+  reference_hs: 2.0            # m — used for heatmap and vessel comparison charts
+  tp_coefficient: 4.0          # JONSWAP peak period: Tp = tp_coefficient * sqrt(Hs)
+  # Go/No-Go acceptance bands (max utilisation thresholds).
+  go_marginal_threshold: 0.85  # max_util >= this (and all pass) => MARGINAL
+  nogo_utilisation: 1.0        # max_util > this (or any phase fails) => NO_GO
+
+# Physical constants — frozen at today's Baseline values.
+physical_constants:
+  seawater_density_kg_m3: 1025.0
+  gravity_m_s2: 9.80665
+  steel_density_kg_m3: 7850.0
+
+# Soil bearing capacity (§4). The landing phase derives the undrained bearing CAPACITY
+# q_ult = su * Nc * sc * dc per Brinch Hansen (undrained, phi=0) and checks the applied
+# bearing pressure (w_sub / a_base) against q_allow = q_ult / FS. sc = 1 + 0.2*(B/L) with
+# B = min(length,width), L = max(length,width); dc = 1 + 0.4*atan(D/B), D = skirt_depth_m.
+# phi=0 => no gamma'*D surcharge term (Nq=1). These parameters drive the LIVE compute.
+soil:
+  undrained_shear_strength_su_kpa: 10.0   # su, soft clay
+  bearing_capacity_factor_nc: 5.14        # Nc for phi=0 (Prandtl, 2 + pi)
+  apply_shape_factor: true                # sc = 1 + 0.2*(B/L)
+  apply_depth_factor: true                # dc = 1 + 0.4*atan(D/B)
+  factor_of_safety: 2.0                   # q_allow = q_ult / FS
+
+# Catalog file locations — paths are relative to THIS yaml file's directory.
+catalogs:
+  vessels: ../data/csv_hlv_vessels.json
+  mudmats: ../data/mudmat_structures.json
+
+# Artifact roots — paths are relative to THIS yaml file's directory. The committed
+# baseline writes to the demo's results/ and output/ trees (today's behaviour).
+artifacts:
+  results_root: ../results
+  output_root: ../output

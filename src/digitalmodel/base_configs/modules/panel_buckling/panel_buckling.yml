@@ -1,0 +1,46 @@
+# Stiffened-panel (plate + longitudinal stiffener) buckling — DNV-RP-C201.
+# Solver: digitalmodel.structural.structural_analysis.panel_buckling
+#         StiffenedPanelBucklingAnalyzer (VALIDATED, see
+#         docs/domains/plate-buckling/panel-buckling-validation-2026-06-26.md)
+#
+# Units: lengths in mm, stresses in MPa.
+# The example below is the validated 0119-015 worked panel (AH36-class plate).
+
+basename: panel_buckling
+
+calculation_type: DNV_rp_C201
+
+material:
+  name: AH36
+  yield_strength: 355        # MPa (use 234.6 to reproduce the 0119-015 golden case)
+  ultimate_strength: 490     # MPa
+  youngs_modulus: 206000     # MPa
+  poisson_ratio: 0.30
+
+groups:
+  - # One stiffened panel
+    plate:
+      length: 2230           # span between transverse frames, L (mm)
+      thickness: 12          # plate thickness t_p (mm)
+    stiffener:
+      section_type: tee      # tee | flatbar | angle
+      web_height: 600        # h_w (mm)
+      web_thickness: 10      # t_w (mm)
+      flange_width: 200      # b_f (mm) — 0 for flatbar
+      flange_thickness: 20   # t_f (mm)
+      spacing: 700           # s, plate width carried by one stiffener (mm)
+    torsional_restraint_spacing: 3500   # L_T (mm); defaults to plate.length
+    loads:
+      sigma_x: 120           # longitudinal compressive stress (MPa)
+      sigma_y: 0             # transverse stress (MPa)
+      tau: 40                # shear stress (MPa)
+    gamma_m: 1.15            # material resistance factor
+
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: True
+
+Analysis:
+  fe_folder: NULL

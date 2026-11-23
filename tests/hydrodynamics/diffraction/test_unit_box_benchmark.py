@@ -1,0 +1,1048 @@
+"""Report-pipeline self-test on synthetic Unit box coefficients.
+
+Series A, B and C share analytically derived approximate coefficients with
+small, seeded per-component perturbations. No analysis program is run; the
+comparison exercises the report pipeline, not physical solver accuracy.
+
+The artifacts under ``docs/benchmarks/unit_box/`` are a committed golden
+reference. Tests never write there; regenerate them deliberately with::
+
+    uv run python tests/hydrodynamics/diffraction/test_unit_box_benchmark.py
+"""
+from __future__ import annotations
+
+import hashlib
+import json
+from datetime import datetime
+from pathlib import Path
+from typing import Any, Dict
+
+import numpy as np
+import pytest
+
+from digitalmodel.hydrodynamics.diffraction.benchmark_runner import (
+    BenchmarkConfig,
+    BenchmarkRunner,
+    BenchmarkRunResult,
+    run_benchmark,
+)
+from digitalmodel.hydrodynamics.diffraction.multi_solver_comparator import (
+    BenchmarkReport,
+    ComparisonPolicy,
+    MultiSolverComparator,
+)
+from digitalmodel.hydrodynamics.diffraction.output_schemas import (
+    AddedMassSet,
+    DampingSet,
+    DiffractionResults,
+    DOF,
+    FrequencyData,
+    HeadingData,
+    HydrodynamicMatrix,
+    RAOComponent,
+    RAOSet,
+)
+
+# ---------------------------------------------------------------------------
+# Unit Box physics constants
+# ---------------------------------------------------------------------------
+UNIT_BOX_NAME = "UnitBox"
+UNIT_BOX_MASS_KG = 500.0
+UNIT_BOX_WATER_DEPTH_M = 50.0
+UNIT_BOX_COG = (0.0, 0.0, -0.25)
+UNIT_BOX_SIDE_M = 1.0
+WATER_DENSITY = 1025.0
+
+# Frequency grid: 0.1 to 2.0 rad/s, dense enough for the abscissa contract.
+N_FREQ = 40
+N_HEAD = 4
+FREQUENCIES = np.geomspace(0.1, 2.0, N_FREQ)
+HEADINGS = np.array([0.0, 90.0, 180.0, 270.0])
+
+# The synthetic builders deliberately impose at most this per-solver variation.
+SOLVER_RELATIVE_UNCERTAINTY = 0.01
+RESPONSE_ABSOLUTE_RESOLUTION = np.finfo(np.float64).eps
+MINIMUM_EXPLAINED_VARIANCE = (1.0 - SOLVER_RELATIVE_UNCERTAINTY) ** 2
+COMPARISON_JUSTIFICATION = (
+    "Unit Box synthetic builders bound every nonzero solver sample to one "
+    "percent by multiplicative construction. The pairwise relative-RMS budget "
+    "is twice that bound because each of two solvers contributes at most one "
+    "percent. Phase is reported as diagnostic-only because no physical phase "
+    "acceptance threshold has been derived. Absolute response resolution and "
+    "the correlation criterion remain provisional and are not physical claims."
+)
+UNIT_BOX_POLICY_INPUTS = {
+    "solver_relative_uncertainty": SOLVER_RELATIVE_UNCERTAINTY,
+    "response_absolute_resolution": RESPONSE_ABSOLUTE_RESOLUTION,
+    "minimum_explained_variance": MINIMUM_EXPLAINED_VARIANCE,
+    "comparison_justification": COMPARISON_JUSTIFICATION,
+}
+
+
+def _unit_box_policy() -> ComparisonPolicy:
+    return ComparisonPolicy.from_uncertainties(
+        solver_relative_uncertainty=SOLVER_RELATIVE_UNCERTAINTY,
+        response_absolute_resolution=RESPONSE_ABSOLUTE_RESOLUTION,
+        minimum_explained_variance=MINIMUM_EXPLAINED_VARIANCE,
+        justification=COMPARISON_JUSTIFICATION,
+    )
+
+
+# ---------------------------------------------------------------------------
+# Unit Box hydrodynamic coefficient builders
+# ---------------------------------------------------------------------------
+
+
+def _make_unit_box_freq_data() -> FrequencyData:
+    """Build FrequencyData for the Unit Box frequency grid."""
+    return FrequencyData(
+        values=FREQUENCIES.copy(),
+        periods=2.0 * np.pi / FREQUENCIES,
+        count=N_FREQ,
+        min_freq=float(FREQUENCIES[0]),
+        max_freq=float(FREQUENCIES[-1]),
+    )
+
+
+def _make_unit_box_heading_data() -> HeadingData:
+    """Build HeadingData for the Unit Box heading grid."""
+    return HeadingData(
+        values=HEADINGS.copy(),
+        count=N_HEAD,
+        min_heading=float(HEADINGS[0]),
+        max_heading=float(HEADINGS[-1]),
+    )
+
+
+def _unit_box_heave_rao(frequencies: np.ndarray) -> np.ndarray:
+    """Approximate heave RAO for a 1m^3 box at 500 kg.
+
+    Peak near resonance frequency: omega_n = sqrt(rho*g*A_wp / m)
+    A_wp = 1 m^2 (waterplane area), rho=1025, g=9.81, m=500 kg
+    omega_n ~ sqrt(1025 * 9.81 * 1 / 500) ~ 4.49 rad/s
+    At lower frequencies (0.1-2.0 rad/s), heave RAO approaches 1.0 m/m.
+    """
+    omega_n = np.sqrt(WATER_DENSITY * 9.81 * UNIT_BOX_SIDE_M**2 / UNIT_BOX_MASS_KG)
+    # Simplified undamped single-DOF response
+    zeta = 0.05  # 5% critical damping
+    r = frequencies / omega_n
+    magnitude = 1.0 / np.sqrt((1.0 - r**2) ** 2 + (2.0 * zeta * r) ** 2)
+    # Clamp to physical range
+    return np.clip(magnitude, 0.0, 3.0)
+
+
+def _unit_box_surge_rao(frequencies: np.ndarray) -> np.ndarray:
+    """Approximate surge RAO — box behaves like a freely drifting body at low freq."""
+    # At low omega, surge RAO -> 1 (follows wave). Damped at higher freq.
+    omega_n = 0.3  # approximate surge natural frequency
+    zeta = 0.15
+    r = frequencies / omega_n
+    magnitude = 1.0 / np.sqrt((1.0 - r**2) ** 2 + (2.0 * zeta * r) ** 2)
+    return np.clip(magnitude, 0.0, 2.0)
+
+
+def _unit_box_pitch_rao(frequencies: np.ndarray) -> np.ndarray:
+    """Approximate pitch RAO (deg/m) for small box."""
+    omega_n = np.sqrt(WATER_DENSITY * 9.81 * UNIT_BOX_SIDE_M**2 * (1.0 / 12.0) / UNIT_BOX_MASS_KG)
+    zeta = 0.10
+    r = frequencies / omega_n
+    magnitude = 5.0 / np.sqrt((1.0 - r**2) ** 2 + (2.0 * zeta * r) ** 2)
+    return np.clip(magnitude, 0.0, 20.0)
+
+
+# RNG stream identity
+# ---------------------------------------------------------------------------
+# Every stream is keyed by the FULL tuple (solver seed, DOF, kind) as a seed
+# SEQUENCE. Summing the components — the previous `seed + dof.value` — aliases:
+# with solver seeds 0/1/2 and DOF values 1-6, AQWA-SWAY drew the same stream as
+# OrcaWave-SURGE, and five of the six sums collided three ways, so the 18
+# pair x DOF results were driven by only 8 distinct draws (#1633).
+_KIND_MAGNITUDE = 0
+_KIND_BASE_PHASE = 1
+_KIND_SOLVER_PHASE = 2
+_KIND_ADDED_MASS = 3
+_KIND_DAMPING = 4
+
+
+def _magnitude_rng(seed: int, dof: DOF) -> np.random.Generator:
+    """RNG for a solver's RAO magnitude perturbation in one DOF."""
+    return np.random.default_rng([seed, dof.value, _KIND_MAGNITUDE])
+
+
+def _unit_box_rao_component(
+    dof: DOF,
+    frequencies: np.ndarray,
+    seed: int = 0,
+) -> RAOComponent:
+    """Build a RAOComponent for the Unit Box with controlled solver variation.
+
+    Args:
+        dof: Degree of freedom.
+        frequencies: Frequency array (rad/s).
+        seed: RNG seed for repeatable phase noise.
+    """
+    freq_data = _make_unit_box_freq_data()
+    head_data = _make_unit_box_heading_data()
+    rng = _magnitude_rng(seed, dof)
+
+    if dof == DOF.HEAVE:
+        base_mag_1d = _unit_box_heave_rao(frequencies)
+    elif dof in (DOF.SURGE, DOF.SWAY):
+        base_mag_1d = _unit_box_surge_rao(frequencies)
+    elif dof in (DOF.PITCH, DOF.ROLL):
+        base_mag_1d = _unit_box_pitch_rao(frequencies)
+    else:
+        # Yaw: near-zero for symmetric box
+        base_mag_1d = np.zeros(len(frequencies)) + 1e-4
+
+    # Expand to [nfreq x nheading]: apply mild heading variation
+    heading_factors = np.array([1.0, 0.7, 1.0, 0.7])  # fore/beam symmetry
+    if dof in (DOF.SWAY, DOF.ROLL):
+        # Sway/roll excited mainly by beam seas
+        heading_factors = np.array([0.1, 1.0, 0.1, 1.0])
+
+    magnitude = np.outer(base_mag_1d, heading_factors)
+
+    # Per-sample multiplicative variation makes the declared relative bound
+    # true at every scale, including the near-zero yaw response.
+    perturbation = rng.uniform(
+        -SOLVER_RELATIVE_UNCERTAINTY,
+        SOLVER_RELATIVE_UNCERTAINTY,
+        size=magnitude.shape,
+    )
+    magnitude = magnitude * (1.0 + perturbation)
+
+    # Phase: physically, heave leads wave by ~90 deg near resonance
+    if dof == DOF.HEAVE:
+        omega_n = np.sqrt(WATER_DENSITY * 9.81 * UNIT_BOX_SIDE_M**2 / UNIT_BOX_MASS_KG)
+        phase_1d = -np.degrees(np.arctan2(2 * 0.05 * frequencies / omega_n,
+                                           1 - (frequencies / omega_n) ** 2))
+    else:
+        phase_rng = np.random.default_rng([dof.value, _KIND_BASE_PHASE])
+        phase_1d = phase_rng.uniform(-30.0, 30.0, size=len(frequencies))
+
+    phase = np.outer(phase_1d, np.ones(N_HEAD))
+
+    # Per-solver phase variation, scaled from the SAME declared relative
+    # uncertainty rather than an independent invented bound.
+    #
+    # SOLVER_RELATIVE_UNCERTAINTY is treated here as a PER-COMPONENT bound: the
+    # radial (magnitude) and tangential (phase) perturbations are each bounded
+    # by u independently. A tangential perturbation of relative size u rotates
+    # the phasor by arctan(u) ~ u radians for small u, so the phase bound is
+    # degrees(u) = 0.573 deg at u = 0.01. Applying u to both components means
+    # the TOTAL complex perturbation reaches u*sqrt(2), not u — stated plainly
+    # because an earlier version of this comment claimed a single-u total,
+    # which is not what the code does. Nothing gates on phase (the policy
+    # justification declares it diagnostic-only), so the per-component reading
+    # is the honest description rather than a derivation of a bound.
+    #
+    # Without this the solver seed never reaches the phase: every solver
+    # produced a bit-identical phase array, all 18 max_phase_diff entries were
+    # exactly 0.0, and an inverted phase convention would have reported perfect
+    # agreement (#1633).
+    phase_perturbation_deg = np.degrees(SOLVER_RELATIVE_UNCERTAINTY)
+    solver_phase_rng = np.random.default_rng([seed, dof.value, _KIND_SOLVER_PHASE])
+    phase = phase + solver_phase_rng.uniform(
+        -phase_perturbation_deg, phase_perturbation_deg, size=phase.shape,
+    )
+
+    return RAOComponent(
+        dof=dof,
+        magnitude=magnitude,
+        phase=phase,
+        frequencies=freq_data,
+        headings=head_data,
+        unit="",
+    )
+
+
+def _unit_box_added_mass(
+    frequencies: np.ndarray,
+    seed: int = 0,
+) -> AddedMassSet:
+    """Build frequency-dependent added mass matrices for the Unit Box.
+
+    For a 1x1x1 box at the waterline, diagonal added mass components are
+    approximately proportional to displaced water mass (~500 kg for this geometry).
+    """
+    rng = np.random.default_rng([seed, _KIND_ADDED_MASS])
+    freq_data = _make_unit_box_freq_data()
+    # Approximate diagonal: surge/sway added mass ~ 50% of displaced mass
+    # heave added mass ~ 20% (flat bottom), roll/pitch ~ 10% * L^2
+    diag_approx = np.array([250.0, 250.0, 100.0, 25.0, 25.0, 5.0])
+
+    matrices = []
+    for i, freq in enumerate(frequencies):
+        m = np.zeros((6, 6))
+        for k in range(6):
+            # Frequency-dependent: slightly higher at low freq
+            freq_factor = 1.0 + 0.1 * np.exp(-freq)
+            m[k, k] = diag_approx[k] * freq_factor
+        # Add small off-diagonal coupling
+        m[0, 4] = m[4, 0] = 5.0
+        m[1, 3] = m[3, 1] = 5.0
+        upper = rng.uniform(
+            -SOLVER_RELATIVE_UNCERTAINTY,
+            SOLVER_RELATIVE_UNCERTAINTY,
+            size=(6, 6),
+        )
+        perturbation = np.triu(upper)
+        perturbation = perturbation + np.triu(perturbation, 1).T
+        m = m * (1.0 + perturbation)
+        matrices.append(
+            HydrodynamicMatrix(
+                matrix=m,
+                frequency=float(freq),
+                matrix_type="added_mass",
+                source="solver",
+                units={"linear": "kg", "angular": "kg.m^2"},
+            )
+        )
+
+    return AddedMassSet(
+        vessel_name=UNIT_BOX_NAME,
+        analysis_tool="solver",
+        water_depth=UNIT_BOX_WATER_DEPTH_M,
+        matrices=matrices,
+        frequencies=freq_data,
+        created_date=datetime.now().isoformat(),
+    )
+
+
+def _unit_box_damping(
+    frequencies: np.ndarray,
+    seed: int = 0,
+) -> DampingSet:
+    """Build frequency-dependent radiation damping matrices for the Unit Box."""
+    rng = np.random.default_rng([seed, _KIND_DAMPING])
+    freq_data = _make_unit_box_freq_data()
+    # Radiation damping is proportional to freq^2 at low frequencies
+    diag_base = np.array([50.0, 50.0, 30.0, 5.0, 5.0, 1.0])
+
+    matrices = []
+    for i, freq in enumerate(frequencies):
+        m = np.zeros((6, 6))
+        for k in range(6):
+            m[k, k] = diag_base[k] * (freq / 1.0)
+        upper = rng.uniform(
+            -SOLVER_RELATIVE_UNCERTAINTY,
+            SOLVER_RELATIVE_UNCERTAINTY,
+            size=(6, 6),
+        )
+        perturbation = np.triu(upper)
+        perturbation = perturbation + np.triu(perturbation, 1).T
+        m = m * (1.0 + perturbation)
+        matrices.append(
+            HydrodynamicMatrix(
+                matrix=m,
+                frequency=float(freq),
+                matrix_type="damping",
+                source="solver",
+                units={"linear": "N.s/m", "angular": "N.m.s/rad"},
+            )
+        )
+
+    return DampingSet(
+        vessel_name=UNIT_BOX_NAME,
+        analysis_tool="solver",
+        water_depth=UNIT_BOX_WATER_DEPTH_M,
+        matrices=matrices,
+        frequencies=freq_data,
+        created_date=datetime.now().isoformat(),
+    )
+
+
+def _build_unit_box_results(
+    solver_name: str,
+    seed: int = 0,
+) -> DiffractionResults:
+    """Build DiffractionResults for the Unit Box hull.
+
+    Args:
+        solver_name: Synthetic series identifier.
+        seed: RNG seed for repeatable results.
+
+    Returns:
+        DiffractionResults with analytically-grounded Unit Box coefficients.
+    """
+    now = datetime.now().isoformat()
+    components: Dict = {}
+    for dof in DOF:
+        components[dof.name.lower()] = _unit_box_rao_component(
+            dof, FREQUENCIES, seed=seed,
+        )
+
+    rao_set = RAOSet(
+        vessel_name=UNIT_BOX_NAME,
+        analysis_tool=solver_name,
+        water_depth=UNIT_BOX_WATER_DEPTH_M,
+        created_date=now,
+        source_file=f"unit_box_{solver_name.lower()}.gdf",
+        **components,
+    )
+
+    return DiffractionResults(
+        vessel_name=UNIT_BOX_NAME,
+        analysis_tool=solver_name,
+        water_depth=UNIT_BOX_WATER_DEPTH_M,
+        raos=rao_set,
+        added_mass=_unit_box_added_mass(FREQUENCIES, seed=seed),
+        damping=_unit_box_damping(FREQUENCIES, seed=seed),
+        created_date=now,
+        source_files=[f"unit_box_{solver_name.lower()}.gdf"],
+        phase_convention="iso_lead",
+        unit_system="SI",
+    )
+
+
+def _build_unit_box_solver_set() -> Dict[str, DiffractionResults]:
+    """Deterministic three-series result set for the Unit Box self-test.
+
+    Each solver uses a distinct deterministic seed for bounded per-sample
+    multiplicative variation. No solver-specific bias is assumed.
+
+    Shared by the ``unit_box_solver_results`` fixture and by ``_regenerate()``
+    so the committed golden artifacts and the tests are built from exactly the
+    same inputs.
+    """
+    return {
+        "Series A": _build_unit_box_results("Series A", seed=0),
+        "Series B": _build_unit_box_results("Series B", seed=1),
+        "Series C": _build_unit_box_results("Series C", seed=2),
+    }
+
+
+# ---------------------------------------------------------------------------
+# Fixtures
+# ---------------------------------------------------------------------------
+
+
+@pytest.fixture
+def unit_box_solver_results() -> Dict[str, DiffractionResults]:
+    """Three synthetic series for the Unit Box self-test."""
+    return _build_unit_box_solver_set()
+
+
+@pytest.fixture
+def unit_box_output_dir(tmp_path: Path) -> Path:
+    """Temporary output directory for benchmark artifacts."""
+    out = tmp_path / "unit_box_benchmark"
+    out.mkdir(parents=True, exist_ok=True)
+    return out
+
+
+# ---------------------------------------------------------------------------
+# 1. Unit Box results construction
+# ---------------------------------------------------------------------------
+
+
+class TestUnitBoxResultsConstruction:
+    """Verify the Unit Box DiffractionResults are well-formed."""
+
+    def test_unit_box_vessel_name_matches_all_series(
+        self,
+        unit_box_solver_results: Dict[str, DiffractionResults],
+    ) -> None:
+        for solver_name, dr in unit_box_solver_results.items():
+            assert dr.vessel_name == UNIT_BOX_NAME, (
+                f"{solver_name} vessel_name mismatch"
+            )
+
+    def test_unit_box_frequency_grid_correct(
+        self,
+        unit_box_solver_results: Dict[str, DiffractionResults],
+    ) -> None:
+        for solver_name, dr in unit_box_solver_results.items():
+            freqs = dr.raos.heave.frequencies.values
+            assert len(freqs) == N_FREQ, f"{solver_name} freq count"
+            assert float(freqs[0]) == pytest.approx(0.1, abs=1e-6)
+            assert float(freqs[-1]) == pytest.approx(2.0, abs=1e-6)
+
+    def test_unit_box_heading_grid_correct(
+        self,
+        unit_box_solver_results: Dict[str, DiffractionResults],
+    ) -> None:
+        for solver_name, dr in unit_box_solver_results.items():
+            heads = dr.raos.heave.headings.values
+            assert len(heads) == N_HEAD, f"{solver_name} heading count"
+            np.testing.assert_array_almost_equal(
+                heads, HEADINGS, decimal=6,
+            )
+
+    def test_unit_box_rao_shapes_correct(
+        self,
+        unit_box_solver_results: Dict[str, DiffractionResults],
+    ) -> None:
+        for solver_name, dr in unit_box_solver_results.items():
+            for dof_name in ("surge", "sway", "heave", "roll", "pitch", "yaw"):
+                comp = getattr(dr.raos, dof_name)
+                assert comp.magnitude.shape == (N_FREQ, N_HEAD), (
+                    f"{solver_name}/{dof_name} magnitude shape"
+                )
+                assert comp.phase.shape == (N_FREQ, N_HEAD), (
+                    f"{solver_name}/{dof_name} phase shape"
+                )
+
+    def test_unit_box_heave_rao_positive(
+        self,
+        unit_box_solver_results: Dict[str, DiffractionResults],
+    ) -> None:
+        for solver_name, dr in unit_box_solver_results.items():
+            assert np.all(dr.raos.heave.magnitude >= 0.0), (
+                f"{solver_name} heave magnitude negative"
+            )
+
+    def test_unit_box_water_depth_correct(
+        self,
+        unit_box_solver_results: Dict[str, DiffractionResults],
+    ) -> None:
+        for solver_name, dr in unit_box_solver_results.items():
+            assert dr.water_depth == pytest.approx(UNIT_BOX_WATER_DEPTH_M)
+
+    def test_unit_box_added_mass_matrix_count(
+        self,
+        unit_box_solver_results: Dict[str, DiffractionResults],
+    ) -> None:
+        for solver_name, dr in unit_box_solver_results.items():
+            assert len(dr.added_mass.matrices) == N_FREQ, (
+                f"{solver_name} added mass matrix count"
+            )
+
+    def test_unit_box_damping_matrices_non_negative_diagonal(
+        self,
+        unit_box_solver_results: Dict[str, DiffractionResults],
+    ) -> None:
+        for solver_name, dr in unit_box_solver_results.items():
+            for hm in dr.damping.matrices:
+                diag = np.diag(hm.matrix)
+                assert np.all(diag >= 0.0), (
+                    f"{solver_name} damping diagonal has negative values at "
+                    f"freq={hm.frequency}"
+                )
+
+
+# ---------------------------------------------------------------------------
+# 2. MultiSolverComparator with Unit Box results
+# ---------------------------------------------------------------------------
+
+
+class TestUnitBoxMultiSolverComparator:
+    """Verify MultiSolverComparator produces sensible output for Unit Box."""
+
+    def test_comparator_accepts_three_unit_box_series(
+        self,
+        unit_box_solver_results: Dict[str, DiffractionResults],
+    ) -> None:
+        comparator = MultiSolverComparator(
+            unit_box_solver_results, policy=_unit_box_policy(),
+        )
+        assert sorted(comparator.solver_names) == ["Series A", "Series B", "Series C"]
+
+    def test_unit_box_rao_comparison_produces_three_pairs(
+        self,
+        unit_box_solver_results: Dict[str, DiffractionResults],
+    ) -> None:
+        comparator = MultiSolverComparator(
+            unit_box_solver_results, policy=_unit_box_policy(),
+        )
+        rao_comps = comparator.compare_raos()
+        assert len(rao_comps) == 3  # C(3,2) = 3 pairs
+
+    def test_unit_box_heave_rao_high_correlation(
+        self,
+        unit_box_solver_results: Dict[str, DiffractionResults],
+    ) -> None:
+        """Heave RAO correlation should be very high (>0.99) for all pairs."""
+        comparator = MultiSolverComparator(
+            unit_box_solver_results, policy=_unit_box_policy(),
+        )
+        rao_comps = comparator.compare_raos()
+        for pair_key, pair_data in rao_comps.items():
+            heave_corr = pair_data["heave"].magnitude_stats.correlation
+            assert heave_corr > 0.99, (
+                f"{pair_key}: heave correlation {heave_corr:.4f} < 0.99"
+            )
+
+    def test_unit_box_heave_consensus_is_full(
+        self,
+        unit_box_solver_results: Dict[str, DiffractionResults],
+    ) -> None:
+        """Unit Box is simple geometry: expect FULL or MAJORITY consensus."""
+        comparator = MultiSolverComparator(
+            unit_box_solver_results, policy=_unit_box_policy(),
+        )
+        consensus = comparator.compute_consensus()
+        heave_level = consensus["HEAVE"].consensus_level
+        assert heave_level == "FULL"
+
+    def test_unit_box_report_generation(
+        self,
+        unit_box_solver_results: Dict[str, DiffractionResults],
+    ) -> None:
+        comparator = MultiSolverComparator(
+            unit_box_solver_results, policy=_unit_box_policy(),
+        )
+        report = comparator.generate_report()
+        assert report.vessel_name == UNIT_BOX_NAME
+        assert len(report.solver_names) == 3
+        assert report.overall_consensus == "FULL"
+
+    def test_unit_box_overall_consensus_not_no_consensus(
+        self,
+        unit_box_solver_results: Dict[str, DiffractionResults],
+    ) -> None:
+        """For 1% solver variation, overall should not be NO_CONSENSUS."""
+        comparator = MultiSolverComparator(
+            unit_box_solver_results, policy=_unit_box_policy(),
+        )
+        report = comparator.generate_report()
+        assert report.overall_consensus == "FULL"
+
+
+# ---------------------------------------------------------------------------
+# 3. BenchmarkRunner with Unit Box results
+# ---------------------------------------------------------------------------
+
+
+class TestUnitBoxReportPipeline:
+    """Verify the report pipeline on three synthetic Unit Box series."""
+
+    def test_report_pipeline_succeeds_for_unit_box(
+        self,
+        unit_box_solver_results: Dict[str, DiffractionResults],
+        unit_box_output_dir: Path,
+    ) -> None:
+        config = BenchmarkConfig(
+            output_dir=unit_box_output_dir,
+            **UNIT_BOX_POLICY_INPUTS,
+        )
+        runner = BenchmarkRunner(config)
+        result = runner.run_from_results(unit_box_solver_results)
+
+        assert result.success is True, (
+            f"BenchmarkRunner failed: {result.error_message}"
+        )
+
+    def test_report_pipeline_creates_json_report_for_unit_box(
+        self,
+        unit_box_solver_results: Dict[str, DiffractionResults],
+        unit_box_output_dir: Path,
+    ) -> None:
+        config = BenchmarkConfig(
+            output_dir=unit_box_output_dir, **UNIT_BOX_POLICY_INPUTS,
+        )
+        runner = BenchmarkRunner(config)
+        result = runner.run_from_results(unit_box_solver_results)
+
+        assert result.report_json_path is not None
+        assert result.report_json_path.exists()
+
+    def test_report_pipeline_creates_html_report_for_unit_box(
+        self,
+        unit_box_solver_results: Dict[str, DiffractionResults],
+        unit_box_output_dir: Path,
+    ) -> None:
+        config = BenchmarkConfig(
+            output_dir=unit_box_output_dir, **UNIT_BOX_POLICY_INPUTS,
+        )
+        runner = BenchmarkRunner(config)
+        result = runner.run_from_results(unit_box_solver_results)
+
+        assert result.report_html_path is not None
+        assert result.report_html_path.exists()
+
+    def test_report_pipeline_creates_overlay_plots_for_unit_box(
+        self,
+        unit_box_solver_results: Dict[str, DiffractionResults],
+        unit_box_output_dir: Path,
+    ) -> None:
+        config = BenchmarkConfig(
+            output_dir=unit_box_output_dir, **UNIT_BOX_POLICY_INPUTS,
+        )
+        runner = BenchmarkRunner(config)
+        result = runner.run_from_results(unit_box_solver_results)
+
+        assert len(result.plot_paths) > 0, "No overlay plots generated"
+
+    def test_report_pipeline_json_contains_vessel_name(
+        self,
+        unit_box_solver_results: Dict[str, DiffractionResults],
+        unit_box_output_dir: Path,
+    ) -> None:
+        config = BenchmarkConfig(
+            output_dir=unit_box_output_dir, **UNIT_BOX_POLICY_INPUTS,
+        )
+        runner = BenchmarkRunner(config)
+        result = runner.run_from_results(unit_box_solver_results)
+
+        with open(result.report_json_path) as fh:
+            data = json.load(fh)
+        assert data["vessel_name"] == UNIT_BOX_NAME
+
+    def test_report_pipeline_json_contains_three_series_names(
+        self,
+        unit_box_solver_results: Dict[str, DiffractionResults],
+        unit_box_output_dir: Path,
+    ) -> None:
+        config = BenchmarkConfig(
+            output_dir=unit_box_output_dir, **UNIT_BOX_POLICY_INPUTS,
+        )
+        runner = BenchmarkRunner(config)
+        result = runner.run_from_results(unit_box_solver_results)
+
+        with open(result.report_json_path) as fh:
+            data = json.load(fh)
+        assert sorted(data["solver_names"]) == ["Series A", "Series B", "Series C"]
+
+    def test_report_pipeline_json_overall_consensus_populated(
+        self,
+        unit_box_solver_results: Dict[str, DiffractionResults],
+        unit_box_output_dir: Path,
+    ) -> None:
+        config = BenchmarkConfig(
+            output_dir=unit_box_output_dir, **UNIT_BOX_POLICY_INPUTS,
+        )
+        runner = BenchmarkRunner(config)
+        result = runner.run_from_results(unit_box_solver_results)
+
+        with open(result.report_json_path) as fh:
+            data = json.load(fh)
+        assert data["overall_consensus"] == "FULL"
+
+    def test_report_pipeline_dry_run_skips_plots(
+        self,
+        unit_box_solver_results: Dict[str, DiffractionResults],
+        unit_box_output_dir: Path,
+    ) -> None:
+        config = BenchmarkConfig(
+            output_dir=unit_box_output_dir, dry_run=True,
+            **UNIT_BOX_POLICY_INPUTS,
+        )
+        runner = BenchmarkRunner(config)
+        result = runner.run_from_results(unit_box_solver_results)
+
+        assert result.success is True
+        assert result.plot_paths == []
+
+    def test_report_pipeline_report_includes_all_six_dofs(
+        self,
+        unit_box_solver_results: Dict[str, DiffractionResults],
+        unit_box_output_dir: Path,
+    ) -> None:
+        config = BenchmarkConfig(
+            output_dir=unit_box_output_dir, **UNIT_BOX_POLICY_INPUTS,
+        )
+        runner = BenchmarkRunner(config)
+        result = runner.run_from_results(unit_box_solver_results)
+
+        assert result.report is not None
+        expected_dofs = {"SURGE", "SWAY", "HEAVE", "ROLL", "PITCH", "YAW"}
+        assert set(result.report.consensus_by_dof.keys()) == expected_dofs
+
+
+# ---------------------------------------------------------------------------
+# 4. Committed golden artifacts under docs/benchmarks/unit_box/
+# ---------------------------------------------------------------------------
+# ``docs/benchmarks/unit_box/`` holds committed benchmark evidence, not scratch
+# output.  Before #1635 the test below regenerated those seven tracked files
+# in place on every run, so any test session left the working tree dirty and
+# the per-file timestamp churn masked genuine coefficient drift.
+#
+# The benchmark is deterministic (seeded RNG, fixed grids); the only volatile
+# content is the embedded wall-clock timestamp.  So the committed artifacts are
+# treated as a read-only golden reference: the tests regenerate into
+# ``tmp_path`` and COMPARE, failing on drift.
+#
+# Regenerate the committed artifacts deliberately with::
+#
+#     uv run python tests/hydrodynamics/diffraction/test_unit_box_benchmark.py
+
+
+DOCS_BENCHMARK_DIR = (
+    Path(__file__).resolve().parents[3]
+    / "docs"
+    / "benchmarks"
+    / "unit_box"
+)
+
+#: Every artifact a Unit Box benchmark run emits into its output directory.
+DOCS_ARTIFACT_NAMES = (
+    "benchmark_amplitude.html",
+    "benchmark_combined.html",
+    "benchmark_heatmap.html",
+    "benchmark_phase.html",
+    "benchmark_report.html",
+    "benchmark_report.json",
+    "hydro_data.yml",
+)
+
+#: JSON keys whose value is a wall-clock timestamp — excluded from comparison.
+VOLATILE_JSON_KEYS = frozenset({"comparison_date"})
+
+#: Marker for the single volatile line of ``hydro_data.yml``.
+VOLATILE_YAML_MARKER = "generated:"
+
+REPORT_TITLE = (
+    "Report-pipeline self-test on synthetic coefficients: "
+    "not a comparison of analysis programs"
+)
+REPORT_SUBTITLE = (
+    "Series A vs Series B vs Series C — 1m^3 box, 500 kg, "
+    "depth 50 m, freq 0.1-2.0 rad/s"
+)
+
+REGENERATE_HINT = (
+    "If the change is intended, regenerate with: uv run python "
+    "tests/hydrodynamics/diffraction/test_unit_box_benchmark.py"
+)
+
+
+def _run_unit_box_benchmark(
+    output_dir: Path,
+    solver_results: Dict[str, DiffractionResults],
+) -> BenchmarkRunResult:
+    """Run the canonical Unit Box benchmark into ``output_dir``."""
+    config = BenchmarkConfig(
+        output_dir=output_dir,
+        **UNIT_BOX_POLICY_INPUTS,
+        report_title=REPORT_TITLE,
+        report_subtitle=REPORT_SUBTITLE,
+        report_page_title=REPORT_TITLE,
+        plot_title=REPORT_TITLE,
+        # Retain the earlier pair orientation and its exact stored metrics.
+        comparison_order=["Series A", "Series C", "Series B"],
+    )
+    return BenchmarkRunner(config).run_from_results(solver_results)
+
+
+def _dir_fingerprint(directory: Path) -> Dict[str, str]:
+    """Map file name -> sha256 for every file directly in ``directory``."""
+    if not directory.is_dir():
+        return {}
+    return {
+        path.name: hashlib.sha256(path.read_bytes()).hexdigest()
+        for path in sorted(directory.iterdir())
+        if path.is_file()
+    }
+
+
+def _assert_json_matches(actual: Any, expected: Any, path: str = "") -> None:
+    """Assert two JSON trees match, ignoring volatile keys.
+
+    Floats are compared with a tight relative tolerance so last-ULP platform
+    noise does not fail the build while any real coefficient drift does.
+    """
+    where = path or "<root>"
+    if isinstance(expected, dict):
+        assert isinstance(actual, dict), f"{where}: expected an object"
+        expected_keys = set(expected) - VOLATILE_JSON_KEYS
+        actual_keys = set(actual) - VOLATILE_JSON_KEYS
+        assert actual_keys == expected_keys, (
+            f"{where}: key set drifted from the committed report; "
+            f"missing={sorted(expected_keys - actual_keys)} "
+            f"unexpected={sorted(actual_keys - expected_keys)}. "
+            f"{REGENERATE_HINT}"
+        )
+        for key in sorted(expected_keys):
+            _assert_json_matches(actual[key], expected[key], f"{path}/{key}")
+    elif isinstance(expected, list):
+        assert isinstance(actual, list), f"{where}: expected a list"
+        assert len(actual) == len(expected), (
+            f"{where}: length {len(actual)} != committed {len(expected)}. "
+            f"{REGENERATE_HINT}"
+        )
+        for index, (got, want) in enumerate(zip(actual, expected)):
+            _assert_json_matches(got, want, f"{path}[{index}]")
+    elif isinstance(expected, bool) or expected is None:
+        assert actual == expected, (
+            f"{where}: {actual!r} != committed {expected!r}. {REGENERATE_HINT}"
+        )
+    elif isinstance(expected, (int, float)):
+        assert actual == pytest.approx(expected, rel=1e-9, abs=1e-12), (
+            f"{where}: {actual!r} != committed {expected!r}. {REGENERATE_HINT}"
+        )
+    else:
+        assert actual == expected, (
+            f"{where}: {actual!r} != committed {expected!r}. {REGENERATE_HINT}"
+        )
+
+
+def _stable_yaml_lines(text: str) -> list:
+    """Drop the single timestamped line from a ``hydro_data.yml`` body."""
+    return [
+        line for line in text.splitlines()
+        if VOLATILE_YAML_MARKER not in line
+    ]
+
+
+@pytest.fixture(scope="module")
+def unit_box_docs_run(tmp_path_factory: pytest.TempPathFactory) -> Dict[str, Any]:
+    """Run the canonical Unit Box benchmark ONCE, into a temp directory.
+
+    Fingerprints ``docs/benchmarks/unit_box/`` immediately before the run so
+    the #1635 regression guard can prove the run touched nothing tracked.
+    Module-scoped so the golden checks below cost a single benchmark run, the
+    same as the pre-#1635 test did.
+    """
+    out_dir = tmp_path_factory.mktemp("unit_box_docs") / "unit_box"
+    docs_before = _dir_fingerprint(DOCS_BENCHMARK_DIR)
+    result = _run_unit_box_benchmark(out_dir, _build_unit_box_solver_set())
+    docs_after = _dir_fingerprint(DOCS_BENCHMARK_DIR)
+    return {
+        "out_dir": out_dir,
+        "result": result,
+        "docs_before": docs_before,
+        "docs_after": docs_after,
+    }
+
+
+class TestUnitBoxSelftestArtifacts:
+    """The Unit Box self-test is side-effect free and matches the golden."""
+
+    def test_unit_box_selftest_writes_all_artifacts(
+        self,
+        unit_box_docs_run: Dict[str, Any],
+    ) -> None:
+        """A run emits the full artifact set into its configured output dir."""
+        result: BenchmarkRunResult = unit_box_docs_run["result"]
+        out_dir: Path = unit_box_docs_run["out_dir"]
+
+        assert result.success is True, (
+            f"Report output failed: {result.error_message}"
+        )
+        assert result.report_json_path is not None
+        assert result.report_json_path.exists()
+        assert result.report_html_path is not None
+        assert result.report_html_path.exists()
+        assert result.hydro_data_yaml_path is not None
+        assert result.hydro_data_yaml_path.exists()
+
+        produced = {p.name for p in out_dir.iterdir() if p.is_file()}
+        missing = sorted(set(DOCS_ARTIFACT_NAMES) - produced)
+        assert not missing, f"benchmark did not produce {missing}"
+
+    def test_unit_box_selftest_does_not_modify_docs(
+        self,
+        unit_box_docs_run: Dict[str, Any],
+    ) -> None:
+        """Regression guard for #1635.
+
+        Running the benchmark must leave every tracked file under
+        ``docs/benchmarks/unit_box/`` byte-identical.
+        """
+        before: Dict[str, str] = unit_box_docs_run["docs_before"]
+        after: Dict[str, str] = unit_box_docs_run["docs_after"]
+        assert before, (
+            f"committed benchmark artifacts missing from {DOCS_BENCHMARK_DIR}"
+        )
+
+        changed = sorted(
+            name for name in set(before) | set(after)
+            if before.get(name) != after.get(name)
+        )
+        assert not changed, (
+            "running the benchmark modified tracked artifacts under "
+            f"{DOCS_BENCHMARK_DIR}: {changed}. Tests must write to tmp_path "
+            "only (#1635)."
+        )
+
+    def test_unit_box_docs_json_is_valid(self) -> None:
+        """The committed JSON is parseable and structurally complete."""
+        json_path = DOCS_BENCHMARK_DIR / "benchmark_report.json"
+        assert json_path.exists(), (
+            f"committed golden {json_path} is missing. {REGENERATE_HINT}"
+        )
+        data = json.loads(json_path.read_text(encoding="utf-8"))
+        assert "vessel_name" in data
+        assert "overall_consensus" in data
+        assert "pairwise_results" in data
+
+    def test_unit_box_docs_json_matches_fresh_run(
+        self,
+        unit_box_docs_run: Dict[str, Any],
+    ) -> None:
+        """Committed JSON must still be reproducible — fail on drift."""
+        golden_path = DOCS_BENCHMARK_DIR / "benchmark_report.json"
+        assert golden_path.exists(), (
+            f"committed golden {golden_path} is missing. {REGENERATE_HINT}"
+        )
+        result: BenchmarkRunResult = unit_box_docs_run["result"]
+        assert result.success is True, (
+            f"Report output failed: {result.error_message}"
+        )
+
+        expected = json.loads(golden_path.read_text(encoding="utf-8"))
+        actual = json.loads(
+            result.report_json_path.read_text(encoding="utf-8"),
+        )
+
+        _assert_json_matches(actual, expected)
+
+    def test_unit_box_docs_hydro_data_matches_fresh_run(
+        self,
+        unit_box_docs_run: Dict[str, Any],
+    ) -> None:
+        """Committed hydro_data.yml must still be reproducible line for line.
+
+        This is the artifact that carries the raw added-mass / damping / RAO
+        numbers, so it is the one that would move if a units or coefficient
+        change reached the benchmark.
+        """
+        golden_path = DOCS_BENCHMARK_DIR / "hydro_data.yml"
+        assert golden_path.exists(), (
+            f"committed golden {golden_path} is missing. {REGENERATE_HINT}"
+        )
+        result: BenchmarkRunResult = unit_box_docs_run["result"]
+        assert result.success is True, (
+            f"Report output failed: {result.error_message}"
+        )
+
+        expected = _stable_yaml_lines(
+            golden_path.read_text(encoding="utf-8"),
+        )
+        actual = _stable_yaml_lines(
+            result.hydro_data_yaml_path.read_text(encoding="utf-8"),
+        )
+
+        assert len(actual) == len(expected), (
+            f"hydro_data.yml line count {len(actual)} != committed "
+            f"{len(expected)}. {REGENERATE_HINT}"
+        )
+        drifted = [
+            (i, got, want)
+            for i, (got, want) in enumerate(zip(actual, expected), start=1)
+            if got != want
+        ]
+        assert not drifted, (
+            f"hydro_data.yml drifted from the committed golden at "
+            f"{len(drifted)} line(s); first: line {drifted[0][0]} "
+            f"{drifted[0][1]!r} != {drifted[0][2]!r}. {REGENERATE_HINT}"
+        )
+
+
+# ---------------------------------------------------------------------------
+# Deliberate regeneration of the committed docs/benchmarks/unit_box/ artifacts
+# ---------------------------------------------------------------------------
+
+
+def _regenerate() -> None:
+    """Rewrite ``docs/benchmarks/unit_box/`` from the CURRENT implementation.
+
+    Opt-in only — never invoked by the test suite (#1635).
+    """
+    DOCS_BENCHMARK_DIR.mkdir(parents=True, exist_ok=True)
+    result = _run_unit_box_benchmark(
+        DOCS_BENCHMARK_DIR, _build_unit_box_solver_set(),
+    )
+    if not result.success:
+        raise SystemExit(
+            f"Unit Box self-test regeneration failed: {result.error_message}"
+        )
+    for name in sorted(set(DOCS_ARTIFACT_NAMES)):
+        path = DOCS_BENCHMARK_DIR / name
+        print(f"wrote {path} ({path.stat().st_size} bytes)")
+
+
+if __name__ == "__main__":
+    _regenerate()

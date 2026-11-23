@@ -1,0 +1,10 @@
+# Synthetic catalogue fixture; no measured or vendor data.
+metadata:
+  structure: riser
+environment:
+  water:
+    depth: 50
+  waves:
+    height: 1
+    period: 8
+simulation: {}

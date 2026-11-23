@@ -1,0 +1,96 @@
+source_type: python
+source_description: "Extracted from digitalmodel/tests/drilling_riser/test_stackup_doc_verified.py"
+extracted_date: "2026-03-16"
+legal_scan_passed: true
+category: "drilling"
+subcategory: "drilling_riser_stackup"
+equations:
+  - name: "Top tension required"
+    latex: "T_{top} = W_{sub} \\times SF"
+    description: "Top tension equals submerged weight times dynamic safety factor"
+  - name: "Barlow wall thickness"
+    latex: "t = \\frac{P \\times OD \\times SF}{2 \\times SMYS}"
+    description: "Minimum wall thickness from Barlow's formula for internal pressure"
+  - name: "Effective tension at depth"
+    latex: "T_{eff} = T_{top} - W_{sub} \\times d_f"
+    description: "Effective tension decreases linearly with depth factor along riser"
+  - name: "Minimum slip ring tension"
+    latex: "T_{SR} = W_s \\times f_{wt} - B_n \\times f_{bt} + A_i (\\rho_m H_m - \\rho_w H_w)"
+    description: "Minimum slip ring tension per 2H-TNE-0050-03 Eq 3.2"
+inputs:
+  - name: "Submerged weight"
+    symbol: "W_sub"
+    unit: "kN"
+    test_value: 500.0
+  - name: "Dynamic factor"
+    symbol: "SF"
+    unit: "dimensionless"
+    test_value: 1.25
+outputs:
+  - name: "Top tension required"
+    symbol: "T_top"
+    unit: "kN"
+    test_expected: 625.0
+    tolerance: 0.01
+worked_examples:
+  - description: "Basic top tension: 500 kN submerged weight with default factor 1.25"
+    inputs:
+      submerged_weight_kn: 500.0
+      dynamic_factor: 1.25
+    outputs:
+      top_tension_kn: 625.0
+    use_as_test: true
+  - description: "Custom dynamic factor of 1.5 on 1000 kN submerged weight"
+    inputs:
+      submerged_weight_kn: 1000.0
+      dynamic_factor: 1.5
+    outputs:
+      top_tension_kn: 1500.0
+    use_as_test: true
+  - description: "Barlow wall thickness: 21-inch OD, 10 MPa, X80 steel, SF=1.5"
+    inputs:
+      od_mm: 533.4
+      design_pressure_mpa: 10.0
+      smys_mpa: 552.0
+      safety_factor: 1.5
+    outputs:
+      wall_thickness_mm: 7.25
+    use_as_test: true
+  - description: "Effective tension at surface (depth_factor=0) equals top tension"
+    inputs:
+      top_tension_kn: 1000.0
+      submerged_weight_kn: 500.0
+      depth_factor: 0.0
+    outputs:
+      effective_tension_kn: 1000.0
+    use_as_test: true
+  - description: "Effective tension at mudline (depth_factor=1)"
+    inputs:
+      top_tension_kn: 1000.0
+      submerged_weight_kn: 500.0
+      depth_factor: 1.0
+    outputs:
+      effective_tension_kn: 500.0
+    use_as_test: true
+  - description: "Deepwater slip ring tension per 2H-TNE-0050-03 Eq 3.2"
+    inputs:
+      submerged_weight_kn: 2000.0
+      buoyancy_uplift_kn: 800.0
+      internal_area_m2: 0.15
+      mud_density_kn_m3: 14.0
+      mud_column_m: 1500.0
+      seawater_density_kn_m3: 10.05
+      seawater_column_m: 1500.0
+      f_wt: 1.05
+      f_bt: 0.96
+    outputs:
+      minimum_slip_ring_tension_kn: 2220.75
+    use_as_test: true
+assumptions:
+  - "Linear tension variation along riser length (uniform weight distribution)"
+  - "Barlow thin-wall formula applicable (D/t > 20)"
+  - "Default dynamic factor is 1.25 per 2H-TNE-0050-03 section 3.1"
+references:
+  - "2H-TNE-0050-03 section 3.1 — Tension Requirements"
+  - "API SPEC 16F section 14.2.2 — Strength Analysis"
+  - "Barlow's formula for pipe wall thickness"

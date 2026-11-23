@@ -1,0 +1,130 @@
+# digitalmodel Operator Map
+
+Updated: 2026-04-27
+Purpose: canonical repo-wide routing map for digitalmodel source, tests, docs,
+and common issue surfaces.
+Traceability: workspace-hub issue #2462 and tier-1 indexing contract #2460.
+
+Historical narrow slice: workspace-hub
+`docs/maps/digitalmodel-orcawave-orcaflex-operator-map.md` remains useful for
+older OrcaWave/OrcaFlex reconciliation context. This repo-wide map is the
+canonical active routing surface for digitalmodel and links that slice instead
+of duplicating its detailed issue history.
+
+## OrcaFlex execution and model qualification
+
+Follow the [ecosystem methodology and execution runbook](https://github.com/vamseeachanta/workspace-hub/blob/chore/orcaflex-execution-plan/docs/solver/orcaflex-execution-runbook.html)
+and the [qualified model-family strategy](https://github.com/vamseeachanta/workspace-hub/blob/chore/orcaflex-execution-plan/docs/reports/2026-09-09-orcaflex-fea-strategy.html).
+These links intentionally target the reviewed documentation branch while its PR is
+draft; switch them to the merged revision when it lands. The runbook distinguishes
+implemented capability from planned deployment controls.
+
+The first repair is tracked by [the batch reliability plan](../plans/2026-09-09-issue-2051-batch-reliability.md)
+for [#1564](https://github.com/vamseeachanta/digitalmodel/issues/1564) and
+[#2051](https://github.com/vamseeachanta/digitalmodel/issues/2051). Keep schema validity,
+native load/run proof, numerical qualification and engineering approval separate.
+Resolve issues using their full repository-qualified URL; solver code remains here,
+licensed execution transport outside this repo, and cross-repository deployment in workspace-hub.
+
+## Source / Tests / Docs Routing
+
+| Module | Source | Tests | Docs | Issue routing | Key dependencies |
+|---|---|---|---|---|---|
+| `ansys` | `src/digitalmodel/ansys/` | `tests/ansys/` | `docs/domains/ansys/` | ANSYS automation, APDL/WBJN parsing, pressure-vessel and weld checks | ANSYS file formats, engineering standards |
+| `aqg` | `src/digitalmodel/aqg/`, offline API `src/digitalmodel/aqg/diffraction.py` | `tests/unit/hydrodynamics/test_aqg_diffraction.py` | `docs/domains/diffraction/g4-evidence.html` | Diffraction G4 evidence records; source qualification and native acceptance evidence remain pending | Python standard library; no solver dependency |
+| `asset_integrity` | `src/digitalmodel/asset_integrity/` | `tests/asset_integrity/` | `docs/domains/README.md` | Fitness-for-service, API 579, BS 7910, RSF, fracture mechanics | NumPy, pandas, matplotlib |
+| `benchmarks` | `src/digitalmodel/benchmarks/` | `tests/benchmarks/` | `docs/domains/README.md` | Benchmark inventory, model comparison, reproducibility metrics | pytest-benchmark |
+| `cad` | `src/digitalmodel/cad/` | `tests/cad/` | `docs/cad-reader/guide.html`, `src/digitalmodel/cad/README.md` | DXF, STL and OBJ ingestion with explicit units; DWG through a caller-configured converter | Optional ezdxf, meshio; NumPy |
+| `cathodic_protection` | `src/digitalmodel/cathodic_protection/` (engine entry: `engine_adapter.run_cathodic_protection`, `basename: cathodic_protection`; keys `DNV_RP_B401_offshore`, `DNV_RP_F103` (edition from `design_data.edition`, default 2019), `ABS_gn_ships_2018`, `ABS_gn_offshore_2018`; deprecated: `DNV_RP_F103_2010` (alias pinned to edition 2010) and the `*_legacy` keys) | `tests/cathodic_protection/` (adapter regression inputs in `tests/fixtures/cathodic_protection/workflow_inputs/`), `tests/specialized/cathodic_protection/` | `docs/domains/cathodic_protection/` | CP design, anode sizing, coating/current demand, PASS/FAIL adequacy status; no demo workflows (retired 2026-09-25, D5) | DNV/API/ISO CP standards |
+| `citations` | `src/digitalmodel/citations/` | `tests/citations/` | `docs/domains/README.md` | Standards citation schema and registry support | PyYAML |
+| `data_models` | `src/digitalmodel/data_models/` | `tests/` | `docs/domains/README.md` | Shared engineering data structures and curves | pydantic/dataclasses |
+| `data_systems` | `src/digitalmodel/data_systems/` | `tests/data_systems/` | `docs/domains/data_systems/` | Data catalogs, config loading, procurement/scraping support | pandas, SQL/file formats |
+| `drilling_riser` | `src/digitalmodel/drilling_riser/` | `tests/drilling_riser/` | `docs/domains/README.md` | Drilling riser stackup, damping, operability, tool passage | marine engineering standards |
+| `fatigue` | `src/digitalmodel/fatigue/` | `tests/fatigue/` | `docs/domains/fatigue/` | S-N curves, rainflow, spectral fatigue, weld classifications | NumPy, fatigue standards |
+| `field_development` | `src/digitalmodel/field_development/` | `tests/field_development/` | `docs/domains/README.md` | Concept selection, CAPEX/OPEX, timelines, architecture patterns | pandas, economic models |
+| `geotechnical` | `src/digitalmodel/geotechnical/` | `tests/geotechnical/` | `docs/domains/README.md` | Pile capacity, soil/scour/anchor calculations | geotechnical standards |
+| `gis` | `src/digitalmodel/gis/` | `tests/gis/` | `docs/domains/README.md` | CRS transforms, spatial queries, GeoJSON/QGIS/Blender export | pyproj, shapely/geospatial formats |
+| `hydrodynamics` | `src/digitalmodel/hydrodynamics/` | `tests/hydrodynamics/` | `docs/domains/hydrodynamics/` | Wave spectra, RAOs, diffraction, hull library, solver bridges | NumPy, SciPy, OrcaWave/AQWA context |
+| `infrastructure` | `src/digitalmodel/infrastructure/` | `tests/infrastructure/` | `docs/domains/infrastructure/` | Base configs, services, validators, transformations | YAML configs, shared services |
+| `marine_ops` | `src/digitalmodel/marine_ops/` | `tests/marine_ops/` | `docs/domains/marine_ops/` | Marine operations, RAO readers, installation and operational analysis | metocean and vessel data |
+| `floating_wind` | `src/digitalmodel/floating_wind/` | `tests/floating_wind/` | `docs/domains/README.md` | Floating-wind global sizing & concept screening (semi/spar/TLP/barge); `floating_wind_sizing` workflow | hydrostatics, parametric sweeps, OrcaWave/OrcaFlex (solver tier) |
+| `hydrostatics` | `src/digitalmodel/hydrostatics/` | `tests/hydrostatics/` | `docs/domains/README.md` | Fluid-column hydrostatics; seabed/hydrostatic pressure and offshore pressure-unit conversions | NumPy |
+| `mooring_resilience` | `src/digitalmodel/mooring_resilience/` | `tests/` | `docs/domains/README.md` | Mooring-system resilience screening (intact/damaged tension, foundation, fatigue) over pre-computed atlases | mooring atlases, API RP 2SK / DNV-OS-E301 |
+| `motion_forecast` | `src/digitalmodel/motion_forecast/` | `tests/motion_forecast/` | `docs/domains/README.md` | Short-horizon vessel/structure motion forecast, operability go/no-go (#1358) | NumPy, RAO/hydrodynamics |
+| `naval_architecture` | `src/digitalmodel/naval_architecture/` | `tests/naval_architecture/` | `docs/domains/README.md` | Stability, hull form, compliance, gyradius calculations; loading computer (#1035) | naval architecture standards |
+| `reporting` | `src/digitalmodel/reporting/` | `tests/reporting/` | `docs/domains/README.md` | Shared report block library / backbone (report-as-backbone, #1018) | pydantic, HTML rendering |
+| `nde` | `src/digitalmodel/nde/` | `tests/nde/` | `docs/domains/README.md` | Non-destructive examination workflows and checks | inspection standards |
+| `orcaflex` | `src/digitalmodel/orcaflex/` | `tests/orcaflex/` | `docs/domains/orcaflex/` | Public OrcaFlex APIs, reporting, model and post-processing utilities | OrcFxAPI where licensed, YAML |
+| `orcawave` | `src/digitalmodel/orcawave/` | `tests/orcawave/` | `docs/domains/orcawave/` | OrcaWave package utilities, reporting, hydrodynamic inputs/outputs | OrcaWave, hydrodynamics |
+| `power` | `src/digitalmodel/power/` | `tests/power/` | `docs/domains/README.md` | Generator controls, microgrid EMS, protection relays | IEEE/NFPA power standards |
+| `process_diagrams` | `src/digitalmodel/process_diagrams/` | `tests/process_diagrams/` | `docs/domains/README.md` | P&ID authoring to ISA-5.1 — symbol set, pipe runs with line-crossing jumps, instrument-tag and line-number grammar, sheet frame and title block, drafting lint | standard library only |
+| `process_piping` | `src/digitalmodel/process_piping/` | `tests/process_piping/` | `docs/domains/process-piping/index.html` | B31.3 thickness/hydrostatic targets, bolt-up screens and liquid/gas/two-phase line sizing | Explicit material/joint inputs; public method citations |
+| `production_chemistry` | `src/digitalmodel/production_chemistry/` | `tests/production_chemistry/` | `docs/domains/README.md` | Mineral-scale saturation indices (Oddo-Tomson), brine mixing/waterflood compatibility | NumPy, pandas |
+| `production_engineering` | `src/digitalmodel/production_engineering/` | `tests/production_engineering/` | `docs/domains/README.md` | Well testing, nodal analysis, production quality scoring | petroleum engineering models |
+| `provider_data` | `src/digitalmodel/provider_data/` | `tests/provider_data/` | `docs/domains/README.md` | Vendor specification schema, provenance and YAML validation; companion library data follows the approved second stage of [#1820](https://github.com/vamseeachanta/digitalmodel/issues/1820) | PyYAML; no licensed solver dependency |
+| `reservoir` | `src/digitalmodel/reservoir/` | `tests/reservoir/` | `docs/domains/reservoir/` | Reservoir engineering and production-support calculations | reservoir engineering models |
+| `residual` | `src/digitalmodel/residual/` | `tests/residual/` | `docs/domains/README.md` | Transparent, bounded residual-correction spine for the hybrid digital twin (#1374) | NumPy |
+| `seismic` | `src/digitalmodel/seismic/` | `tests/seismic/` | `docs/domains/README.md` | Strong-motion accelerogram preprocessing and response-spectrum workflow scaffolding | NumPy, SciPy, pandas, Plotly |
+| `signal_processing` | `src/digitalmodel/signal_processing/` | `tests/signal_processing/` | `docs/domains/signal_processing/` | Signal analysis, filters, time-series utilities | NumPy, SciPy |
+| `solvers` | `src/digitalmodel/solvers/` | `tests/solvers/` | `docs/domains/solvers/` | Solver adapters, OrcaFlex/OrcaWave/AQWA workflows, batch execution | solver-specific APIs |
+| `specialized` | `src/digitalmodel/specialized/` | `tests/specialized/` | `docs/domains/specialized/` | Specialized/non-core modules pending routing cleanup | mixed utilities |
+| `specs` | `src/digitalmodel/specs/` | `tests/specs/` | `docs/domains/README.md` | Runtime package specs and structured metadata helpers | PyYAML |
+| `structural` | `src/digitalmodel/structural/` | `tests/structural/` | `docs/domains/structural/` | Structural analysis, wall thickness, fatigue bridges, pipe capacity | structural standards |
+| `subsea` | `src/digitalmodel/subsea/` | `tests/subsea/` | `docs/domains/subsea/` | Pipeline, riser, mooring, on-bottom stability, VIV and free-span work | DNV/API subsea standards |
+| `visualization` | `src/digitalmodel/visualization/` | `tests/visualization/` | `docs/domains/visualization/` | Dashboards, design tools, rendering and visual outputs | frontend/CAD/rendering tools |
+| `web` | `src/digitalmodel/web/` | `tests/web/` | `docs/domains/README.md` | Web-facing calculator and app support | web framework assets |
+| `well` | `src/digitalmodel/well/` | `tests/well/` | `docs/domains/README.md` | Well engineering, drilling hydraulics, tubular design | API well standards |
+| `workflows` | `src/digitalmodel/workflows/` | `tests/workflows/` | `docs/domains/workflows/` | Multi-step issue workflows and agent/solver orchestration | repo workflow conventions |
+| `base_configs` | `src/digitalmodel/base_configs/` | `tests/` | `docs/domains/README.md` | Shared base configuration scaffolding for module configs | PyYAML |
+| `code_checks` | `src/digitalmodel/code_checks/` | `tests/code_checks/` | `docs/domains/README.md` | Engineering code-check helpers and standards verification | engineering standards |
+| `common` | `src/digitalmodel/common/` | `tests/common/` | `docs/domains/README.md` | Shared assumption-ledger and spec-authoring helpers | PyYAML |
+| `contract_validation` | `src/digitalmodel/contract_validation/` | `tests/contracts/` | `docs/plans/2026-07-16-issue-1602-riser-data-orcaflex-hf-plan.md` | Solver-neutral engineering contract validation | PyYAML |
+| `corrosion` | `src/digitalmodel/corrosion/` | `tests/corrosion/` | `docs/domains/README.md` | Galvanic (dissimilar-metal) compatibility screening, MIL-STD-889 anodic index | NumPy, pandas |
+| `materials` | `src/digitalmodel/materials/` | `tests/materials/` | `docs/domains/README.md` | Material grades and line-pipe property data | NumPy, pandas |
+| `workflow_api` | `src/digitalmodel/workflow_api/` | `tests/workflow_api/` | `docs/domains/README.md` | Workflow runner, provenance and golden-output API | repo workflow conventions |
+| `compare_tool` | `src/digitalmodel/compare_tool/` | `tests/compare_tool/` | `docs/domains/README.md` | Result/model comparison utilities across runs and tools | pandas, NumPy |
+| `riser_reporting` | `src/digitalmodel/riser_reporting/` | `tests/reporting/test_riser_fatigue_view.py` | `docs/domains/risers/riser-fatigue-report-view.md` | Provenance-bound presentation of supplied riser fatigue results; screening only (#814) | reporting backbone |
+| `report_pack` | `src/digitalmodel/report_pack/` | `tests/report_pack/test_report_pack.py` | `docs/domains/reporting/standard-report-pack.md` | Standard marine engineering report pack (md + self-contained html + optional pdf + citations + provenance manifest) | PyYAML, optional pdf renderer chain |
+| `alt_fuel_ship_sizing` | `src/digitalmodel/alt_fuel_ship_sizing/` | `tests/naval_architecture/test_alt_fuel_ship_sizing.py` | `docs/domains/ship-design/alt-fuel-lh2-sizing.md` | Alternative-fuel (LH2) concept sizing: fuel chain + boil-off, wind-assist thrust matrix, endurance/fuel-cost trade study, ITC 69 tonnage | published LH2 data, ITC 69 |
+| `dynmoor_mooring` | `src/digitalmodel/dynmoor_mooring/` | `tests/subsea/mooring_analysis/test_dynmoor.py` | `docs/domains/mooring/dynmoor-legacy-mooring.md` | Legacy DYNMOOR static mooring (catenary tables, pretension, restoring forces) + passing-ship forces | mooring engineering |
+| `fatg_spectral_fatigue` | `src/digitalmodel/fatg_spectral_fatigue/` | `tests/fatigue/test_fatg.py` | `docs/domains/fatigue/fatg-legacy-spectral-fatigue.md` | Legacy FATG closed-form spectral fatigue (RAO x Bretschneider x scatter x S-N Miner) | fatigue standards |
+| `foam_system` | `src/digitalmodel/foam_system/` | `tests/fire_safety/test_foam_system_sizing.py` | `docs/domains/fire_safety/foam-system-sizing.md` | Foam/fire-suppression sizing screening (cited criteria demand, concentrate + reserve, proportioner duty, tree-network hydraulics) | config-cited standards (NFPA 11 / SOLAS FSS / ABS MODU) |
+| `technical_safety` | `src/digitalmodel/technical_safety/` | `tests/technical_safety/` | `docs/domains/fire_safety/technical-safety-screens.html` | Ship-impact energy and fire heat-flux screening from edition-cited criteria; screening only, not design acceptance | config-cited standards (NORSOK S-DP-001), PyYAML |
+| `passing_ship_forces` | `src/digitalmodel/passing_ship_forces/` | `tests/hydrodynamics/test_wang_passing_ship.py` | `docs/domains/hydrodynamics/wang-passing-ship-forces.md` | Wang (1975) passing-ship surge/sway/yaw forces on a moored vessel (legacy VBA/MathCAD port, image-method finite depth) | NumPy, slender-body theory |
+| `hull_wastage_screen` | `src/digitalmodel/hull_wastage_screen/` | `tests/asset_integrity/hull_wastage_screen/` | `docs/domains/ship-design/hull-wastage-screen.html` | Representative thickness wastage screening, section properties and elastic plate arithmetic; class acceptance is not established | shared FFS decisions, hull-girder section properties, plate metal-loss solver |
+| `hull_girder_screening` | `src/digitalmodel/hull_girder_screening/` | `tests/naval_architecture/test_hull_girder_screening.py` | `docs/domains/ship-design/hull-girder-strength-screening.md` | Hull-girder still-water SF/BM screening vs allowable curves, IACS UR S11 wave BM/SF + total (sw+wave) utilisation, section-modulus check (box / Bonjean-table / direct buoyancy); report-pack demo in `examples/workflows/hull-girder-report-pack/` | NumPy, PNA/Hughes longitudinal strength, IACS UR S11 |
+| `installation` | `src/digitalmodel/installation/` | `tests/` | `docs/domains/installation/` | Offshore installation analysis, lift/lay operability, weather windows | marine engineering standards |
+| `lifting_lug` | `src/digitalmodel/lifting_lug/` | `tests/` | `docs/domains/README.md` | Lifting-lug/padeye sizing and closed-form structural checks | structural standards |
+| `mooring_fatigue` | `src/digitalmodel/mooring_fatigue/` | `tests/` | `docs/domains/README.md` | Mooring-line fatigue analysis and parametric atlases | fatigue standards, NumPy |
+| `parametric` | `src/digitalmodel/parametric/` | `tests/parametric/` | `docs/domains/README.md` | Parametric atlas build and query (sweep-built surrogate serving) | NumPy, pandas |
+| `parametrics` | `src/digitalmodel/parametrics/` | `tests/parametrics/` | `docs/domains/README.md` | Parametric sweep bridging into atlases and query handlers | NumPy, pandas |
+| `pipelay` | `src/digitalmodel/pipelay/` | `tests/pipelay/` | `docs/domains/README.md` | Pipelay analysis, lay tension and configuration checks | marine/subsea standards |
+| `rao_spectral_fatigue` | `src/digitalmodel/rao_spectral_fatigue/` | `tests/` | `docs/domains/README.md` | RAO-driven spectral fatigue workflow (closed-form) | fatigue/hydrodynamics standards |
+| `bha_database` | `src/digitalmodel/bha_database/` | `tests/bha_database/` | `docs/bha_database.md` | Synthetic BHA catalogue, provenance, assembly rules and SI sections | Pydantic, Pint, PyYAML |
+| `riser_bom` | `src/digitalmodel/riser_bom/` | `tests/riser_bom/` | `docs/domains/risers/bom-costing.html` | Riser bill-of-materials costing with external rate tables | Citation contract, Decimal, YAML |
+| `riser_database` | `src/digitalmodel/riser_database/` | `tests/riser_database/` | `docs/domains/README.md` | Public riser reference tables (config catalog, materials, crosswalk) | PyYAML, pandas |
+| `riser_results` | `src/digitalmodel/riser_results/` | `tests/riser_results/` | `docs/domains/risers/results-exchange/README.md` | Solver-independent results exchange and validation; native qualification outstanding | JSON schema, caller-supplied native adapter |
+| `riser_configuration_screen` | `src/digitalmodel/riser_configuration_screen/` | `tests/riser_configuration_screen/` | `examples/workflows/riser-configuration-screen/` | SCR and lazy-wave static configuration screening; provisional SCREEN candidates under [#1947](https://github.com/vamseeachanta/digitalmodel/issues/1947) and [#815](https://github.com/vamseeachanta/digitalmodel/issues/815) | NumPy, SciPy, catenary kernels |
+| `riser_fatigue` | `src/digitalmodel/riser_fatigue/` | `tests/riser_fatigue/` | `docs/domains/README.md` | Riser fatigue analysis and automation | fatigue standards, NumPy |
+| `riser_study` | `src/digitalmodel/riser_study/` | `tests/subsea/riser_study/` | `src/digitalmodel/riser_study/README.md` | Export validation and three-state fatigue benchmark damage | jsonschema, standard library |
+| `spectral_fatigue` | `src/digitalmodel/spectral_fatigue/` | `tests/` | `docs/domains/README.md` | Spectral (frequency-domain) fatigue calculation | fatigue standards, SciPy |
+| `synthetic_rope_mooring_fatigue` | `src/digitalmodel/synthetic_rope_mooring_fatigue/` | `tests/` | `docs/domains/README.md` | Synthetic-rope mooring fatigue analysis | fatigue standards, NumPy |
+| `tug` | `src/digitalmodel/tug/` | `tests/tug/` | `docs/domains/README.md` | Tug/towage analysis: bollard pull, fendering, girting stability, towline mechanics, emissions | NumPy, engineering standards |
+| `uncertainty` | `src/digitalmodel/uncertainty/` | `tests/uncertainty/` | `docs/domains/README.md` | Monte Carlo uncertainty quantification: priors, LHS DoE, evaluator harness, sensitivity ranking, percentile analytics | NumPy, pandas, SciPy, PyYAML, pydantic |
+| `usecase_registry` | `src/digitalmodel/usecase_registry/` | `tests/test_usecase_registry.py` | `docs/domains/README.md` | Registry of runnable use cases and routing metadata | PyYAML |
+| `vessel_seakeeping` | `src/digitalmodel/vessel_seakeeping/` | `tests/` | `docs/domains/README.md` | Vessel seakeeping response and operability analysis | hydrodynamics standards |
+| `vessel_stability_screening` | `src/digitalmodel/vessel_stability_screening/` | `tests/naval_architecture/test_vessel_stability_screening.py` | `docs/domains/ship-design/vessel-stability-screening.md` | Intact + damage stability screening: hydrostatic-table loading condition (KG + free-surface correction, trim), GZ/KN criteria (IMO IS Code 2008 Part A, 46 CFR 170.170 weather, 46 CFR 173 lifting heel), max-KG limits, damage cases (added-weight flooding or supplied damaged hydrostatics; 46 CFR 174 / IMO MODU Code 2009 survival criteria) | cited criteria config (IMO IS Code / 46 CFR / MODU Code), stability fundamentals |
+| `viv_screening` | `src/digitalmodel/viv_screening/` | `tests/workflows/test_viv_screening_workflow.py`, `tests/workflows/test_durable_workflows.py` | `examples/workflows/riser-viv-screening/README.md` | Riser VIV lock-in screening and cross-flow damage-rate estimate; corpus validation deferred | VIV and fatigue cores, pandas, PyYAML |
+| `weather_window` | `src/digitalmodel/weather_window/` | `tests/` | `docs/domains/README.md` | Weather-window/operability assessment for marine operations | metocean data, statistics |
+| `well_access` | `src/digitalmodel/well_access/` | `tests/well_access/` | `docs/domains/README.md` | Well-access/intervention analysis and operability | well engineering standards |
+
+## Common Routing Rules
+
+- Start from this map when an issue names a domain, package, solver, or common
+  engineering workflow.
+- Use `docs/registry/module-routing.yaml` for machine-readable resolution.
+- If a domain docs folder is missing, route through `docs/domains/README.md`
+  and the module row here before creating new docs.
+- Keep large generated outputs, raw crawls, solver result dumps, caches, and
+  binary artifacts out of the repo unless a plan explicitly approves a small
+  curated artifact.

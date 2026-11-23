@@ -1,0 +1,456 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
+"""Builder for the Environment section of OrcaFlex models."""
+
+from typing import Any
+
+from .base import BaseBuilder
+from .registry import BuilderRegistry
+
+
+# Mapping from spec wave types to OrcaFlex wave type strings
+WAVE_TYPE_MAP = {
+    "dean_stream": "Dean stream",
+    "airy": "Airy",
+    "stokes_5th": "Stokes' 5th",
+    "cnoidal": "Cnoidal",
+    "jonswap": "JONSWAP",
+    "pierson_moskowitz": "Pierson-Moskowitz",
+    "user_defined": "User defined spectrum",
+}
+
+# Deterministic wave types use WaveHeight + WavePeriod
+_DETERMINISTIC_WAVE_TYPES = {
+    "Dean stream", "Airy", "Stokes' 5th", "Cnoidal",
+    "dean_stream", "airy", "stokes_5th", "cnoidal",
+}
+
+# Spectral wave types use WaveHs + WaveTz
+_SPECTRAL_WAVE_TYPES = {
+    "JONSWAP", "Pierson-Moskowitz", "Torsethaugen", "Ochi-Hubble",
+    "jonswap", "pierson_moskowitz",
+}
+
+
+@BuilderRegistry.register("03_environment.yml", order=30)
+class EnvironmentBuilder(BaseBuilder):
+    """Builds the Environment section of the OrcaFlex model.
+
+    Uses hardcoded safe defaults as the base layer, then overlays
+    spec-derived values (water depth, density, wave params, current, wind).
+
+    Note:
+        Raw pass-through of monolithic Environment properties was tested
+        but causes "Change not allowed" errors due to OrcaFlex mode-dependent
+        dormant properties.  The ``raw_properties`` field on the Environment
+        schema is preserved for diagnostic use (semantic validation tool)
+        but is NOT used by this builder.
+    """
+
+    # Default Environment dict used when no raw_properties are available.
+    _DEFAULTS: dict[str, Any] = {
+        "WaterSurfaceZ": 0,
+        "KinematicViscosity": 1.35e-06,
+        "SeaTemperature": 10,
+        "ReynoldsNumberCalculation": "Flow direction",
+        "HorizontalWaterDensityFactor": None,
+        "VerticalDensityVariation": "Constant",
+        "SeabedType": "Flat",
+        "SeabedOrigin": [0, 0],
+        "NominalDepth": None,
+        "SeabedSlopeDirection": 0,
+        "SeabedModel": "Elastic",
+        "WaveKinematicsCutoffDepth": "Infinity",
+        "WaveCalculationMethod": "Instantaneous position (exact)",
+        "WaveCalculationTimeInterval": 0,
+        "WaveCalculationSpatialInterval": 0,
+        "MultipleCurrentDataCanBeDefined": "No",
+        "CurrentModel": "Variation scheme",
+        "CurrentRamped": "No",
+        "CurrentApplyVerticalStretching": "No",
+        "HorizontalCurrentFactor": None,
+        "VerticalCurrentVariationMethod": "Interpolated",
+        "IncludeVesselWindLoads": "Yes",
+        "IncludeLineWindLoads": "Yes",
+        "IncludeBuoyWindLoads": "Yes",
+        "IncludeBuoyWingWindLoads": "Yes",
+        "WindRamping": "From mean",
+        "WindType": "Constant",
+        "AirDensity": 0.00128,
+        "AirSpeedOfSound": 343,
+    }
+
+    # Safe properties that can be overlaid from raw_properties without
+    # triggering "Change not allowed" errors.  These are mode-independent
+    # scalar or list properties that exist regardless of wind/wave type.
+    # Seabed/current selectors retain their default positions before dependent fields.
+    # Selector-first principle: text data files, Ordering issues:
+    # https://www.orcina.com/webhelp/OrcaFlex/Content/html/Textdatafiles.htm
+    _SAFE_RAW_OVERLAY_KEYS: tuple[str, ...] = (
+        "WaterSurfaceZ",
+        "KinematicViscosity",
+        "SeaTemperature",
+        "ReynoldsNumberCalculation",
+        "HorizontalWaterDensityFactor",
+        "VerticalDensityVariation",
+        "SeabedType",
+        "SeabedOrigin",
+        "WaterDepth",
+        "SeabedSlopeDirection",
+        "SeabedSlope",
+        "SeabedModel",
+        "SeabedNormalStiffness",
+        "SeabedShearStiffness",
+        "KinematicStretchingMethod",
+        "UserSpecifiedRandomWaveSeeds",
+        "WaveFrequencySpectrumDiscretisationMethod",
+        "WaveKinematicsCutoffDepth",
+        "WaveCalculationMethod",
+        "WaveCalculationTimeInterval",
+        "WaveCalculationSpatialInterval",
+        "MultipleCurrentDataCanBeDefined",
+        "CurrentModel",
+        "CurrentRamped",
+        "CurrentApplyVerticalStretching",
+        "HorizontalCurrentFactor",
+        "VerticalCurrentVariationMethod",
+        "IncludeVesselWindLoads",
+        "IncludeLineWindLoads",
+        "IncludeBuoyWindLoads",
+        "IncludeBuoyWingWindLoads",
+        "WindRamping",
+        "AirDensity",
+        "AirSpeedOfSound",
+    )
+
+    # Wind-type-dependent properties keyed by WindType value.
+    # Only emitted when the detected wind type matches.
+    # WindType retains its default position before dependent fields; the source
+    # order below retains full-field format before filename. Ordering principle:
+    # https://www.orcina.com/webhelp/OrcaFlex/Content/html/Textdatafiles.htm
+    _WIND_TYPE_PROPS: dict[str, tuple[str, ...]] = {
+        "API spectrum": (
+            "VerticalWindVariationFactor",
+            "WindSpectrumElevation",
+            "WindSpectrumFMin",
+            "WindSpectrumFMax",
+            "WindTimeOrigin",
+            "WindSeed",
+            "NumberOfWindComponents",
+        ),
+        "NPD spectrum": (
+            "VerticalWindVariationFactor",
+            "WindSpectrumElevation",
+            "WindSpectrumFMin",
+            "WindSpectrumFMax",
+            "WindTimeOrigin",
+            "WindSeed",
+            "NumberOfWindComponents",
+        ),
+        "ESDU spectrum": (
+            "VerticalWindVariationFactor",
+            "WindSpectrumElevation",
+            "WindSpectrumFMin",
+            "WindSpectrumFMax",
+            "WindTimeOrigin",
+            "WindSeed",
+            "NumberOfWindComponents",
+        ),
+        "Full field": (
+            "WindFullFieldFormat",
+            "WindFullFieldTurbSimFileName",
+            "WindTimeOrigin",
+            "WindOrigin",
+        ),
+    }
+
+    # Wind types where WindSpeed is dormant (not settable).
+    _WIND_SPEED_DORMANT: set[str] = {"Full field"}
+
+    def build(self) -> dict[str, Any]:
+        """Build the Environment section from environmental settings.
+
+        Returns:
+            Dictionary with 'Environment' key containing OrcaFlex settings.
+
+        Strategy:
+            1. Start with hardcoded safe defaults.
+            2. Overlay mode-independent properties from raw_properties (if
+               available) using _SAFE_RAW_OVERLAY_KEYS whitelist.
+            3. Detect WindType from raw_properties and emit wind-type-
+               dependent properties from _WIND_TYPE_PROPS.
+            4. Apply spec-derived values (always authoritative) last.
+        """
+        env = self.spec.environment
+        raw = getattr(env, "raw_properties", {}) or {}
+
+        environment = dict(self._DEFAULTS)
+
+        # Step 2: Overlay safe mode-independent raw properties
+        for key in self._SAFE_RAW_OVERLAY_KEYS:
+            if key in raw:
+                environment[key] = raw[key]
+
+        # Step 3: Detect and apply wind type from raw_properties
+        wind_type = raw.get("WindType", "Constant")
+        environment["WindType"] = wind_type
+        wind_dep_keys = self._WIND_TYPE_PROPS.get(wind_type, ())
+        for key in wind_dep_keys:
+            if key in raw:
+                environment[key] = raw[key]
+
+        # Step 4: Overlay spec-derived values (always authoritative)
+        environment["Density"] = env.water.density
+        # Use WaterDepth if raw has it (extracted models), else SeabedOriginDepth
+        # (hand-crafted specs) for backward compatibility.
+        if "WaterDepth" in raw:
+            environment["WaterDepth"] = env.water.depth
+            # Remove NominalDepth default when WaterDepth is used
+            environment.pop("NominalDepth", None)
+        else:
+            environment["SeabedOriginDepth"] = env.water.depth
+        environment["SeabedSlope"] = env.seabed.slope
+        environment["SeabedNormalStiffness"] = env.seabed.stiffness.normal
+        environment["SeabedShearStiffness"] = env.seabed.stiffness.shear
+
+        # Wave trains
+        environment["WaveTrains"] = self._build_wave_trains(env.waves, raw)
+
+        # Current — mode depends on VerticalCurrentVariationMethod
+        current_method = environment.get(
+            "VerticalCurrentVariationMethod", "Interpolated"
+        )
+        if current_method == "Power law":
+            # Power law mode: emit surface/seabed speeds and exponent.
+            # These props are only valid in Power law mode (dormant in
+            # Interpolated mode), so overlay them conditionally here.
+            for key in ("CurrentExponent", "CurrentSpeedAtSurface",
+                        "CurrentSpeedAtSeabed"):
+                if key in raw:
+                    environment[key] = raw[key]
+            environment["RefCurrentDirection"] = env.current.direction
+            # Do NOT emit RefCurrentSpeed, CurrentDepth/Factor/Rotation
+            # — they are Interpolated-mode properties and will cause
+            # "Change not allowed" errors in Power law mode.
+        else:
+            # Interpolated mode (default): emit tabular profile
+            environment["RefCurrentSpeed"] = env.current.speed
+            environment["RefCurrentDirection"] = env.current.direction
+            environment["CurrentDepth, CurrentFactor, CurrentRotation"] = (
+                self._build_current_profile(env.current.profile, raw)
+            )
+
+        # Wind — WindSpeed is dormant for some wind types (e.g. Full field)
+        if wind_type not in self._WIND_SPEED_DORMANT:
+            environment["WindSpeed"] = env.wind.speed
+        environment["WindDirection"] = env.wind.direction
+
+        return {"Environment": environment}
+
+    def _build_wave_trains(
+        self, waves: Any, raw: dict[str, Any] | None = None
+    ) -> list[dict[str, Any]]:
+        """Build wave train configuration from wave settings.
+
+        Iterates over ``waves.trains`` to support multiple simultaneous
+        wave trains.  Uses the correct OrcaFlex property names based on
+        wave type:
+
+        - Deterministic (Dean stream, Airy, etc.): WaveHeight + WavePeriod
+        - Spectral (JONSWAP, Pierson-Moskowitz, etc.): WaveHs + WaveTz
+        - Other (User defined, User specified components, etc.): no height/period emitted
+
+        When raw_properties contain WaveTrains, raw train entries are used
+        as the base layer (matched by index) to preserve all original
+        properties (Name, spectral discretisation params, etc.), with
+        spec-derived values overlaid on top.
+
+        Args:
+            waves: Wave specification from the input spec.
+            raw: Raw environment properties dict (optional).
+
+        Returns:
+            List of wave train definitions.
+        """
+        raw = raw or {}
+        raw_trains = raw.get("WaveTrains", [])
+        if not isinstance(raw_trains, list):
+            raw_trains = []
+
+        result: list[dict[str, Any]] = []
+        for i, train in enumerate(waves.trains):
+            # Map wave type to OrcaFlex enum value
+            wave_type = WAVE_TYPE_MAP.get(train.type, train.type)
+
+            # Use raw train as base layer if available for this index
+            raw_train = (
+                raw_trains[i]
+                if raw_trains and i < len(raw_trains)
+                and isinstance(raw_trains[i], dict)
+                else None
+            )
+            if raw_train is not None:
+                wave_train = dict(raw_train)
+            else:
+                wave_train = {
+                    "Name": train.name,
+                    "WaveOrigin": [0, 0],
+                    "WaveTimeOrigin": 0,
+                }
+
+            # Always overlay spec-derived values
+            wave_train["WaveType"] = wave_type
+            wave_train["WaveDirection"] = train.direction
+
+            # Emit height/period with correct property names for the wave type
+            if wave_type in _DETERMINISTIC_WAVE_TYPES:
+                wave_train["WaveHeight"] = train.height
+                wave_train["WavePeriod"] = train.period
+            elif wave_type in _SPECTRAL_WAVE_TYPES:
+                wave_train["WaveHs"] = train.height
+                # Emit the period under the same key the raw export used.
+                # A Tp-only export (e.g. docs/domains/orcaflex/risers/
+                # drilling/gom/app_vertical_riser_2500ft_WT1000_064pcf_
+                # Wave1_FE.yml uses WaveTp with no WaveTz) must not be
+                # re-emitted as WaveTz — OrcaFlex applies the last period
+                # key set, which would shift the peak period (~28% for
+                # JONSWAP with gamma 3.3).
+                if (
+                    raw_train is not None
+                    and "WaveTp" in raw_train
+                    and "WaveTz" not in raw_train
+                ):
+                    wave_train["WaveTp"] = train.period
+                else:
+                    wave_train["WaveTz"] = train.period
+                    # Drop any stale WaveTp from the raw base layer so the
+                    # output never carries contradictory period keys.
+                    wave_train.pop("WaveTp", None)
+                if wave_type in ("JONSWAP", "jonswap"):
+                    # WaveGamma is dormant when WaveJONSWAPParameters is "Automatic"
+                    jonswap_params = wave_train.get("WaveJONSWAPParameters", "")
+                    if jonswap_params != "Automatic":
+                        # Only overlay gamma when the spec set it explicitly;
+                        # otherwise keep the raw train's WaveGamma (the spec
+                        # default 3.3 must not clobber e.g. WaveGamma: 1.5 in
+                        # docs/domains/orcaflex/structures/mudmat/
+                        # SUT_MM_DZ_30deg.yml).
+                        explicitly_set = getattr(train, "model_fields_set", set())
+                        if "gamma" in explicitly_set or "WaveGamma" not in wave_train:
+                            wave_train["WaveGamma"] = train.gamma
+            # For other wave types (User defined, User specified components,
+            # etc.), omit height/period — OrcaFlex uses type-specific
+            # parameters that pass through via generic properties.
+
+            # Add wave-type specific defaults, preserving any values already
+            # present from the raw base layer (e.g. a Dean stream train with
+            # WaveStreamFunctionOrder: 9 must round-trip unchanged).
+            if train.type == "dean_stream" or wave_type == "Dean stream":
+                wave_train.setdefault("WaveStreamFunctionOrder", 5)
+                wave_train.setdefault(
+                    "WaveCurrentSpeedInWaveDirectionAtMeanWaterLevel", None
+                )
+
+            result.append(self._order_wave_train(wave_train))
+
+        # Retain values of raw trains beyond the spec's train count, ordering
+        # their selectors too. Extra trains the typed spec did not capture
+        # are never silently dropped from the regenerated model.
+        for j in range(len(waves.trains), len(raw_trains)):
+            extra = raw_trains[j]
+            if isinstance(extra, dict):
+                result.append(self._order_wave_train(extra))
+
+        return result
+
+    @staticmethod
+    def _order_wave_train(train: dict[str, Any]) -> dict[str, Any]:
+        """Place wave selectors before properties they enable.
+
+        Raw mappings can retain a parameter before its selector even after
+        overlaying WaveType. Assignment updates values without moving keys.
+        WaveJONSWAPParameters also controls whether WaveGamma is settable.
+        JONSWAP trains carrying gamma explicitly select partially specified
+        parameters when no selector was supplied. Set gamma before Tp because
+        changing gamma holds Tz constant and updates Tp.
+
+        Args:
+            train: Wave properties after spec overlays, or an extra raw train.
+
+        Returns:
+            Active gamma with selectors first, an explicit JONSWAP selector
+            when needed, and the remaining values and order retained.
+        """
+        if train.get("WaveType") in ("JONSWAP", "jonswap"):
+            if train.get("WaveJONSWAPParameters") == "Automatic":
+                # Automatic parameters calculate gamma; inactive data cannot
+                # be assigned in text files. Filter a copy, including for extra
+                # raw trains, so later selector edits retain the source gamma.
+                # Orcina public help, online edition accessed 2026-10-19:
+                # Environment: Data for JONSWAP and ISSC spectra, spectral parameters
+                # https://www.orcina.com/webhelp/OrcaFlex/Content/html/Environment%2CDataforJONSWAPandISSCspectra.htm
+                # Text data files, Ordering issues
+                # https://www.orcina.com/webhelp/OrcaFlex/Content/html/Textdatafiles.htm
+                train = {key: value for key, value in train.items() if key != "WaveGamma"}
+            elif "WaveGamma" in train and "WaveJONSWAPParameters" not in train:
+                train = dict(train, WaveJONSWAPParameters="Partially specified")
+        selectors = ("Name", "WaveType", "WaveJONSWAPParameters", "WaveGamma")
+        ordered = {key: train[key] for key in selectors if key in train}
+        ordered.update((key, value) for key, value in train.items() if key not in ordered)
+        return ordered
+
+    def _build_current_profile(
+        self,
+        profile: list[list[float]],
+        raw: dict[str, Any] | None = None,
+    ) -> list[list[float | int]]:
+        """Build current profile in OrcaFlex format.
+
+        Converts [[depth, factor], ...] to [[depth, factor, rotation], ...].
+        The typed spec profile carries no rotation column, so the rotation is
+        recovered from the raw ``CurrentDepth, CurrentFactor, CurrentRotation``
+        rows (matched by index on depth and factor) when available; otherwise
+        it defaults to 0.
+
+        OrcFxAPI requires NumberOfCurrentLevels >= 2. When only one level is
+        provided, a second level is added at the seabed depth with the same
+        factor.
+
+        Args:
+            profile: Current profile as [[depth, factor], ...]
+            raw: Raw environment properties dict (optional), used to recover
+                the rotation column dropped by the typed spec.
+
+        Returns:
+            Profile in OrcaFlex format [[depth, factor, rotation], ...]
+        """
+        raw_profile = (raw or {}).get(
+            "CurrentDepth, CurrentFactor, CurrentRotation"
+        )
+        if not isinstance(raw_profile, list):
+            raw_profile = []
+
+        result: list[list[float | int]] = []
+        for i, p in enumerate(profile):
+            rotation: float | int = 0
+            if i < len(raw_profile):
+                row = raw_profile[i]
+                if (
+                    isinstance(row, list)
+                    and len(row) >= 3
+                    and row[2] is not None
+                    and float(row[0]) == float(p[0])
+                    and float(row[1]) == float(p[1])
+                ):
+                    rotation = row[2]
+            result.append([p[0], p[1], rotation])
+        if len(result) < 2:
+            seabed_depth = self.spec.environment.water.depth
+            last_factor = result[0][1] if result else 1.0
+            if result and result[0][0] >= seabed_depth:
+                # Single point at or below seabed — add surface point
+                result.insert(0, [0, last_factor, 0])
+            else:
+                result.append([seabed_depth, last_factor, 0])
+        return result

@@ -1,0 +1,17 @@
+# Input Parameters for Parametric Analysis
+# Source: 5 tug_env - 6D buoys.yml
+# Generated: 2026-01-21 14:02:15
+
+water_depth: 8
+current_speed: 1
+current_direction: 270
+wind_speed: 8.87
+water_density: 1.03
+stage_durations:
+- 8
+- 16
+time_step: 0.1
+hs: 0
+tp: 8
+wave_direction: 180
+

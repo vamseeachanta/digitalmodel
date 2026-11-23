@@ -1,0 +1,11 @@
+# Padeye screening FE — dispatchable through the licensed-run lane (#940/#948).
+# Runs padeye.inp on a licensed MAPDL host:
+#   uv run python -m digitalmodel examples/ansys/padeye/input.yml
+# Off-license this fails closed (dry-run fallback raises). Regenerate padeye.inp
+# with: uv run python examples/ansys/padeye/build.py
+basename: ansys
+ansys:
+  operation: run_ansys
+  script: padeye.inp
+  output_directory: results
+  dry_run: false

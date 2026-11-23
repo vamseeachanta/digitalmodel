@@ -1,0 +1,2 @@
+Comparator parity: five commands retain identical verdicts and numerical output after neutral attribution text substitution.
+Original decks and numerical comparison bands remain unchanged.

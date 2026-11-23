@@ -1,0 +1,20 @@
+# Chain 76mm R4 Studded - Library Component
+# Category: line_types
+# NOTE: No section header - properties only for IncludeFile
+# Typical application: Permanent mooring systems, medium duty
+# Studded chains have ~10% higher mass and larger effective diameter than studless
+OD: 0.076
+ID: 0
+MassPerUnitLength: 0.079
+CompressionIsLimited: Yes
+EA: 490000
+EI: [0, ~]
+GJ: 0
+PoissonRatio: 0.5
+Cd: [1.1, ~, 0.45]
+Ca: [1, ~, 0.08]
+NormalDragLiftDiameter: 0.129
+AxialDragLiftDiameter: 0.014
+SeabedLateralFrictionCoefficient: 0.55
+RayleighDampingCoefficients: (no damping)
+Pen: [2, Solid, $FF4400]

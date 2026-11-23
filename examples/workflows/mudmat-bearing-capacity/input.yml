@@ -1,0 +1,30 @@
+basename: mudmat_bearing_capacity
+
+default:
+  log_level: INFO
+  config:
+    generate_plots: false
+    overwrite:
+      output: true
+
+mudmat_bearing_capacity:
+  case:
+    id: registry_mudmat_bearing_capacity
+    description: DNV-RP-C212 / Brinch Hansen undrained bearing-capacity screening of a subsea mudmat in soft clay
+  foundation:
+    width_B_m: 6.0
+    length_L_m: 8.0
+    embedment_depth_m: 0.5
+  soil:
+    condition: undrained          # undrained | drained
+    submerged_unit_weight_kN_m3: 6.0
+    undrained_shear_strength_kpa: 15.0
+  loads:
+    vertical_kN: 2500.0
+    horizontal_kN: 200.0
+    moment_kNm: 0.0
+  design:
+    factor_of_safety: 2.0
+  outputs:
+    directory: results/mudmat_bearing_capacity
+    summary_json: mudmat_bearing_capacity_summary.json

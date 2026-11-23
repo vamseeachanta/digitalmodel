@@ -1,0 +1,10 @@
+Table 8-8 Recommended anode utilization factors for cathodic protection design calculations,
+Anode type,Anode utilization factor
+"Long slender stand-off
+L ≥ 4r",0.90
+"Short slender stand-off
+L < 4r",0.85
+"Long flush-mounted
+L ≥ 4 width and
+L ≥ 4 thickness",0.85
+"Short flush-mounted, bracelet and other types",0.80

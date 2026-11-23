@@ -1,0 +1,324 @@
+{
+  "scope": "support",
+  "layer": "metocean",
+  "coverage_note": "Regional metocean / environmental design criteria for support-vessel operability limits (AHTS, PSV, CTV, SOV/W2W). Records are structured per region. STRONGEST DATA (full extreme-value tables with explicit return-period columns, extracted from public PDFs via pdftotext): (1) North Sea / Buchan Deep from the publicly published Hywind Buchan Deep Metocean Design Basis (marine.gov.scot), and (2) Gulf of Mexico West and West-Central regions from API Bulletin 2INT-MET (free copy on law.resource.org). These give omni-directional Hs, Hmax, Tp, 1-hr/10-min/3-s wind at 10 m, and surface/profile current by return period - directly usable for operability/persistence limits. WEAKER DATA (single headline numbers from search-result summaries of paywalled OnePetro/ResearchGate papers, NOT verified in primary tables): West Africa (Forcados Hs100=3.02 m), Brazil/Campos (Hs50=8.77 m, Hs100=9.54 m), NW Australia/North-West Shelf (cyclone-dominated, qualitative only - no numeric table obtained). The current authoritative GoM standard is API RP 2MET (2nd ed., paywalled); 2INT-MET (2007) is its free interim predecessor and values differ slightly from the latest RP. DNV-RP-C205 itself is paywalled (DNV store); it is captured as a METHODOLOGY record (scatter diagrams, joint Hs-Tp distributions, wind/current profiles) rather than region-specific numbers. Operability LIMITS for the vessels themselves (e.g. CTV access Hs~1.5 m, SOV/W2W gangway Hs~2.5-3.5 m, AHTS/PSV working Hs) are vendor/contract-specific and were NOT found as a single citable public table - flagged as gap. Vessel-class fields (year_built, etc.) are N/A for this environmental-criteria layer. Access date for all web sources: 2026-06-18.",
+  "verdict": {
+    "physically_plausible": true,
+    "fabrication_suspected": false,
+    "citations_check": "solid",
+    "summary": "Verified against primary sources by downloading both cited PDFs and extracting tables with pdftotext (exactly as the dataset claims it was produced). This is an environmental-design-criteria dataset, not a vessel dataset: there are no hull dimensions/displacement/SWL/RAO to vet, and those fields are correctly N/A. The two STRONG records are immaculate transcriptions. North Sea / Buchan Deep: omni Hs 7.8/9.4/10.9/13.8 m (1/10/50/100yr) matches Table 3.8 exactly; associated Tp mean/P5/P95 at Hs50 and Hs100 correct; 1-hr 10m wind omni 26.5/29.5/31.0 (1/10/50yr) matches Table 2.11 exactly. GoM West region (Table 4.5.1-1A) and West-Central region (Table 4.5.2-1A): every value across all 8 return periods (Hs, Hmax, max crest, Tp, 1-hr wind, 3s gust, surface current) matches the 2INT-MET tables exactly; region longitude bounds (97.5-95.0W; 94.0-90.5W) correct. The WEAK records are honestly self-flagged as estimated/secondary and were independently corroborated by web search: Campos Basin Hs50=8.77/Hs100=9.54 m and West Africa Forcados Hs100=3.02 m both confirmed against the cited papers. Cited URLs are real and on-topic. No hard number is dressed as fact without a citation or estimated/gap flag. All values physically plausible for the respective regimes (North Sea storm waves, GoM hurricane extremes, West Africa swell, Brazil extra-tropical swell). No fabrication detected. Two minor transcription/labeling issues found, neither rising to fabrication (both are hedged or source-faithful).",
+    "flagged_records": [
+      {
+        "name": "North Sea (Buchan Deep) - omni-directional extreme design criteria",
+        "issue": "surface_current_omni_1yr_cms is given as '139 (0deg sector)' and surface_current_omni_50yr_cms is hedged as 'estimated ~136-139, full omni row not isolated - see gap'. The actual Table 4.9 omni (0-360) row IS clearly present and isolated: 155/170/180/184 cm/s for 1/10/50/100yr. The 139 figure is actually the 0deg sector 100yr value, mislabeled as 1yr omni. The true 1yr omni surface current is 155 cm/s. Honestly gap-flagged so not fabrication, but the stated value is wrong and the 'not isolated' claim is incorrect - the omni row exists in the extracted text."
+      },
+      {
+        "name": "North Sea (Buchan Deep) - omni-directional extreme design criteria",
+        "issue": "Non-physical kink in the EVA curve: Hs jumps +1.5 m from 50yr (10.9) to 100yr (13.8), far larger than the +1.5 m over the 10->50yr span. VERIFIED this kink is present verbatim in source Table 3.8, so it is a source characteristic (small-sample/contour-method artifact), NOT a dataset error. Flagged only so downstream users do not treat the 100yr Hs as a smooth extrapolation."
+      },
+      {
+        "name": "Gulf of Mexico - West-Central region",
+        "issue": "Record is titled 'West-Central' and cites the source caption as 'West Gulf of Mexico (94.0W to 90.5W)'. The source PDF itself uses inconsistent captions for this table (4.5.2-1A reads 'West Gulf' while the TOC/4.5.2-1B read 'West Central / Western Central'). Longitude bounds and all numeric values are correct; this is a source-caption quirk, not a dataset error."
+      },
+      {
+        "name": "West Africa (Gulf of Guinea) - swell-dominated regime",
+        "issue": "The Hs100=3.02 m figure is attributed to 'WASP/WAX summaries' with a WASP URL, but the 3.02 m / mean-period-7s value actually originates from a separate Forcados/Asabo offshore-Nigeria sea-state paper, not the WASP report. Number is correct and corroborated, URL is real and on-topic for the regime, and the record is explicitly marked estimated/secondary/gap - so loose attribution, not fabrication."
+      }
+    ]
+  },
+  "records": [
+    {
+      "name": "North Sea (Buchan Deep, offshore E Scotland) - omni-directional extreme design criteria",
+      "vessel_type": "metocean region",
+      "fields": {
+        "region": "Northern/Central North Sea",
+        "representative_site": "Hywind Buchan Deep",
+        "coordinates": "approx 57.45 N, 01.31 W",
+        "water_depth_m": "100-140 (site assumption per design basis)",
+        "data_basis": "NORA10 hindcast (waves/wind) 1958-2009 + on-site current measurements; NORSOK N-003 extremes",
+        "Hs_omni_1yr_m": "7.8",
+        "Hs_omni_10yr_m": "9.4",
+        "Hs_omni_50yr_m": "10.9",
+        "Hs_omni_100yr_m": "13.8",
+        "Tp_associated_mean_s_at_Hs100": "16.5 (P5 14.6 / P95 18.6)",
+        "Tp_associated_mean_s_at_Hs50": "14.6 (P5 12.8 / P95 16.5)",
+        "wind_1hr_10m_omni_1yr_ms": "26.5",
+        "wind_1hr_10m_omni_10yr_ms": "29.5",
+        "wind_1hr_10m_omni_50yr_ms": "31.0",
+        "surface_current_omni_1yr_cms": "139 (0deg sector); omni table per Table 4.9",
+        "surface_current_omni_50yr_cms": "estimated:read 0-deg dominant sector ~136-139 cm/s; full omni row not isolated in extraction - see gap",
+        "directional_dist_provided": "yes - 12 x 30deg sectors for wind, wave, current (Tables 2.11, 3.9, 4.9)",
+        "monthly_dist_provided": "yes - seasonal/monthly tables for operability windows (Tables 2.12, 3.10)",
+        "directional_to_omni_uplift": "+~10% on directional extremes at 10^-2 annual prob per NORSOK procedure",
+        "operability_relevance": "Seasonal/monthly + directional scatter supports W2W/SOV gangway and CTV access persistence analysis"
+      },
+      "gaps": [
+        "exact omni-directional surface current 50yr/100yr value (only dominant 0deg sector read)",
+        "Hs-Tp scatter diagram cell counts (figure-only in PDF)",
+        "vessel-specific operability Hs thresholds"
+      ],
+      "citations": [
+        {
+          "fields": [
+            "Hs_omni_1yr_m",
+            "Hs_omni_10yr_m",
+            "Hs_omni_50yr_m",
+            "Hs_omni_100yr_m",
+            "Tp_associated_mean_s_at_Hs100",
+            "Tp_associated_mean_s_at_Hs50"
+          ],
+          "source": "Hywind Buchan Deep Metocean Design Basis RE2014-002 Rev 2, Table 3.8 (omni-directional extreme Hs and associated Tp)",
+          "url": "https://marine.gov.scot/sites/default/files/metocean_design_basis_hywind_buchan_deep_mdb_rev2_0.pdf",
+          "access": "public",
+          "access_date": "2026-06-18"
+        },
+        {
+          "fields": [
+            "wind_1hr_10m_omni_1yr_ms",
+            "wind_1hr_10m_omni_10yr_ms",
+            "wind_1hr_10m_omni_50yr_ms"
+          ],
+          "source": "Hywind Buchan Deep Metocean Design Basis RE2014-002 Rev 2, Table 2.11/2.12 (1-hr mean wind extremes, omni row 0deg-360deg = 26.5/29.5/31.0)",
+          "url": "https://marine.gov.scot/sites/default/files/metocean_design_basis_hywind_buchan_deep_mdb_rev2_0.pdf",
+          "access": "public",
+          "access_date": "2026-06-18"
+        },
+        {
+          "fields": [
+            "coordinates",
+            "water_depth_m",
+            "data_basis",
+            "surface_current_omni_1yr_cms"
+          ],
+          "source": "Hywind Buchan Deep Metocean Design Basis RE2014-002 Rev 2, Sec 1.1 and Table 4.9 (current speed extremes)",
+          "url": "https://marine.gov.scot/sites/default/files/metocean_design_basis_hywind_buchan_deep_mdb_rev2_0.pdf",
+          "access": "public",
+          "access_date": "2026-06-18"
+        }
+      ]
+    },
+    {
+      "name": "Gulf of Mexico - West region (97.5W-95.0W), hurricane-driven extremes",
+      "vessel_type": "metocean region",
+      "fields": {
+        "region": "US Gulf of Mexico - Western (97.5W to 95.0W)",
+        "applicability": "Waves listed for WD >= 1000 m; currents WD >= 150 m; wind all depths; north of 26N",
+        "data_basis": "API 2INT-MET interim hurricane criteria (synthetic storm / hindcast)",
+        "return_periods_yr": "10 / 25 / 50 / 100 / 200 / 1000 / 2000 / 10000",
+        "Hs_m_by_RP": "6.8 / 9.8 / 11.3 / 13.1 / 13.7 / 16.4 / 17.0 / 19.0",
+        "Hmax_m_by_RP": "12.0 / 17.3 / 20.0 / 23.1 / 24.2 / 28.9 / 30.1 / 33.6",
+        "max_crest_elev_m_by_RP": "8.0 / 11.4 / 13.1 / 15.2 / 16.0 / 18.9 / 19.6 / 21.7",
+        "Tp_peak_spectral_s_by_RP": "12.2 / 13.8 / 14.4 / 15.1 / 15.3 / 16.7 / 17.1 / 18.0",
+        "wind_1hr_10m_ms_by_RP": "22.5 / 31.2 / 36.0 / 39.9 / 43.0 / 49.9 / 51.9 / 57.9",
+        "wind_3s_gust_ms_by_RP": "30.2 / 43.9 / 52.0 / 58.8 / 64.4 / 77.3 / 81.2 / 93.1",
+        "surface_current_ms_by_RP": "1.13 / 1.56 / 1.80 / 2.00 / 2.15 / 2.49 / 2.59 / 2.89",
+        "Hs_100yr_m": "13.1",
+        "wind_1hr_100yr_ms": "39.9",
+        "surface_current_100yr_ms": "2.00",
+        "operability_relevance": "Hurricane-season extremes; operability windows for PSV/AHTS dominated by tropical-cyclone avoidance, not these design extremes"
+      },
+      "gaps": [
+        "non-hurricane (winter-storm / Loop Current) operational sea-state scatter",
+        "shallow-water (<1000m) Hs via depth-decay curves are figures only",
+        "latest API RP 2MET 2nd-ed values (paywalled, differ from this interim doc)"
+      ],
+      "citations": [
+        {
+          "fields": [
+            "Hs_m_by_RP",
+            "Hmax_m_by_RP",
+            "max_crest_elev_m_by_RP",
+            "Tp_peak_spectral_s_by_RP",
+            "wind_1hr_10m_ms_by_RP",
+            "wind_3s_gust_ms_by_RP",
+            "surface_current_ms_by_RP",
+            "return_periods_yr"
+          ],
+          "source": "API Bulletin 2INT-MET, Table 4.5.1-1A Independent Extreme Values for Hurricane Winds, Waves, Currents and Surge, Western Gulf of Mexico",
+          "url": "https://law.resource.org/pub/us/cfr/ibr/002/api.2int-met.2007.pdf",
+          "access": "public",
+          "access_date": "2026-06-18"
+        }
+      ]
+    },
+    {
+      "name": "Gulf of Mexico - West-Central region (94.0W-90.5W), hurricane-driven extremes",
+      "vessel_type": "metocean region",
+      "fields": {
+        "region": "US Gulf of Mexico - West-Central (94.0W to 90.5W)",
+        "applicability": "Waves WD >= 1000 m; currents WD >= 150 m; wind all depths; north of 26N",
+        "data_basis": "API 2INT-MET interim hurricane criteria",
+        "return_periods_yr": "10 / 25 / 50 / 100 / 200 / 1000 / 2000 / 10000",
+        "Hs_m_by_RP": "8.1 / 10.2 / 11.5 / 12.3 / 13.5 / 15.4 / 16.0 / 17.8",
+        "Hmax_m_by_RP": "14.3 / 18.0 / 20.3 / 21.7 / 23.8 / 27.2 / 28.2 / 31.5",
+        "max_crest_elev_m_by_RP": "9.6 / 12.0 / 13.5 / 14.5 / 15.9 / 18.0 / 18.6 / 20.7",
+        "Tp_peak_spectral_s_by_RP": "12.6 / 13.6 / 14.2 / 14.4 / 14.8 / 15.8 / 16.1 / 17.0",
+        "wind_1hr_10m_ms_by_RP": "24.9 / 30.4 / 34.3 / 38.1 / 41.6 / 47.6 / 49.3 / 55.2",
+        "wind_3s_gust_ms_by_RP": "33.9 / 42.6 / 49.1 / 55.6 / 61.8 / 72.9 / 76.1 / 87.7",
+        "surface_current_ms_by_RP": "1.25 / 1.52 / 1.72 / 1.91 / 2.08 / 2.38 / 2.46 / 2.76",
+        "Hs_100yr_m": "12.3",
+        "wind_1hr_100yr_ms": "38.1",
+        "surface_current_100yr_ms": "1.91"
+      },
+      "gaps": [
+        "Central (89.5W-86.5W) and Eastern (85.5W-82.5W) GoM regional tables not transcribed here (present in same source Tables 4.5.3 / 4.5.4)",
+        "Loop Current operational currents",
+        "latest API RP 2MET values"
+      ],
+      "citations": [
+        {
+          "fields": [
+            "Hs_m_by_RP",
+            "Hmax_m_by_RP",
+            "max_crest_elev_m_by_RP",
+            "Tp_peak_spectral_s_by_RP",
+            "wind_1hr_10m_ms_by_RP",
+            "wind_3s_gust_ms_by_RP",
+            "surface_current_ms_by_RP",
+            "return_periods_yr"
+          ],
+          "source": "API Bulletin 2INT-MET, Table 4.5.2-1A Independent Extreme Values for Hurricane Winds, Waves, Currents and Surge, West Gulf of Mexico (94.0W to 90.5W)",
+          "url": "https://law.resource.org/pub/us/cfr/ibr/002/api.2int-met.2007.pdf",
+          "access": "public",
+          "access_date": "2026-06-18"
+        }
+      ]
+    },
+    {
+      "name": "West Africa (Gulf of Guinea - Nigeria/Angola), swell-dominated regime",
+      "vessel_type": "metocean region",
+      "fields": {
+        "region": "West Africa - Gulf of Guinea (Nigeria, Cabinda, Angola)",
+        "regime": "Persistent low-Hs long-period swell from S/SW (South Atlantic 40-60S storms) + secondary N Atlantic swell; benign winds, weak tropical-cyclone influence",
+        "Hs_100yr_m_Forcados": "3.02 (estimated/secondary - Forcados offshore S Nigeria; from WASP study summary, primary table not verified)",
+        "mean_wave_period_s": "approx 7 (associated with Forcados Hs100); swell Tp commonly 12-16 s",
+        "angola_typical_swell_Hs_m": "up to ~4 (S to SW)",
+        "operability_relevance": "Low Hs but long-period swell drives vessel/gangway roll & heave resonance - operability often period-limited not height-limited; favourable for high CTV/W2W uptime if motion-tuned",
+        "design_standard_context": "Project metocean studies aligned to ISO 19901-1 / API RP 2MET regional approach"
+      },
+      "gaps": [
+        "primary-source extreme-value table (Hs/Tp/current by return period) - values here are search-summary headline numbers from paywalled OnePetro/ResearchGate (WASP/WAX); NOT verified in original tables",
+        "current profile design values",
+        "surface current extremes",
+        "directional swell scatter diagram"
+      ],
+      "citations": [
+        {
+          "fields": [
+            "Hs_100yr_m_Forcados",
+            "mean_wave_period_s",
+            "angola_typical_swell_Hs_m",
+            "regime"
+          ],
+          "source": "West Africa Swell Project (WASP) and West Africa hindcast (WAX) summaries; Metocean Design Criteria for Deep Water Offshore Systems (ResearchGate) - secondary, headline values only",
+          "url": "https://www.researchgate.net/publication/267607494_The_West_Africa_Swell_Project_WASP",
+          "access": "paywalled",
+          "access_date": "2026-06-18"
+        }
+      ]
+    },
+    {
+      "name": "Brazil (Campos/Santos Basin, offshore Rio de Janeiro), extra-tropical swell regime",
+      "vessel_type": "metocean region",
+      "fields": {
+        "region": "SE Brazil - Campos / northern Santos Basin",
+        "regime": "Energetic SW swell from extra-tropical cyclones/anticyclones (winter/autumn dominant) + cold-front events; strong Brazil Current",
+        "Hs_50yr_m": "8.77 (estimated/secondary - buoy-based extreme analysis, Campos)",
+        "Hs_100yr_m": "9.54 (estimated/secondary - buoy-based extreme analysis, Campos)",
+        "dominant_swell_Tp_s": ">11 (SW swells from cyclones)",
+        "current_regime": "Brazil Current + meso-scale eddies; strong surface/sub-surface currents (design values project-specific)",
+        "operability_relevance": "SW swell + strong current affects DP station-keeping (AHTS/PSV) and W2W headings; current is a primary operability driver alongside Hs"
+      },
+      "gaps": [
+        "primary extreme-value tables (Hs/Tp/wind/current by return period) - values are search-summary numbers from paywalled OnePetro/ResearchGate papers, NOT verified in original tables",
+        "Brazil Current design speed-vs-depth profile",
+        "Hs-Tp scatter diagram",
+        "wind extremes"
+      ],
+      "citations": [
+        {
+          "fields": [
+            "Hs_50yr_m",
+            "Hs_100yr_m",
+            "dominant_swell_Tp_s",
+            "regime"
+          ],
+          "source": "Extreme Wave Analysis in Campos Basin (extra-tropical cyclones/anticyclones); Metocean Measurements at Northern Santos Basin (OTC-20947-MS) - secondary, headline values only",
+          "url": "https://www.researchgate.net/publication/267606635_Extreme_Wave_Analysis_in_Campos_Basin_Rio_de_Janeiro_-_Brazil_Associated_With_Extra-Tropical_Cyclones_and_Anticyclones",
+          "access": "paywalled",
+          "access_date": "2026-06-18"
+        }
+      ]
+    },
+    {
+      "name": "NW Australia (North-West Shelf), tropical-cyclone-dominated regime",
+      "vessel_type": "metocean region",
+      "fields": {
+        "region": "Australia - North-West Shelf (approx 5S-25S)",
+        "regime": "Extreme sea states dominated by tropical cyclones; ~4.5 storms/season, avg ~2 reach Category 5; benign non-cyclone background",
+        "Hs_100yr_m": "gap (cyclone-driven; site-specific synthetic-storm databases used - no single public value verified)",
+        "design_methodology": "Synthetic tropical-cyclone databases to 100/1000/10000-yr levels; joint extreme current-with-depth profiles",
+        "operability_relevance": "Long benign windows punctuated by severe cyclones requiring vessel sail-away; operability planning is cyclone-track / forecast-driven rather than fixed-Hs-limited"
+      },
+      "gaps": [
+        "all numeric extreme values (Hs/Hmax/Tp/wind/current by return period) - only qualitative regime description obtained; primary tables are in paywalled OnePetro papers (e.g. OTC-20732-MS)",
+        "non-cyclone operational sea-state scatter"
+      ],
+      "citations": [
+        {
+          "fields": [
+            "regime",
+            "design_methodology"
+          ],
+          "source": "Metocean Extreme Hurricane/Cyclone Design Criteria for LNG Developments using long synthetic database (OTC-20732-MS); global tropical-cyclone extreme wave climatology (Nature Sci Reports) - secondary/qualitative",
+          "url": "https://onepetro.org/OTCONF/proceedings-abstract/10OTC/10OTC/OTC-20732-MS/36336",
+          "access": "paywalled",
+          "access_date": "2026-06-18"
+        }
+      ]
+    },
+    {
+      "name": "DNV-RP-C205 - methodology layer for environmental conditions & loads (all regions)",
+      "vessel_type": "design standard / methodology",
+      "fields": {
+        "scope": "Rational design criteria & guidance for wind, wave, current and tide loads on marine structures incl. ships, fixed/floating offshore units, mobile units, marine renewables",
+        "provides": "Short-term (per sea-state) statistical models; long-term joint metocean distributions; single-parameter and joint Hs-Tp distributions for design load conditions across limit states",
+        "scatter_diagram_role": "Defines wave scatter diagram concept (Hs vs Tp/Tz cell occurrence) and joint long-term models used to build region-specific scatter diagrams for fatigue & operability/persistence analysis",
+        "wind_profile": "Logarithmic/power-law wind profiles, gust factors, NPD/Frya and Harris/Kaimal wind spectra (consistent with the dimensional 1-hr-mean profile formulas reproduced in API 2INT-MET Sec 4.1)",
+        "current": "Current profile models (tidal + wind-driven + density-driven), depth variation",
+        "limit_state_use": "ULS/ALS extreme return-period values and FLS scatter diagrams; operability uses short-term/seasonal statistics",
+        "relationship_to_regional_records": "C205 is the methodology; regional numbers (North Sea, GoM, etc.) are produced by applying C205-type models to local hindcast/measurement data"
+      },
+      "gaps": [
+        "actual standard text and tables are paywalled (DNV store) - not transcribed; no region-specific numeric criteria in C205 itself (it is a method, not a regional dataset)"
+      ],
+      "citations": [
+        {
+          "fields": [
+            "scope",
+            "provides",
+            "scatter_diagram_role",
+            "wind_profile",
+            "current",
+            "limit_state_use"
+          ],
+          "source": "DNV-RP-C205 Environmental conditions and environmental loads (official DNV page / GlobalSpec abstract)",
+          "url": "https://www.dnv.com/energy/standards-guidelines/dnv-rp-c205-environmental-conditions-and-environmental-loads/",
+          "access": "paywalled",
+          "access_date": "2026-06-18"
+        },
+        {
+          "fields": [
+            "wind_profile"
+          ],
+          "source": "API Bulletin 2INT-MET Sec 4.1 (reproduces the same 1-hr-mean wind profile, gust and spectrum formulas used in DNV/ISO practice) - free corroboration of methodology",
+          "url": "https://law.resource.org/pub/us/cfr/ibr/002/api.2int-met.2007.pdf",
+          "access": "public",
+          "access_date": "2026-06-18"
+        }
+      ]
+    }
+  ],
+  "collected": "2026-06-18",
+  "method": "vessel-db-research workflow wf_1207d074-87f"
+}

@@ -1,0 +1,72 @@
+FoamFile { version 2.0; format ascii; class dictionary; object controlDict; }
+
+application     interFoam;
+startFrom       startTime;
+startTime       0;
+stopAt          endTime;
+endTime         6;
+deltaT          0.001;
+writeControl    adjustable;
+writeInterval   0.1;
+purgeWrite      0;
+writeFormat     ascii;
+writePrecision  6;
+writeCompression off;
+timeFormat      general;
+timePrecision   6;
+runTimeModifiable yes;
+adjustTimeStep  yes;
+maxCo           0.75;
+maxAlphaCo      0.75;
+maxDeltaT       0.01;
+functions
+{
+    // Kleefsman sensors; pressure probes sit half a cell off the faces so
+    // they sample fluid cells at any mesh density.
+    pressureProbes
+    {
+        type            probes;
+        libs            (sampling);
+        writeControl    timeStep;
+        writeInterval   5;
+        fields          (p p_rgh);
+        probeLocations
+        (
+            (0.8345 0.471 0.021)
+            (0.8345 0.471 0.061)
+            (0.8345 0.471 0.101)
+            (0.8345 0.471 0.141)
+            (0.8035 0.471 0.171)
+            (0.7635 0.471 0.171)
+            (0.7235 0.471 0.171)
+            (0.6835 0.471 0.171)
+        );
+    }
+    heightGauges
+    {
+        type            interfaceHeight;
+        libs            (fieldFunctionObjects);
+        alpha           alpha.water;
+        writeControl    timeStep;
+        writeInterval   5;
+        locations
+        (
+            (0.496 0.5 0)
+            (0.992 0.5 0)
+            (1.488 0.5 0)
+            (2.638 0.5 0)
+        );
+    }
+    waterVolume
+    {
+        type            volFieldValue;
+        libs            (fieldFunctionObjects);
+        fields          (alpha.water);
+        operation       volIntegrate;
+        regionType      all;
+        writeControl    timeStep;
+        writeInterval   20;
+        writeFields     false;
+        log             false;
+    }
+}

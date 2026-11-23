@@ -1,0 +1,768 @@
+"""Tests for AQWA diffraction analysis runner (WRK-025).
+
+TDD test suite for AQWARunner, covering:
+- Data models (AQWARunStatus, AQWARunConfig, AQWARunResult)
+- File preparation (generate .dat input files, copy mesh, validate)
+- Solver execution (subprocess invocation with /nowind, timeout, dry-run)
+- Full pipeline (run = prepare + execute)
+- Executable detection (ANSYS install paths, env var, shutil.which)
+- Module-level convenience function
+"""
+
+from __future__ import annotations
+
+import subprocess
+from dataclasses import fields as dataclass_fields
+from pathlib import Path
+from unittest.mock import MagicMock, patch
+
+import pytest
+
+from digitalmodel.hydrodynamics.diffraction.input_schemas import DiffractionSpec
+from digitalmodel.hydrodynamics.diffraction.aqwa_runner import (
+    AQWARunner,
+    AQWARunConfig,
+    AQWARunResult,
+    AQWARunStatus,
+    run_aqwa,
+)
+
+
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
+
+def _load_spec(path: Path) -> DiffractionSpec:
+    """Load a DiffractionSpec from a YAML fixture file."""
+    return DiffractionSpec.from_yaml(path)
+
+
+# ---------------------------------------------------------------------------
+# TestAQWARunStatus
+# ---------------------------------------------------------------------------
+
+class TestAQWARunStatus:
+    """Enum values and string representation."""
+
+    def test_all_values_present(self):
+        expected = {
+            "pending", "preparing", "running", "completed",
+            "failed", "dry_run", "cancelled",
+        }
+        actual = {s.value for s in AQWARunStatus}
+        assert actual == expected
+
+    def test_string_enum_comparison(self):
+        assert AQWARunStatus.COMPLETED == "completed"
+        assert AQWARunStatus.DRY_RUN == "dry_run"
+
+
+# ---------------------------------------------------------------------------
+# TestAQWARunConfig
+# ---------------------------------------------------------------------------
+
+class TestAQWARunConfig:
+    """Pydantic v2 model defaults and validation."""
+
+    def test_defaults(self):
+        config = AQWARunConfig()
+        assert config.executable_path is None
+        assert config.dry_run is False
+        assert config.timeout_seconds == 7200
+        assert config.copy_mesh_files is True
+        assert config.extra_args == []
+        assert config.nowind is True
+
+    def test_output_dir_default_none(self):
+        config = AQWARunConfig()
+        assert config.output_dir is None
+
+    def test_custom_values(self):
+        config = AQWARunConfig(
+            executable_path=Path(
+                r"C:\Program Files\ANSYS Inc\v241\aqwa\bin\winx64\aqwa.exe"
+            ),
+            output_dir=Path("/tmp/out"),
+            dry_run=True,
+            timeout_seconds=3600,
+            copy_mesh_files=False,
+            extra_args=["--verbose"],
+            nowind=False,
+        )
+        assert config.executable_path == Path(
+            r"C:\Program Files\ANSYS Inc\v241\aqwa\bin\winx64\aqwa.exe"
+        )
+        assert config.output_dir == Path("/tmp/out")
+        assert config.dry_run is True
+        assert config.timeout_seconds == 3600
+        assert config.copy_mesh_files is False
+        assert config.extra_args == ["--verbose"]
+        assert config.nowind is False
+
+    def test_timeout_must_be_positive(self):
+        from pydantic import ValidationError
+
+        with pytest.raises(ValidationError):
+            AQWARunConfig(timeout_seconds=0)
+
+    def test_path_coercion(self):
+        config = AQWARunConfig(executable_path="aqwa.exe")
+        assert isinstance(config.executable_path, Path)
+
+
+# ---------------------------------------------------------------------------
+# TestAQWARunResult
+# ---------------------------------------------------------------------------
+
+class TestAQWARunResult:
+    """Dataclass properties and defaults."""
+
+    def test_default_values(self):
+        result = AQWARunResult(status=AQWARunStatus.PENDING)
+        assert result.status == AQWARunStatus.PENDING
+        assert result.input_file is None
+        assert result.output_dir is None
+        assert result.mesh_files == []
+        assert result.log_file is None
+        assert result.lis_file is None
+        assert result.stdout == ""
+        assert result.stderr == ""
+        assert result.return_code is None
+        assert result.duration_seconds is None
+        assert result.error_message is None
+        assert result.spec_name is None
+
+    def test_custom_values(self):
+        result = AQWARunResult(
+            status=AQWARunStatus.COMPLETED,
+            input_file=Path("analysis.dat"),
+            spec_name="Ship_001",
+            return_code=0,
+            duration_seconds=120.5,
+            lis_file=Path("analysis.LIS"),
+        )
+        assert result.status == AQWARunStatus.COMPLETED
+        assert result.input_file == Path("analysis.dat")
+        assert result.spec_name == "Ship_001"
+        assert result.return_code == 0
+        assert result.duration_seconds == 120.5
+        assert result.lis_file == Path("analysis.LIS")
+
+    def test_is_dataclass(self):
+        field_names = {f.name for f in dataclass_fields(AQWARunResult)}
+        expected_fields = {
+            "status", "input_file", "output_dir",
+            "mesh_files", "log_file", "lis_file", "stdout", "stderr",
+            "return_code", "duration_seconds", "error_message", "spec_name",
+        }
+        assert expected_fields.issubset(field_names)
+
+
+# ---------------------------------------------------------------------------
+# TestAQWARunnerPrepare
+# ---------------------------------------------------------------------------
+
+class TestAQWARunnerPrepare:
+    """File generation, mesh copying, and validation in prepare()."""
+
+    def test_prepare_creates_output_dir(self, ship_raos_spec_path, tmp_path):
+        spec = _load_spec(ship_raos_spec_path)
+        config = AQWARunConfig(output_dir=tmp_path / "new_dir", dry_run=True)
+        runner = AQWARunner(config)
+        result = runner.prepare(spec)
+        assert (tmp_path / "new_dir").exists()
+        assert result.status in (
+            AQWARunStatus.DRY_RUN, AQWARunStatus.COMPLETED,
+            AQWARunStatus.PREPARING,
+        )
+
+    def test_prepare_generates_dat_input_file(
+        self, ship_raos_spec_path, tmp_path
+    ):
+        spec = _load_spec(ship_raos_spec_path)
+        config = AQWARunConfig(output_dir=tmp_path, dry_run=True)
+        runner = AQWARunner(config)
+        result = runner.prepare(spec)
+        assert result.input_file is not None
+        assert result.input_file.exists()
+        assert result.input_file.suffix == ".dat"
+
+    def test_prepare_copies_mesh_files(
+        self, ship_raos_spec_path, tmp_path
+    ):
+        spec = _load_spec(ship_raos_spec_path)
+        config = AQWARunConfig(
+            output_dir=tmp_path, dry_run=True, copy_mesh_files=True,
+        )
+        runner = AQWARunner(config)
+        result = runner.prepare(spec, spec_path=ship_raos_spec_path)
+        assert len(result.mesh_files) > 0
+        for mf in result.mesh_files:
+            assert mf.exists()
+
+    def test_prepare_skips_mesh_copy_when_disabled(
+        self, ship_raos_spec_path, tmp_path
+    ):
+        spec = _load_spec(ship_raos_spec_path)
+        config = AQWARunConfig(
+            output_dir=tmp_path, dry_run=True, copy_mesh_files=False,
+        )
+        runner = AQWARunner(config)
+        result = runner.prepare(spec)
+        assert result.mesh_files == []
+
+    def test_prepare_sets_spec_name(self, ship_raos_spec_path, tmp_path):
+        spec = _load_spec(ship_raos_spec_path)
+        config = AQWARunConfig(output_dir=tmp_path, dry_run=True)
+        runner = AQWARunner(config)
+        result = runner.prepare(spec)
+        assert result.spec_name is not None
+        assert len(result.spec_name) > 0
+
+    def test_prepare_with_multibody_spec(
+        self, fpso_turret_spec_path, tmp_path
+    ):
+        spec = _load_spec(fpso_turret_spec_path)
+        config = AQWARunConfig(output_dir=tmp_path, dry_run=True)
+        runner = AQWARunner(config)
+        result = runner.prepare(spec)
+        assert result.input_file is not None
+        assert result.input_file.exists()
+
+    def test_prepare_multibody_copies_all_meshes(
+        self, fpso_turret_spec_path, tmp_path
+    ):
+        spec = _load_spec(fpso_turret_spec_path)
+        config = AQWARunConfig(
+            output_dir=tmp_path, dry_run=True, copy_mesh_files=True,
+        )
+        runner = AQWARunner(config)
+        result = runner.prepare(spec, spec_path=fpso_turret_spec_path)
+        assert len(result.mesh_files) >= 2
+
+    def test_prepare_stores_output_dir(self, ship_raos_spec_path, tmp_path):
+        spec = _load_spec(ship_raos_spec_path)
+        config = AQWARunConfig(output_dir=tmp_path, dry_run=True)
+        runner = AQWARunner(config)
+        result = runner.prepare(spec)
+        assert result.output_dir == tmp_path
+
+
+# ---------------------------------------------------------------------------
+# TestAQWARunnerExecute
+# ---------------------------------------------------------------------------
+
+class TestAQWARunnerExecute:
+    """Subprocess mocking, timeout, error handling in execute()."""
+
+    def test_execute_dry_run_skips_subprocess(
+        self, ship_raos_spec_path, tmp_path
+    ):
+        spec = _load_spec(ship_raos_spec_path)
+        config = AQWARunConfig(output_dir=tmp_path, dry_run=True)
+        runner = AQWARunner(config)
+        runner.prepare(spec)
+        result = runner.execute()
+        assert result.status == AQWARunStatus.DRY_RUN
+        assert result.return_code is None
+
+    def test_execute_invokes_subprocess_with_nowind(
+        self, ship_raos_spec_path, tmp_path
+    ):
+        spec = _load_spec(ship_raos_spec_path)
+        config = AQWARunConfig(
+            output_dir=tmp_path,
+            executable_path=Path("aqwa.exe"),
+            dry_run=False,
+            nowind=True,
+        )
+        runner = AQWARunner(config)
+        runner.prepare(spec)
+
+        mock_result = MagicMock()
+        mock_result.returncode = 0
+        mock_result.stdout = "AQWA completed"
+        mock_result.stderr = ""
+
+        with patch.object(
+            runner, "_detect_executable", return_value=Path("aqwa.exe")
+        ):
+            with patch("subprocess.run", return_value=mock_result) as mock_run:
+                result = runner.execute()
+                mock_run.assert_called_once()
+                # Verify /nowind flag is in the command args
+                call_args = mock_run.call_args
+                cmd = call_args[0][0] if call_args[0] else call_args[1]["cmd"]
+                assert "/nowind" in cmd
+                assert result.status == AQWARunStatus.COMPLETED
+                assert result.return_code == 0
+
+    def test_execute_handles_timeout(self, ship_raos_spec_path, tmp_path):
+        spec = _load_spec(ship_raos_spec_path)
+        config = AQWARunConfig(
+            output_dir=tmp_path,
+            executable_path=Path("aqwa.exe"),
+            dry_run=False,
+            timeout_seconds=10,
+        )
+        runner = AQWARunner(config)
+        runner.prepare(spec)
+
+        with patch.object(
+            runner, "_detect_executable", return_value=Path("aqwa.exe")
+        ):
+            with patch(
+                "subprocess.run",
+                side_effect=subprocess.TimeoutExpired(
+                    cmd="aqwa.exe", timeout=10,
+                ),
+            ):
+                result = runner.execute()
+                assert result.status == AQWARunStatus.FAILED
+                assert "timeout" in result.error_message.lower()
+
+    def test_execute_handles_nonzero_exit(
+        self, ship_raos_spec_path, tmp_path
+    ):
+        spec = _load_spec(ship_raos_spec_path)
+        config = AQWARunConfig(
+            output_dir=tmp_path,
+            executable_path=Path("aqwa.exe"),
+            dry_run=False,
+        )
+        runner = AQWARunner(config)
+        runner.prepare(spec)
+
+        mock_result = MagicMock()
+        mock_result.returncode = 1
+        mock_result.stdout = ""
+        mock_result.stderr = "License error"
+
+        with patch.object(
+            runner, "_detect_executable", return_value=Path("aqwa.exe")
+        ):
+            with patch("subprocess.run", return_value=mock_result):
+                result = runner.execute()
+                assert result.status == AQWARunStatus.FAILED
+                assert result.return_code == 1
+                assert "License error" in result.stderr
+
+    def test_execute_handles_file_not_found(
+        self, ship_raos_spec_path, tmp_path
+    ):
+        spec = _load_spec(ship_raos_spec_path)
+        config = AQWARunConfig(
+            output_dir=tmp_path,
+            executable_path=Path("nonexistent_aqwa.exe"),
+            dry_run=False,
+        )
+        runner = AQWARunner(config)
+        runner.prepare(spec)
+
+        with patch.object(
+            runner,
+            "_detect_executable",
+            return_value=Path("nonexistent_aqwa.exe"),
+        ):
+            with patch(
+                "subprocess.run",
+                side_effect=FileNotFoundError("not found"),
+            ):
+                result = runner.execute()
+                assert result.status == AQWARunStatus.FAILED
+                assert result.error_message is not None
+
+    def test_execute_records_duration(self, ship_raos_spec_path, tmp_path):
+        spec = _load_spec(ship_raos_spec_path)
+        config = AQWARunConfig(output_dir=tmp_path, dry_run=True)
+        runner = AQWARunner(config)
+        runner.prepare(spec)
+        result = runner.execute()
+        assert result.duration_seconds is not None
+        assert result.duration_seconds >= 0
+
+
+# ---------------------------------------------------------------------------
+# TestAQWARunnerRun
+# ---------------------------------------------------------------------------
+
+class TestAQWARunnerRun:
+    """Full pipeline: run = prepare + execute."""
+
+    def test_run_dry_run_ship(self, ship_raos_spec_path, tmp_path):
+        spec = _load_spec(ship_raos_spec_path)
+        config = AQWARunConfig(output_dir=tmp_path, dry_run=True)
+        runner = AQWARunner(config)
+        result = runner.run(spec)
+        assert result.status == AQWARunStatus.DRY_RUN
+        assert result.input_file is not None
+        assert result.input_file.exists()
+
+    def test_run_dry_run_semisub(self, semisub_spec_path, tmp_path):
+        spec = _load_spec(semisub_spec_path)
+        config = AQWARunConfig(output_dir=tmp_path, dry_run=True)
+        runner = AQWARunner(config)
+        result = runner.run(spec)
+        assert result.status == AQWARunStatus.DRY_RUN
+        assert result.input_file is not None
+
+    def test_run_dry_run_fpso_turret(self, fpso_turret_spec_path, tmp_path):
+        spec = _load_spec(fpso_turret_spec_path)
+        config = AQWARunConfig(output_dir=tmp_path, dry_run=True)
+        runner = AQWARunner(config)
+        result = runner.run(spec)
+        assert result.status == AQWARunStatus.DRY_RUN
+        assert result.input_file is not None
+
+    def test_run_stores_result_property(self, ship_raos_spec_path, tmp_path):
+        spec = _load_spec(ship_raos_spec_path)
+        config = AQWARunConfig(output_dir=tmp_path, dry_run=True)
+        runner = AQWARunner(config)
+        result = runner.run(spec)
+        assert runner.result is result
+
+    def test_run_with_no_executable_falls_back_to_dry_run(
+        self, ship_raos_spec_path, tmp_path
+    ):
+        spec = _load_spec(ship_raos_spec_path)
+        config = AQWARunConfig(output_dir=tmp_path, dry_run=False)
+        runner = AQWARunner(config)
+
+        with patch.object(runner, "_detect_executable", return_value=None):
+            result = runner.run(spec)
+            assert result.status == AQWARunStatus.DRY_RUN
+
+    def test_run_with_mock_executable(self, ship_raos_spec_path, tmp_path):
+        spec = _load_spec(ship_raos_spec_path)
+        config = AQWARunConfig(
+            output_dir=tmp_path,
+            executable_path=Path("aqwa.exe"),
+            dry_run=False,
+        )
+        runner = AQWARunner(config)
+
+        mock_result = MagicMock()
+        mock_result.returncode = 0
+        mock_result.stdout = "done"
+        mock_result.stderr = ""
+
+        with patch.object(
+            runner, "_detect_executable", return_value=Path("aqwa.exe")
+        ):
+            with patch("subprocess.run", return_value=mock_result):
+                result = runner.run(spec)
+                assert result.status == AQWARunStatus.COMPLETED
+                assert result.input_file.exists()
+
+
+# ---------------------------------------------------------------------------
+# TestAQWARunnerDetectExecutable
+# ---------------------------------------------------------------------------
+
+class TestAQWARunnerDetectExecutable:
+    """ANSYS-aware executable search."""
+
+    def test_explicit_path_takes_priority(self, tmp_path):
+        exe = tmp_path / "aqwa.exe"
+        exe.touch()
+        config = AQWARunConfig(executable_path=exe)
+        runner = AQWARunner(config)
+        detected = runner._detect_executable()
+        assert detected == exe
+
+    def test_explicit_path_wins_over_env_and_standard_candidates(self, tmp_path):
+        explicit = tmp_path / "explicit-aqwa.exe"
+        env_exe = tmp_path / "env-aqwa.exe"
+        standard = tmp_path / "standard-aqwa.exe"
+        for path in (explicit, env_exe, standard):
+            path.touch()
+        runner = AQWARunner(AQWARunConfig(executable_path=explicit))
+        with patch.dict("os.environ", {"AQWA_PATH": str(env_exe)}, clear=True), patch(
+            "digitalmodel.hydrodynamics.diffraction.aqwa_runner._STANDARD_PATHS",
+            [str(standard)],
+        ):
+            assert runner._detect_executable() == explicit
+
+    def test_env_path_wins_over_standard_candidates(self, tmp_path):
+        env_exe = tmp_path / "env-aqwa.exe"
+        standard = tmp_path / "standard-aqwa.exe"
+        env_exe.touch()
+        standard.touch()
+        runner = AQWARunner(AQWARunConfig())
+        with patch.dict("os.environ", {"AQWA_PATH": str(env_exe)}, clear=True), patch(
+            "digitalmodel.hydrodynamics.diffraction.aqwa_runner._STANDARD_PATHS",
+            [str(standard)],
+        ):
+            assert runner._detect_executable() == env_exe
+
+    def test_windows_candidates_put_v261_before_v252(self):
+        from digitalmodel.hydrodynamics.diffraction.aqwa_runner import (
+            WINDOWS_AQWA_CANDIDATES,
+        )
+
+        versions = [path.split("ANSYS Inc\\", 1)[1].split("\\", 1)[0]
+                    for path in WINDOWS_AQWA_CANDIDATES]
+        assert "v261" in versions
+        assert versions.index("v261") < versions.index("v252")
+
+    def test_v261_wins_over_older_existing_standard_candidates(self, tmp_path):
+        v261 = tmp_path / "v261" / "Aqwa.exe"
+        v252 = tmp_path / "v252" / "Aqwa.exe"
+        v261.parent.mkdir()
+        v252.parent.mkdir()
+        v261.touch()
+        v252.touch()
+        runner = AQWARunner(AQWARunConfig())
+        with patch.dict("os.environ", {}, clear=True), patch(
+            "digitalmodel.hydrodynamics.diffraction.aqwa_runner._STANDARD_PATHS",
+            [str(v261), str(v252)],
+        ):
+            assert runner._detect_executable() == v261
+
+    def test_env_variable_fallback(self):
+        config = AQWARunConfig()
+        runner = AQWARunner(config)
+        with patch.dict("os.environ", {"AQWA_PATH": "/usr/bin/aqwa"}):
+            with patch("pathlib.Path.exists", return_value=True):
+                detected = runner._detect_executable()
+                assert detected == Path("/usr/bin/aqwa")
+
+    def test_shutil_which_fallback(self):
+        config = AQWARunConfig()
+        runner = AQWARunner(config)
+        with patch.dict("os.environ", {}, clear=True), patch(
+            "digitalmodel.hydrodynamics.diffraction.aqwa_runner._STANDARD_PATHS", []
+        ):
+            with patch("shutil.which", return_value="/usr/local/bin/aqwa"):
+                detected = runner._detect_executable()
+                assert detected == Path("/usr/local/bin/aqwa")
+
+    def test_returns_none_when_not_found(self):
+        config = AQWARunConfig()
+        runner = AQWARunner(config)
+        with patch.dict("os.environ", {}, clear=True), patch(
+            "digitalmodel.hydrodynamics.diffraction.aqwa_runner._STANDARD_PATHS", []
+        ):
+            with patch("shutil.which", return_value=None):
+                detected = runner._detect_executable()
+                assert detected is None
+
+
+# ---------------------------------------------------------------------------
+# TestRunAqwaConvenience
+# ---------------------------------------------------------------------------
+
+class TestRunAqwaConvenience:
+    """Module-level convenience function."""
+
+    def test_convenience_dry_run(self, ship_raos_spec_path, tmp_path):
+        spec = _load_spec(ship_raos_spec_path)
+        result = run_aqwa(spec, output_dir=tmp_path, dry_run=True)
+        assert result.status == AQWARunStatus.DRY_RUN
+        assert result.input_file is not None
+
+    def test_convenience_returns_aqwa_run_result(
+        self, semisub_spec_path, tmp_path
+    ):
+        spec = _load_spec(semisub_spec_path)
+        result = run_aqwa(spec, output_dir=tmp_path, dry_run=True)
+        assert isinstance(result, AQWARunResult)
+
+    def test_convenience_accepts_timeout(self, ship_raos_spec_path, tmp_path):
+        spec = _load_spec(ship_raos_spec_path)
+        result = run_aqwa(
+            spec, output_dir=tmp_path, dry_run=True, timeout_seconds=300,
+        )
+        assert result.status == AQWARunStatus.DRY_RUN
+
+
+# ---------------------------------------------------------------------------
+# #611 AQWARunResult contract + #625 validation contract (Phase-1a)
+# ---------------------------------------------------------------------------
+
+class TestAQWARunResultContract611:
+    """New #611/#625 fields on AQWARunResult: defaults and presence."""
+
+    def test_new_contract_fields_present(self):
+        field_names = {f.name for f in dataclass_fields(AQWARunResult)}
+        expected = {
+            "data_file", "xlsx_path", "report_path",
+            "validation_report_path", "validation_verdict", "validation_issues",
+            "validation_report", "diffraction_results",
+        }
+        assert expected.issubset(field_names)
+        # AQWA keeps its solver-specific files...
+        assert {"lis_file", "ah1_file", "log_file"}.issubset(field_names)
+        # ...and must NOT add a generic owr_path (AQWA produces no .owr).
+        assert "owr_path" not in field_names
+
+    def test_contract_defaults(self):
+        result = AQWARunResult(status=AQWARunStatus.PENDING)
+        assert result.data_file is None
+        assert result.xlsx_path is None      # D2: present but None this phase
+        assert result.report_path is None    # D2
+        assert result.validation_report_path is None
+        assert result.validation_verdict == "SKIPPED"
+        assert result.validation_issues == []
+        assert result.validation_report is None
+        assert result.diffraction_results is None
+        # Backward-compat: solver-specific fields still default None.
+        assert result.lis_file is None
+        assert result.ah1_file is None
+        assert result.log_file is None
+
+
+class TestAQWARunConfigValidationToggles:
+    """#625 validation toggles on AQWARunConfig."""
+
+    def test_defaults(self):
+        config = AQWARunConfig()
+        assert config.validate_outputs is True
+        assert config.validation_strict is False
+
+    def test_overrides(self):
+        config = AQWARunConfig(validate_outputs=False, validation_strict=True)
+        assert config.validate_outputs is False
+        assert config.validation_strict is True
+
+
+class TestAQWASkippedWiring:
+    """Dry-run / no-executable fallback produce SKIPPED verdict + reason."""
+
+    def test_dry_run_skipped(self, ship_raos_spec_path, tmp_path):
+        spec = _load_spec(ship_raos_spec_path)
+        result = run_aqwa(spec, output_dir=tmp_path, dry_run=True)
+        assert result.status == AQWARunStatus.DRY_RUN
+        assert result.validation_verdict == "SKIPPED"
+        assert result.validation_issues
+        assert "dry-run" in result.validation_issues[0].lower()
+
+    def test_no_executable_fallback_skipped(self, ship_raos_spec_path, tmp_path):
+        spec = _load_spec(ship_raos_spec_path)
+        config = AQWARunConfig(output_dir=tmp_path, dry_run=False)
+        with patch.object(AQWARunner, "_detect_executable", return_value=None):
+            result = AQWARunner(config).run(spec)
+        assert result.status == AQWARunStatus.DRY_RUN
+        assert result.validation_verdict == "SKIPPED"
+        assert result.validation_issues
+
+
+# ---------------------------------------------------------------------------
+# #625: AQWA extraction (.LIS/.AH1) + runtime validation wiring
+# ---------------------------------------------------------------------------
+
+from unittest.mock import patch as _patch  # noqa: E402
+
+from digitalmodel.hydrodynamics.diffraction.aqwa_result_extractor import (  # noqa: E402
+    AQWAExtractionResult,
+)
+
+
+def _run_solver_success(runner):
+    """Drive execute() through a mocked successful AQWA solver invocation."""
+    mock_proc = MagicMock()
+    mock_proc.returncode = 0
+    mock_proc.stdout = "AQWA completed"
+    mock_proc.stderr = ""
+    with patch.object(runner, "_detect_executable", return_value=Path("aqwa.exe")), \
+            patch("subprocess.run", return_value=mock_proc):
+        return runner.execute()
+
+
+def _patch_extract(result):
+    """Patch AQWAResultExtractor.extract to return *result*."""
+    return _patch(
+        "digitalmodel.hydrodynamics.diffraction.aqwa_result_extractor."
+        "AQWAResultExtractor.extract",
+        return_value=result,
+    )
+
+
+class TestAQWAExtractionAndValidation:
+    """AQWA obtains DiffractionResults via the extractor, then validates."""
+
+    def test_success_validates_pass(
+        self, ship_raos_spec_path, tmp_path, dense_diffraction_results
+    ):
+        spec = _load_spec(ship_raos_spec_path)
+        runner = AQWARunner(
+            AQWARunConfig(output_dir=tmp_path, executable_path=Path("aqwa.exe"))
+        )
+        runner.prepare(spec)
+        extraction = AQWAExtractionResult(
+            success=True, results=dense_diffraction_results
+        )
+        with _patch_extract(extraction):
+            result = _run_solver_success(runner)
+
+        assert result.status == AQWARunStatus.COMPLETED
+        assert result.validation_verdict == "PASS"
+        assert result.diffraction_results is dense_diffraction_results
+        assert result.validation_report_path is not None
+        assert result.validation_report_path.exists()
+
+    def test_extraction_failure_skips_validation(
+        self, ship_raos_spec_path, tmp_path
+    ):
+        spec = _load_spec(ship_raos_spec_path)
+        runner = AQWARunner(
+            AQWARunConfig(output_dir=tmp_path, executable_path=Path("aqwa.exe"))
+        )
+        runner.prepare(spec)
+        extraction = AQWAExtractionResult(
+            success=False, error_message="No .LIS file found"
+        )
+        with _patch_extract(extraction):
+            result = _run_solver_success(runner)
+
+        # Solver succeeded but no results -> SKIPPED, never PASS.
+        assert result.status == AQWARunStatus.COMPLETED
+        assert result.validation_verdict == "SKIPPED"
+        assert result.diffraction_results is None
+
+
+class TestAQWAStrictMode:
+    """Strict-mode escalation mirrors OrcaWave."""
+
+    def test_strict_fail_marks_run_failed(
+        self, ship_raos_spec_path, tmp_path, fail_diffraction_results
+    ):
+        spec = _load_spec(ship_raos_spec_path)
+        runner = AQWARunner(
+            AQWARunConfig(
+                output_dir=tmp_path,
+                executable_path=Path("aqwa.exe"),
+                validation_strict=True,
+            )
+        )
+        runner.prepare(spec)
+        extraction = AQWAExtractionResult(
+            success=True, results=fail_diffraction_results
+        )
+        with _patch_extract(extraction):
+            result = _run_solver_success(runner)
+
+        assert result.validation_verdict == "FAIL"
+        assert result.status == AQWARunStatus.FAILED
+        assert result.return_code == -2
+
+    def test_non_strict_fail_stays_completed(
+        self, ship_raos_spec_path, tmp_path, fail_diffraction_results
+    ):
+        spec = _load_spec(ship_raos_spec_path)
+        runner = AQWARunner(
+            AQWARunConfig(
+                output_dir=tmp_path,
+                executable_path=Path("aqwa.exe"),
+                validation_strict=False,
+            )
+        )
+        runner.prepare(spec)
+        extraction = AQWAExtractionResult(
+            success=True, results=fail_diffraction_results
+        )
+        with _patch_extract(extraction):
+            result = _run_solver_success(runner)
+
+        assert result.validation_verdict == "FAIL"
+        assert result.status == AQWARunStatus.COMPLETED

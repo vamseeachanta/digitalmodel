@@ -1,0 +1,23 @@
+id: pe-2026-01-15
+date: "2026-01-15"
+slug: pe-problem-of-the-day-1-15-2026
+source_url: https://app.collide.io/posts/pe-problem-of-the-day-1-15-2026
+title: "PE Problem of the Day 1/15/2026 — standing valve in gas lift"
+posted_by: Yogashri Pradhan
+tags: [production, upstream, artificial-lift]
+type: conceptual
+
+statement: >
+  What is the purpose of a standing valve in a gas-lift configuration? Several answers exist; one is enough.
+
+find:
+  - "Give one valid purpose"
+
+solution:
+  method: "Petroleum-engineering concept recall (no calculation)."
+  answer: "A check valve at the tubing intake: it lets fluid flow up from the formation but blocks backflow, holding the fluid column and preventing U-tubing of injected gas/fluid back into the formation (aids unloading)."
+  confidence: high
+  solved_by: "petroleum-engineering domain knowledge (Deckhand wells-subsurface pack / Claude API solver)"
+
+# Knowledge dot: the concept lives in llm-wiki (Deckhand wells-subsurface pack source).
+wiki_concept: wikis/drilling-engineering/wiki/concepts/sucker-rod-pumping-overview.md  # standing/traveling valve mechanism

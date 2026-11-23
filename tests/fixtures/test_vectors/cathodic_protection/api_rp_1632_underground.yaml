@@ -1,0 +1,109 @@
+source_type: standard
+source_description: "API RP 1632 underground cathodic protection calculations with Dwight resistance equation"
+extracted_date: "2026-03-16"
+legal_scan_passed: true
+category: "cathodic_protection"
+subcategory: "underground_galvanic"
+equations:
+  - name: "Dwight Vertical Rod Resistance"
+    latex: "R_a = \\frac{\\rho}{2\\pi L} \\left( \\ln\\frac{8L}{d} - 1 \\right)"
+    description: "Anode-to-electrolyte resistance for a vertical rod anode per API RP 1632 section 6.3"
+  - name: "Current Per Anode"
+    latex: "I_a = \\frac{E_{drive}}{2 R_a}"
+    description: "Current output per single galvanic anode assuming electrolyte resistance equals anode resistance"
+  - name: "Anode Life"
+    latex: "Life = \\frac{W \\cdot \\varepsilon}{I_a \\cdot 8760}"
+    description: "Estimated anode service life in years per API RP 1632 section 6.4"
+inputs:
+  - name: "Soil resistivity"
+    symbol: "rho"
+    unit: "ohm-m"
+    test_value: 10.0
+  - name: "Anode length"
+    symbol: "L"
+    unit: "m"
+    test_value: 1.5
+  - name: "Anode diameter"
+    symbol: "d"
+    unit: "m"
+    test_value: 0.05
+outputs:
+  - name: "Anode resistance"
+    symbol: "R_a"
+    unit: "ohm"
+    test_expected: 4.754
+    tolerance: 0.01
+worked_examples:
+  - description: "Dwight equation benchmark (rho=10, L=1.5, d=0.05)"
+    inputs:
+      rho: 10.0
+      L: 1.5
+      d: 0.05
+    outputs:
+      resistance_ohm: 4.754
+    use_as_test: true
+  - description: "Zinc anode driving voltage (|-1.10 - (-0.850)| = 0.250 V)"
+    inputs:
+      anode_type: "zinc"
+    outputs:
+      driving_voltage_V: 0.250
+    use_as_test: true
+  - description: "Magnesium H-1 anode driving voltage (|-1.55 - (-0.850)| = 0.700 V)"
+    inputs:
+      anode_type: "magnesium_h1"
+    outputs:
+      driving_voltage_V: 0.700
+    use_as_test: true
+  - description: "Zinc anode current output (I = 0.250 / (2 * 4.754) = 0.02629 A)"
+    inputs:
+      anode_type: "zinc"
+      rho: 10.0
+      L: 1.5
+      d: 0.05
+    outputs:
+      current_per_anode_A: 0.02629
+    use_as_test: true
+  - description: "Bare steel current demand (10 m2 at 21.5 mA/m2 = 0.215 A)"
+    inputs:
+      surface_area_m2: 10.0
+      current_density_mA_m2: 21.5
+    outputs:
+      current_demand_A: 0.215
+    use_as_test: true
+  - description: "Coated steel current demand (10 m2 at 0.3 mA/m2 = 0.003 A)"
+    inputs:
+      surface_area_m2: 10.0
+      current_density_mA_m2: 0.3
+    outputs:
+      current_demand_A: 0.003
+    use_as_test: true
+  - description: "Number of anodes for bare 10 m2 with zinc anodes = 9"
+    inputs:
+      surface_area_m2: 10.0
+      current_density_mA_m2: 21.5
+      anode_type: "zinc"
+      rho: 10.0
+      L: 1.5
+      d: 0.05
+    outputs:
+      anode_count: 9
+    use_as_test: true
+  - description: "Zinc anode life (1 kg anode, I_a=0.02629 A) = 3.39 years"
+    inputs:
+      W_anode_kg: 1.0
+      anode_type: "zinc"
+      I_per_anode_A: 0.02629
+    outputs:
+      life_years: 3.39
+    use_as_test: true
+assumptions:
+  - "Zinc anode open-circuit potential -1.10 V vs CSE (ASTM B418)"
+  - "Magnesium H-1 open-circuit potential -1.55 V vs CSE"
+  - "Protection criterion -0.850 V vs CSE per API RP 1632 section 4.2.1"
+  - "Zinc electrochemical capacity 780 A-h/kg (ASTM B418 Type II)"
+  - "Electrolyte resistance approximately equals anode resistance for remote anode"
+references:
+  - "API RP 1632 (3rd Edition, 1996), Section 4.2"
+  - "API RP 1632, Section 5"
+  - "API RP 1632, Section 6.3"
+  - "API RP 1632, Section 6.4"

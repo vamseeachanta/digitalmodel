@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "case_input": "examples/cfd/synthetic_l_tank/input.yml",
+  "scope": "synthetic bridge execution; no experimental validation or numerical uncertainty claim",
+  "gmsh_version": "4.15.1",
+  "maximum_ranks": 8,
+  "failed_mesh_checks": 0,
+  "mesh_requirements": "Mesh OK; positive cells; exact walls/atmosphere patches and all-cell fluid zone; positive signed tetrahedra; byte-identical source rebuild",
+  "end_time_s": 0.3,
+  "delta_t_s": 0.001,
+  "minimum_steps": 2,
+  "time_tolerance_s": 1e-8,
+  "rotation_tolerance_m": 1.6e-6,
+  "history_requirements": "finite probe pressure and force/moment rows at two or more advancing times",
+  "basis": {
+    "mesh": "src/digitalmodel/solvers/openfoam/poly_mesh_contract.py: validate_poly_mesh_contract",
+    "time": "scripts/cfd/run_synthetic_tank_3d_smoke.py: default end-time/delta-t/time-precision; smoke.py: _require_final_time",
+    "rotation": "src/digitalmodel/solvers/openfoam/smoke.py: verify_rigid_rotation, 1e-6 times fixture length",
+    "tolerances": "execution tolerances assumed, based on previous experience; inherited repository contracts, not accuracy against published data"
+  }
+}

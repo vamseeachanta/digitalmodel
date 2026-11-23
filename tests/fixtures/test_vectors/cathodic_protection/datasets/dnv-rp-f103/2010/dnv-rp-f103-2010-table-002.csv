@@ -1,0 +1,20 @@
+"Table A.1: Recommendations for constants “a” and “b” to be used for calculation of coating breakdown factors associated with
+specific linepipe coating systems as defined in DNV-RP-F106.
+(Maximum temperatures refer to continuous operation and are indicative only. Manufacturer’s recommendations shall always apply. For coat-
+ings with an inner layer of FBE and operating temperatures above 90°C, adequate properties shall be documented by pre-qualification and/or
+PQT. The same applies for polychloroprene based coatings at operating temperatures above 90°C)",,,,,
+Linepipe Coating Type,"DNV-RP-F106
+CDS","Concrete Weight
+Coating","Max. Temperature
+(°C)","a
+x100","b
+x100"
+Glass Fibre Reinforced Asphalt Enamel,No. 5,yes,70,0.3,0.01
+Glass Fibre Reinforced Coal Tar Enamel,No. 6,yes,80,0.3,0.01
+Single or Dual Layer FBE,No. 1,yes,90,1,0.03
+3-layer FBE/PE,No. 2,yes,80,0.1,0.003
+3-layer FBE/PP,No. 3,no,110,0.1,0.003
+Multi-Layer FBE/PP,No. 4,no,140,0.03,0.001
+Polychloroprene,No. 7,no,90,0.1,0.01
+"Note: x100 in the heading of the two column to the right means that all figures in these columns have been multiplied by a factor of 100; i.e.
+before use in eqns. (2) or (4), the numbers shall be multiplied with a factor 10-2.",,,,,

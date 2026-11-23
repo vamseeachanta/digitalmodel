@@ -1,0 +1,15 @@
+# VariableData Configuration
+# Generated from: 5 tug_env - 6D buoys.yml
+# Date: 2026-01-21 14:02:14
+VariableData:
+  Coatingsorlinings:
+  - Name: 3LPP+CWC80
+    LayerThickness, LayerMaterialDensity:
+    - - 0.0035
+      - 1.1
+    - - 0.08
+      - 3.0
+  - Name: 3LPP
+    LayerThickness, LayerMaterialDensity:
+    - - 0.0035
+      - 1.1

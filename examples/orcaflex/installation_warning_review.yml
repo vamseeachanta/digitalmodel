@@ -1,0 +1,25 @@
+# Reuse with --postprocess-only against the original fingerprinted run directory.
+model: ../../docs/domains/orcaflex/jumper/manifold_to_plet/monolithic/DZ_AHCoff.yml
+model_sha256: c338974b24512ee893311c6d12353b0584e1b11afbff94d655d5f7bf26f439e3
+solver_version: '11.6'
+timeout_seconds: 900
+limitations:
+  - Warning investigation only; no model inputs or solver results will be changed.
+  - The extraction includes build-up; it does not establish steady-state operational demands.
+  - Rope compression treatment, torsional boundary conditions and lay settings require engineering review.
+  - Allowable loads and field validation are not established; acceptance is NOT EVALUATED.
+extraction:
+  title: Installation warning review — unchanged saved simulation
+  period: [-10.0, 11.0]
+  time_histories:
+    - {object: 'Sling#5', variable: Effective tension, position: End A, units: kN}
+    - {object: 'Sling#5', variable: Effective tension, position: End B, units: kN}
+    - {object: JumperLine, variable: Torque, position: End A, units: kN.m}
+    - {object: JumperLine, variable: Torque, position: End B, units: kN.m}
+    - {object: Connector2, variable: Seabed clearance, position: End A, units: m}
+    - {object: Connector2, variable: Seabed clearance, position: End B, units: m}
+  range_graphs:
+    - {object: 'Sling#5', variable: Effective tension, units: kN}
+    - {object: JumperLine, variable: Torque, units: kN.m}
+    - {object: JumperLine, variable: Twist, units: deg/m}
+    - {object: Connector2, variable: Seabed clearance, units: m}

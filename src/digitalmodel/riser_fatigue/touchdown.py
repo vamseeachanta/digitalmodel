@@ -1,0 +1,360 @@
+"""
+SCR/SLWR Touchdown-Zone Fatigue Workflow (DNV-RP-C203)
+
+Self-contained, license-free fatigue assessment for the touchdown zone (TDZ)
+of a Steel Catenary Riser (SCR) or Steel Lazy-Wave Riser (SLWR).
+
+The workflow consumes a **stress-range histogram** (cycles per stress bin)
+that characterises the long-term TDZ stress response.  This histogram is the
+output of an upstream solver (e.g. OrcaFlex time-domain + rainflow), but this
+module does NOT depend on any solver or licence: the histogram is supplied as
+input (real or synthetic).  The OrcaFlex stress-extraction front-end is a
+deferred follow-on (see issue #810 acceptance criteria).
+
+Method (per DNV-RP-C203, 2021):
+  1. Apply a Stress Concentration Factor (SCF) to each nominal stress range.
+  2. Apply the thickness correction  S_corr = S * (t/t_ref)^k  (welded joints).
+  3. Read allowable cycles N_i from the selected bilinear S-N curve.
+  4. Accumulate Palmgren-Miner damage  D = sum(n_i / N_i).
+  5. Extrapolate one "histogram period" of damage to the design life and
+     apply a Design Fatigue Factor (DFF) for the PASS/FAIL verdict.
+
+Reuses the core ``digitalmodel.fatigue`` engine (get_sn_curve / miner_damage /
+thickness_correction) — no S-N math is reimplemented here.
+"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass, field
+from typing import Optional, Sequence
+
+import numpy as np
+import pandas as pd
+
+from digitalmodel.fatigue import (
+    get_sn_curve,
+    miner_damage,
+    thickness_correction,
+)
+from digitalmodel.fatigue import c203_sn_tables as _c203
+from digitalmodel.fatigue.damage import validate_histogram
+from digitalmodel.riser_fatigue.validation import (
+    evidence_text, finite_number, histogram_basis, positive_damage,
+)
+
+__all__ = [
+    "RiserSection",
+    "TouchdownFatigueInput",
+    "BinResult",
+    "TouchdownFatigueResult",
+    "assess_touchdown_fatigue",
+    "report_markdown",
+]
+
+
+@dataclass(frozen=True)
+class RiserSection:
+    """Riser pipe section properties at the touchdown zone.
+
+    Parameters
+    ----------
+    outer_diameter_mm : float
+        Pipe outer diameter (mm), informational for this stress-based assessment.
+    wall_thickness_mm : float
+        Pipe wall thickness (mm) — used for the DNV thickness correction.
+    material : str
+        Material designation (informational, e.g. 'API 5L X65').
+    """
+
+    outer_diameter_mm: float
+    wall_thickness_mm: float
+    material: str = "API 5L X65"
+
+
+@dataclass(frozen=True)
+class TouchdownFatigueInput:
+    """Inputs for a touchdown-zone fatigue assessment.
+
+    Parameters
+    ----------
+    section : RiserSection
+        Riser pipe section properties.
+    stress_ranges_mpa : Sequence[float]
+        Nominal hot-spot stress-range bin centres (MPa).
+    cycles : Sequence[float]
+        Applied cycle count for each stress bin over ``histogram_period_years``.
+    sn_class : str
+        DNV-RP-C203 detail category (e.g. 'F1', 'F3', 'D').
+    environment : str
+        S-N environment: 'air', 'seawater_cp', or 'free_corrosion'.
+    scf : float
+        Stress concentration factor applied to every nominal stress range
+        (girth-weld misalignment etc.). Must be supplied; unity requires
+        ``scf_basis`` to explain why concentration is already included or absent.
+    design_life_years : float
+        Required service design life (years).
+    dff : float
+        Design Fatigue Factor (DNV-OS-F201).  Allowable damage = 1 / DFF.
+    histogram_period_years : float
+        Real-time duration represented by the supplied histogram. Required,
+        with ``histogram_basis`` identifying the observation and cycle-count basis.
+    thickness_ref_mm : float
+        Reference thickness for the thickness correction (default 25 mm).
+    thickness_exponent : float, optional
+        Thickness exponent k. ``None`` (default) takes k for ``sn_class`` from
+        DNV-RP-C203 (2011) Tables 2-1 to 2-3 via
+        :mod:`digitalmodel.fatigue.c203_sn_tables` (#2165); an explicit value
+        overrides it only with ``thickness_exponent_basis`` and without
+        reducing the selected class penalty. ``sn_basis`` records detail and
+        environment evidence; ``histogram_basis`` records the duration basis.
+    report_revision : str
+        Supplied report revision identifier (default "1").
+    report_date : str, optional
+        Supplied issue date. Omitted dates are reported as "Not supplied";
+        rendering never reads the current calendar date.
+    """
+
+    section: RiserSection
+    stress_ranges_mpa: Sequence[float]
+    cycles: Sequence[float]
+    sn_class: Optional[str] = None
+    environment: Optional[str] = None
+    scf: Optional[float] = None
+    design_life_years: Optional[float] = None
+    dff: Optional[float] = None
+    histogram_period_years: Optional[float] = None
+    thickness_ref_mm: float = _c203.T_REF_WELDED_MM
+    thickness_exponent: Optional[float] = None
+    scf_basis: Optional[str] = None
+    sn_basis: Optional[str] = None
+    histogram_basis: Optional[dict] = None
+    thickness_exponent_basis: Optional[str] = None
+    report_revision: str = "1"
+    report_date: Optional[str] = None
+
+
+def _class_thickness_exponent(sn_class: str, environment: str) -> float:
+    """k for the class, from the same tables as the S-N values (#2165)."""
+    if environment == "free_corrosion":
+        return _c203.FREE_CORROSION[sn_class].k
+    return _c203.BILINEAR[sn_class].k
+
+
+@dataclass(frozen=True)
+class BinResult:
+    """Per-bin fatigue result row."""
+
+    stress_range_mpa: float
+    stress_corrected_mpa: float
+    cycles: float
+    allowable_cycles: float
+    damage: float
+
+
+@dataclass
+class TouchdownFatigueResult:
+    """Result of a touchdown-zone fatigue assessment."""
+
+    bins: list[BinResult] = field(default_factory=list)
+    period_damage: float = 0.0           # damage per histogram period
+    annual_damage: float = 0.0           # damage per year
+    design_life_damage: float = 0.0      # damage over the full design life
+    fatigue_life_years: float = 0.0      # D=1 life (no DFF)
+    allowable_damage: float = 0.0        # 1 / DFF
+    usage_factor: float = 0.0            # design_life_damage / allowable_damage
+    pass_fail: str = "FAIL"
+    standard: str = "DNV-RP-C203 (2021) + DNV-OS-F201 (DFF)"
+    sn_class: str = ""
+    environment: str = ""
+    thickness_exponent: float = 0.0  # k applied (class default or override)
+    scf: float = 1.0
+    dff: float = 10.0
+    design_life_years: float = 25.0
+
+
+def assess_touchdown_fatigue(
+    inp: TouchdownFatigueInput,
+) -> TouchdownFatigueResult:
+    """Assess SCR/SLWR touchdown-zone fatigue per DNV-RP-C203.
+
+    Returns a :class:`TouchdownFatigueResult` with per-bin damage, the
+    design-life damage, the D=1 fatigue life, and a DFF-based PASS/FAIL.
+    """
+    stress, cycles = validate_histogram(inp.stress_ranges_mpa, inp.cycles)
+    period = finite_number(inp.histogram_period_years, "histogram_period_years")
+    life = finite_number(inp.design_life_years, "design_life_years")
+    dff = finite_number(inp.dff, "dff")
+    finite_number(life * dff, "required_life_years")
+    scf = finite_number(inp.scf, "scf")
+    if scf == 1:
+        evidence_text(inp.scf_basis, "scf_basis for unity")
+    histogram_basis(inp.histogram_basis, period)
+    sn_class = evidence_text(inp.sn_class, "sn_class").upper()
+    environment = evidence_text(inp.environment, "environment")
+    evidence_text(inp.sn_basis, "sn_basis")
+    diameter = finite_number(inp.section.outer_diameter_mm, "outer_diameter_mm")
+    thickness = finite_number(inp.section.wall_thickness_mm, "wall_thickness_mm")
+    reference = finite_number(inp.thickness_ref_mm, "thickness_ref_mm")
+    if 2 * thickness >= diameter:
+        raise ValueError("section geometry requires outer diameter > twice wall thickness")
+
+    # 3) S-N curve first: it validates the class and environment. The class
+    # is normalised once, as get_sn_curve() does, for both lookups.
+    sn_curve = get_sn_curve(sn_class, environment)
+    class_k = _class_thickness_exponent(sn_class, environment)
+    k = class_k
+    if inp.thickness_exponent is not None:
+        k = finite_number(inp.thickness_exponent, "thickness_exponent", positive=False)
+        if k < class_k:
+            raise ValueError("thickness_exponent must not reduce the selected class penalty")
+        evidence_text(inp.thickness_exponent_basis, "thickness_exponent_basis")
+    # A larger reference thickness could suppress the selected method's penalty.
+    if reference > _c203.T_REF_WELDED_MM:
+        raise ValueError("thickness_ref_mm must not exceed the selected method reference")
+
+    # 1) SCF on nominal stress ranges, then 2) DNV thickness correction.
+    stress_scf = stress * scf
+    stress_corr = thickness_correction(
+        stress_scf,
+        t_actual=thickness,
+        t_ref=reference,
+        k=k,
+    )
+
+    # 4) Allowable cycles and Palmgren-Miner damage via the core engine.
+    histogram = pd.DataFrame(
+        {"stress_range": stress_corr, "cycles": cycles}
+    )
+    damaged = miner_damage(histogram, sn_curve)
+    # Riser screening has no qualified endurance-limit mode for loaded bins.
+    loaded = (stress_corr > 0) & (cycles > 0)
+    if not np.all(np.isfinite(damaged.loc[loaded, "allowable_cycles"])):
+        raise ValueError("riser allowable cycles must be finite for loaded bins")
+    period_damage = positive_damage(damaged.attrs["total_damage"], "period_damage")
+
+    bins: list[BinResult] = []
+    for s_nom, s_corr, row in zip(
+        stress, stress_corr, damaged.itertuples(index=False)
+    ):
+        bins.append(
+            BinResult(
+                stress_range_mpa=float(s_nom),
+                stress_corrected_mpa=float(s_corr),
+                cycles=float(row.cycles),
+                allowable_cycles=float(row.allowable_cycles),
+                damage=float(row.damage),
+            )
+        )
+
+    annual_damage = positive_damage(period_damage / period, "annual_damage")
+    design_life_damage = positive_damage(annual_damage * life, "design_life_damage")
+    fatigue_life_years = finite_number(1.0 / annual_damage, "fatigue_life_years")
+
+    # 5) DFF check: design-life damage must not exceed the allowable 1/DFF.
+    allowable_damage = finite_number(1.0 / dff, "allowable_damage")
+    usage_factor = positive_damage(design_life_damage / allowable_damage, "usage_factor")
+    pass_fail = "PASS" if usage_factor <= 1.0 else "FAIL"
+
+    return TouchdownFatigueResult(
+        bins=bins,
+        period_damage=period_damage,
+        annual_damage=annual_damage,
+        design_life_damage=design_life_damage,
+        fatigue_life_years=fatigue_life_years,
+        allowable_damage=allowable_damage,
+        usage_factor=usage_factor,
+        pass_fail=pass_fail,
+        sn_class=sn_class,
+        environment=environment,
+        thickness_exponent=k,
+        scf=scf,
+        dff=dff,
+        design_life_years=life,
+    )
+
+
+def report_markdown(
+    inp: TouchdownFatigueInput,
+    result: TouchdownFatigueResult,
+    location: str = "Touchdown Zone (TDZ)",
+) -> str:
+    """Render a Markdown fatigue report for the assessment."""
+    sec = inp.section
+    lines: list[str] = []
+    lines.append("# SCR/SLWR Touchdown-Zone Fatigue Report")
+    lines.append("")
+    lines.append(f"**Standard:** {result.standard}")
+    lines.append(f"**Critical location:** {location}")
+    lines.append("")
+    lines.append("## Summary")
+    lines.append("")
+    lines.append(f"Verdict: {result.pass_fail}; PASS requires design-life damage × DFF ≤ 1.")
+    lines.append("Outer diameter is informational; supplied stresses drive this assessment.")
+    lines.append("")
+    lines.append("## Revision history")
+    lines.append("")
+    lines.append("| Revision | Date | What changed and why |")
+    lines.append("|---|---|---|")
+    lines.append(
+        f"| {inp.report_revision} | {inp.report_date or 'Not supplied'} | "
+        "Stress-based assessment with validated input evidence |"
+    )
+    lines.append("")
+    lines.append("## Inputs")
+    lines.append("")
+    lines.append("| Parameter | Value |")
+    lines.append("|---|---|")
+    lines.append(f"| Outer diameter (informational) | {sec.outer_diameter_mm:.1f} mm |")
+    lines.append(f"| Wall thickness | {sec.wall_thickness_mm:.1f} mm |")
+    lines.append(f"| Material | {sec.material} |")
+    lines.append(f"| S-N detail category | {result.sn_class} ({result.environment}) |")
+    lines.append(f"| SCF | {result.scf:.2f} |")
+    lines.append(f"| SCF basis | {inp.scf_basis or 'Applied concentration factor'} |")
+    lines.append(f"| S-N selection basis | {inp.sn_basis} |")
+    lines.append(f"| Histogram duration and cycle-count basis | {inp.histogram_basis['evidence']} |")
+    lines.append(
+        f"| Thickness correction | t_ref={inp.thickness_ref_mm:.0f} mm, "
+        f"k={result.thickness_exponent:.2f} |"
+    )
+    lines.append(f"| Histogram period | {inp.histogram_period_years:.2f} yr |")
+    lines.append(f"| Design life | {result.design_life_years:.0f} yr |")
+    lines.append(f"| Design Fatigue Factor (DFF) | {result.dff:.1f} |")
+    lines.append("")
+    lines.append("## Stress-range histogram and per-bin damage")
+    lines.append("")
+    lines.append(
+        "| Nominal ΔS (MPa) | Corrected ΔS (MPa) | Cycles n | Allowable N | "
+        "Damage n/N |"
+    )
+    lines.append("|---:|---:|---:|---:|---:|")
+    for b in result.bins:
+        lines.append(
+            f"| {b.stress_range_mpa:.1f} | {b.stress_corrected_mpa:.1f} | "
+            f"{b.cycles:,.0f} | {b.allowable_cycles:,.3g} | {b.damage:.4e} |"
+        )
+    lines.append("")
+    lines.append("## Results")
+    lines.append("")
+    lines.append("| Quantity | Value |")
+    lines.append("|---|---|")
+    lines.append(f"| Damage per histogram period | {result.period_damage:.4e} |")
+    lines.append(f"| Annual damage | {result.annual_damage:.4e} |")
+    lines.append(
+        f"| Damage over design life ({result.design_life_years:.0f} yr) | "
+        f"{result.design_life_damage:.4e} |"
+    )
+    life = result.fatigue_life_years
+    life_str = "inf" if np.isinf(life) else f"{life:,.1f}"
+    lines.append(f"| Unfactored fatigue life (D=1) | {life_str} yr |")
+    lines.append(f"| Allowable damage (1/DFF) | {result.allowable_damage:.4e} |")
+    lines.append(f"| Usage factor (D_life · DFF) | {result.usage_factor:.3f} |")
+    lines.append(f"| **Verdict** | **{result.pass_fail}** |")
+    lines.append("")
+    lines.append("## Deferred (follow-on)")
+    lines.append("")
+    lines.append(
+        "- OrcaFlex time-domain stress extraction + rainflow at the TDZ to "
+        "generate the histogram consumed by this workflow (issue #810)."
+    )
+    lines.append("")
+    return "\n".join(lines)

@@ -1,0 +1,75 @@
+#!/usr/bin/env python3
+"""
+ABOUTME: Hydrodynamics module for managing hydrodynamic coefficients, wave spectra,
+and environmental loading calculations for offshore vessel response analysis.
+"""
+
+__version__ = "1.0.0"
+
+from .models import (
+    HydrodynamicMatrix,
+    VesselProperties,
+    WaveSpectrumType,
+    WaveParameters,
+    EnvironmentalConditions,
+)
+from .coefficient_database import CoefficientDatabase
+from .wave_spectra import WaveSpectra
+from .ocimf_loading import OCIMFLoading
+from .interpolator import CoefficientsInterpolator
+from .seakeeping import (
+    compute_response_spectrum,
+    spectral_moments,
+    significant_amplitude,
+    motion_exceedance,
+    operability_analysis,
+)
+from .sloshing import (
+    rectangular_tank_periods,
+    cylindrical_tank_periods,
+    horizontal_cylinder_periods,
+    oval_tank_periods,
+    api650_convective_period,
+    api650_annex_e,
+    AnnexEResult,
+    resonance_check,
+    screen_tank,
+    SloshingResult,
+)
+
+# Capytaine BEM solver (optional — requires capytaine-env)
+try:
+    from .capytaine import CapytaineSolver, run_bem_analysis, compute_rao
+    _HAS_CAPYTAINE = True
+except ImportError:
+    _HAS_CAPYTAINE = False
+
+__all__ = [
+    "HydrodynamicMatrix",
+    "VesselProperties",
+    "WaveSpectrumType",
+    "WaveParameters",
+    "EnvironmentalConditions",
+    "CoefficientDatabase",
+    "WaveSpectra",
+    "OCIMFLoading",
+    "CoefficientsInterpolator",
+    "compute_response_spectrum",
+    "spectral_moments",
+    "significant_amplitude",
+    "motion_exceedance",
+    "operability_analysis",
+    "rectangular_tank_periods",
+    "cylindrical_tank_periods",
+    "horizontal_cylinder_periods",
+    "oval_tank_periods",
+    "api650_convective_period",
+    "api650_annex_e",
+    "AnnexEResult",
+    "resonance_check",
+    "screen_tank",
+    "SloshingResult",
+]
+
+if _HAS_CAPYTAINE:
+    __all__ += ["CapytaineSolver", "run_bem_analysis", "compute_rao"]

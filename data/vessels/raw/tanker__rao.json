@@ -1,0 +1,225 @@
+{
+  "scope": "tanker",
+  "layer": "rao",
+  "coverage_note": null,
+  "verdict": {
+    "physically_plausible": true,
+    "fabrication_suspected": false,
+    "citations_check": "thin",
+    "summary": "All 4 tanker RAO records are physically plausible and traceable to real sources; no fabricated numbers found. KVLCC2 geometry verified exactly (Lpp 320 m, beam 58 m, draft 20.8 m, Cb 0.810, depth 30 m) against MOERI/ResearchGate; displacement claimed 312738 m3 vs sourced ~312622 m3 (0.04% diff, rounding). KVLCC2 uncertainty figures (heave <3%, pitch <1%) confirmed in the real Brodogradnja 71(1) 2020 paper (doi:10.21278/brod71105). L01 Default vessel confirmed as a real Orcina example (103 m tanker, 400 m water depth, NMIWave diffraction, 24 periods / 9 headings) - the source even contains beam=15.95 m, draft=6.66 m, periods and headings that the dataset conservatively left as gaps rather than inventing. OTRC turret-moored FPSO (1:60, Texas A&M) and 138000 m3 membrane LNG carrier (OMAE2010-20077, four tanks, sloshing-roll coupling) both verified as real, on-topic citations. Hard numbers are uniformly either cited-and-verified or correctly flagged estimated/gap. Citations rated thin (not solid) because: (1) the L01 citation URL is BROKEN/WRONG - it points to L01-Default-vessel.pdf with hyphens, which resolves to a generic example index, while the real document is at .../L01%20Default%20vessel.pdf with spaces; (2) the KVLCC2 record conflates the full-scale 320 m hull geometry with the 1:62 model-test benchmark that the uncertainty paper actually describes (186 m full-scale equivalent), so the two citation groups describe slightly different objects; (3) several records lean on single paywalled/secondary citations for the RAO claims.",
+    "flagged_records": [
+      {
+        "name": "OrcaWave/OrcaFlex L01 Default Vessel (103 m tanker)",
+        "issue": "Broken citation URL: cited https://www.orcina.com/.../L01-Default-vessel.pdf (hyphens) does not resolve to the vessel doc; correct URL uses spaces (L01%20Default%20vessel.pdf). Content itself is accurate (103 m, 400 m depth, NMIWave). Note source also publishes beam=15.95 m, draft=6.66 m, 24 periods, 9 headings, all left as gap - conservative, not fabricated."
+      },
+      {
+        "name": "KVLCC2 (KRISO Very Large Crude Carrier 2)",
+        "issue": "Geometry (full-scale 320 m KVLCC2) and the RAO/uncertainty benchmark (a 1:62 model = ~186 m full-scale per the Brodogradnja paper) are conflated under one record; the two cited sources describe slightly different objects. Displacement 312738 m3 vs sourced ~312622 m3 (negligible 0.04% rounding diff). radii_of_gyration correctly marked estimated."
+      }
+    ]
+  },
+  "records": [
+    {
+      "name": "OrcaWave/OrcaFlex L01 Default Vessel (103 m tanker)",
+      "vessel_type": "tanker (generic)",
+      "owner_operator": "Orcina Ltd (software sample vessel)",
+      "year_built": "gap",
+      "fields": {
+        "rao_kind": "computed (diffraction/radiation)",
+        "rao_source_solver": "NMIWave diffraction analysis recreated in OrcaWave, validated vs WAMIT",
+        "dataset_name": "OrcaFlex example L01 Default vessel (.owd/.owr + mesh.gdf)",
+        "dof_covered": "6 DOF displacement RAOs + load RAOs + Newman QTFs",
+        "headings": "gap",
+        "frequencies_periods": "gap",
+        "length_m": "103.0",
+        "beam_m": "gap",
+        "draft_m": "gap",
+        "water_depth_m": "400",
+        "mesh_panels": "216",
+        "radii_of_gyration": "gap",
+        "availability": "true"
+      },
+      "gaps": [
+        "headings",
+        "frequencies_periods",
+        "beam_m",
+        "draft_m",
+        "radii_of_gyration",
+        "year_built"
+      ],
+      "citations": [
+        {
+          "fields": [
+            "length_m",
+            "water_depth_m",
+            "mesh_panels",
+            "dof_covered",
+            "dataset_name",
+            "rao_kind",
+            "rao_source_solver"
+          ],
+          "source": "Orcina OrcaFlex example L01 Default vessel PDF",
+          "url": "https://www.orcina.com/wp-content/uploads/examples/l/l01/L01-Default-vessel.pdf",
+          "access": "brochure-pdf",
+          "access_date": "2026-06-18"
+        }
+      ]
+    },
+    {
+      "name": "KVLCC2 (KRISO Very Large Crude Carrier 2)",
+      "vessel_type": "VLCC (benchmark hull)",
+      "owner_operator": "KRISO/MOERI benchmark hull",
+      "year_built": "gap",
+      "fields": {
+        "rao_kind": "model_test and computed/CFD validation",
+        "dataset_name": "KVLCC2 seakeeping benchmark; RAO uncertainty benchmark Brodogradnja 71(1) 2020",
+        "dof_covered": "heave, pitch, roll (full 6-DOF in ML/RC papers)",
+        "headings": "head 180 deg and beam 90 deg; oblique studies exist",
+        "frequencies_periods": "regular waves one height three periods (cited); exact grid gap",
+        "model_scale": "1:62 (also 1:45.7, 1:58)",
+        "lpp_m": "320.0",
+        "beam_m": "58.0",
+        "draft_m": "20.8",
+        "depth_m": "30.0",
+        "block_coefficient_cb": "0.810",
+        "displacement_volume_m3": "312738",
+        "rao_uncertainty": "heave under 3 pct, pitch under 1 pct at 95 pct CL",
+        "radii_of_gyration": "estimated:kyy approx 0.25 Lpp standard pitch-gyradius rule",
+        "availability": "true"
+      },
+      "gaps": [
+        "frequencies_periods exact grid",
+        "radii_of_gyration measured",
+        "year_built",
+        "exact numeric RAO ordinates"
+      ],
+      "citations": [
+        {
+          "fields": [
+            "lpp_m",
+            "beam_m",
+            "draft_m",
+            "block_coefficient_cb",
+            "displacement_volume_m3",
+            "depth_m"
+          ],
+          "source": "ResearchGate KVLCC2 geometrical-properties table; SIMMAN/MOERI cross-confirmed",
+          "url": "https://researchgate.net/figure/Geometrical-properties-of-KVLCC2_tbl1_308694255",
+          "access": "public",
+          "access_date": "2026-06-18"
+        },
+        {
+          "fields": [
+            "rao_kind",
+            "model_scale",
+            "headings",
+            "frequencies_periods",
+            "rao_uncertainty",
+            "dof_covered",
+            "dataset_name"
+          ],
+          "source": "Jang et al KVLCC2 seakeeping benchmark with uncertainty analysis Brodogradnja 71(1) 2020",
+          "url": "https://doi.org/10.21278/brod71105",
+          "access": "public",
+          "access_date": "2026-06-18"
+        }
+      ]
+    },
+    {
+      "name": "OTRC Turret-Moored FPSO (1:60 model)",
+      "vessel_type": "FPSO tanker-based floating production (benchmark model-test)",
+      "owner_operator": "Offshore Technology Research Center (Texas A&M)",
+      "year_built": "gap",
+      "fields": {
+        "rao_kind": "model_test",
+        "dataset_name": "OTRC turret-moored FPSO experiment (vessel/mooring/riser coupled benchmark)",
+        "dof_covered": "6 DOF absolute + relative motions + mooring forces; surge and heave RAOs published",
+        "headings": "head-sea regular swell + JONSWAP wind-sea at various angles, weathervaning turret",
+        "frequencies_periods": "wide wavelength range; multiple irregular sea states; exact grid gap",
+        "model_scale": "1:60",
+        "lpp_m": "gap",
+        "radii_of_gyration": "gap",
+        "availability": "true"
+      },
+      "gaps": [
+        "lpp_m",
+        "beam_m",
+        "draft_m",
+        "frequencies_periods exact grid",
+        "radii_of_gyration",
+        "year_built",
+        "exact numeric RAO ordinates"
+      ],
+      "citations": [
+        {
+          "fields": [
+            "rao_kind",
+            "dof_covered",
+            "headings",
+            "model_scale",
+            "dataset_name"
+          ],
+          "source": "Vessel/mooring/riser coupled dynamic analysis of turret-moored FPSO vs OTRC experiment",
+          "url": "https://www.academia.edu/36456073",
+          "access": "public",
+          "access_date": "2026-06-18"
+        }
+      ]
+    },
+    {
+      "name": "138000 m3 Membrane LNG Carrier (sloshing-coupled motion benchmark)",
+      "vessel_type": "LNG carrier (membrane, benchmark model-test)",
+      "owner_operator": "Academic/published benchmark (KAIST, Pusan Nat Univ)",
+      "year_built": "gap",
+      "fields": {
+        "rao_kind": "model_test and computed (potential-flow coupled with sloshing)",
+        "dataset_name": "138000 m3 LNG carrier four membrane tanks, motion + sloshing coupling (OMAE2010)",
+        "dof_covered": "6 DOF RAOs (optical sensors); roll and heave emphasized",
+        "headings": "head 180 deg and beam 90 deg; roll validated at 150 deg in one study",
+        "frequencies_periods": "regular waves; heave resonance about 11.6 s; exact grid gap",
+        "tank_filling_levels": "partially filled at multiple ratios (alters roll RAO)",
+        "model_scale": "tank models 1:70, 1:50, 1:30",
+        "lpp_m": "gap",
+        "radii_of_gyration": "gap",
+        "availability": "true"
+      },
+      "gaps": [
+        "lpp_m",
+        "beam_m",
+        "draft_m",
+        "frequencies_periods exact grid",
+        "radii_of_gyration",
+        "year_built",
+        "exact numeric RAO ordinates"
+      ],
+      "citations": [
+        {
+          "fields": [
+            "rao_kind",
+            "dataset_name",
+            "dof_covered",
+            "tank_filling_levels",
+            "headings"
+          ],
+          "source": "Coupling Effects Between Tank Sloshing and Motions of a LNG Carrier OMAE2010 ASME",
+          "url": "https://asmedigitalcollection.asme.org/OMAE/proceedings-abstract/OMAE2010/49095/75/349161",
+          "access": "paywalled",
+          "access_date": "2026-06-18"
+        },
+        {
+          "fields": [
+            "frequencies_periods",
+            "headings",
+            "dof_covered"
+          ],
+          "source": "Effects of LNG-tank sloshing on global motions of FLNG, Int J Naval Arch Ocean Eng",
+          "url": "https://www.sciencedirect.com/science/article/pii/S2092678216306148",
+          "access": "public",
+          "access_date": "2026-06-18"
+        }
+      ]
+    }
+  ],
+  "collected": "2026-06-18",
+  "method": "vessel-db-research workflow wf_1207d074-87f"
+}

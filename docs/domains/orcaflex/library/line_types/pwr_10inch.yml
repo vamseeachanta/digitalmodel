@@ -1,0 +1,15 @@
+# PWR_10inch - Library Component
+# Category: line_types
+# Generated: 2026-01-19 08:11:32
+# Description: Pliant wave riser configuration
+# NOTE: No section header - properties only for IncludeFile
+OD: 0.2731
+ID: 0.2461
+MassPerUnitLength: 80.5
+EA: 785000000.0
+CompressionIsLimited: Yes
+EI:
+- 1850000.0
+- ~
+GJ: 0
+PoissonRatio: 0.3

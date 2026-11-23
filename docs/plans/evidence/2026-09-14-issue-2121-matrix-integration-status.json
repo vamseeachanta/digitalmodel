@@ -1,0 +1,35 @@
+{
+  "issue": "https://github.com/vamseeachanta/digitalmodel/issues/2121",
+  "status": "DRAFT_PLAN; Claude exact-current review pending provider quota availability",
+  "authorization": "Standing lifecycle authority from explicit user message2026-09-14; no routine stage approval requested",
+  "plan_sha256": "8649cf0d19dd9f36751172b18a6035cf966d4f1e2307330bc6e8daf977f1e64f",
+  "canonical_matrix": "examples/ansys/analysis-evidence/manifest.json",
+  "dataset_id": "ansys-retained-evidence",
+  "observed": {
+    "new_reusable_rows": 0,
+    "cylinder_cases": 0,
+    "qualified": 0,
+    "computed_diagnostic": 88,
+    "revision": "r1",
+    "native_cylinder_attempts": 0,
+    "responses": 94,
+    "failed_null": 6,
+    "cases": 8
+  },
+  "next_revision_target": {
+    "new_cylinder_responses": 256,
+    "qualified": 0,
+    "responses": 350,
+    "initial_new_usable_native_values": "null",
+    "cases": 12
+  },
+  "codex_consistency": "MINOR; three clarifications applied inline after factual schema check; not a Claude review substitute",
+  "claude_review": "NOT_PERFORMED for this plan; known API429 quota blocks provider availability",
+  "evidence": "2026-09-14-issue-2121-matrix-discovery-plan-check.json",
+  "change_disposition": [
+    "Derived hashes removed before rebuilding; preserve historical row payloads and recomputed hashes",
+    "Pending native rows use unverified kind and retained preparation evidence",
+    "Existing resolved-finding justification and live-evidence gate retained"
+  ],
+  "implementation": "Not started; existing matrix and frozen solver artifacts unchanged"
+}

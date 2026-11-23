@@ -1,0 +1,24 @@
+{
+  "scope": "Static plan/report browser and source verification",
+  "artifacts": [
+    {
+      "path": "docs/reports/2026-09-12-padeye-pressure-preparation.html",
+      "sha256": "7b65cba5839cb8e7d9abf5ef79145aee00e604c53cecf2b31390cdfc97022a2c",
+      "http_status": 200,
+      "headings": 7,
+      "tables": 4,
+      "local_links_verified": true,
+      "console_page_errors": [],
+      "horizontal_overflow": false,
+      "screenshot": "2026-09-12-padeye-pressure-preparation.png"
+    }
+  ],
+  "visual_inspection": "PASS: full-page screenshot reviewed; mesh, table captions and limitations legible",
+  "assets": [
+    {
+      "path": "docs/reports/assets/2026-09-12-padeye-pressure-native-mesh.svg",
+      "sha256": "7b86e647b49b8dfe23ba280a48f92e643d2db02caae2ade91c08be05d40619d1",
+      "derivation": "matplotlib from corrected native CDB; trailing SVG whitespace removed"
+    }
+  ]
+}

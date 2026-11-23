@@ -1,0 +1,50 @@
+{
+  "demo_id": "demo_02",
+  "git_sha": "e78536dc09b4ab28180d795b7dd31430b5430a57",
+  "input_ref": "/mnt/local-analysis/.worktrees/dm-gtm-demo02/examples/demos/gtm/inputs/demo_02_wall_thickness.yml",
+  "n_safe": 48,
+  "n_unsafe": 24,
+  "resolved_config": {
+    "code_ref": "DNV-ST-F101 (2021) / API RP 1111 (2015) / PD 8010-2 (2015)",
+    "codes": [
+      "DNV-ST-F101",
+      "API RP 1111",
+      "PD 8010-2"
+    ],
+    "corrosion_allowance_m": 0.001,
+    "demo_id": "demo_02",
+    "design_codes": [
+      "DNV-ST-F101",
+      "API-RP-1111",
+      "PD-8010-2"
+    ],
+    "find_min_bounds_m": [
+      0.003,
+      0.06
+    ],
+    "find_min_tol_m": 0.0001,
+    "grade": "X65",
+    "internal_pressures_mpa": [
+      10,
+      15,
+      20,
+      25
+    ],
+    "safety_class": "MEDIUM",
+    "sizes": [
+      "6\"",
+      "8\"",
+      "10\"",
+      "12\"",
+      "16\"",
+      "20\""
+    ],
+    "smts_pa": 531000000.0,
+    "smys_pa": 448000000.0,
+    "source_path": "/mnt/local-analysis/.worktrees/dm-gtm-demo02/examples/demos/gtm/inputs/demo_02_wall_thickness.yml",
+    "water_depth_m": 500.0
+  },
+  "run_id": "baseline",
+  "total_cases": 72,
+  "utc": "2026-06-01T00:53:54.386658+00:00"
+}

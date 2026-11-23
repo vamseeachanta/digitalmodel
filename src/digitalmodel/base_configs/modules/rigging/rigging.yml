@@ -1,0 +1,102 @@
+basename: rigging
+
+default:
+  Constants:
+    g: 9.81
+  units:
+    verticalDistance: m
+    declinationAngle: deg with vertical
+    Temperature: deg F
+    Pressure: psi
+    EffectiveTension: kN
+    BendingMoment: kNm
+    YieldStrength: psi
+    E: psi
+    NominalID: inch
+    NominalOD: inch
+    NominalWT: inch
+    Rho: kg/m3
+    MassPerUnitLength: kg/m
+    WeightPerUnitLength: N/m
+    SoilStiffness: kN/m/m
+    BuoyancyCoverage: Percentage
+  log_level: DEBUG
+  Analysis:
+    rigging: True
+
+  config:
+    overwrite:
+      output: True
+    cfg_sensitivities: False
+
+as_is_commands:
+  BaseFile: __03_add_rigging.yml
+  Shapes:
+    Deleted:
+      - AFT Crane Pedestal
+      - Aft crane radius
+      - Aft crane radius range
+
+structure:
+  type: 6DBuoy
+  name: 10ksi Production Manifold Primary Buoy - Splash Zone
+
+crane:
+  hook: 
+    weight: 150
+
+  pedestal: 
+    x: -14.21
+    y: 11.92
+    z: 12.5
+
+  radius: 
+    name: Main crane radius range1
+    value: 26
+    OuterDiameter: NULL
+    InnerDiameter: NULL
+
+  wire:
+    azimuth: 90
+    category: wire
+    subcategory: 6x36
+    part_number: xxx
+    length: 100
+    wll_mt: 6.5
+  
+
+rigging:
+  connections: NULL
+  groups:
+    - label: uta1_clump_weight
+      elements:
+      - category: shackle
+        subcategory: G2100
+        part_number: 2038614
+        wll_mt: 25
+      - category: sling
+        subcategory: polyester_endless_round
+        part_number: 1500
+        length: 4
+        wll_mt: 5
+      - category: shackle
+        subcategory: G2130
+        part_number: 1019533
+        wll_mt: 6.5
+
+structure:
+  type: 6DBuoy
+  name: 10ksi Production Manifold mudmat - Splash Zone
+  padeyes:
+    - x: -1.1938
+      y: -3.0861
+      z:  6.4067
+    - x: -1.1938
+      y:  3.0861
+      z:  6.4067
+    - x:  1.1938
+      y:  3.0861
+      z:  6.4067
+    - x:  1.1938
+      y: -3.0861
+      z:  6.4067

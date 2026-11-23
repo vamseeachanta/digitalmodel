@@ -1,0 +1,23 @@
+id: pe-2026-05-08
+date: "2026-05-08"
+slug: pe-problem-of-the-day-5-8-2026
+source_url: https://app.collide.io/posts/pe-problem-of-the-day-5-8-2026
+title: "PE Problem of the Day 5/8/2026 — walking-beam component"
+posted_by: Yogashri Pradhan
+tags: [production, upstream, equipment, field-service]
+type: conceptual
+
+statement: >
+  On a rod pump (pumpjack), what is the curved structural component at the front of the walking beam that supports the bridle connecting the beam to the polished rod?
+
+find:
+  - "Name the component"
+
+solution:
+  method: "Petroleum-engineering concept recall (no calculation)."
+  answer: "The horsehead (horse head)."
+  confidence: high
+  solved_by: "petroleum-engineering domain knowledge (Deckhand wells-subsurface pack / Claude API solver)"
+
+# Knowledge dot: the concept lives in llm-wiki (Deckhand wells-subsurface pack source).
+wiki_concept: wikis/drilling-engineering/wiki/concepts/sucker-rod-pumping-overview.md  # surface unit / horsehead

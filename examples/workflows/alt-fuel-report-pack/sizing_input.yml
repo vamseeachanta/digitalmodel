@@ -1,0 +1,44 @@
+# Alternative-fuel ship sizing -> report_pack demo, step 1 of 2: the
+# trade-study run. Synthetic ~40k DWT bulker-like LH2 concept, fully
+# round-number public data (no client, vessel or project identifiers);
+# the single-passage numbers are hand-verified in
+# tests/naval_architecture/test_alt_fuel_ship_sizing.py.
+#
+# The route is a voyage profile: 2000 nm at 12 kn, a 10-day port dwell
+# (BOG accrues against inventory with zero burn), then 2000 nm back.
+#
+# Run: python -m digitalmodel examples/workflows/alt-fuel-report-pack/sizing_input.yml
+# Outputs (under data/): sizing_input_fuel_chain_summary.csv,
+# sizing_input_voyage_legs.csv, sizing_input_trade_study.csv -- consumed by
+# input.yml (the report_pack step).
+
+basename: alt_fuel_ship_sizing
+
+alt_fuel_ship_sizing:
+  route:
+    service_speed_kn: 12.0
+    legs:
+      - {type: sea, distance_nm: 2000.0, speed_kn: 12.0}
+      - {type: port, dwell_h: 240.0}
+      - {type: sea, distance_nm: 2000.0, speed_kn: 12.0}
+  powering:
+    shaft_power_kw: 4750.0      # input from the resistance/propulsion lane
+    hotel_load_kw: 500.0
+  efficiency:
+    fuel_cell_lhv: 0.50
+    electric_drivetrain: 0.95
+  fuel:
+    preset: lh2
+    margin_fraction: 0.10
+    lhv_mj_per_kg: 120.0        # round-number override (published: 119.96)
+  tank:
+    ullage_fraction: 0.08
+    length_to_diameter: 5.0
+    insulation_heat_flux_w_per_m2: 1.5
+    bog_handling: consumed
+  trade_study:
+    speeds_kn: [10.0, 12.0, 14.0]
+    wind_assist: [false]
+  economics:
+    fuel_price_per_kg: 6.0
+  output_dir: data

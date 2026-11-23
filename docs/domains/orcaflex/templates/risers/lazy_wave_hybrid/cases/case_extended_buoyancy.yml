@@ -1,0 +1,4 @@
+# Case: Extended Buoyancy Lazy Wave Riser
+# Combines base model with extended buoyancy variation
+BaseFile: ../base/lwr_base.yml
+IncludeFile: ../variations/extended_buoyancy.yml

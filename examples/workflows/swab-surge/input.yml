@@ -1,0 +1,34 @@
+basename: swab_surge
+
+# Swab/surge tripping-pressure screen (issue #1036). Closed-form, license-free:
+#   uv run python -m digitalmodel examples/workflows/swab-surge/input.yml
+# Swabbing (pulling out) lowers BHP -> kick risk; surging (running in) raises
+# BHP -> loss/fracture risk. Burkhardt clinging-constant + Bingham annular
+# friction (API RP 13D). Screening tool; transient surge model is a follow-up.
+swab_surge:
+  case:
+    id: registry_swab_surge
+    description: Swab/surge for an 8.5 inch hole section, closed-ended pipe
+
+  section:
+    pipe_od: 5.0
+    pipe_id: 4.276
+    hole_diameter: 8.5
+    mud_weight: 12.0          # static mud weight, ppg
+    tvd: 12000.0              # ft
+    plastic_viscosity: 20.0   # cp
+    yield_point: 15.0         # lbf/100 ft^2
+    clinging_constant: 0.45   # Burkhardt Kc
+    pipe_config: closed       # closed | open
+
+  trip:
+    trip_speed_ft_min: 90.0   # tripping speed to evaluate
+
+  # Safe drilling window (from a pore-pressure / frac assessment, e.g. #1034).
+  window:
+    pore_pressure_emw_ppg: 11.5
+    fracture_emw_ppg: 13.0
+
+  outputs:
+    directory: results/swab_surge
+    summary_json: swab_surge_summary.json

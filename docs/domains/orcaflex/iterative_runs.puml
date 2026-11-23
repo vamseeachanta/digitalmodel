@@ -1,0 +1,93 @@
+@startuml iterative_runs
+scale 3
+skinparam titleBorderRoundCorner 15
+skinparam titleBorderThickness 2
+skinparam titleBorderColor red
+skinparam titleBackgroundColor Tomato
+
+title Structure Installation \n OrcaFlex
+
+start
+
+    note right
+        Objective: To streamline (and automate) structure installation analysis. 
+        Examples are:
+         - mudmat installation
+         - etc
+    end note
+
+
+    partition "Vessel Files" {
+            note right
+                Vessel Definition
+            end note
+        :Definition - Vessel;
+            note right
+                If .dat file, convert to .yml
+            end note
+
+        :Delete Unwanted Structures;
+            note right
+                ?
+            end note
+
+        :Definition - Crane Radius;
+            note right
+                example filenames: 
+                    __06_uth2_splz.yml
+                    __07_adjust_main_crane.yml
+            end note
+
+    }
+
+    partition "Add Rigging" {
+        :Add Rigging
+            save as "_filename.yml";
+            note right
+                Top wire:
+                    1 m
+                    define at crane radius & azimuth
+                Winch:
+                    beween top and bottom wire
+                Bottom wire
+                    crane hook?
+                    define 25 m length
+                masterlink
+                slings
+                    correct length and orientation
+                    fix bottom to vessel
+                
+                
+            end note
+
+    }
+
+    partition "Add structure" {
+        :Add structures 
+            Save as "_filename_nn";
+            note right
+                add mudmat and structure.
+                use suffix a, b, c to indicate varying models
+            end note
+        
+        : Connect rigging EndB to structure;
+
+    }
+
+    partition "Add shapes" {
+        :Add ancillary equipment
+            Save as "_filename_nn";
+            note right
+                Padeyes, shackles etc.
+            end note
+
+    }
+
+stop
+
+footer
+%date("yyyy.MM.dd' at 'HH:mm")
+%filename()
+end footer
+
+@enduml

@@ -1,0 +1,19 @@
+{
+  "owners": {
+    "tests/solvers/ghs/test_boundaries.py": [
+      "solver-smoke"
+    ],
+    "tests/solvers/ghs/test_comparison.py": [
+      "solver-smoke"
+    ],
+    "tests/solvers/ghs/test_contracts.py": [
+      "solver-smoke"
+    ],
+    "tests/solvers/ghs/test_runner.py": [
+      "solver-smoke"
+    ]
+  },
+  "only_change": "Add tests/solvers/ghs/ to existing solver-smoke test domain",
+  "existing_roots_preserved": true,
+  "workflow_registry_activated": false
+}

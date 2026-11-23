@@ -1,0 +1,12 @@
+# Input Parameters for Parametric Analysis
+# Source: K03 15MW semi-sub FOWT.yml
+# Generated: 2026-01-18 22:18:32
+
+current_speed: 0
+wind_speed: 17.1
+water_density: 1.025
+stage_durations:
+- 12
+- 150
+wave_direction: 180
+

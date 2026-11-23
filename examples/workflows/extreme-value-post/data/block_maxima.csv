@@ -1,0 +1,41 @@
+# Synthetic block-maxima dataset for offline extreme-value post-processing.
+#
+# Each row is the maximum effective tension (kN) observed in one block
+# (here: one storm year) of an OrcaFlex dynamic mooring/riser simulation
+# campaign. Generated synthetically (Gumbel-like) so the demo is fully
+# offline and license-free; values are illustrative, not from any real
+# vessel or client model.
+#
+# block = sequential block index (e.g. storm-year number)
+# effective_tension_kN = block maximum of effective tension
+block,effective_tension_kN
+1,1842.6
+2,1798.3
+3,1925.1
+4,1880.7
+5,2010.4
+6,1764.9
+7,1956.2
+8,1872.0
+9,2088.5
+10,1813.7
+11,1990.8
+12,1748.5
+13,1903.6
+14,2155.9
+15,1837.2
+16,1921.4
+17,1859.8
+18,2042.3
+19,1786.1
+20,1968.7
+21,1895.0
+22,2110.6
+23,1822.9
+24,1944.5
+25,1877.3
+26,2023.8
+27,1801.2
+28,1933.1
+29,2071.4
+30,1866.7

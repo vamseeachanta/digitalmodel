@@ -1,0 +1,61 @@
+{
+  "schema": "review-packet/1",
+  "created": "2026-10-10T12:56:21+00:00",
+  "git_head": "eb8526563343f022dc3dfccc50600b2b4097eb9c",
+  "digest_domain": "raw-bytes",
+  "packet_path": "/tmp/fz2338-packet-r3.md",
+  "packet_bytes": 133884,
+  "packet_sha256": "abf969f9ac9032bba3d3f5072a413391f267ab4ac5ac864932b93ade341a8511",
+  "files": [
+    {
+      "path": "src/digitalmodel/asset_integrity/dnv_rp_f101.py",
+      "sha256": "add69d9bfd4de9df25f55bc99fb0e08432288caa1ea4ee1104a723ea4cb78ccb",
+      "bytes": 26713
+    },
+    {
+      "path": "src/digitalmodel/asset_integrity/pipeline_defect_screen.py",
+      "sha256": "03f92e926e4c84317e3f1c49dae734eee0271842cdffa2e161ea46c4f159bb2f",
+      "bytes": 14158
+    },
+    {
+      "path": "src/digitalmodel/asset_integrity/pipeline_defect_screen_inputs.py",
+      "sha256": "875626eb053a5333f082ee5c83486a048dee77dcc102e6bdbeed4e5e86aa7f1c",
+      "bytes": 2677
+    },
+    {
+      "path": "tests/asset_integrity/test_dnv_rp_f101.py",
+      "sha256": "cf5c985990f9113d46a33e739994f87c444d1fb95a9778fb3de78a35647c7090",
+      "bytes": 18801
+    },
+    {
+      "path": "tests/asset_integrity/test_pipeline_defect_screen_review.py",
+      "sha256": "cf2f0172efd095bb481b616e5e1a173c48c71d57d029e28d26dab4e20b8791cc",
+      "bytes": 6638
+    },
+    {
+      "path": "docs/domains/asset-integrity/ffs-validation-record-2026-06-27.md",
+      "sha256": "6bb06c25a97de84c05c728f78bb186cf0949d5d7abc8b585c203b5fd1c554fd5",
+      "bytes": 6323
+    },
+    {
+      "path": "src/digitalmodel/asset_integrity/data/ffs_offering_catalog.yml",
+      "sha256": "c916a9842ddb67d2275042ccb729488f09f08d6ae0c219214b19375c2050f957",
+      "bytes": 35893
+    },
+    {
+      "path": "examples/workflows/pipeline-corroded-defect-screen/README.md",
+      "sha256": "0f07ce3e411afdd92609328649600d18cb345bb3dcdb9ab7326e5f8324f2130a",
+      "bytes": 3140
+    },
+    {
+      "path": "examples/workflows/pipeline-corroded-defect-screen/input.yml",
+      "sha256": "5da6cd31b788a1071e4016e4320c1834bb2eec99dce34701a0735a6a75aa7502",
+      "bytes": 900
+    },
+    {
+      "path": "examples/workflows/pipeline-corroded-defect-screen/synthetic.yml",
+      "sha256": "757e5f95cde8bc80e82b657542e1571c84d7bd0ac065344912498a861b1de1b8",
+      "bytes": 847
+    }
+  ]
+}

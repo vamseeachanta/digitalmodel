@@ -1,0 +1,399 @@
+schema_version: digitalmodel-riser-host-motion/v3
+contract_version: 3.0.0-draft.1
+component_id: host_motion_component
+authority_issue: https://github.com/vamseeachanta/digitalmodel/issues/1602
+design: ../superpowers/specs/2026-07-18-riser-host-diffraction-monitoring-design.html
+scope: public_rig_to_host_to_diffraction_to_RAO_to_riser_core_tracer
+owners:
+  floating_host_source:
+    issue: https://github.com/vamseeachanta/worldenergydata/issues/1050
+    parent: https://github.com/vamseeachanta/worldenergydata/issues/698
+    outputs: [public_floater_source_record]
+  floating_host_identity:
+    issue: https://github.com/vamseeachanta/digitalmodel/issues/1618
+    parent: https://github.com/vamseeachanta/digitalmodel/issues/1203
+    outputs: [floating_host_identity_contract, reviewed_host_crosswalk]
+  hydrodynamic_response:
+    issue: https://github.com/vamseeachanta/digitalmodel/issues/1619
+    parent: https://github.com/vamseeachanta/digitalmodel/issues/1203
+    outputs: [hydrodynamic_response_contract, diffraction_execution_evidence]
+  normalized_ssot:
+    issue: https://github.com/vamseeachanta/digitalmodel/issues/1603
+    amendment: reference_producer_owned_host_and_response_commitments_without_redefinition
+  drilling_workflow:
+    issue: https://github.com/vamseeachanta/digitalmodel/issues/811
+    amendment: select_exactly_one_reviewed_rig_host_pair_and_preserve_it
+  analysis_semantics:
+    issue: https://github.com/vamseeachanta/digitalmodel/issues/138
+    amendment: own_vessel_motion_boundary_contract_and_riser_coupling_semantics
+  licensed_execution:
+    issue: https://github.com/vamseeachanta/deckhand/issues/568
+    amendment: preserve_host_response_motion_IDs_and_hashes_without_interpretation
+  public_release:
+    issue: https://github.com/vamseeachanta/digitalmodel/issues/1604
+    amendment: publish_approved_lineage_domain_validation_and_fidelity_evidence
+interface_envelopes:
+  public_floater_source_record:
+    producer: floating_host_source
+    consumers: [floating_host_identity]
+    minimum_bindings: [source_record_schema_version, rig_source_id,
+      canonical_source_URL_sha256, source_capture_date,
+      source_license_id, redistribution_status, source_content_sha256,
+      aliases_source_evidence_sha256, physical_identity_evidence_sha256,
+      loading_condition_source_evidence_sha256,
+      host_particulars_source_evidence_sha256,
+      mass_properties_source_evidence_sha256, public_eligibility_status,
+      public_eligibility_evidence_sha256, ambiguity_disposition_sha256,
+      rig_source_commitment_sha256]
+  floating_host_identity:
+    producer: floating_host_identity
+    consumers: [normalized_ssot, drilling_workflow, hydrodynamic_response,
+      analysis_semantics, public_release]
+    minimum_bindings: [schema_version, floating_host_id, rig_source_id,
+      rig_source_commitment_sha256, physical_vessel_id, hull_id,
+      hull_geometry_sha256, loading_condition_id, loading_condition_sha256,
+      host_particulars_sha256, mass_properties_sha256,
+      aliases_evidence_sha256, identity_resolution_evidence_sha256,
+      units_coordinate_contract_sha256, confidence_class,
+      source_license_id, redistribution_status,
+      public_eligibility_status, public_eligibility_evidence_sha256,
+      ambiguity_disposition_sha256, floating_host_identity_envelope_sha256]
+  hydrodynamic_response:
+    producer: hydrodynamic_response
+    consumers: [normalized_ssot, analysis_semantics, public_release]
+    minimum_bindings: [schema_version, hydrodynamic_response_id,
+      floating_host_id, floating_host_identity_envelope_sha256,
+      physical_vessel_id, hull_id, hull_geometry_sha256,
+      loading_condition_id, loading_condition_sha256,
+      host_particulars_sha256, mass_properties_sha256,
+      diffraction_spec_sha256, geometry_mesh_sha256,
+      diffraction_solver_target_id, diffraction_adapter_contract_sha256,
+      diffraction_projection_sha256, diffraction_adapter_version,
+      diffraction_run_configuration_sha256,
+      diffraction_execution_evidence_sha256, ordered_DOF_contract_sha256,
+      frequency_heading_grid_sha256, complex_RAO_payload_sha256,
+      hydrodynamic_matrix_payload_sha256, unit_contract_sha256,
+      phase_sign_heading_convention_sha256,
+      coordinate_frame_reference_point_sha256, water_properties_sha256,
+      source_evidence_sha256, validation_contract_sha256,
+      validation_evidence_sha256, validation_status,
+      hydrodynamic_usable_domain_sha256,
+      fidelity_class, source_class, source_capture_commitment_sha256,
+      source_license_id, confidentiality_status,
+      redistribution_status, public_eligibility_status,
+      public_eligibility_evidence_sha256, withheld_disposition_sha256,
+      hydrodynamic_response_envelope_sha256]
+  vessel_motion_boundary:
+    producer: analysis_semantics
+    consumers: [drilling_workflow, normalized_ssot, licensed_execution,
+      public_release]
+    minimum_bindings: [schema_version, vessel_motion_boundary_id,
+      floating_host_id, loading_condition_id, case_id, case_sha256,
+      wave_case_sha256,
+      floating_host_identity_envelope_sha256, hydrodynamic_response_id,
+      hydrodynamic_response_envelope_sha256, complex_RAO_payload_sha256,
+      motion_boundary_contract_sha256,
+      phase_sign_heading_convention_sha256,
+      coordinate_frame_reference_point_sha256,
+      top_connection_frame_reference_sha256, rigid_body_transform_sha256,
+      rigid_body_transform_validation_evidence_sha256,
+      phase_time_basis_sha256, coupling_intent, boundary_payload_sha256,
+      coverage_status, hydrodynamic_usable_domain_sha256,
+      motion_boundary_usable_domain_sha256,
+      motion_domain_derivation_evidence_sha256,
+      unsupported_disposition_sha256, public_eligibility_status,
+      public_eligibility_evidence_sha256,
+      vessel_motion_boundary_envelope_sha256]
+envelope_commitment_rules:
+  public_floater_source_record:
+    commitment_field: rig_source_commitment_sha256
+    covers: every_minimum_binding_except_commitment_field
+    canonical_preimage_owner: floating_host_source
+  floating_host_identity:
+    commitment_field: floating_host_identity_envelope_sha256
+    covers: every_minimum_binding_except_commitment_field
+    canonical_preimage_owner: floating_host_identity
+  hydrodynamic_response:
+    commitment_field: hydrodynamic_response_envelope_sha256
+    covers: every_minimum_binding_except_commitment_field
+    canonical_preimage_owner: hydrodynamic_response
+  vessel_motion_boundary:
+    commitment_field: vessel_motion_boundary_envelope_sha256
+    covers: every_minimum_binding_except_commitment_field
+    canonical_preimage_owner: analysis_semantics
+  analysis_contract:
+    commitment_field: analysis_contract_envelope_sha256
+    covers: every_effective_minimum_binding_except_commitment_field
+    canonical_preimage_owner: analysis_semantics
+  drilling_analysis_request:
+    commitment_field: analysis_request_envelope_sha256
+    covers: every_effective_minimum_binding_except_commitment_field
+    canonical_preimage_owner: drilling_workflow
+  completion_workover_analysis_request:
+    commitment_field: analysis_request_envelope_sha256
+    covers: every_effective_minimum_binding_except_commitment_field
+    canonical_preimage_owner: analysis_semantics
+  deterministic_bundle:
+    commitment_field: bundle_sha256
+    covers: every_effective_minimum_binding_except_commitment_field
+    canonical_preimage_owner: normalized_ssot
+  logical_release:
+    commitment_field: logical_release_sha256
+    covers: every_effective_minimum_binding_except_commitment_field_including_all_v3_set_commitments
+    canonical_preimage_owner: public_release
+  HF_publication_receipt:
+    commitment_field: HF_publication_receipt_sha256
+    covers: every_effective_minimum_binding_except_commitment_field
+    canonical_preimage_owner: public_release
+  website_evidence:
+    commitment_field: website_evidence_sha256
+    covers: every_effective_minimum_binding_except_commitment_field
+    canonical_preimage_owner: website
+  program_closeout:
+    commitment_field: program_closeout_evidence_sha256
+    covers: every_effective_minimum_binding_except_commitment_field
+    canonical_preimage_owner: parent_closeout
+downstream_chain_fields: &downstream_chain_fields
+  [floating_host_id, loading_condition_id, hydrodynamic_response_id,
+   vessel_motion_boundary_id, floating_host_identity_envelope_sha256,
+   hydrodynamic_response_envelope_sha256,
+   vessel_motion_boundary_envelope_sha256]
+
+host_motion_route_union: &host_motion_route_union
+  discriminator: host_motion_applicability
+  allowed_values: [required, not_applicable]
+  required_branch:
+    required_fields: *downstream_chain_fields
+    forbidden_fields: [reviewed_disposition_sha256]
+  not_applicable_branch:
+    required_fields: [reviewed_disposition_sha256]
+    forbidden_fields: *downstream_chain_fields
+  exactly_one_branch: true
+  family_constraints:
+    drilling: required
+    completion: required_or_not_applicable
+    workover: required_or_not_applicable
+
+normalized_host_response_union: &normalized_host_response_union
+  discriminator: host_motion_applicability
+  allowed_values: [required, not_applicable]
+  required_branch:
+    required_fields: [floating_host_id, loading_condition_id,
+      floating_host_identity_envelope_sha256, hydrodynamic_response_id,
+      hydrodynamic_response_envelope_sha256]
+    forbidden_fields: [reviewed_disposition_sha256]
+  not_applicable_branch:
+    required_fields: [reviewed_disposition_sha256]
+    forbidden_fields: [floating_host_id, loading_condition_id,
+      floating_host_identity_envelope_sha256, hydrodynamic_response_id,
+      hydrodynamic_response_envelope_sha256]
+  family_constraints: {drilling: required,
+    completion: required_or_not_applicable, workover: required_or_not_applicable}
+  exactly_one_branch: true
+
+analysis_lineage_fields:
+  contract: &analysis_contract_lineage [analysis_contract_envelope_sha256]
+  selected_request: &selected_request_lineage [analysis_contract_envelope_sha256,
+    analysis_request_envelope_sha256]
+
+existing_envelope_extensions:
+  normalized_case:
+    always_required_fields: [wave_case_sha256]
+    discriminated_union: *normalized_host_response_union
+  analysis_contract: [analysis_contract_envelope_sha256]
+  drilling_analysis_request:
+    fixed_applicability: required
+    applicability_field_required: host_motion_applicability
+    always_required_fields: [wave_case_sha256,
+      analysis_contract_envelope_sha256, analysis_request_envelope_sha256]
+    required_fields: *downstream_chain_fields
+  completion_workover_analysis_request:
+    always_required_fields: [wave_case_sha256,
+      analysis_contract_envelope_sha256, analysis_request_envelope_sha256]
+    discriminated_union: *host_motion_route_union
+  deterministic_bundle:
+    always_required_fields: [wave_case_sha256]
+    lineage_fields: *selected_request_lineage
+    discriminated_union: *host_motion_route_union
+  execution_request:
+    always_required_fields: [wave_case_sha256]
+    lineage_fields: *selected_request_lineage
+    discriminated_union: *host_motion_route_union
+  execution_receipt:
+    always_required_fields: [wave_case_sha256]
+    lineage_fields: *selected_request_lineage
+    discriminated_union: *host_motion_route_union
+  engineering_result:
+    always_required_fields: [wave_case_sha256]
+    lineage_fields: *selected_request_lineage
+    discriminated_union: *host_motion_route_union
+  logical_release: [floating_host_identity_set_sha256,
+    hydrodynamic_response_set_sha256, hydrodynamic_response_values_set_sha256,
+    vessel_motion_boundary_set_sha256]
+  HF_publication_receipt: [floating_host_identity_set_sha256,
+    hydrodynamic_response_set_sha256, hydrodynamic_response_values_set_sha256,
+    vessel_motion_boundary_set_sha256]
+  website_evidence: [floating_host_identity_set_sha256,
+    hydrodynamic_response_set_sha256, hydrodynamic_response_values_set_sha256,
+    vessel_motion_boundary_set_sha256]
+  program_closeout: [floating_host_identity_set_sha256,
+    hydrodynamic_response_set_sha256, hydrodynamic_response_values_set_sha256,
+    vessel_motion_boundary_set_sha256]
+
+host_motion_binding:
+  drilling: required
+  completion: child_declared_required_or_not_applicable
+  workover: child_declared_required_or_not_applicable
+  not_applicable_requires: reviewed_disposition_sha256
+  downstream_rule: selected_union_branch_propagates_unchanged_through_result
+
+identity_chain:
+  order: [approved_public_riser_and_rig_source_commitments, floating_host,
+    physical_vessel_and_hull, loading_condition, normalized_configuration,
+    analysis_case_and_wave_case, hydrodynamic_response_and_complex_RAO,
+    vessel_motion_boundary, analysis_request, target_adapter_and_projection,
+    deterministic_bundle, execution_request, native_model, raw_payload,
+    execution_receipt, engineering_result, logical_release,
+    HF_commit_and_receipt, website_evidence]
+  rule: every_downstream_node_preserves_all_received_IDs_and_hashes
+
+milestone_DAG_extensions:
+  edges:
+    - floating_host_source_ready -> floating_host_identity_ready
+    - floating_host_identity_ready -> hydrodynamic_response_ready
+    - hydrodynamic_response_ready -> vessel_motion_boundary_ready
+    - analysis_contract_ready -> vessel_motion_boundary_ready
+    - vessel_motion_boundary_ready -> drilling_requests_ready
+  milestone_owners:
+    floating_host_source_ready: floating_host_source
+    floating_host_identity_ready: floating_host_identity
+    hydrodynamic_response_ready: hydrodynamic_response
+    vessel_motion_boundary_ready: analysis_semantics
+  conditional_route_rule: completion_and_workover_depend_on_motion_only_when_child_declares_required
+  deterministic_bundle_readiness_guards:
+    drilling: [drilling_requests_ready, vessel_motion_boundary_ready,
+      solver_adapter_contract_ready]
+    completion_or_workover_required: [completion_workover_requests_ready,
+      vessel_motion_boundary_ready, solver_adapter_contract_ready]
+    completion_or_workover_not_applicable: [completion_workover_requests_ready,
+      solver_adapter_contract_ready]
+  normalized_case_readiness_guards:
+    required: [source_ready, floating_host_identity_ready,
+      hydrodynamic_response_ready]
+    not_applicable: [source_ready]
+  guard_predicates:
+    completion_or_workover_not_applicable:
+      completion_workover_request_has_reviewed_disposition_sha256
+    normalized_case_not_applicable:
+      normalized_case_has_reviewed_disposition_sha256
+
+required_handoff_equalities:
+  - {from: analysis_contract, to: drilling_analysis_request, fields: *analysis_contract_lineage}
+  - {from: analysis_contract, to: completion_workover_analysis_request, fields: *analysis_contract_lineage}
+  - {from: normalized_case, to: drilling_analysis_request, fields: [case_id, case_sha256, wave_case_sha256]}
+  - {from: normalized_case, to: completion_workover_analysis_request, fields: [case_id, case_sha256, wave_case_sha256]}
+  - {from: public_floater_source_record, to: floating_host_identity,
+     fields: [rig_source_id, rig_source_commitment_sha256,
+       source_license_id, redistribution_status, public_eligibility_status,
+       public_eligibility_evidence_sha256, ambiguity_disposition_sha256]}
+  - {from: floating_host_identity, to: hydrodynamic_response,
+     fields: [floating_host_id, floating_host_identity_envelope_sha256,
+       physical_vessel_id, hull_id, hull_geometry_sha256,
+       loading_condition_id, loading_condition_sha256,
+       host_particulars_sha256, mass_properties_sha256]}
+  - {from: floating_host_identity, to: normalized_case,
+     when: host_motion_applicability_equals_required,
+     fields: [floating_host_id, floating_host_identity_envelope_sha256,
+       loading_condition_id]}
+  - {from: hydrodynamic_response, to: normalized_case,
+     when: host_motion_applicability_equals_required,
+     fields: [hydrodynamic_response_id, hydrodynamic_response_envelope_sha256]}
+  - {from: normalized_case, to: vessel_motion_boundary,
+     when: host_motion_applicability_equals_required,
+     fields: [case_id, case_sha256, wave_case_sha256,
+       floating_host_identity_envelope_sha256,
+       hydrodynamic_response_envelope_sha256]}
+  - {from: hydrodynamic_response, to: vessel_motion_boundary,
+     fields: [floating_host_id, loading_condition_id,
+       floating_host_identity_envelope_sha256, hydrodynamic_response_id,
+       hydrodynamic_response_envelope_sha256, complex_RAO_payload_sha256,
+       phase_sign_heading_convention_sha256,
+       coordinate_frame_reference_point_sha256,
+       hydrodynamic_usable_domain_sha256]}
+  - {from: vessel_motion_boundary, to: drilling_analysis_request,
+     fields: [case_id, case_sha256, wave_case_sha256, floating_host_id,
+       loading_condition_id, hydrodynamic_response_id,
+       vessel_motion_boundary_id, floating_host_identity_envelope_sha256,
+       hydrodynamic_response_envelope_sha256,
+       vessel_motion_boundary_envelope_sha256]}
+  - {from: vessel_motion_boundary, to: completion_workover_analysis_request,
+     when: host_motion_applicability_equals_required,
+     fields: [case_id, case_sha256, wave_case_sha256, floating_host_id,
+       loading_condition_id, hydrodynamic_response_id,
+       vessel_motion_boundary_id, floating_host_identity_envelope_sha256,
+       hydrodynamic_response_envelope_sha256,
+       vessel_motion_boundary_envelope_sha256]}
+  - {from: drilling_analysis_request, to: deterministic_bundle,
+     fields: *downstream_chain_fields}
+  - {from: drilling_analysis_request, to: deterministic_bundle,
+     fields: *selected_request_lineage}
+  - {from: completion_workover_analysis_request, to: deterministic_bundle,
+     fields_ref: route_union_handoff_expansion.selected_branch_by_discriminator}
+  - {from: completion_workover_analysis_request, to: deterministic_bundle,
+     fields: *selected_request_lineage}
+  - {from: deterministic_bundle, to: execution_request,
+     fields_ref: route_union_handoff_expansion.selected_branch_by_discriminator}
+  - {from: deterministic_bundle, to: execution_request,
+     fields: *selected_request_lineage}
+  - {from: execution_request, to: execution_receipt,
+     fields_ref: route_union_handoff_expansion.selected_branch_by_discriminator}
+  - {from: execution_request, to: execution_receipt,
+     fields: *selected_request_lineage}
+  - {from: execution_receipt, to: engineering_result,
+     fields_ref: route_union_handoff_expansion.selected_branch_by_discriminator}
+  - {from: execution_receipt, to: engineering_result,
+     fields: *selected_request_lineage}
+  - {from: drilling_analysis_request, to: deterministic_bundle,
+     fields: [wave_case_sha256]}
+  - {from: completion_workover_analysis_request, to: deterministic_bundle,
+     fields: [wave_case_sha256]}
+  - {from: deterministic_bundle, to: execution_request,
+     fields: [wave_case_sha256]}
+  - {from: execution_request, to: execution_receipt,
+     fields: [wave_case_sha256]}
+  - {from: execution_receipt, to: engineering_result,
+     fields: [wave_case_sha256]}
+  - {from: logical_release, to: HF_publication_receipt,
+     fields: [logical_release_sha256, floating_host_identity_set_sha256,
+       hydrodynamic_response_set_sha256,
+       hydrodynamic_response_values_set_sha256,
+       vessel_motion_boundary_set_sha256]}
+  - {from: HF_publication_receipt, to: website_evidence,
+     fields: [logical_release_sha256, floating_host_identity_set_sha256,
+       hydrodynamic_response_set_sha256,
+       hydrodynamic_response_values_set_sha256,
+       vessel_motion_boundary_set_sha256]}
+  - {from: website_evidence, to: program_closeout,
+     fields: [logical_release_sha256, floating_host_identity_set_sha256,
+       hydrodynamic_response_set_sha256,
+       hydrodynamic_response_values_set_sha256,
+       vessel_motion_boundary_set_sha256]}
+  - {from: logical_release, to: program_closeout,
+     fields: [logical_release_sha256, floating_host_identity_set_sha256,
+       hydrodynamic_response_set_sha256,
+       hydrodynamic_response_values_set_sha256,
+       vessel_motion_boundary_set_sha256]}
+
+route_union_handoff_expansion:
+  required_branch_equalities: [host_motion_applicability,
+    floating_host_id, loading_condition_id, hydrodynamic_response_id,
+    vessel_motion_boundary_id, floating_host_identity_envelope_sha256,
+    hydrodynamic_response_envelope_sha256,
+    vessel_motion_boundary_envelope_sha256]
+  not_applicable_branch_equalities: [host_motion_applicability,
+    reviewed_disposition_sha256]
+  selected_branch_by_discriminator:
+    required_ref: route_union_handoff_expansion.required_branch_equalities
+    not_applicable_ref: route_union_handoff_expansion.not_applicable_branch_equalities
+  expansion_rule: selected_host_motion_route_union_branch_expands_by_discriminator
+  propagation_rule: discriminator_and_selected_branch_equalities_remain_unchanged_through_result

@@ -1,0 +1,260 @@
+"""Summary evidence regressions for the Claude review of issue 1633."""
+import importlib.util
+import json
+from pathlib import Path
+
+import pytest
+import yaml
+
+from digitalmodel.hydrodynamics.diffraction.multi_solver_comparator import MultiSolverComparator
+
+
+def load_module(tmp_path, monkeypatch):
+    path = Path(__file__).resolve().parents[3] / "scripts/benchmark/validate_owd_vs_spec.py"
+    spec = importlib.util.spec_from_file_location("summary_evidence_test", path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    monkeypatch.setattr(module, "L00_DIR", tmp_path)
+    monkeypatch.setattr(module, "CASES", {"2.7": {"description": "Synthetic case", "vessel_name": "Synthetic"}})
+    (tmp_path / "validation_config.yaml").write_text(
+        yaml.safe_dump({"cases": {"2.7": {"status": "pass", "notes": "r=1.0"}}}), encoding="utf-8")
+    return module
+
+
+def write_report(tmp_path, report):
+    directory = tmp_path / "2.7/benchmark"
+    directory.mkdir(parents=True)
+    (directory / "benchmark_report.json").write_text(json.dumps(report), encoding="utf-8")
+
+
+def report_fixture():
+    from digitalmodel.hydrodynamics.diffraction.multi_solver_comparator import ComparisonPolicy
+    dofs = ("surge", "sway", "heave", "roll", "pitch", "yaw")
+    return {"comparison_status": "DECIDED", "overall_consensus": "FULL",
+            "comparison_policy": ComparisonPolicy(.025, 5e-11, .9801, "Synthetic test budget").to_dict(),
+            "consensus_by_dof": {d.upper(): {"mean_pairwise_correlation": 1.0} for d in dofs},
+            "pairwise_results": {"a_vs_b": {"comparison_status": "DECIDED",
+                "hydrostatic_comparison": None, "added_mass_correlations": {"1,1": 1.0},
+                "damping_correlations": {"1,1": 1.0},
+                "rao_comparisons": {d: {"max_magnitude_diff": 0.0, "n_points": 12,
+                    "magnitude_quality": "COMPARED", "magnitude_correlation": 1.0,
+                    "phase_correlation": None, "max_phase_diff": None} for d in dofs}}}}
+
+
+def test_missing_report_never_manufactures_comparison(tmp_path, monkeypatch):
+    module = load_module(tmp_path, monkeypatch)
+    results = module._build_results_from_config()
+    assert results["2.7"]["status"] != "completed"
+    assert not results["2.7"]["dof_summary_by_body"]
+    html = module._generate_master_html(results, tmp_path).read_text(encoding="utf-8")
+    assert "ALL PASS" not in html
+
+
+def test_decided_report_with_metadata_renders(tmp_path, monkeypatch):
+    module = load_module(tmp_path, monkeypatch)
+    write_report(tmp_path, report_fixture())
+    results = module._build_results_from_config()
+    html = module._generate_master_html(results, tmp_path).read_text(encoding="utf-8")
+    assert "ALL PASS" in html
+
+
+@pytest.mark.parametrize("status", ["owd_only", "comparison_failed", "refused"])
+def test_noncompleted_status_never_passes(tmp_path, monkeypatch, status):
+    module = load_module(tmp_path, monkeypatch)
+    result = {"2.7": {"description": "Synthetic", "status": status}}
+    html = module._generate_master_html(result, tmp_path).read_text(encoding="utf-8")
+    assert "ALL PASS" not in html
+
+
+@pytest.mark.parametrize("sample_count", [0, None])
+def test_absent_samples_never_pass(tmp_path, monkeypatch, sample_count):
+    module = load_module(tmp_path, monkeypatch)
+    report = report_fixture()
+    report.pop("comparison_status")  # Legacy data cannot establish an authoritative verdict.
+    for entry in report["pairwise_results"]["a_vs_b"]["rao_comparisons"].values():
+        entry["n_points"] = sample_count
+    write_report(tmp_path, report)
+    results = module._build_results_from_config()
+    html = module._generate_master_html(results, tmp_path).read_text(encoding="utf-8")
+    assert "ALL PASS" not in html
+
+
+def test_empty_results_never_pass(tmp_path, monkeypatch):
+    module = load_module(tmp_path, monkeypatch)
+    html = module._generate_master_html({}, tmp_path).read_text(encoding="utf-8")
+    assert "ALL PASS" not in html
+
+
+def test_real_serialized_dof_refusal_is_recognized(tmp_path, monkeypatch, two_identical_results):
+    module = load_module(tmp_path, monkeypatch)
+    report_path = tmp_path / "serialized.json"
+    MultiSolverComparator(two_identical_results).export_report_json(report_path)
+    report = json.loads(report_path.read_text(encoding="utf-8"))
+    # A direct DOF record must retain its own refusal independently of aggregation.
+    entry = next(iter(next(iter(report["pairwise_results"].values()))["rao_comparisons"].values()))
+    entry["refusal_reason"] = "INSUFFICIENT_DATA"
+    assert module._report_has_refusal(entry)
+
+
+@pytest.mark.parametrize("field", ["mean_pairwise_correlation", "max_magnitude_diff"])
+def test_null_metrics_render_without_passing(tmp_path, monkeypatch, field):
+    module = load_module(tmp_path, monkeypatch)
+    report = report_fixture()
+    if field == "mean_pairwise_correlation":
+        report["consensus_by_dof"]["HEAVE"][field] = None
+    else:
+        report["pairwise_results"]["a_vs_b"]["rao_comparisons"]["heave"][field] = None
+    write_report(tmp_path, report)
+    results = module._build_results_from_config()
+    html = module._generate_master_html(results, tmp_path).read_text(encoding="utf-8")
+    assert "ALL PASS" not in html
+    assert "Unavailable" in html
+
+
+def test_actual_exporter_report_renders_without_sample_count(tmp_path, monkeypatch, two_identical_results):
+    from digitalmodel.hydrodynamics.diffraction.multi_solver_comparator import ComparisonPolicy
+    module = load_module(tmp_path, monkeypatch)
+    policy = ComparisonPolicy(.025, 5e-11, .9801, "Synthetic regression uncertainty budget")
+    path = tmp_path / "2.7/benchmark/benchmark_report.json"
+    MultiSolverComparator(two_identical_results, policy=policy).export_report_json(path)
+    results = module._build_results_from_config()
+    html = module._generate_master_html(results, tmp_path).read_text(encoding="utf-8")
+    assert "ALL PASS" in html
+    assert results["2.7"]["dof_summary_by_body"][0]["surge"]["n_points"] is None
+
+
+@pytest.mark.parametrize("invalid", ["negative_difference", "null_correlation_range"])
+def test_malformed_report_metrics_never_pass(tmp_path, monkeypatch, invalid):
+    module = load_module(tmp_path, monkeypatch)
+    report = report_fixture()
+    entry = report["pairwise_results"]["a_vs_b"]["rao_comparisons"]["heave"]
+    if invalid == "negative_difference":
+        entry["max_magnitude_diff"] = -1.0
+    else:
+        entry["magnitude_quality"] = "NULL_RESPONSE"
+        report["consensus_by_dof"]["HEAVE"]["mean_pairwise_correlation"] = 2.0
+    write_report(tmp_path, report)
+    results = module._build_results_from_config()
+    assert not module._case_summary_passes(results["2.7"])
+    assert "ALL PASS" not in module._generate_master_html(results, tmp_path).read_text(encoding="utf-8")
+
+
+def test_summary_only_cli_reads_real_export(tmp_path, monkeypatch, two_identical_results):
+    import sys
+    from digitalmodel.hydrodynamics.diffraction.multi_solver_comparator import ComparisonPolicy
+    module = load_module(tmp_path, monkeypatch)
+    monkeypatch.setattr(module, "OUTPUT_DIR", tmp_path)
+    policy = ComparisonPolicy(.025, 5e-11, .9801, "Synthetic regression uncertainty budget")
+    MultiSolverComparator(two_identical_results, policy=policy).export_report_json(
+        tmp_path / "2.7/benchmark/benchmark_report.json")
+    monkeypatch.setattr(sys, "argv", ["validate_owd_vs_spec.py", "--summary-only"])
+    module.main()
+    assert any("ALL PASS" in path.read_text(encoding="utf-8") for path in tmp_path.glob("*.html"))
+
+
+def test_console_summary_handles_metadata_and_missing_values(tmp_path, monkeypatch, capsys):
+    import sys
+    module = load_module(tmp_path, monkeypatch)
+    report = report_fixture()
+    report["pairwise_results"]["a_vs_b"]["rao_comparisons"]["heave"]["max_magnitude_diff"] = None
+    write_report(tmp_path, report)
+    result = module._build_results_from_config()["2.7"]
+    monkeypatch.setattr(module, "run_case", lambda *args, **kwargs: result)
+    monkeypatch.setattr(sys, "argv", ["validate_owd_vs_spec.py", "--case", "2.7"])
+    module.main()
+    output = capsys.readouterr().out
+    assert "Unavailable" in output
+    assert "SOME CASES NEED INVESTIGATION" in output
+
+
+@pytest.mark.parametrize("configured", [True, False])
+def test_live_comparison_preserves_actual_report_authority(tmp_path, monkeypatch, two_identical_results, configured):
+    from types import SimpleNamespace
+    from digitalmodel.hydrodynamics.diffraction import benchmark_runner
+    from digitalmodel.hydrodynamics.diffraction.multi_solver_comparator import ComparisonPolicy
+    from scripts.benchmark import solver_metadata
+    module = load_module(tmp_path, monkeypatch)
+    spec_path = tmp_path / "spec.yml"
+    spec_path.write_text("{}", encoding="utf-8")
+    module.CASES["2.7"]["spec"] = spec_path
+    monkeypatch.setattr(module, "OUTPUT_DIR", tmp_path)
+    monkeypatch.setattr(solver_metadata, "build_solver_metadata", lambda *a, **kw: {})
+    values = list(two_identical_results.values())
+    policy = ComparisonPolicy(.025, 5e-11, .9801, "Synthetic test budget") if configured else None
+    report = MultiSolverComparator(
+        {"OrcaWave (.owd)": values[0], "OrcaWave (spec.yml)": values[1]}, policy=policy).generate_report()
+    monkeypatch.setattr(benchmark_runner.BenchmarkRunner, "run_from_results",
+                        lambda *a, **kw: SimpleNamespace(report=report))
+    result = module.run_comparison({0: values[0]}, {0: values[1]}, {}, {}, "2.7")
+    result["status"] = "completed"
+    body = result["dof_summary_by_body"][0]
+    assert body["_comparison_status"] == report.comparison_status
+    assert body["_overall_consensus"] == report.overall_consensus
+    assert module._case_summary_passes(result) is configured
+
+
+@pytest.mark.parametrize('policy', [None, {}])
+def test_report_without_declared_policy_never_passes(tmp_path, monkeypatch, policy):
+    module = load_module(tmp_path, monkeypatch)
+    report = report_fixture()
+    report['comparison_policy'] = policy
+    write_report(tmp_path, report)
+    assert not module._case_summary_passes(module._build_results_from_config()['2.7'])
+
+
+def test_missing_declared_body_never_passes_summary_only(tmp_path, monkeypatch):
+    module = load_module(tmp_path, monkeypatch)
+    module.CASES['2.7']['bodies'] = [
+        {'body_index': 0, 'vessel_name': 'Synthetic'},
+        {'body_index': 1, 'vessel_name': 'Second'},
+    ]
+    directory = tmp_path / '2.7/benchmark/body_0'
+    directory.mkdir(parents=True)
+    (directory / 'benchmark_report.json').write_text(json.dumps(report_fixture()))
+    result = module._build_results_from_config()['2.7']
+    assert result['status'] == 'incomplete'
+    assert not module._case_summary_passes(result)
+
+
+@pytest.mark.parametrize('correlation', [1.0, None, 'N/A'])
+def test_refused_multibody_overview_never_passes(tmp_path, monkeypatch, correlation):
+    module = load_module(tmp_path, monkeypatch)
+    summary = {d: {'correlation': correlation, 'max_abs_diff': 0.0, 'quality': 'COMPARED'}
+               for d in module.SUMMARY_DOFS}
+    summary.update(_comparison_status='REFUSED', _overall_consensus='FULL')
+    bodies = [{'body_index': 0, 'vessel_name': 'Synthetic'}]
+    page = module._build_multibody_index_html(
+        tmp_path, '2.7', module.CASES['2.7'], bodies, {0: summary}, {})
+    assert '>PASS<' not in page.read_text(encoding='utf-8')
+
+
+def test_live_summary_uses_report_metrics_and_declared_bodies(tmp_path, monkeypatch, two_identical_results):
+    from types import SimpleNamespace
+    from digitalmodel.hydrodynamics.diffraction import benchmark_runner
+    from digitalmodel.hydrodynamics.diffraction.multi_solver_comparator import ComparisonPolicy
+    from scripts.benchmark import solver_metadata
+    module = load_module(tmp_path, monkeypatch)
+    spec_path = tmp_path / 'spec.yml'
+    spec_path.write_text('{}')
+    module.CASES['2.7'].update(spec=spec_path, bodies=[
+        {'body_index': 0, 'vessel_name': 'Synthetic'},
+        {'body_index': 1, 'vessel_name': 'Second'}])
+    monkeypatch.setattr(module, 'OUTPUT_DIR', tmp_path)
+    monkeypatch.setattr(solver_metadata, 'build_solver_metadata', lambda *a, **kw: {})
+    values = list(two_identical_results.values())
+    for result in values:
+        result.raos.surge.magnitude[:] = 0
+    policy = ComparisonPolicy(.025, 5e-11, .9801, 'Synthetic test budget')
+    report = MultiSolverComparator(
+        {'OrcaWave (.owd)': values[0], 'OrcaWave (spec.yml)': values[1]}, policy=policy).generate_report()
+    monkeypatch.setattr(benchmark_runner.BenchmarkRunner, 'run_from_results',
+                        lambda *a, **kw: SimpleNamespace(report=report))
+    result = module.run_comparison({0: values[0]}, {0: values[1]}, {}, {}, '2.7')
+    result['status'] = 'completed'
+    summary = result['dof_summary_by_body'][0]
+    assert summary['surge']['correlation'] is None
+    assert not module._case_summary_passes(result)
+    pair = next(iter(report.pairwise_results.values()))
+    for dof in module.SUMMARY_DOFS:
+        assert summary[dof]['correlation'] == report.consensus_by_dof[dof.upper()].mean_pairwise_correlation
+        assert summary[dof]['max_abs_diff'] == pair.rao_comparisons[dof].max_magnitude_diff

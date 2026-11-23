@@ -1,0 +1,232 @@
+# ABOUTME: Machine source of truth for the capability information
+# ABOUTME: architecture -- section ids, titles, and the links each owns.
+#
+# Extracted from docs/api/capabilities/index.html at 2ff0f72c^ (dm#1637).
+# That page was doing two jobs: rendering the gallery AND declaring the IA.
+# #1573 (C10 / workspace-hub#3485) correctly retired the rendering job by
+# redirecting to aceengineer.com/capabilities -- and took the declaration
+# with it, which is what broke the census. The data now lives here, where
+# a presentation decision cannot delete it.
+#
+# `id`     -- URL anchor. STABLE: external links cite these (see the
+#             anchor-stability contract in capabilities-ia-spec-1444.md).
+# `title`  -- human label used in the generated spec tables. Plain text, NOT
+#             HTML: the entities the extraction inherited (&amp;, &mdash;)
+#             were an artefact of the markup this data used to live in, and
+#             are decoded here. test_titles_are_plain_text keeps them out.
+# `card_id` -- section card in capability-cards.json.
+# `hrefs`  -- every link the section owns, page-relative to
+#             docs/api/capabilities/. These drive the explorer<->section
+#             join, `unlinked_explorers`, and the standards-grounding
+#             ratchet, so pruning one silently drops real coverage.
+#
+# Adding a capability: append a section here, map it in
+# capabilities-clusters.yml, add its sec-* SPECS entry, then regenerate:
+#   .venv/bin/python scripts/capabilities/build_capabilities_inventory.py
+
+schema_version: "1.0"
+canonical_surface: "https://www.aceengineer.com/capabilities/"
+
+sections:
+  - id: ffs
+    card_id: sec-ffs
+    title: "Fitness-for-service"
+    hrefs:
+      - "../ffs/ffs-showcase.html"
+      - "../ffs/ffs-field-dashboard.html"
+      - "../ffs/riser-joint-acceptance-explorer.html"
+      - "https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/asset_integrity/assessment/ffs_coordinator.py"
+      - "https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/asset_integrity/corroded_pipe.py"
+      - "https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/asset_integrity/dnv_rp_f101.py"
+
+  - id: structural
+    card_id: sec-structural
+    title: "Ship structural strength"
+    hrefs:
+      - "../buckling/ship-plate-buckling.html"
+      - "../buckling/ship-panel-buckling.html"
+      - "https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/infrastructure/base_solvers/structural/plate_buckling.py"
+
+  - id: fatigue
+    card_id: sec-fatigue
+    title: "Fatigue & fracture — S-N life and crack growth"
+    hrefs:
+      - "https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/fatigue/sn_library.py"
+      - "https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/fatigue/scf_library.py"
+      - "https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/fatigue/weld_fatigue_quickcheck.py"
+      - "https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/fatigue/hotspot_stress.py"
+      - "https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/fatigue/crack_growth.py"
+
+  - id: hydro
+    card_id: sec-hydro
+    title: "Hydrodynamics & diffraction"
+    hrefs:
+      - "../hydro/rao-comparison/"
+      - "../hydro/unit-box-benchmark/benchmark_report.html"
+      - "../hydro/unit-box-benchmark/benchmark_amplitude.html"
+      - "../hydro/unit-box-benchmark/benchmark_phase.html"
+      - "../hydro/unit-box-benchmark/benchmark_combined.html"
+      - "../hydro/unit-box-benchmark/benchmark_heatmap.html"
+      - "../hydro/ocimf-coefficient-explorer.html"
+      - "../hydro/passing-ship-benchmark.html"
+      - "https://github.com/vamseeachanta/digitalmodel/tree/main/examples/workflows/aqwa-diffraction-deck-prep"
+
+  - id: cfd
+    card_id: sec-cfd
+    title: "Computational fluid dynamics (CFD)"
+    hrefs:
+      - "../cfd/"
+      - "../cfd/tank-sloshing-verification.html"
+      - "../cfd/sloshing-cfd-study.html"
+      - "../cfd/cfd-runtime-estimator.html"
+      - "../cfd/wave-excited-body-verification.html"
+      - "../cfd/wave-excited-body-rao-verification.html"
+      - "../cfd/wave-excited-body-decay-verification.html"
+      - "../cfd/maccamy-fuchs-cylinder-verification.html"
+      - "../cfd/flat-plate-blasius-verification.html"
+      - "../cfd/cylinder-re100-verification.html"
+      - "../cfd/turbulent-flat-plate-verification.html"
+      - "../cfd/kleefsman-impact-verification.html"
+      - "../cfd/wave-tank-verification.html"
+      - "../cfd/floating-body-decay-verification.html"
+      - "../cfd/dam-break-verification.html"
+      - "../cfd/naca0012-airfoil-verification.html"
+
+  - id: risers
+    card_id: sec-risers
+    title: "Risers & pipelines"
+    hrefs:
+      - "../orcaflex/riser-validation-report.html"
+      - "../orcaflex/riser-mesh-sensitivity.html"
+      - "../drilling/drilling-riser-operability-explorer.html"
+      - "../drilling/operability-monitor.html"
+      - "https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/orcaflex/code_check_engine.py"
+
+  - id: wall-thickness
+    card_id: sec-wall-thickness
+    title: "Wall thickness — sizing & code checks"
+    hrefs:
+      - "https://github.com/vamseeachanta/digitalmodel/tree/main/src/digitalmodel/structural/analysis/wall_thickness_codes"
+      - "../structural/wall-thickness-explorer.html"
+      - "https://github.com/vamseeachanta/digitalmodel/tree/main/examples/structural/wall_thickness_quickcheck"
+      - "https://github.com/vamseeachanta/digitalmodel/tree/main/src/digitalmodel/subsea/pipeline"
+
+  - id: subsea
+    card_id: sec-subsea
+    title: "Subsea"
+    hrefs:
+      - "../subsea/offshore-cross-section-report.html"
+
+  - id: viv
+    card_id: sec-viv
+    title: "Vortex-induced vibration — screening, frequency & fatigue"
+    hrefs:
+      - "../structural/viv-explorer.html"
+      - "https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/subsea/viv_analysis/vortex_shedding.py"
+      - "https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/subsea/viv_analysis/fatigue.py"
+      - "https://github.com/vamseeachanta/digitalmodel/tree/main/examples/workflows/viv-analysis"
+
+  - id: installation
+    card_id: sec-installation
+    title: "Installation"
+    hrefs:
+      - "../installation/installation-heading-explorer.html"
+      - "../installation/installation-forecast.html"
+      - "https://github.com/vamseeachanta/digitalmodel/tree/main/src/digitalmodel/installation/installation_pamphlet"
+      - "https://github.com/vamseeachanta/digitalmodel/tree/main/data/vessels"
+      - "https://github.com/vamseeachanta/digitalmodel/tree/main/examples/structural/offshore_container_utilization"
+
+  - id: wind
+    card_id: sec-wind
+    title: "Floating wind"
+    hrefs:
+      - "https://github.com/vamseeachanta/digitalmodel/tree/main/examples/workflows/floating-wind-sizing"
+      - "https://github.com/vamseeachanta/digitalmodel/tree/main/examples/workflows/floating-wind-economics"
+
+  - id: field-development
+    card_id: sec-field-development
+    title: "Field development — concept screening, cost & economics"
+    hrefs:
+      - "https://github.com/vamseeachanta/digitalmodel/tree/main/src/digitalmodel/field_development"
+      - "https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/field_development/capex_estimator.py"
+      - "../structural/field-economics-explorer.html"
+      - "https://github.com/vamseeachanta/digitalmodel/tree/main/docs/domains/references/field_development/catalog"
+
+  - id: manoeuvring
+    card_id: sec-manoeuvring
+    title: "Manoeuvring & station-keeping"
+    hrefs:
+      - "../hydro/rudder-maneuvering-explorer.html"
+      - "https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/naval_architecture/data/rudder_database.yml"
+      - "https://github.com/vamseeachanta/digitalmodel/tree/main/examples/marine_ops/mooring_resilience"
+      - "../hydro/short-horizon-motion-forecast.html"
+
+  - id: naval-architecture
+    card_id: sec-naval-architecture
+    title: "Naval architecture — stability, resistance & hull strength"
+    hrefs:
+      - "../structural/ship-resistance-explorer.html"
+      - "https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/naval_architecture/damage_stability.py"
+      - "https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/naval_architecture/hull_girder_strength.py"
+      - "https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/naval_architecture/floating_platform_stability.py"
+
+  - id: geotechnical
+    card_id: sec-geotechnical
+    title: "Geotechnical — pile, anchor & foundation capacity"
+    hrefs:
+      - "https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/geotechnical/piles.py"
+      - "../structural/anchor-holding-explorer.html"
+      - "https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/geotechnical/mudmat.py"
+      - "https://github.com/vamseeachanta/digitalmodel/tree/main/src/digitalmodel/geotechnical"
+
+  - id: artificial-lift
+    card_id: sec-artificial-lift
+    title: "Artificial lift — rod-pump diagnostics"
+    hrefs:
+      - "../artificial-lift/dynacard-troubleshooting.html"
+      - "https://github.com/vamseeachanta/digitalmodel/tree/main/examples/workflows/artificial-lift-field-health"
+
+  - id: production-engineering
+    card_id: sec-production-engineering
+    title: "Production engineering — nodal analysis & well deliverability"
+    hrefs:
+      - "https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/production_engineering/nodal_solver.py"
+      - "../structural/ipr-explorer.html"
+      - "https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/production_engineering/esp_pump_hydraulics.py"
+      - "https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/production_engineering/reconciliation_workflow.py"
+
+  - id: well
+    card_id: sec-well
+    title: "Well construction — casing & tubulars"
+    hrefs:
+      - "../well/casing-design-explorer.html"
+
+  - id: drilling-engineering
+    card_id: sec-drilling-engineering
+    title: "Drilling engineering — pore pressure, hydraulics & well control"
+    hrefs:
+      - "../structural/pore-pressure-explorer.html"
+      - "https://github.com/vamseeachanta/digitalmodel/tree/main/examples/workflows/swab-surge"
+      - "https://github.com/vamseeachanta/digitalmodel/tree/main/src/digitalmodel/well/drilling"
+      - "https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/well/drilling/dysfunction_detector.py"
+
+  - id: cathodic
+    card_id: sec-cathodic
+    title: "Cathodic protection"
+    hrefs:
+      - "https://github.com/vamseeachanta/digitalmodel/tree/main/src/digitalmodel/cathodic_protection"
+      - "../structural/cathodic-protection-explorer.html"
+      - "https://github.com/vamseeachanta/digitalmodel/blob/main/docs/domains/articles/dnv_rp_f106_coating_selection.md"
+
+  - id: corrosion-production
+    card_id: sec-corrosion-production
+    title: "Corrosion & production chemistry"
+    hrefs:
+      - "../corrosion/galvanic-compatibility-explorer.html"
+      - "../production/scale-si-explorer.html"
+
+  - id: validation
+    card_id: sec-validation
+    title: "Validated against published references"
+    hrefs:
+      - "https://github.com/vamseeachanta/digitalmodel/blob/main/docs/domains/codes-register.md"

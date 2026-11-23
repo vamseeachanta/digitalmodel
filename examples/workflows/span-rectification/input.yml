@@ -1,0 +1,37 @@
+basename: span_rectification
+
+span_rectification:
+  case:
+    id: registry_span_rectification
+    description: DNV-RP-F105 free-span rectification — intermediate supports for an over-long surveyed span
+  pipe_span:
+    od_m: 0.2731
+    wt_m: 0.0127
+    span_length_m: 34.0          # design/allowable-screen span
+    e_modulus_pa: 207000000000.0
+    steel_density_kgm3: 7850.0
+    content_density_kgm3: 900.0
+    water_density_kgm3: 1025.0
+    current_velocity_ms: 0.8
+    wave_velocity_ms: 0.0
+    seabed_gap_m: 0.5
+    bc: pinned-pinned
+    sag_m: 0.0
+    structural_damping: 0.005
+    hydrodynamic_damping: 0.010
+    sn_curve_class: F
+    environment: seawater_cp
+    gamma_on_IL: 1.1
+    gamma_on_CF: 1.3
+    gamma_k: 1.15
+  submerged_weight_N_m: 850.0
+  actual_span_length_m: 60.0      # as-surveyed span (exceeds the allowable -> rectify)
+  outputs:
+    directory: results/span_rectification
+    summary_json: span_rectification_summary.json
+
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: true

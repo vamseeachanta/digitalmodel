@@ -1,0 +1,6 @@
+{
+  "check": "i",
+  "status": "not_run",
+  "statement": "Benchmark check (i) not run: the published reference gives plots only; a numeric reference or a digitising ruling is pending.",
+  "issue": 2017
+}

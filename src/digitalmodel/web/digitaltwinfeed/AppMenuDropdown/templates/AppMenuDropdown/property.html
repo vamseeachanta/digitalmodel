@@ -1,0 +1,13 @@
+{% extends 'AppMenuDropdown/index.html' %}
+
+{% block subitem_page %}
+<div>
+    This is the property tab to describe the various properties
+    <br>
+    <p>Form Submission Value is: {{ context['form_submitted_value'] }}</p>
+    <br>
+    {% if context.data %}
+        {{ context.data }}
+    {% endif %}
+</div>
+{% endblock %} {# subitem_page #}

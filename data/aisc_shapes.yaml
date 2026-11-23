@@ -1,0 +1,161 @@
+# AISC Steel Construction Manual — W-Shape Dimensions & Properties
+# Source: AISC Shapes Database v15.0 (consistent with 15th/16th Edition Manual)
+# Reference: https://www.aisc.org/publications/steel-construction-manual-resources/
+#
+# Dimensions in inches
+# A in in^2, Ix/Iy/J in in^4, Sx/Zx in in^3, Cw in in^6
+#
+# k_des = design k (smallest fillet — conservative for strength)
+# k_det = detailing k (largest fillet — conservative for fit-up)
+# Fillet radius for modeling: r = k_des - tf
+
+shapes:
+  W14x90:
+    d: 14.0
+    bf: 14.520
+    tf: 0.710
+    tw: 0.440
+    k_des: 1.310
+    k_det: 2.000
+    A: 26.5
+    Ix: 999
+    Iy: 362
+    Sx: 143
+    Zx: 157
+    J: 4.06
+    Cw: 16000
+
+  W14x48:
+    d: 13.8
+    bf: 8.030
+    tf: 0.595
+    tw: 0.340
+    k_des: 1.190
+    k_det: 1.4375
+    A: 14.1
+    Ix: 484
+    Iy: 51.4
+    Sx: 70.2
+    Zx: 78.4
+    J: 1.45
+    Cw: 2240
+
+  W14x22:
+    d: 13.7
+    bf: 5.000
+    tf: 0.335
+    tw: 0.230
+    k_des: 0.735
+    k_det: 1.0625
+    A: 6.49
+    Ix: 199
+    Iy: 7.0
+    Sx: 29.0
+    Zx: 33.2
+    J: 0.208
+    Cw: 314
+
+  W12x65:
+    d: 12.1
+    bf: 12.000
+    tf: 0.605
+    tw: 0.390
+    k_des: 1.200
+    k_det: 1.500
+    A: 19.1
+    Ix: 533
+    Iy: 174
+    Sx: 87.9
+    Zx: 96.8
+    J: 2.18
+    Cw: 5780
+
+  W10x49:
+    d: 10.0
+    bf: 10.000
+    tf: 0.560
+    tw: 0.340
+    k_des: 1.060
+    k_det: 1.250
+    A: 14.4
+    Ix: 272
+    Iy: 93.4
+    Sx: 54.6
+    Zx: 60.4
+    J: 1.39
+    Cw: 2070
+
+  W8x31:
+    d: 8.0
+    bf: 8.000
+    tf: 0.435
+    tw: 0.285
+    k_des: 0.829
+    k_det: 1.125
+    A: 9.13
+    Ix: 110
+    Iy: 37.1
+    Sx: 27.5
+    Zx: 30.4
+    J: 0.536
+    Cw: 530
+
+  W6x15:
+    d: 5.99
+    bf: 5.990
+    tf: 0.260
+    tw: 0.230
+    k_des: 0.510
+    k_det: 0.750
+    A: 4.43
+    Ix: 29.1
+    Iy: 9.32
+    Sx: 9.72
+    Zx: 10.8
+    J: 0.101
+    Cw: 76.5
+
+  W24x176:
+    d: 25.2
+    bf: 12.900
+    tf: 1.340
+    tw: 0.750
+    k_des: 1.840
+    k_det: 2.625
+    A: 51.7
+    Ix: 5680
+    Iy: 479
+    Sx: 450
+    Zx: 511
+    J: 23.9
+    Cw: 68400
+
+  W36x150:
+    d: 35.9
+    bf: 12.000
+    tf: 0.940
+    tw: 0.625
+    k_des: 1.690
+    k_det: 2.1875
+    A: 44.3
+    Ix: 9040
+    Iy: 270
+    Sx: 504
+    Zx: 581
+    J: 10.1
+    Cw: 82200
+
+  W21x44:
+    d: 20.7
+    bf: 6.500
+    tf: 0.450
+    tw: 0.350
+    k_des: 0.950
+    k_det: 1.125
+    A: 13.0
+    Ix: 843
+    Iy: 20.7
+    Sx: 81.6
+    Zx: 95.4
+    J: 0.770
+    Cw: 2110

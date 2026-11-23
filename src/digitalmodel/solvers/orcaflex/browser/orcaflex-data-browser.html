@@ -1,0 +1,916 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OrcaFlex Data Browser - POC Dashboard</title>
+    
+    <!-- External Libraries -->
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+    
+    <style>
+        /* Reset and Base Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50, #34495e);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        /* Control Panel Styles */
+        .control-panel {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .control-row {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            min-width: 150px;
+        }
+
+        .control-group label {
+            font-weight: 600;
+            font-size: 12px;
+            color: #555;
+            text-transform: uppercase;
+        }
+
+        .control-group select, .control-group button {
+            padding: 8px 12px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .control-group select:hover, .control-group select:focus {
+            border-color: #3498db;
+            outline: none;
+        }
+
+        .load-button {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.3s ease;
+        }
+
+        .load-button:hover {
+            background: #2980b9;
+        }
+
+        .compare-mode {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 12px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: #3498db;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+
+        /* Dashboard Grid */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .dashboard-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .dashboard-card h3 {
+            margin-bottom: 15px;
+            color: #2c3e50;
+            font-size: 18px;
+            border-bottom: 2px solid #ecf0f1;
+            padding-bottom: 10px;
+        }
+
+        /* Visualization Styles */
+        .plot-container {
+            height: 400px;
+            width: 100%;
+        }
+
+        /* Statistics Table */
+        .stats-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+
+        .stats-table th, .stats-table td {
+            padding: 8px 12px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+
+        .stats-table th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+            color: #555;
+        }
+
+        .stats-table tr:hover {
+            background-color: #f5f5f5;
+        }
+
+        .stats-value {
+            font-weight: 600;
+        }
+
+        .critical {
+            color: #e74c3c;
+        }
+
+        .warning {
+            color: #f39c12;
+        }
+
+        .normal {
+            color: #27ae60;
+        }
+
+        /* Line Controls */
+        .line-controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .line-toggle {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 5px 10px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            font-size: 12px;
+        }
+
+        .line-toggle input[type="checkbox"] {
+            cursor: pointer;
+        }
+
+        .line-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 2px;
+            border: 1px solid #ddd;
+        }
+
+        /* Insights Panel */
+        .insights-panel {
+            background: #f8f9fa;
+            border-left: 4px solid #3498db;
+            padding: 15px;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .insight-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            margin-bottom: 12px;
+            padding: 8px;
+            background: white;
+            border-radius: 5px;
+        }
+
+        .insight-icon {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+            color: white;
+            flex-shrink: 0;
+        }
+
+        .insight-critical { background-color: #e74c3c; }
+        .insight-warning { background-color: #f39c12; }
+        .insight-info { background-color: #3498db; }
+        .insight-success { background-color: #27ae60; }
+
+        .insight-text {
+            font-size: 13px;
+            line-height: 1.4;
+        }
+
+        /* Status indicators */
+        .status-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status-loaded { background-color: #27ae60; }
+        .status-error { background-color: #e74c3c; }
+        .status-loading { background-color: #f39c12; }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .control-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .line-controls {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Loading Animation */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>OrcaFlex Data Browser - POC Dashboard</h1>
+            <p>Interactive visualization of mooring line tensions with pattern-based filename parsing</p>
+        </div>
+
+        <!-- Control Panel -->
+        <div class="control-panel">
+            <div class="control-row">
+                <div class="control-group">
+                    <label>FST Configuration</label>
+                    <select id="fstConfig">
+                        <option value="">Select Configuration</option>
+                        <option value="FST1_F">FST1_F (Float)</option>
+                        <option value="FST1_E">FST1_E (Float)</option>
+                        <option value="FST2_F">FST2_F (Float)</option>
+                        <option value="FST2_E">FST2_E (Float)</option>
+                    </select>
+                </div>
+
+                <div class="control-group">
+                    <label>Tide Level</label>
+                    <select id="tideLevel">
+                        <option value="">Select Tide Level</option>
+                        <option value="HWL">HWL (High Water Level)</option>
+                        <option value="MWL">MWL (Mean Water Level)</option>
+                        <option value="LWL">LWL (Low Water Level)</option>
+                    </select>
+                </div>
+
+                <div class="control-group">
+                    <label>Environment Heading</label>
+                    <select id="envHeading">
+                        <option value="">Select Heading</option>
+                        <option value="000deg">000° (North)</option>
+                        <option value="045deg">045° (Northeast)</option>
+                        <option value="090deg">090° (East)</option>
+                        <option value="135deg">135° (Southeast)</option>
+                        <option value="180deg">180° (South)</option>
+                        <option value="225deg">225° (Southwest)</option>
+                        <option value="270deg">270° (West)</option>
+                        <option value="315deg">315° (Northwest)</option>
+                    </select>
+                </div>
+
+                <div class="control-group">
+                    <button class="load-button" onclick="loadData()">
+                        <span id="loadButtonText">Load Data</span>
+                        <div id="loadingSpinner" class="loading" style="display: none;"></div>
+                    </button>
+                </div>
+            </div>
+
+            <div class="control-row">
+                <div class="compare-mode">
+                    <label>Compare Mode:</label>
+                    <div class="toggle-switch">
+                        <input type="checkbox" id="compareMode" onchange="toggleCompareMode()">
+                        <span class="slider"></span>
+                    </div>
+                    <span id="compareModeStatus">Single Case</span>
+                </div>
+
+                <div id="comparisonControls" style="display: none;">
+                    <div class="control-group">
+                        <label>Comparison Case</label>
+                        <select id="comparisonCase">
+                            <option value="">Select Second Case</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div id="dataStatus">
+                <span class="status-indicator status-loading"></span>
+                <span>Ready to load data...</span>
+            </div>
+        </div>
+
+        <!-- Line Toggle Controls -->
+        <div class="dashboard-card">
+            <h3>Mooring Line Visibility Controls</h3>
+            <div id="lineControls" class="line-controls">
+                <!-- Line toggles will be generated dynamically -->
+            </div>
+        </div>
+
+        <!-- Dashboard Grid -->
+        <div class="dashboard-grid">
+            <!-- Time Series Visualization -->
+            <div class="dashboard-card">
+                <h3>Mooring Line Tensions - Time Series</h3>
+                <div id="timeSeriesPlot" class="plot-container"></div>
+            </div>
+
+            <!-- Statistical Summary -->
+            <div class="dashboard-card">
+                <h3>Statistical Summary</h3>
+                <div id="statisticsTable" style="max-height: 350px; overflow-y: auto;">
+                    <p style="text-align: center; color: #777; padding: 40px;">Load data to view statistics</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Insights Panel -->
+        <div class="dashboard-card">
+            <h3>Automated Engineering Insights</h3>
+            <div id="insightsPanel" class="insights-panel">
+                <p style="text-align: center; color: #777; padding: 20px;">Load data to generate insights</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables for data management
+        let currentData = null;
+        let comparisonData = null;
+        let lineVisibility = {};
+        let compareMode = false;
+
+        // Simulated CSV data generator
+        function generateSimulatedData(fstConfig, tideLevel, heading) {
+            const timeSteps = 1000; // 1000 time steps
+            const lineCount = 16; // 16 mooring lines
+            const dt = 0.1; // 0.1 second time step
+            
+            const data = {
+                metadata: {
+                    filename: `${fstConfig}_${tideLevel}_${heading}_MooringTensions.csv`,
+                    fstConfig: fstConfig,
+                    tideLevel: tideLevel,
+                    heading: heading,
+                    timeSteps: timeSteps,
+                    lineCount: lineCount
+                },
+                time: [],
+                lines: {}
+            };
+
+            // Generate time array
+            for (let i = 0; i < timeSteps; i++) {
+                data.time.push(i * dt);
+            }
+
+            // Generate data for each mooring line with realistic patterns
+            for (let lineNum = 1; lineNum <= lineCount; lineNum++) {
+                const lineName = `Line_${lineNum.toString().padStart(2, '0')}`;
+                data.lines[lineName] = [];
+
+                // Base tension varies by line position and configuration
+                const baseTension = 800 + lineNum * 50 + (fstConfig.includes('F') ? 200 : 0);
+                const waveFreq = 0.1 + lineNum * 0.01; // Different wave frequencies
+                const headingFactor = Math.cos((parseInt(heading) - lineNum * 22.5) * Math.PI / 180);
+                
+                // Tide level effects
+                const tideFactor = tideLevel === 'HWL' ? 1.2 : tideLevel === 'LWL' ? 0.8 : 1.0;
+                
+                for (let i = 0; i < timeSteps; i++) {
+                    const t = data.time[i];
+                    
+                    // Complex wave pattern with multiple components
+                    const waveComponent1 = Math.sin(2 * Math.PI * waveFreq * t) * 150;
+                    const waveComponent2 = Math.sin(2 * Math.PI * waveFreq * 1.5 * t) * 80;
+                    const waveComponent3 = Math.sin(2 * Math.PI * waveFreq * 0.3 * t) * 200;
+                    
+                    // Random noise
+                    const noise = (Math.random() - 0.5) * 50;
+                    
+                    // Combine components
+                    const tension = baseTension * tideFactor + 
+                                   waveComponent1 * headingFactor + 
+                                   waveComponent2 + 
+                                   waveComponent3 * Math.abs(headingFactor) +
+                                   noise;
+                    
+                    data.lines[lineName].push(Math.max(0, tension)); // Ensure positive
+                }
+            }
+
+            return data;
+        }
+
+        // Filename parser implementation
+        function parseFilename(filename) {
+            const patterns = {
+                fst: /FST[12]_[FE]/,
+                tide: /[HML]WL/,
+                heading: /\d{3}deg/
+            };
+
+            const parsed = {
+                fstConfig: null,
+                tideLevel: null,
+                heading: null,
+                valid: false
+            };
+
+            // Extract FST configuration
+            const fstMatch = filename.match(patterns.fst);
+            if (fstMatch) parsed.fstConfig = fstMatch[0];
+
+            // Extract tide level
+            const tideMatch = filename.match(patterns.tide);
+            if (tideMatch) parsed.tideLevel = tideMatch[0];
+
+            // Extract heading
+            const headingMatch = filename.match(patterns.heading);
+            if (headingMatch) parsed.heading = headingMatch[0];
+
+            // Check if all components were found
+            parsed.valid = parsed.fstConfig && parsed.tideLevel && parsed.heading;
+
+            return parsed;
+        }
+
+        // Data loading function
+        function loadData() {
+            const fstConfig = document.getElementById('fstConfig').value;
+            const tideLevel = document.getElementById('tideLevel').value;
+            const heading = document.getElementById('envHeading').value;
+
+            if (!fstConfig || !tideLevel || !heading) {
+                alert('Please select all parameters before loading data');
+                return;
+            }
+
+            // Show loading state
+            const loadButton = document.getElementById('loadButtonText');
+            const spinner = document.getElementById('loadingSpinner');
+            loadButton.style.display = 'none';
+            spinner.style.display = 'inline-block';
+
+            // Update status
+            updateDataStatus('loading', 'Loading data...');
+
+            // Simulate loading delay
+            setTimeout(() => {
+                try {
+                    // Generate simulated data
+                    currentData = generateSimulatedData(fstConfig, tideLevel, heading);
+                    
+                    // Initialize line visibility
+                    initializeLineVisibility();
+                    
+                    // Update visualizations
+                    updateVisualization();
+                    updateStatistics();
+                    generateInsights();
+                    
+                    // Update comparison dropdown
+                    updateComparisonOptions();
+                    
+                    // Reset loading state
+                    loadButton.style.display = 'inline-block';
+                    spinner.style.display = 'none';
+                    
+                    updateDataStatus('loaded', `Data loaded: ${currentData.metadata.filename}`);
+                    
+                } catch (error) {
+                    console.error('Error loading data:', error);
+                    loadButton.style.display = 'inline-block';
+                    spinner.style.display = 'none';
+                    updateDataStatus('error', 'Error loading data');
+                }
+            }, 1500); // Simulate network delay
+        }
+
+        // Initialize line visibility controls
+        function initializeLineVisibility() {
+            if (!currentData) return;
+
+            const lineControlsDiv = document.getElementById('lineControls');
+            lineControlsDiv.innerHTML = '';
+            
+            const lineNames = Object.keys(currentData.lines);
+            const colors = generateLineColors(lineNames.length);
+            
+            lineNames.forEach((lineName, index) => {
+                lineVisibility[lineName] = true; // All lines visible by default
+                
+                const toggleDiv = document.createElement('div');
+                toggleDiv.className = 'line-toggle';
+                
+                toggleDiv.innerHTML = `
+                    <input type="checkbox" id="toggle_${lineName}" checked onchange="toggleLine('${lineName}')">
+                    <div class="line-color" style="background-color: ${colors[index]}"></div>
+                    <label for="toggle_${lineName}">${lineName}</label>
+                `;
+                
+                lineControlsDiv.appendChild(toggleDiv);
+            });
+        }
+
+        // Generate distinct colors for lines
+        function generateLineColors(count) {
+            const colors = [];
+            for (let i = 0; i < count; i++) {
+                const hue = (i * 137.508) % 360; // Golden angle approximation
+                colors.push(`hsl(${hue}, 70%, 50%)`);
+            }
+            return colors;
+        }
+
+        // Toggle line visibility
+        function toggleLine(lineName) {
+            lineVisibility[lineName] = !lineVisibility[lineName];
+            updateVisualization();
+        }
+
+        // Update time series visualization
+        function updateVisualization() {
+            if (!currentData) return;
+
+            const traces = [];
+            const colors = generateLineColors(Object.keys(currentData.lines).length);
+            let colorIndex = 0;
+
+            Object.entries(currentData.lines).forEach(([lineName, tensions]) => {
+                if (lineVisibility[lineName]) {
+                    traces.push({
+                        x: currentData.time,
+                        y: tensions,
+                        type: 'scatter',
+                        mode: 'lines',
+                        name: lineName,
+                        line: { color: colors[colorIndex], width: 2 }
+                    });
+                }
+                colorIndex++;
+            });
+
+            const layout = {
+                title: {
+                    text: `Mooring Line Tensions - ${currentData.metadata.filename}`,
+                    font: { size: 14 }
+                },
+                xaxis: {
+                    title: 'Time (s)',
+                    gridcolor: '#f0f0f0'
+                },
+                yaxis: {
+                    title: 'Tension (kN)',
+                    gridcolor: '#f0f0f0'
+                },
+                margin: { l: 60, r: 20, t: 60, b: 60 },
+                legend: {
+                    orientation: 'h',
+                    y: -0.2,
+                    font: { size: 10 }
+                },
+                plot_bgcolor: '#fafafa',
+                paper_bgcolor: 'white'
+            };
+
+            const config = {
+                responsive: true,
+                displayModeBar: true,
+                modeBarButtonsToRemove: ['pan2d', 'lasso2d', 'select2d']
+            };
+
+            Plotly.newPlot('timeSeriesPlot', traces, layout, config);
+        }
+
+        // Update statistics table
+        function updateStatistics() {
+            if (!currentData) return;
+
+            const statsDiv = document.getElementById('statisticsTable');
+            let tableHTML = `
+                <table class="stats-table">
+                    <thead>
+                        <tr>
+                            <th>Line Name</th>
+                            <th>Min (kN)</th>
+                            <th>Max (kN)</th>
+                            <th>Mean (kN)</th>
+                            <th>Std Dev (kN)</th>
+                            <th>Utilization</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            Object.entries(currentData.lines).forEach(([lineName, tensions]) => {
+                const min = Math.min(...tensions);
+                const max = Math.max(...tensions);
+                const mean = tensions.reduce((a, b) => a + b, 0) / tensions.length;
+                const stdDev = Math.sqrt(tensions.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / tensions.length);
+                
+                // Assume design limit of 2000 kN for utilization calculation
+                const designLimit = 2000;
+                const utilization = (max / designLimit) * 100;
+                
+                let statusClass = 'normal';
+                let statusText = 'Normal';
+                if (utilization > 90) {
+                    statusClass = 'critical';
+                    statusText = 'Critical';
+                } else if (utilization > 75) {
+                    statusClass = 'warning';
+                    statusText = 'Warning';
+                }
+
+                tableHTML += `
+                    <tr>
+                        <td><strong>${lineName}</strong></td>
+                        <td class="stats-value">${min.toFixed(1)}</td>
+                        <td class="stats-value">${max.toFixed(1)}</td>
+                        <td class="stats-value">${mean.toFixed(1)}</td>
+                        <td class="stats-value">${stdDev.toFixed(1)}</td>
+                        <td class="stats-value ${statusClass}">${utilization.toFixed(1)}%</td>
+                        <td class="stats-value ${statusClass}">${statusText}</td>
+                    </tr>
+                `;
+            });
+
+            tableHTML += '</tbody></table>';
+            statsDiv.innerHTML = tableHTML;
+        }
+
+        // Generate automated insights
+        function generateInsights() {
+            if (!currentData) return;
+
+            const insights = [];
+            const lineStats = {};
+
+            // Calculate statistics for each line
+            Object.entries(currentData.lines).forEach(([lineName, tensions]) => {
+                const min = Math.min(...tensions);
+                const max = Math.max(...tensions);
+                const mean = tensions.reduce((a, b) => a + b, 0) / tensions.length;
+                const utilization = (max / 2000) * 100; // Assume 2000 kN design limit
+                
+                lineStats[lineName] = { min, max, mean, utilization, tensions };
+            });
+
+            // Insight 1: Identify critical lines
+            const criticalLines = Object.entries(lineStats)
+                .filter(([name, stats]) => stats.utilization > 90)
+                .sort((a, b) => b[1].utilization - a[1].utilization);
+
+            if (criticalLines.length > 0) {
+                const topCritical = criticalLines[0];
+                insights.push({
+                    type: 'critical',
+                    icon: '!',
+                    text: `Critical Alert: ${topCritical[0]} shows highest utilization at ${topCritical[1].utilization.toFixed(1)}% (${topCritical[1].max.toFixed(0)} kN max tension). Immediate attention required.`
+                });
+            } else {
+                insights.push({
+                    type: 'success',
+                    icon: '✓',
+                    text: 'All mooring lines operating within safe limits. No critical utilization levels detected.'
+                });
+            }
+
+            // Insight 2: FST flooding impact analysis
+            const fstType = currentData.metadata.fstConfig;
+            const floodedConfig = fstType.includes('F');
+            if (floodedConfig) {
+                const avgUtilization = Object.values(lineStats).reduce((sum, stats) => sum + stats.utilization, 0) / Object.keys(lineStats).length;
+                insights.push({
+                    type: 'warning',
+                    icon: '~',
+                    text: `FST Flooding Analysis: Configuration ${fstType} shows average line utilization of ${avgUtilization.toFixed(1)}%. Flooding increases mooring loads by approximately 15-25% compared to intact condition.`
+                });
+            }
+
+            // Insight 3: Environmental heading analysis
+            const heading = parseInt(currentData.metadata.heading);
+            const headingEffect = Math.abs(Math.cos(heading * Math.PI / 180));
+            let directionText = '';
+            if (heading === 0 || heading === 180) directionText = 'head/following seas';
+            else if (heading === 90 || heading === 270) directionText = 'beam seas';
+            else directionText = 'quartering seas';
+
+            insights.push({
+                type: 'info',
+                icon: 'i',
+                text: `Environmental Loading: ${heading}° heading (${directionText}) creates directional loading factor of ${headingEffect.toFixed(2)}. Lines aligned with environmental direction experience highest dynamic tensions.`
+            });
+
+            // Insight 4: Tide level impact
+            const tideLevel = currentData.metadata.tideLevel;
+            let tideImpact = '';
+            if (tideLevel === 'HWL') {
+                tideImpact = 'High water level increases mean tensions by ~20% due to reduced mooring line angles.';
+            } else if (tideLevel === 'LWL') {
+                tideImpact = 'Low water level reduces mean tensions by ~20% due to steeper mooring line angles.';
+            } else {
+                tideImpact = 'Mean water level provides baseline reference conditions for mooring analysis.';
+            }
+
+            insights.push({
+                type: 'info',
+                icon: 'i',
+                text: `Tide Level Impact: ${tideLevel} condition - ${tideImpact}`
+            });
+
+            // Render insights
+            const insightsDiv = document.getElementById('insightsPanel');
+            insightsDiv.innerHTML = insights.map(insight => `
+                <div class="insight-item">
+                    <div class="insight-icon insight-${insight.type}">${insight.icon}</div>
+                    <div class="insight-text">${insight.text}</div>
+                </div>
+            `).join('');
+        }
+
+        // Toggle compare mode
+        function toggleCompareMode() {
+            compareMode = document.getElementById('compareMode').checked;
+            const status = document.getElementById('compareModeStatus');
+            const controls = document.getElementById('comparisonControls');
+            
+            if (compareMode) {
+                status.textContent = 'Compare Mode';
+                controls.style.display = 'block';
+            } else {
+                status.textContent = 'Single Case';
+                controls.style.display = 'none';
+                comparisonData = null;
+            }
+        }
+
+        // Update comparison options
+        function updateComparisonOptions() {
+            if (!currentData) return;
+
+            const select = document.getElementById('comparisonCase');
+            select.innerHTML = '<option value="">Select Second Case</option>';
+
+            // Generate some alternative cases for comparison
+            const alternatives = [
+                'FST1_F_HWL_045deg',
+                'FST2_E_MWL_090deg',
+                'FST1_E_LWL_180deg',
+                'FST2_F_HWL_270deg'
+            ].filter(alt => alt !== currentData.metadata.filename.replace('_MooringTensions.csv', ''));
+
+            alternatives.forEach(alt => {
+                const option = document.createElement('option');
+                option.value = alt;
+                option.textContent = alt;
+                select.appendChild(option);
+            });
+        }
+
+        // Update data status indicator
+        function updateDataStatus(status, message) {
+            const statusDiv = document.getElementById('dataStatus');
+            const indicator = statusDiv.querySelector('.status-indicator');
+            
+            indicator.className = `status-indicator status-${status}`;
+            statusDiv.querySelector('span:last-child').textContent = message;
+        }
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('OrcaFlex Data Browser initialized');
+            updateDataStatus('loading', 'Ready to load data...');
+        });
+    </script>
+</body>
+</html>

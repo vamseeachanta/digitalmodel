@@ -1,0 +1,136 @@
+{
+  "_comment": "Changed paths and the test files the fast gate must select for them, against OWNERS.toml in this folder. fallback lists the paths that fell back to whole domains.",
+  "cases": [
+    {
+      "id": "changed-test-file-selects-itself",
+      "changed": ["tests/citations/test_registry.py"],
+      "selected": ["tests/citations/test_registry.py"],
+      "shards": ["citations"],
+      "fallback": {}
+    },
+    {
+      "id": "package-unit-expands-its-folder-entry",
+      "changed": ["src/digitalmodel/citations/schema.py"],
+      "selected": ["tests/citations/test_registry.py", "tests/citations/test_resolver.py"],
+      "shards": ["citations"],
+      "fallback": {}
+    },
+    {
+      "id": "subfolder-unit-crosses-shards",
+      "changed": ["src/digitalmodel/subsea/riser/joint.py"],
+      "selected": ["tests/marine_ops/fowt/test_mooring.py", "tests/subsea/riser/test_joint.py"],
+      "shards": ["marine-engineering", "subsea"],
+      "extras": ["fowt", "test"],
+      "fallback": {}
+    },
+    {
+      "id": "deeper-file-belongs-to-its-subfolder-unit",
+      "changed": ["src/digitalmodel/subsea/riser/legacy/old_joint.py"],
+      "selected": ["tests/marine_ops/fowt/test_mooring.py", "tests/subsea/riser/test_joint.py"],
+      "shards": ["marine-engineering", "subsea"],
+      "fallback": {}
+    },
+    {
+      "id": "top-level-module",
+      "changed": ["src/digitalmodel/units.py"],
+      "selected": ["tests/subsea/test_catenary.py"],
+      "shards": ["subsea"],
+      "fallback": {}
+    },
+    {
+      "id": "data-file-in-unimported-folder-takes-the-package-row",
+      "changed": ["src/digitalmodel/citations/data/table.yml"],
+      "selected": ["tests/citations/test_registry.py", "tests/citations/test_resolver.py"],
+      "shards": ["citations"],
+      "fallback": {}
+    },
+    {
+      "id": "unmapped-source-falls-back-to-the-full-matrix",
+      "changed": ["src/digitalmodel/hydrodynamics/rao.py"],
+      "selected": [
+        "tests/citations/test_registry.py",
+        "tests/citations/test_resolver.py",
+        "tests/docs/test_routing.py",
+        "tests/marine_ops/fowt/test_basis.py",
+        "tests/marine_ops/fowt/test_mooring.py",
+        "tests/subsea/riser/test_joint.py",
+        "tests/subsea/test_catenary.py"
+      ],
+      "shards": ["citations", "contracts", "marine-engineering", "subsea"],
+      "fallback": {"src/digitalmodel/hydrodynamics/rao.py": ["citations", "contracts", "marine-engineering", "subsea"]}
+    },
+    {
+      "id": "python-file-without-a-row-falls-back-to-the-detector-route",
+      "_note": "The detector routes src/digitalmodel/citations/ to the citations shard alone.",
+      "changed": ["src/digitalmodel/citations/loaders/new_loader.py"],
+      "selected": ["tests/citations/test_registry.py", "tests/citations/test_resolver.py"],
+      "shards": ["citations"],
+      "fallback": {"src/digitalmodel/citations/loaders/new_loader.py": ["citations"]}
+    },
+    {
+      "id": "domain-record-falls-back-to-contracts",
+      "changed": ["docs/domains/risers/notes.md"],
+      "selected": ["tests/docs/test_routing.py"],
+      "shards": ["contracts"],
+      "fallback": {"docs/domains/risers/notes.md": ["contracts"]}
+    },
+    {
+      "id": "conftest-falls-back-to-its-domain",
+      "changed": ["tests/subsea/conftest.py"],
+      "selected": ["tests/subsea/riser/test_joint.py", "tests/subsea/test_catenary.py"],
+      "shards": ["subsea"],
+      "fallback": {"tests/subsea/conftest.py": ["subsea"]}
+    },
+    {
+      "id": "dependency-change-selects-everything",
+      "changed": ["uv.lock"],
+      "selected": [
+        "tests/citations/test_registry.py",
+        "tests/citations/test_resolver.py",
+        "tests/docs/test_routing.py",
+        "tests/marine_ops/fowt/test_basis.py",
+        "tests/marine_ops/fowt/test_mooring.py",
+        "tests/subsea/riser/test_joint.py",
+        "tests/subsea/test_catenary.py"
+      ],
+      "shards": ["citations", "contracts", "marine-engineering", "subsea"],
+      "fallback": {"uv.lock": ["citations", "contracts", "marine-engineering", "subsea"]}
+    },
+    {
+      "id": "example-is-outside-the-matrix",
+      "changed": ["examples/demo/run.py"],
+      "selected": [],
+      "shards": [],
+      "fallback": {}
+    },
+    {
+      "id": "harness-file-is-outside-the-matrix",
+      "changed": [".github/workflows/quality-gates-by-domain.yml"],
+      "selected": [],
+      "shards": [],
+      "fallback": {}
+    },
+    {
+      "id": "unowned-path-selects-nothing",
+      "changed": ["README.md"],
+      "selected": [],
+      "shards": [],
+      "fallback": {}
+    },
+    {
+      "id": "deleted-test-file-selects-nothing",
+      "changed": ["tests/subsea/test_removed.py"],
+      "selected": [],
+      "shards": [],
+      "fallback": {}
+    },
+    {
+      "id": "union-of-several-changes",
+      "changed": ["tests/marine_ops/fowt/test_basis.py", "src/digitalmodel/units.py", "README.md"],
+      "selected": ["tests/marine_ops/fowt/test_basis.py", "tests/subsea/test_catenary.py"],
+      "shards": ["marine-engineering", "subsea"],
+      "extras": ["fowt", "test"],
+      "fallback": {}
+    }
+  ]
+}

@@ -1,0 +1,205 @@
+"""ASCII accelerogram readers for response-spectrum workflows."""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+from hashlib import sha256
+from pathlib import Path
+import re
+from typing import Iterable
+
+import numpy as np
+
+G0_M_S2 = 9.80665
+
+
+@dataclass(frozen=True)
+class AccelerogramRecord:
+    """A single-component accelerogram with immutable SI sample snapshots."""
+
+    time_s: np.ndarray
+    acceleration_m_s2: np.ndarray
+    units: str
+    source_path: Path
+    source_digest: str
+
+    def __post_init__(self) -> None:
+        # NumPy ndarray.flags (stable reference, Notes): write protection needs
+        # immutable ultimate backing, rather than just setflags(write=False).
+        # https://numpy.org/doc/stable/reference/generated/numpy.ndarray.flags.html
+        for name in ("time_s", "acceleration_m_s2"):
+            value = object.__getattribute__(self, name)
+            if isinstance(value, np.ndarray) and type(value) is not np.ndarray:
+                raise TypeError("accelerogram arrays cannot be ndarray subclasses")
+            value = np.asarray(value)
+            if value.dtype.hasobject:
+                raise TypeError("accelerogram arrays cannot contain object references")
+            snapshot = (value.tobytes(), value.dtype, value.shape)
+            object.__setattr__(self, name, snapshot)
+
+    def __getattribute__(self, name: str):
+        value = object.__getattribute__(self, name)
+        if name in ("time_s", "acceleration_m_s2"):
+            # NumPy ndarray reference, buffer parameter: a fresh header may share
+            # immutable bytes without exposing the retained header via .base.
+            # https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html
+            if not (
+                isinstance(value, tuple) and len(value) == 3
+                and isinstance(value[0], bytes)
+            ):
+                raise TypeError("accelerogram requires an immutable sample snapshot")
+            data, dtype, shape = value
+            return np.ndarray(shape, dtype=dtype, buffer=data)
+        return value
+
+    def __eq__(self, other):
+        if self is other:
+            return True
+        if type(self) is not type(other):
+            return NotImplemented
+        return (
+            np.array_equal(self.time_s, other.time_s)
+            and np.array_equal(self.acceleration_m_s2, other.acceleration_m_s2)
+            and (self.units, self.source_path, self.source_digest)
+            == (other.units, other.source_path, other.source_digest)
+        )
+
+    def __reduce__(self):
+        # Python pickle reference, object.__reduce__: reconstruct through the
+        # constructor; copy/deepcopy also use this protocol.
+        # https://docs.python.org/3/library/pickle.html#object.__reduce__
+        return type(self), (
+            self.time_s, self.acceleration_m_s2, self.units,
+            self.source_path, self.source_digest,
+        )
+
+    def __setstate__(self, state: dict) -> None:
+        """Snapshot arrays when loading the former default dict-state pickle."""
+        self.__dict__.update(state)
+        self.__post_init__()
+
+    @property
+    def npts(self) -> int:
+        return int(self.time_s.size)
+
+    @property
+    def dt_s(self) -> float:
+        if self.npts < 2:
+            raise ValueError("AccelerogramRecord requires at least two samples")
+        return float(self.time_s[1] - self.time_s[0])
+
+    @property
+    def pga_m_s2(self) -> float:
+        return float(np.max(np.abs(self.acceleration_m_s2)))
+
+    @property
+    def pga_g(self) -> float:
+        return self.pga_m_s2 / G0_M_S2
+
+    @property
+    def acceleration_g(self) -> np.ndarray:
+        return self.acceleration_m_s2 / G0_M_S2
+
+
+def read_ascii_accelerogram(
+    path: str | Path,
+    *,
+    units: str | None = None,
+    dt_s: float | None = None,
+) -> AccelerogramRecord:
+    """Read two-column or dt-header single-column ASCII accelerogram data."""
+
+    source_path = Path(path)
+    raw = source_path.read_bytes()
+    metadata, rows = _parse_rows(raw.decode("utf-8"))
+    resolved_units = _normalise_units(units or metadata.get("units") or "m_s2")
+    if dt_s is None and "dt_s" in metadata:
+        dt_s = float(metadata["dt_s"])
+    time_s, acceleration = _time_and_acceleration(rows, dt_s)
+    _validate_uniform_time_step(time_s)
+    acceleration_m_s2 = _to_si(acceleration, resolved_units)
+    return AccelerogramRecord(
+        time_s=time_s,
+        acceleration_m_s2=acceleration_m_s2,
+        units=resolved_units,
+        source_path=source_path,
+        source_digest=sha256(raw).hexdigest(),
+    )
+
+
+def _parse_rows(text: str) -> tuple[dict[str, str], list[list[float]]]:
+    metadata: dict[str, str] = {}
+    rows: list[list[float]] = []
+    for line in text.splitlines():
+        stripped = line.strip()
+        if not stripped:
+            continue
+        if stripped.startswith("#"):
+            metadata.update(_metadata_from_comment(stripped))
+            continue
+        rows.append([float(part) for part in stripped.split()])
+    if not rows:
+        raise ValueError("ASCII accelerogram contains no numeric samples")
+    return metadata, rows
+
+
+def _metadata_from_comment(line: str) -> dict[str, str]:
+    match = re.match(r"#\s*([A-Za-z0-9_./-]+)\s*:\s*(.+?)\s*$", line)
+    if not match:
+        return {}
+    key, value = match.groups()
+    key = key.strip().lower().replace("-", "_")
+    if key in {"dt", "delta_t", "time_step_s"}:
+        key = "dt_s"
+    return {key: value.strip()}
+
+
+def _time_and_acceleration(
+    rows: list[list[float]],
+    dt_s: float | None,
+) -> tuple[np.ndarray, np.ndarray]:
+    widths = {len(row) for row in rows}
+    if widths == {1}:
+        if dt_s is None:
+            raise ValueError("single-column accelerogram requires dt_s")
+        acceleration = np.array([row[0] for row in rows], dtype=float)
+        time_s = np.arange(acceleration.size, dtype=float) * float(dt_s)
+        return time_s, acceleration
+    if widths == {2}:
+        time_s = np.array([row[0] for row in rows], dtype=float)
+        acceleration = np.array([row[1] for row in rows], dtype=float)
+        return time_s, acceleration
+    raise ValueError("ASCII accelerogram must be one-column or two-column data")
+
+
+def _validate_uniform_time_step(time_s: np.ndarray) -> None:
+    if time_s.size < 2:
+        raise ValueError("accelerogram requires at least two time samples")
+    dt = np.diff(time_s)
+    if np.any(dt <= 0.0) or not np.allclose(dt, dt[0], rtol=1.0e-6, atol=1.0e-12):
+        raise ValueError("accelerogram must use a uniform time step")
+
+
+def _normalise_units(units: str) -> str:
+    value = str(units).strip().lower().replace("/", "_").replace("-", "_")
+    aliases = {
+        "g": "g",
+        "cm_s2": "cm_s2",
+        "cm_s_s": "cm_s2",
+        "cm_per_s2": "cm_s2",
+        "m_s2": "m_s2",
+        "m_s_s": "m_s2",
+        "m_per_s2": "m_s2",
+    }
+    if value not in aliases:
+        raise ValueError("units must be one of g, cm_s2, or m_s2")
+    return aliases[value]
+
+
+def _to_si(values: Iterable[float], units: str) -> np.ndarray:
+    array = np.asarray(list(values), dtype=float)
+    if units == "g":
+        return array * G0_M_S2
+    if units == "cm_s2":
+        return array / 100.0
+    return array

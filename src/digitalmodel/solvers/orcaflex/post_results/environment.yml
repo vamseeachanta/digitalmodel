@@ -1,0 +1,13 @@
+name: OrcaFlex
+channels:
+  - defaults
+dependencies:
+  - python=3.6
+  - pyyaml
+  - yaml
+  - oyaml
+  - matplotlib
+  - scipy
+  - pandas
+  - numpy
+  - OrcFxAPI

@@ -1,0 +1,191 @@
+FileName: API_STD_2RD
+LoadingConditionResults:
+- BendingMoment:
+  - 216
+  - 406
+  - 641
+  - 594
+  DataLabels:
+  - Near
+  - Far
+  - Cross
+  - Transverse
+  Label: 100 yr Wave, 10yr Current, 750 psi
+  PlotSettings:
+    Color: blue
+    Marker: o
+    Markerfillstyle: blue
+  Tension:
+  - 10578
+  - 12635
+  - 11558
+  - 10838
+- BendingMoment:
+  - 181
+  - 195
+  - 441
+  - 449
+  DataLabels:
+  - Near
+  - Far
+  - Cross
+  - Transverse
+  Label: 100 yr Current, 10yr Wave, 750 psi
+  PlotSettings:
+    Color: blue
+    Marker: D
+    Markerfillstyle: none
+  Tension:
+  - 12598
+  - 10427
+  - 9937
+  - 12633
+- BendingMoment:
+  - 406
+  DataLabels:
+  - Far
+  Label: 100 yr Wave, 10yr Current, 8000 psi
+  PlotSettings:
+    Color: red
+    Marker: o
+    Markerfillstyle: none
+  Tension:
+  - 12633
+- BendingMoment:
+  - 322
+  DataLabels:
+  - Far
+  Label: 1 yr Wave, 10000 psi
+  PlotSettings:
+    Color: green
+    Marker: v
+    Markerfillstyle: green
+  Tension:
+  - 13762
+default:
+  Analysis:
+    nominalWTAPISTD2RDMethod1: true
+    nominalWTAPISTD2RDMethod2: false
+    nominalWTAPISTD2RDMethod4: false
+    variableWTBurst: true
+    variableWTCollapse: true
+  logLevel: DEBUG
+  units:
+    BendingMoment: kNm
+    E: psi
+    EffectiveTension: kN
+    NominalID: inch
+    NominalOD: inch
+    NominalWT: inch
+    Pressure: psi
+    Temperature: deg F
+    YieldStrength: psi
+design:
+  pressure: 8000
+  temperature: 250
+  wallThickness: 1.9
+designFactors:
+  collapse:
+    ALS: 1.0
+    SLS: 0.8
+    SeamlessPipe: 0.7
+    ULS: 0.8
+    coldExpandedPipe: 0.8
+  externalPressure:
+    ALS: 1.0
+    SLS: 0.6
+    ULS: 0.6
+  internalPressure:
+    ALS: 1.0
+    SLS: 0.8
+    ULS: 0.8
+    design: 0.6
+    drillingRiserWithExtremePressure: 0.81
+    hydroStaticTest: 0.75
+    incidentalPressure: 0.675
+    productionCasingWithTubingLeak: 0.81
+fatigueAnalysis:
+  serviceLife: 0.1
+  singleALSEvent: 1.0
+  singleULSEvent: 0.1
+geometry:
+  AllowableStressFac: 0.667
+  CorrosionAllowance: 0.236
+  DesignWT: 1.9
+  NominalID: null
+  NominalOD: 16
+  NominalWT:
+  - 1.0
+  - 1.1
+  - 1.2
+  - 1.3
+  - 1.4
+  - 1.5
+  - 1.6
+  - 1.7
+  - 1.8
+  - 1.9
+  - 2.0
+load:
+  bendingMoment: 0
+  externalPressure: 0
+  internalPressure: 8000
+material:
+  E: 30000000.0
+  Poissionsratio: 0.3
+  SMUS: 77600
+  SMYS: 65300
+  alphafab: 1
+  k: 0.45
+  materialFabrication:
+    Seamless: 1.0
+    TRB: 0.925
+    UO: 0.925
+    UOE: 0.85
+  materialStrengthFactor:
+    Normal: 0.96
+    SupplementaryRequirementU: 1
+  ovality: 0.01
+  rho: 7800
+nominalWTAPISTD2RDMethod1:
+  data:
+  - CorrosionAllowance: 0.236
+    ExternalPressure: 0
+    InternalPressure: 750
+    Label: Utilization {0}, Internal Pressure {1}
+    LimitState: ULS
+    PlotSettings:
+      Color: blue
+      LineStyle: '-'
+  - CorrosionAllowance: 0.236
+    ExternalPressure: 0
+    InternalPressure: 8000
+    Label: Utilization {0}, Internal Pressure {1}
+    LimitState: ALS
+    PlotSettings:
+      Color: red
+      LineStyle: '-'
+  - CorrosionAllowance: 0.0
+    ExternalPressure: 0
+    InternalPressure: 10000
+    Label: Utilization {0}, Internal Pressure {1}
+    LimitState: ALS
+    PlotSettings:
+      Color: green
+      LineStyle: '-'
+  label3: Method 4 AxialLimit@Pr=
+  pltSupTitle: Pipe Utilization, API STD 2RD, X-65, Method 1
+  pltTitle: OD {0} inch, WT {1} inch
+  pltXLabel: Tension (kN)
+  pltYLabel: Resultant Bending Moment (kN.m)
+plotSettings:
+  variableWTBurst:
+    label: Design Pressure Limit
+    plotFileName: Burst_Pressure_OD_16_CA0p236
+    pltSupTitle: Design Pressure With Thickness
+    pltTitle: API STD 2RD, X-65, OD of 16 inch, Corrosion Allowance 0.236 inch
+    pltXLabel: Thickness (inch)
+    pltYLabel: Pressure (psi)
+    yLim:
+    - 0
+    - 12500

@@ -1,0 +1,33 @@
+basename: fowt_mooring
+
+# FOWT (floating offshore wind turbine) watch-circle vs dynamic export-cable
+# minimum-bend-radius (MBR) feasibility screen. Closed-form, solver-free
+# (mooring_design_fowt). Runs offline with no OrcaFlex licence:
+#   uv run python -m digitalmodel examples/workflows/fowt-mooring/input.yml
+# Preliminary screen only; final dynamic-cable curvature design needs a
+# licensed FE / lumped-mass dynamic solver.
+fowt_mooring:
+  # Max horizontal platform offset under environmental loading (watch-circle
+  # radius, m). Worst case = floater drifts this far toward the touchdown,
+  # shrinking the suspended-cable chord and tightening the bend.
+  watch_circle_radius: 25.0
+
+  cable:
+    # Suspended dynamic-cable span geometry (hang-off to touchdown), all metres.
+    suspended_length: 320.0
+    hang_off_elevation: 90.0
+    nominal_horizontal_span: 260.0
+    # DNV-RP-0360 design-factored cable minimum bend radius (cable-specific input).
+    mbr_limit_m: 4.5
+    mooring_type: hybrid   # catenary | taut | hybrid (lazy-wave host)
+    floater_type: semi     # spar | semi | tlp
+
+output:
+  summary_json: examples/workflows/fowt-mooring/results/fowt_mooring_summary.json
+
+default:
+  log_level: INFO
+  config:
+    generate_plots: false
+    overwrite:
+      output: true

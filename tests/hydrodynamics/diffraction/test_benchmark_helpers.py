@@ -1,0 +1,637 @@
+"""Tests for benchmark_helpers — leaf constants and utility functions.
+
+ABOUTME: Tests for _is_phase_at_negligible_amplitude, _parse_fdf_panels,
+generate_dof_observations, and module-level constants (DOF_ORDER,
+_AMPLITUDE_UNITS, _SOLVER_STYLES, _FILE_DESCRIPTIONS, _NEGLIGIBLE_AMPLITUDE_RATIO).
+"""
+from __future__ import annotations
+
+from pathlib import Path
+
+import pytest
+
+from digitalmodel.hydrodynamics.diffraction.benchmark_helpers import (
+    DOF_ORDER,
+    _AMPLITUDE_UNITS,
+    _FILE_DESCRIPTIONS,
+    _NEGLIGIBLE_AMPLITUDE_RATIO,
+    _SOLVER_STYLES,
+    _is_phase_at_negligible_amplitude,
+    _parse_fdf_panels,
+    generate_dof_observations,
+)
+from digitalmodel.hydrodynamics.diffraction.output_schemas import DOF
+
+
+# ---------------------------------------------------------------------------
+# Constants validation
+# ---------------------------------------------------------------------------
+
+
+class TestConstants:
+    """Verify module-level constants have the expected shape and content."""
+
+    def test_dof_order_length(self):
+        assert len(DOF_ORDER) == 6
+
+    def test_dof_order_starts_with_surge(self):
+        assert DOF_ORDER[0] == DOF.SURGE
+
+    def test_dof_order_ends_with_yaw(self):
+        assert DOF_ORDER[-1] == DOF.YAW
+
+    def test_dof_order_all_dofs_present(self):
+        assert set(DOF_ORDER) == set(DOF)
+
+    def test_amplitude_units_has_six_keys(self):
+        assert len(_AMPLITUDE_UNITS) == 6
+
+    def test_amplitude_units_keys_match_dof(self):
+        assert set(_AMPLITUDE_UNITS.keys()) == set(DOF)
+
+    def test_amplitude_units_translational_are_m_per_m(self):
+        for dof in (DOF.SURGE, DOF.SWAY, DOF.HEAVE):
+            assert _AMPLITUDE_UNITS[dof] == "m/m"
+
+    def test_amplitude_units_rotational_are_deg_per_m(self):
+        for dof in (DOF.ROLL, DOF.PITCH, DOF.YAW):
+            assert _AMPLITUDE_UNITS[dof] == "deg/m"
+
+    def test_solver_styles_has_four_entries(self):
+        assert len(_SOLVER_STYLES) == 4
+
+    def test_solver_styles_keys_are_dash_and_color(self):
+        for idx, style in _SOLVER_STYLES.items():
+            assert "dash" in style
+            assert "color_base" in style
+
+    def test_file_descriptions_has_known_keys(self):
+        assert "OrcaWave (.owd)" in _FILE_DESCRIPTIONS
+        assert "OrcaWave (spec.yml)" in _FILE_DESCRIPTIONS
+        assert "AQWA" in _FILE_DESCRIPTIONS
+
+    def test_file_descriptions_values_are_strings(self):
+        for key, desc in _FILE_DESCRIPTIONS.items():
+            assert isinstance(desc, str)
+            assert len(desc) > 10
+
+    def test_negligible_amplitude_ratio_value(self):
+        assert _NEGLIGIBLE_AMPLITUDE_RATIO == 0.05
+
+
+# ---------------------------------------------------------------------------
+# _is_phase_at_negligible_amplitude
+# ---------------------------------------------------------------------------
+
+
+class TestIsPhaseAtNegligibleAmplitude:
+    """Tests for _is_phase_at_negligible_amplitude."""
+
+    def test_zero_peak_returns_true(self):
+        assert _is_phase_at_negligible_amplitude(0.0, 0.0) is True
+
+    def test_negative_peak_returns_true(self):
+        assert _is_phase_at_negligible_amplitude(0.01, -1.0) is True
+
+    def test_below_threshold_returns_true(self):
+        # 0.04 / 1.0 = 0.04 < 0.05
+        assert _is_phase_at_negligible_amplitude(0.04, 1.0) is True
+
+    def test_at_threshold_returns_false(self):
+        # 0.05 / 1.0 = 0.05, NOT < 0.05
+        assert _is_phase_at_negligible_amplitude(0.05, 1.0) is False
+
+    def test_above_threshold_returns_false(self):
+        assert _is_phase_at_negligible_amplitude(0.5, 1.0) is False
+
+    def test_equal_magnitudes_returns_false(self):
+        assert _is_phase_at_negligible_amplitude(1.0, 1.0) is False
+
+    def test_large_peak_small_mag_returns_true(self):
+        # 0.001 / 100 = 0.00001 < 0.05
+        assert _is_phase_at_negligible_amplitude(0.001, 100.0) is True
+
+    def test_barely_above_threshold(self):
+        # 0.051 / 1.0 = 0.051 >= 0.05
+        assert _is_phase_at_negligible_amplitude(0.051, 1.0) is False
+
+
+# ---------------------------------------------------------------------------
+# _parse_fdf_panels
+# ---------------------------------------------------------------------------
+
+
+class TestParseFdfPanels:
+    """Tests for _parse_fdf_panels with synthetic FDF files."""
+
+    def _write_fdf(self, tmp_path: Path, data_lines: list[str]) -> Path:
+        """Write a fake FDF file with 4 header lines then data_lines."""
+        lines = [
+            "Title line\n",
+            "RINNER 10.0\n",
+            "NPF 100 NTCL 200\n",
+            "NAL 300\n",
+        ]
+        lines.extend(dl + "\n" for dl in data_lines)
+        fdf_path = tmp_path / "test.fdf"
+        fdf_path.write_text("".join(lines))
+        return fdf_path
+
+    def test_single_panel(self, tmp_path):
+        row = "1.0 2.0 3.0 4.0 5.0 6.0 7.0 8.0"
+        path = self._write_fdf(tmp_path, [row])
+        panels = _parse_fdf_panels(path)
+        assert len(panels) == 1
+        assert panels[0] == [
+            [1.0, 5.0, 0.0],
+            [2.0, 6.0, 0.0],
+            [3.0, 7.0, 0.0],
+            [4.0, 8.0, 0.0],
+        ]
+
+    def test_multiple_panels(self, tmp_path):
+        rows = [
+            "1.0 2.0 3.0 4.0 5.0 6.0 7.0 8.0",
+            "10.0 20.0 30.0 40.0 50.0 60.0 70.0 80.0",
+        ]
+        path = self._write_fdf(tmp_path, rows)
+        panels = _parse_fdf_panels(path)
+        assert len(panels) == 2
+
+    def test_empty_data_section(self, tmp_path):
+        path = self._write_fdf(tmp_path, [])
+        panels = _parse_fdf_panels(path)
+        assert panels == []
+
+    def test_blank_lines_skipped(self, tmp_path):
+        rows = [
+            "1.0 2.0 3.0 4.0 5.0 6.0 7.0 8.0",
+            "",
+            "   ",
+            "10.0 20.0 30.0 40.0 50.0 60.0 70.0 80.0",
+        ]
+        path = self._write_fdf(tmp_path, rows)
+        panels = _parse_fdf_panels(path)
+        assert len(panels) == 2
+
+    def test_wrong_column_count_skipped(self, tmp_path):
+        rows = [
+            "1.0 2.0 3.0 4.0 5.0 6.0 7.0 8.0",
+            "1.0 2.0 3.0",  # only 3 values
+        ]
+        path = self._write_fdf(tmp_path, rows)
+        panels = _parse_fdf_panels(path)
+        assert len(panels) == 1
+
+    def test_non_numeric_row_skipped(self, tmp_path):
+        rows = [
+            "1.0 2.0 3.0 4.0 5.0 6.0 7.0 8.0",
+            "not a number line at all nope",
+        ]
+        path = self._write_fdf(tmp_path, rows)
+        panels = _parse_fdf_panels(path)
+        assert len(panels) == 1
+
+    def test_nonexistent_file_returns_empty(self, tmp_path):
+        panels = _parse_fdf_panels(tmp_path / "does_not_exist.fdf")
+        assert panels == []
+
+    def test_panel_vertex_structure(self, tmp_path):
+        row = "0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8"
+        path = self._write_fdf(tmp_path, [row])
+        panels = _parse_fdf_panels(path)
+        panel = panels[0]
+        assert len(panel) == 4
+        for vertex in panel:
+            assert len(vertex) == 3
+            assert vertex[2] == 0.0  # z is always 0
+
+
+# ---------------------------------------------------------------------------
+# generate_dof_observations
+# ---------------------------------------------------------------------------
+
+
+class TestGenerateDofObservations:
+    """Tests for generate_dof_observations HTML generation."""
+
+    def test_full_consensus(self):
+        html = generate_dof_observations(
+            dof_name="Heave",
+            consensus="FULL",
+            mag_corr=0.9999,
+            phase_corr=0.999,
+            max_mag_diff=0.001,
+            max_phase_diff=1.0,
+            unit="m/m",
+        )
+        assert "full agreement" in html
+        assert "Heave" in html
+
+    def test_majority_consensus(self):
+        html = generate_dof_observations(
+            dof_name="Surge",
+            consensus="MAJORITY",
+            mag_corr=0.998,
+            phase_corr=0.95,
+            max_mag_diff=0.05,
+            max_phase_diff=10.0,
+            unit="m/m",
+        )
+        assert "majority agreement" in html
+        assert "Surge" in html
+
+    def test_no_consensus(self):
+        html = generate_dof_observations(
+            dof_name="Roll",
+            consensus="NONE",
+            mag_corr=0.8,
+            phase_corr=0.5,
+            max_mag_diff=2.0,
+            max_phase_diff=100.0,
+            unit="deg/m",
+            magnitude_at_max_phase_diff=3.0,
+            peak_magnitude=5.0,
+        )
+        assert "no consensus" in html
+        assert "review recommended" in html
+
+    def test_refused_comparison_is_not_described_as_no_consensus(self):
+        html = generate_dof_observations(
+            dof_name="Heave",
+            consensus="REFUSED",
+            mag_corr=0.999,
+            phase_corr=0.999,
+            max_mag_diff=0.001,
+            max_phase_diff=1.0,
+            unit="m/m",
+            refusal_reason="UNCONFIGURED_POLICY",
+        )
+
+        assert (
+            "Comparison was refused" in html,
+            "UNCONFIGURED_POLICY" in html,
+            "no consensus" in html,
+        ) == (True, True, False)
+
+    def test_virtually_identical_amplitude(self):
+        html = generate_dof_observations(
+            dof_name="Heave",
+            consensus="FULL",
+            mag_corr=0.9999,
+            phase_corr=0.99,
+            max_mag_diff=0.001,
+            max_phase_diff=5.0,
+            unit="m/m",
+        )
+        assert "virtually identical" in html
+
+    def test_excellent_amplitude(self):
+        html = generate_dof_observations(
+            dof_name="Heave",
+            consensus="FULL",
+            mag_corr=0.995,
+            phase_corr=0.99,
+            max_mag_diff=0.05,
+            max_phase_diff=5.0,
+            unit="m/m",
+        )
+        assert "excellent" in html
+
+    def test_good_amplitude(self):
+        html = generate_dof_observations(
+            dof_name="Heave",
+            consensus="FULL",
+            mag_corr=0.96,
+            phase_corr=0.90,
+            max_mag_diff=0.3,
+            max_phase_diff=15.0,
+            unit="m/m",
+        )
+        assert "good" in html.lower()
+
+    def test_moderate_amplitude(self):
+        html = generate_dof_observations(
+            dof_name="Heave",
+            consensus="NONE",
+            mag_corr=0.80,
+            phase_corr=0.50,
+            max_mag_diff=1.0,
+            max_phase_diff=10.0,
+            unit="m/m",
+        )
+        assert "moderate" in html
+
+    def test_phase_diff_small(self):
+        html = generate_dof_observations(
+            dof_name="Surge",
+            consensus="FULL",
+            mag_corr=0.999,
+            phase_corr=0.999,
+            max_mag_diff=0.001,
+            max_phase_diff=5.0,
+            unit="m/m",
+        )
+        assert "5.0" in html
+        assert "agreement within" in html
+
+    def test_phase_diff_moderate(self):
+        html = generate_dof_observations(
+            dof_name="Pitch",
+            consensus="FULL",
+            mag_corr=0.999,
+            phase_corr=0.95,
+            max_mag_diff=0.01,
+            max_phase_diff=45.0,
+            unit="deg/m",
+        )
+        assert "resonance" in html
+
+    def test_phase_diff_large_at_negligible_amplitude(self):
+        html = generate_dof_observations(
+            dof_name="Yaw",
+            consensus="MAJORITY",
+            mag_corr=0.99,
+            phase_corr=0.80,
+            max_mag_diff=0.1,
+            max_phase_diff=150.0,
+            unit="deg/m",
+            magnitude_at_max_phase_diff=0.001,
+            peak_magnitude=5.0,
+        )
+        assert "insignificant" in html or "can be ignored" in html
+
+    def test_phase_diff_large_at_significant_amplitude(self):
+        html = generate_dof_observations(
+            dof_name="Roll",
+            consensus="NONE",
+            mag_corr=0.90,
+            phase_corr=0.70,
+            max_mag_diff=1.0,
+            max_phase_diff=120.0,
+            unit="deg/m",
+            magnitude_at_max_phase_diff=3.0,
+            peak_magnitude=5.0,
+        )
+        assert "significant amplitude" in html
+        assert "convention" in html or "resonance" in html
+
+    def test_hidden_heading_phase(self):
+        html = generate_dof_observations(
+            dof_name="Sway",
+            consensus="FULL",
+            mag_corr=0.999,
+            phase_corr=0.95,
+            max_mag_diff=0.01,
+            max_phase_diff=45.0,
+            unit="m/m",
+            phase_diff_at_visible_heading=False,
+        )
+        assert "omitted" in html
+        assert "negligible" in html.lower() or "good phase" in html
+
+    def test_returns_string(self):
+        result = generate_dof_observations(
+            dof_name="Heave",
+            consensus="FULL",
+            mag_corr=1.0,
+            phase_corr=1.0,
+            max_mag_diff=0.0,
+            max_phase_diff=0.0,
+            unit="m/m",
+        )
+        assert isinstance(result, str)
+
+    def test_contains_html_tags(self):
+        result = generate_dof_observations(
+            dof_name="Heave",
+            consensus="FULL",
+            mag_corr=0.999,
+            phase_corr=0.999,
+            max_mag_diff=0.0,
+            max_phase_diff=0.0,
+            unit="m/m",
+        )
+        assert "<p>" in result
+        assert "</p>" in result
+
+
+# ---------------------------------------------------------------------------
+# Absence rendering: "nothing to compare" must not look like "could not
+# compare" (#1633 defect 3)
+# ---------------------------------------------------------------------------
+
+
+def _absence_facts(rendered: str) -> dict:
+    """Reduce rendered absence markup to the facts a reader would take away."""
+    import re
+
+    match = re.fullmatch(r'<span class="([^"]+)"[^>]*>(.*)</span>', rendered)
+    if match is None:
+        return {"class": None, "text": rendered}
+    return {"class": match.group(1), "text": match.group(2)}
+
+
+class TestAbsenceIsClassified:
+    """A structurally absent cell and a refused cell are different facts.
+
+    Before #1633 both rendered as ``Unavailable (QUALITY)`` with identical
+    weight, so a reader could not tell "there was nothing to compare" from
+    "there was something and we could not compare it".
+    """
+
+    def test_structurally_absent_cell_is_not_labelled_unavailable(self):
+        from digitalmodel.hydrodynamics.diffraction.benchmark_helpers import (
+            format_optional_correlation,
+        )
+
+        actual = _absence_facts(
+            format_optional_correlation(None, "NOT_APPLICABLE"),
+        )
+
+        assert actual == {
+            "class": "absence-structural",
+            "text": "Not compared (NOT_APPLICABLE)",
+        }
+
+    def test_refused_cell_keeps_the_unavailable_label(self):
+        from digitalmodel.hydrodynamics.diffraction.benchmark_helpers import (
+            format_optional_correlation,
+        )
+
+        actual = _absence_facts(
+            format_optional_correlation(None, "INSUFFICIENT_DATA"),
+        )
+
+        assert actual == {
+            "class": "absence-refusal",
+            "text": "Unavailable (INSUFFICIENT_DATA)",
+        }
+
+    def test_absent_diagonal_is_a_refusal_not_a_structural_absence(self):
+        """ABSENT_DIAGONAL is in REFUSAL_QUALITIES, so it must read as one."""
+        from digitalmodel.hydrodynamics.diffraction.benchmark_helpers import (
+            format_optional_correlation,
+        )
+
+        actual = _absence_facts(
+            format_optional_correlation(None, "ABSENT_DIAGONAL"),
+        )
+
+        assert actual == {
+            "class": "absence-refusal",
+            "text": "Unavailable (ABSENT_DIAGONAL)",
+        }
+
+    def test_unknown_quality_defaults_to_the_refusal_reading(self):
+        from digitalmodel.hydrodynamics.diffraction.benchmark_helpers import (
+            format_optional_correlation,
+        )
+
+        actual = _absence_facts(format_optional_correlation(None))
+
+        assert actual == {
+            "class": "absence-refusal",
+            "text": "Unavailable",
+        }
+
+    def test_mixed_distribution_containing_a_refusal_reads_as_refusal(self):
+        from digitalmodel.hydrodynamics.diffraction.benchmark_helpers import (
+            format_quality_distribution,
+        )
+
+        actual = _absence_facts(
+            format_quality_distribution(
+                {"NOT_APPLICABLE": 30, "INSUFFICIENT_DATA": 6},
+            ),
+        )
+
+        assert actual == {
+            "class": "absence-refusal",
+            "text": "Unavailable (INSUFFICIENT_DATA: 6, NOT_APPLICABLE: 30)",
+        }
+
+    def test_distribution_without_a_refusal_reads_as_structural(self):
+        from digitalmodel.hydrodynamics.diffraction.benchmark_helpers import (
+            format_quality_distribution,
+        )
+
+        actual = _absence_facts(
+            format_quality_distribution(
+                {"NOT_APPLICABLE": 30, "NULL_RESPONSE": 6},
+            ),
+        )
+
+        assert actual == {
+            "class": "absence-structural",
+            "text": "Not compared (NOT_APPLICABLE: 30, NULL_RESPONSE: 6)",
+        }
+
+
+# ---------------------------------------------------------------------------
+# Coefficient coverage: how much of the matrix was actually compared
+# (#1633 defect 2)
+# ---------------------------------------------------------------------------
+
+
+class TestCoefficientCoverage:
+    """Coverage is a first-class, machine-readable fact.
+
+    No threshold is applied here on purpose: the function reports what was
+    compared and lets a human judge it. The failure case of a whole matrix
+    being zeroed is already caught by the ABSENT_DIAGONAL refusal.
+
+    A cell counts as compared when it produced a correlation. That is the
+    ground truth of "did this cell yield evidence", read off the data rather
+    than declared by a hand-picked list of qualities.
+    """
+
+    def test_coverage_counts_cells_that_produced_a_correlation(self):
+        from digitalmodel.hydrodynamics.diffraction.benchmark_helpers import (
+            coefficient_coverage,
+        )
+
+        qualities = {}
+        correlations = {}
+        for i in range(1, 7):
+            for j in range(1, 7):
+                on_diagonal = i == j
+                qualities[(i, j)] = (
+                    "COMPARED" if on_diagonal else "NOT_APPLICABLE"
+                )
+                correlations[(i, j)] = 0.99 if on_diagonal else None
+
+        assert coefficient_coverage(qualities, correlations) == {
+            "compared_cells": 6,
+            "total_cells": 36,
+            "quality_counts": {"COMPARED": 6, "NOT_APPLICABLE": 30},
+            "uncompared_quality_counts": {"NOT_APPLICABLE": 30},
+        }
+
+    def test_identical_cells_were_compared_and_must_count_as_such(self):
+        """IDENTICAL means the comparison ran and found bit-equal legs.
+
+        Counting only the literal COMPARED quality reported "0 of 36 cells
+        compared" for a matrix every cell of which had been compared --
+        precisely the class of confidently wrong statement #1633 exists to
+        remove.
+        """
+        from digitalmodel.hydrodynamics.diffraction.benchmark_helpers import (
+            coefficient_coverage,
+        )
+
+        qualities = {
+            (i, j): "IDENTICAL" for i in range(1, 7) for j in range(1, 7)
+        }
+        correlations = {
+            (i, j): 1.0 for i in range(1, 7) for j in range(1, 7)
+        }
+
+        assert coefficient_coverage(qualities, correlations) == {
+            "compared_cells": 36,
+            "total_cells": 36,
+            "quality_counts": {"IDENTICAL": 36},
+            "uncompared_quality_counts": {},
+        }
+
+    def test_coverage_of_an_empty_matrix_is_zero_of_zero(self):
+        from digitalmodel.hydrodynamics.diffraction.benchmark_helpers import (
+            coefficient_coverage,
+        )
+
+        assert coefficient_coverage({}, {}) == {
+            "compared_cells": 0,
+            "total_cells": 0,
+            "quality_counts": {},
+            "uncompared_quality_counts": {},
+        }
+
+    def test_coverage_summary_names_the_uncompared_remainder(self):
+        from digitalmodel.hydrodynamics.diffraction.benchmark_helpers import (
+            format_coverage_summary,
+        )
+
+        summary = format_coverage_summary({
+            "compared_cells": 10,
+            "total_cells": 36,
+            "quality_counts": {"COMPARED": 10, "NOT_APPLICABLE": 26},
+            "uncompared_quality_counts": {"NOT_APPLICABLE": 26},
+        })
+
+        assert summary == "10 of 36 cells compared (NOT_APPLICABLE: 26)"
+
+    def test_coverage_summary_of_a_fully_compared_matrix_has_no_remainder(
+        self,
+    ):
+        from digitalmodel.hydrodynamics.diffraction.benchmark_helpers import (
+            format_coverage_summary,
+        )
+
+        summary = format_coverage_summary({
+            "compared_cells": 36,
+            "total_cells": 36,
+            "quality_counts": {"IDENTICAL": 36},
+            "uncompared_quality_counts": {},
+        })
+
+        assert summary == "36 of 36 cells compared"

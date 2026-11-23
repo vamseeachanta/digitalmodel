@@ -1,0 +1,166 @@
+# digitalmodel Roadmap
+
+> Tethering timeless engineering to a single source of truth.
+
+## How This Roadmap Works
+
+Modules are tiered by client project demand. Tier 1 = build next, Tier 2 = build when needed, Tier 3 = backlog. Tiers are re-evaluated when new client projects arrive -- this is event-driven, not calendar-driven. aceengineer.com calculator potential is a secondary signal: modules that make good web calculators get a small priority boost but never override client demand.
+
+Module IDs reference `docs/registry/module-routing.yaml`. Maturity levels (production, stable, beta, development, stub) track readiness, not priority.
+
+## Tier 1: Active Development
+
+### OrcaFlex Subsea Structural Analysis
+
+**Current state:** The `solvers/orcaflex/` module contains 80+ files spanning model generation (`model_generator/`, `modular_generator/`), run automation (`universal/`, parallel batch execution), post-processing (`post_process/`, `post_results/`), mooring analysis (`mooring_analysis/`, `mooring_tension_iteration/`), format conversion (`format_converter/`), and reporting (`reporting/`). Maturity is rated production for the core runner and converter. Additional OrcaFlex integration exists in `orcaflex/` (3 files + reporting), `workflows/agents/orcaflex/`, and `hydrodynamics/diffraction/` (OrcaWave-to-OrcaFlex export).
+
+**Target state:** Production-grade subsea structural analysis workflow, defined as:
+1. At least 3 reference scenario templates (jacket, pipeline, riser) with YAML configs
+2. Integration tests that run without an OrcaFlex license (mock OrcFxAPI calls)
+3. Validated output against at least 1 reference project result
+
+**Work remaining:**
+- [ ] Define canonical YAML scenario templates for jacket, pipeline, and riser configurations
+- [ ] Add license-free integration tests using mocked OrcFxAPI responses
+- [ ] Validate model generation output against a reference project dataset
+- [ ] Consolidate OrcaWave integration (`solvers/orcawave/`, `hydrodynamics/diffraction/`) into a unified Orca suite entry point
+- [ ] Document the full pipeline: YAML config to model generation to run to post-processing
+
+**Calculator potential:** Medium -- complex multi-step workflows do not simplify to single-page web calculators. Individual sub-calculations (e.g., mooring line catenary, VIV screening) are better candidates.
+
+### Cathodic Protection Maturity
+
+**Current state:** 4 implementation files covering 3 international standards plus fuel system CP:
+- `dnv_rp_b401.py` -- offshore structure CP design (anode sizing, coating breakdown, zone-based calculations)
+- `api_rp_1632.py` -- underground pipeline CP (Dwight resistance, current demand, anode life)
+- `iso_15589_2.py` -- offshore pipeline CP (bracelet anodes, attenuation length)
+- `fuel_system_cp.py` -- impressed current system design (ground bed, rectifier)
+
+72 passing tests across the 3 standards. Module exports ~30 public functions.
+
+**Target state:** Higher maturity, defined as:
+1. All standard clauses within implemented standards have corresponding code
+2. Worked-example tests from standard appendices validate each clause implementation
+3. ABS Guide for Building and Classing Ships/Offshore Installations full implementation (currently configured only in README, no code)
+
+**Work remaining:**
+- [ ] Audit DNV-RP-B401, API RP 1632, and ISO 15589-2 for missing clauses within implemented scope
+- [ ] Add worked-example tests from each standard's appendices
+- [ ] Implement ABS GN for Building and Classing Ships/Offshore Installations CP requirements
+- [ ] Add module entry to `docs/registry/module-routing.yaml` with full capabilities and gaps
+- [ ] Create manifest.yaml with clause-level traceability
+
+**Calculator potential:** High -- CP sizing (anode quantity, coating breakdown factor, current demand) is a natural web calculator for aceengineer.com. Similar in complexity to the existing wall-thickness calculator.
+
+## Tier 2: Build When Needed
+
+### Structural Fatigue -- Efthymiou SCF Gap
+
+**Current state:** Production maturity. 221 S-N curves from 17 standards, spectral methods (Dirlik, Tovo-Benasciutti), scatter diagram fatigue damage, 808+ passing tests.
+**Key gap:** Efthymiou SCF parametric equations for tubular joints not implemented. Stress transfer function composition missing.
+**Calculator potential:** High -- fatigue-life and fatigue-sn-curve calculators already exist on aceengineer.com.
+
+### Subsea Pipeline -- Installation and Free-Span
+
+**Current state:** Stable maturity across `subsea/pipeline/` and `subsea/on_bottom_stability/` (DNV-RP-F109, 5 functions, 20 tests). Pipe capacity (burst, collapse, propagation) in `structural/pipe_capacity/`.
+**Key gap:** Installation window weather criteria not implemented. Free-span VIV full response model missing (screening exists in `subsea/viv_analysis/`).
+**Calculator potential:** Medium -- on-bottom stability calculator already exists on aceengineer.com.
+
+### Asset Integrity / API 579
+
+**Current state:** Stable maturity. API 579-1/ASME FFS-1 Level 1/2 assessments, remaining strength factor (RSF), BS 7910 fracture mechanics (FAD diagrams, critical flaw size).
+**Key gap:** Level 3 assessment (elastic-plastic, buckling, crack driving force) not automated; API 579 Part 9 Level 1 curves, Annex C/E/F data and API 653 tank settlement absent; only one legacy workflow (API 579 b314) is demonstrable end to end. Program + readiness review: `docs/domains/asset-integrity/level3-and-part9-program-2026-09-25.md`, `ffs-readiness-review-2026-09-25.md` (epic #1057 Phase 4). Creep (Part 10) and fire damage not implemented.
+**Calculator potential:** Medium -- FFS screening could work as a calculator but requires significant input complexity.
+
+### Geotechnical -- Soil Models, Anchors, Scour
+
+**Current state:** 13 functions covering pile axial capacity (API RP 2GEO) and basic geotechnical calculations. 23 tests.
+**Key gap:** Soil constitutive models (clay, sand, calcareous), anchor design (DNVGL-RP-E301/E303, API RP 2SK), scour assessment (DNV-RP-F107), and shallow foundation design (DNV-RP-C212) all missing.
+**Calculator potential:** Medium -- pile capacity and scour screening are natural calculator candidates.
+
+### Mooring Analysis -- Fatigue and Optimization
+
+**Current state:** Stable maturity in `subsea/mooring_analysis/`. Catenary line analysis, spread mooring, CALM/SALM buoy design, OrcaFlex model generation, safety factor checks per DNV-OS-E301 and API RP 2SK.
+**Key gap:** Mooring line fatigue not implemented. Clump weight and buoy optimization not automated.
+**Calculator potential:** High -- mooring line preliminary sizing is a good candidate for aceengineer.com.
+
+## Tier 3: Backlog
+
+### Hydrodynamics
+
+**Current state:** 825 functions across 8 sub-modules (production maturity for top-level, AQWA, and diffraction). Wave spectra, RAO analysis, passing ship, hull library, Capytaine BEM solver, planing hull seakeeping. Zero standards mapped in capability register despite extensive code.
+**Backlog reason:** Functional and mature but needs capability map population before gap analysis is meaningful.
+
+### Naval Architecture
+
+**Current state:** 20 functions. Basic hull form and stability calculations.
+**Backlog reason:** No standards mapped, no active client demand.
+
+### Production Engineering
+
+**Current state:** Production maturity for well test quality scoring, nodal analysis (IPR/VLP), and GIGO detection. 39 functions.
+**Backlog reason:** Complete for current use cases. The published Hagedorn-Brown and Beggs-Brill vertical-lift methods are not yet implemented and are the next gap.
+
+### Well Engineering
+
+**Current state:** Stable maturity for drilling hydraulics (API RP 13D) and tubular design (API 5C3). 18 functions.
+**Backlog reason:** Basic modules functional. Casing design integration with API 5CT grades available via assetutilities.
+
+### Drilling Riser
+
+**Current state:** 13 functions. Basic riser analysis.
+**Backlog reason:** No standards mapped, no active client demand.
+
+### Candidates for Removal
+
+~~These stub modules contain no engineering value and clutter the namespace:~~
+- `specialized/digitalmarketing` -- retained: actively imported by engine.py despite earlier characterization
+- `specialized/finance` -- retained during O04 reconciliation to preserve main's public-hygiene changes and package dependencies
+- `specialized/project_management` -- disabled code stubs removed; existing data and configuration retained
+
+## Tech Debt
+
+### Category A -- Blocks Current Work
+
+1. ~~**0/150 structural tests runnable.**~~ Closed — the suite this figure described is `tests/marine_ops/marine_engineering/`, not `tests/structural/`. On 2026-11-01, with the gates' assetutilities git overlay, it ran 437 passed, 2 skipped, 9 xfailed. Full-suite collection with `-m "not solver and not slow"`: 34,584 tests, 0 collection errors. Issues (b) RAOPlotter import and (c) PYTHONPATH were fixed earlier; issue (a), the `extract_hydro_coefficients` bare import, was fixed in `validate_phase2.py` (2026-10-08). `TEST_STATUS_DASHBOARD.md` is stale (generated 2025-10-03).
+
+2. ~~**pyproject.toml version mismatch.**~~ Closed — pyproject.toml, __init__.py, and CHANGELOG now all read 2.1.0 (2026-09-10).
+
+### Category B -- Degrades Developer Experience
+
+3. ~~**Bloated pyproject.toml dependencies.**~~ Closed — runtime dependencies pruned to ~50 AST-verified imports; dev/test tools moved to extras (#1632).
+
+4. **Duplicate module paths.** Catenary solver canonical location is `marine_ops/marine_analysis/catenary/` (2,125 lines, ~40 import sites, proper BVP solver). `marine_ops/marine_engineering/` is a pure re-export facade. `subsea/catenary_riser/` is a complementary riser-specific domain layer with its own CLI. `subsea/catenary/` never existed.
+
+5. ~~**Stale coverage metrics.**~~ Closed — no `coverage.json` is tracked in the repository; CI generates coverage on each run.
+
+### Category C -- Aspirational (not blocking, not in roadmap)
+
+6. **455 standards gaps across 30 disciplines.** Many represent entire disciplines not yet started. Only gaps in Tier 1 and Tier 2 modules are actionable.
+
+7. ~~**No VISION.md at repo root.**~~ Closed — Phase 6 delivered `docs/vision/CALCULATIONS-VISION.md` as the canonical library vision document (2026-03-29).
+
+8. ~~**Stub modules with no engineering value.**~~ Partially closed — Project-management disabled code stubs removed; finance and all existing data retained during O04 reconciliation. `specialized/digitalmarketing` retained: actively imported by engine.py.
+
+## Document Intelligence Pipeline
+
+The workspace-hub document intelligence platform is the upstream data source for new calculation module development. The established workflow is: extraction (from engineering standards PDFs) to promotion (tables to CSV, equations to Python, procedures to YAML) to implementation (digitalmodel calculation modules).
+
+Three standards currently have promoted data ready for direct code use: DNV-RP-B401 (cathodic protection), DNV-RP-C203 (fatigue), and DNV-RP-F109 (on-bottom stability). The standards-transfer-ledger maps 425 standards to their target repositories and modules. Table extraction yields 69-93% accuracy; equation extraction requires manual reference. As new standards are extracted and promoted, they feed directly into Tier 1 and Tier 2 module development.
+
+## GTM Connection
+
+aceengineer.com calculators consume digitalmodel as their calculation engine. Current alignment:
+
+| aceengineer.com Calculator | digitalmodel Module | Status |
+|---|---|---|
+| fatigue-life-calculator | structural/fatigue | Live -- S-N curves + damage accumulation |
+| fatigue-sn-curve | structural/fatigue | Live -- 221 S-N curves from 17 standards |
+| npv-field-development | worldenergydata (cross-repo) | Live -- NPV/MIRR with carbon cost |
+| on-bottom-stability | subsea/on_bottom_stability | Live -- DNV-RP-F109 |
+| wall-thickness | structural/analysis | Live -- ASME B31.4 wall thickness |
+
+**Gap opportunities for next calculators:**
+- Cathodic Protection sizing calculator (cathodic_protection module, Tier 1) -- anode quantity, coating breakdown, current demand
+- Mooring line preliminary design (subsea/mooring_analysis, Tier 2) -- catenary geometry, tension, material selection
+- VIV screening (subsea/viv_analysis, Tier 2) -- reduced velocity, lock-in assessment, fatigue damage estimate

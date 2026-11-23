@@ -1,0 +1,35 @@
+FoamFile { version 2.0; format ascii; class dictionary; object controlDict; }
+
+application     interFoam;
+startFrom       startTime;
+startTime       0;
+stopAt          endTime;
+endTime         30;
+deltaT          0.01;
+writeControl    adjustable;
+writeInterval   0.25;
+purgeWrite      0;
+writeFormat     ascii;
+writePrecision  6;
+writeCompression off;
+timeFormat      general;
+timePrecision   6;
+runTimeModifiable yes;
+adjustTimeStep  yes;
+maxCo           0.65;
+maxAlphaCo      0.65;
+maxDeltaT       0.05;
+functions
+{
+    // Wave gauges: interface height above the bed. The 7 gauges around
+    // mid-tank (x = 8..12.8) feed the reflection split.
+    waveGauges
+    {
+        type            interfaceHeight;
+        libs            (fieldFunctionObjects);
+        alpha           alpha.water;
+        writeControl    timeStep;
+        writeInterval   1;
+        locations       ( (2 0.02 0.0) (8 0.02 0.0) (8.8 0.02 0.0) (9.6 0.02 0.0) (10.4 0.02 0.0) (11.2 0.02 0.0) (12 0.02 0.0) (12.8 0.02 0.0) (14 0.02 0.0) (18 0.02 0.0) );
+    }
+}

@@ -1,0 +1,12 @@
+﻿%YAML 1.1
+# Type: Model
+# Program: OrcaFlex 11.2d
+# File: docs/domains/orcaflex/installation/pipeline/route_a/monolithic/_09_def_01.yml
+# Created: 4:31 PM on 7/13/2023
+# User: 
+# Machine: 
+---
+BaseFile: _08_def_01.yml
+Lines:
+  Deleted: Rigging2ndCrane1
+...

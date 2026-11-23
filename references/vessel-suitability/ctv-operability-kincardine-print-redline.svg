@@ -1,0 +1,127 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="850" height="1100" viewBox="0 0 850 1100">
+<rect width="100%" height="100%" fill="white"/>
+<text x="60" y="52" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" fill="#a16207" text-anchor="start">CTV WORKABILITY · KINCARDINE</text>
+<text x="60" y="82" font-family="Arial, Helvetica, sans-serif" font-size="32" font-weight="800" fill="#111827" text-anchor="start">Month-by-month CTV operability</text>
+<text x="60" y="116" font-family="Arial, Helvetica, sans-serif" font-size="25" font-weight="800" fill="#0f766e" text-anchor="start">as-built [N] only vs [N] + [S]</text>
+<text x="60" y="142" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="400" fill="#4b5563" text-anchor="start">NORA3 56.95°N 1.87°W · 1979–2025 · 411,264 hours · daylight-only · Ws ≤ 12 m/s · t ≥ 4 h daylight</text>
+<polyline points="650.0,74.0 651.3,74.7 652.6,75.3 653.9,75.9 655.2,76.5 656.5,77.0 657.8,77.4 659.1,77.7 660.4,77.9 661.7,78.0 663.0,78.0 664.3,77.9 665.6,77.6 666.9,77.3 668.2,76.9 669.5,76.4 670.8,75.8 672.1,75.2 673.4,74.6 674.7,73.9 676.0,73.2 677.3,72.6 678.6,72.0 679.9,71.4 681.2,71.0 682.5,70.6 683.8,70.3 685.1,70.1 686.4,70.0 687.7,70.0 689.0,70.2 690.3,70.4 691.6,70.7 692.9,71.2 694.2,71.7 695.5,72.3 696.8,72.9 698.1,73.5 699.4,74.2 700.7,74.9 702.0,75.5 703.3,76.1 704.6,76.6 705.9,77.1 707.2,77.5 708.5,77.8 709.8,77.9 711.1,78.0" fill="none" stroke="#0f766e" stroke-width="2"/>
+<polyline points="650.0,80.0 651.3,80.7 652.6,81.3 653.9,81.9 655.2,82.5 656.5,83.0 657.8,83.4 659.1,83.7 660.4,83.9 661.7,84.0 663.0,84.0 664.3,83.9 665.6,83.6 666.9,83.3 668.2,82.9 669.5,82.4 670.8,81.8 672.1,81.2 673.4,80.6 674.7,79.9 676.0,79.2 677.3,78.6 678.6,78.0 679.9,77.4 681.2,77.0 682.5,76.6 683.8,76.3 685.1,76.1 686.4,76.0 687.7,76.0 689.0,76.2 690.3,76.4 691.6,76.7 692.9,77.2 694.2,77.7 695.5,78.3 696.8,78.9 698.1,79.5 699.4,80.2 700.7,80.9 702.0,81.5 703.3,82.1 704.6,82.6 705.9,83.1 707.2,83.5 708.5,83.8 709.8,83.9 711.1,84.0" fill="none" stroke="#0891b2" stroke-width="2"/>
+<polyline points="650.0,86.0 651.3,86.7 652.6,87.3 653.9,87.9 655.2,88.5 656.5,89.0 657.8,89.4 659.1,89.7 660.4,89.9 661.7,90.0 663.0,90.0 664.3,89.9 665.6,89.6 666.9,89.3 668.2,88.9 669.5,88.4 670.8,87.8 672.1,87.2 673.4,86.6 674.7,85.9 676.0,85.2 677.3,84.6 678.6,84.0 679.9,83.4 681.2,83.0 682.5,82.6 683.8,82.3 685.1,82.1 686.4,82.0 687.7,82.0 689.0,82.2 690.3,82.4 691.6,82.7 692.9,83.2 694.2,83.7 695.5,84.3 696.8,84.9 698.1,85.5 699.4,86.2 700.7,86.9 702.0,87.5 703.3,88.1 704.6,88.6 705.9,89.1 707.2,89.5 708.5,89.8 709.8,89.9 711.1,90.0" fill="none" stroke="#67e8f9" stroke-width="2"/>
+<text x="720" y="70" font-family="Arial, Helvetica, sans-serif" font-size="26" font-weight="800" fill="#0f766e" text-anchor="start">SeaOps</text>
+<text x="722" y="90" font-family="Arial, Helvetica, sans-serif" font-size="8" font-weight="700" fill="#4b5563" text-anchor="start">SOLUTIONS</text>
+<rect x="60" y="165" width="172" height="82" rx="8" fill="white" stroke="#b45309" stroke-width="2"/>
+<text x="72" y="188" font-family="Arial, Helvetica, sans-serif" font-size="10" font-weight="800" fill="#4b5563" text-anchor="start">AS-BUILT [N] · ANNUAL</text>
+<text x="72" y="222" font-family="Arial, Helvetica, sans-serif" font-size="28" font-weight="800" fill="#b45309" text-anchor="start">17.8%</text>
+<text x="72" y="239" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="400" fill="#4b5563" text-anchor="start">of hours operable today</text>
+<rect x="249" y="165" width="172" height="82" rx="8" fill="white" stroke="#15803d" stroke-width="2"/>
+<text x="261" y="188" font-family="Arial, Helvetica, sans-serif" font-size="10" font-weight="800" fill="#4b5563" text-anchor="start">WITH [S] LANDING · ANNUAL</text>
+<text x="261" y="222" font-family="Arial, Helvetica, sans-serif" font-size="28" font-weight="800" fill="#15803d" text-anchor="start">25.9%</text>
+<text x="261" y="239" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="400" fill="#4b5563" text-anchor="start">+8.2 pp vs as-built</text>
+<rect x="438" y="165" width="172" height="82" rx="8" fill="white" stroke="#0f766e" stroke-width="2"/>
+<text x="450" y="188" font-family="Arial, Helvetica, sans-serif" font-size="10" font-weight="800" fill="#4b5563" text-anchor="start">ANNUAL UPLIFT (RELATIVE)</text>
+<text x="450" y="222" font-family="Arial, Helvetica, sans-serif" font-size="28" font-weight="800" fill="#0f766e" text-anchor="start">+46%</text>
+<text x="450" y="239" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="400" fill="#4b5563" text-anchor="start">operability lifts ~half-again</text>
+<rect x="627" y="165" width="172" height="82" rx="8" fill="white" stroke="#0e7490" stroke-width="2"/>
+<text x="639" y="188" font-family="Arial, Helvetica, sans-serif" font-size="10" font-weight="800" fill="#4b5563" text-anchor="start">PEAK ABS · MAY</text>
+<text x="639" y="222" font-family="Arial, Helvetica, sans-serif" font-size="28" font-weight="800" fill="#0e7490" text-anchor="start">+15.3 pp</text>
+<text x="639" y="239" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="400" fill="#4b5563" text-anchor="start">28% → 43%</text>
+<text x="60" y="258" font-family="Arial, Helvetica, sans-serif" font-size="17" font-weight="800" fill="#a16207" text-anchor="start">Arrangement</text>
+<rect x="60" y="280" width="330" height="245" rx="0" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+<line x1="155" y1="410" x2="260" y2="360" stroke="#64748b" stroke-width="2"/>
+<line x1="155" y1="410" x2="260" y2="445" stroke="#64748b" stroke-width="2"/>
+<line x1="260" y1="360" x2="260" y2="445" stroke="#64748b" stroke-width="2"/>
+<line x1="260" y1="360" x2="320" y2="328" stroke="#0e7490" stroke-width="2"/>
+<text x="312" y="323" font-family="Arial, Helvetica, sans-serif" font-size="10" font-weight="800" fill="#0f766e" text-anchor="start">platform-N</text>
+<text x="312" y="336" font-family="Arial, Helvetica, sans-serif" font-size="10" font-weight="800" fill="#0f766e" text-anchor="start">(true 030°)</text>
+<text x="85" y="320" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="800" fill="#dc2626" text-anchor="start">N (true)</text>
+<line x1="95" y1="345" x2="95" y2="312" stroke="#dc2626" stroke-width="2"/>
+<polygon points="95,308 90,318 100,318" fill="#dc2626"/>
+<circle cx="155" cy="410" r="13" fill="#e2e8f0" stroke="#475569" stroke-width="2"/>
+<text x="129" y="414" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="800" fill="#111827" text-anchor="start">W col</text>
+<circle cx="260" cy="360" r="13" fill="#e2e8f0" stroke="#475569" stroke-width="2"/>
+<text x="234" y="332" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="800" fill="#111827" text-anchor="start">N col</text>
+<circle cx="260" cy="445" r="13" fill="#e2e8f0" stroke="#475569" stroke-width="2"/>
+<text x="234" y="479" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="800" fill="#111827" text-anchor="start">S col</text>
+<text x="285" y="390" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="800" fill="#b45309" text-anchor="start">[N] AS-BUILT</text>
+<text x="295" y="475" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="800" fill="#15803d" text-anchor="start">[S]</text>
+<text x="210" y="422" font-family="Arial, Helvetica, sans-serif" font-size="24" font-weight="400" fill="#111827" text-anchor="start">+</text>
+<text x="130" y="507" font-family="Arial, Helvetica, sans-serif" font-size="10" font-weight="400" fill="#4b5563" text-anchor="start">Top-down · north-up · 3-column semisub</text>
+<rect x="430" y="280" width="360" height="245" rx="0" fill="white" stroke="#cbd5e1" stroke-width="1"/>
+<text x="450" y="315" font-family="Arial, Helvetica, sans-serif" font-size="17" font-weight="800" fill="#a16207" text-anchor="start">What the data says</text>
+<circle cx="456" cy="350" r="4" fill="#15803d"/>
+<text x="470" y="355" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="800" fill="#111827" text-anchor="start">Adding [S] lifts annual operability ~46%</text>
+<text x="470" y="374" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="400" fill="#4b5563" text-anchor="start">As-built [N] alone: 17.8%; with [S] added:</text>
+<text x="470" y="390" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="400" fill="#4b5563" text-anchor="start">25.9% (+8.2 pp).</text>
+<circle cx="456" cy="422" r="4" fill="#0f766e"/>
+<text x="470" y="427" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="800" fill="#111827" text-anchor="start">Summer peak in May</text>
+<text x="470" y="446" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="400" fill="#4b5563" text-anchor="start">As-built 28% → with [S] 43% (+15.3 pp).</text>
+<text x="470" y="462" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="400" fill="#4b5563" text-anchor="start">Apr–Aug all clear +9 pp uplift.</text>
+<circle cx="456" cy="494" r="4" fill="#dc2626"/>
+<text x="470" y="499" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="800" fill="#111827" text-anchor="start">Winter is daylight-bound</text>
+<text x="470" y="518" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="400" fill="#4b5563" text-anchor="start">Jan 6.8% · Dec 6.2% even with [S]. At 57°N</text>
+<text x="470" y="534" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="400" fill="#4b5563" text-anchor="start">the must-complete-in-daylight rule</text>
+<text x="470" y="550" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="400" fill="#4b5563" text-anchor="start">structurally caps Dec/Jan/Feb.</text>
+<text x="60" y="560" font-family="Arial, Helvetica, sans-serif" font-size="17" font-weight="800" fill="#a16207" text-anchor="start">Operable hours per month — climatology</text>
+<line x1="98" y1="860.0" x2="790" y2="860.0" stroke="#e5e7eb" stroke-width="1"/>
+<text x="60" y="864.0" font-family="Arial, Helvetica, sans-serif" font-size="10" font-weight="400" fill="#4b5563" text-anchor="start">0</text>
+<line x1="98" y1="818.3" x2="790" y2="818.3" stroke="#e5e7eb" stroke-width="1"/>
+<text x="60" y="822.3333333333334" font-family="Arial, Helvetica, sans-serif" font-size="10" font-weight="400" fill="#4b5563" text-anchor="start">10</text>
+<line x1="98" y1="776.7" x2="790" y2="776.7" stroke="#e5e7eb" stroke-width="1"/>
+<text x="60" y="780.6666666666666" font-family="Arial, Helvetica, sans-serif" font-size="10" font-weight="400" fill="#4b5563" text-anchor="start">20</text>
+<line x1="98" y1="735.0" x2="790" y2="735.0" stroke="#e5e7eb" stroke-width="1"/>
+<text x="60" y="739.0" font-family="Arial, Helvetica, sans-serif" font-size="10" font-weight="400" fill="#4b5563" text-anchor="start">30</text>
+<line x1="98" y1="693.3" x2="790" y2="693.3" stroke="#e5e7eb" stroke-width="1"/>
+<text x="60" y="697.3333333333334" font-family="Arial, Helvetica, sans-serif" font-size="10" font-weight="400" fill="#4b5563" text-anchor="start">40</text>
+<line x1="98" y1="651.7" x2="790" y2="651.7" stroke="#e5e7eb" stroke-width="1"/>
+<text x="60" y="655.6666666666666" font-family="Arial, Helvetica, sans-serif" font-size="10" font-weight="400" fill="#4b5563" text-anchor="start">50</text>
+<line x1="98" y1="610.0" x2="790" y2="610.0" stroke="#e5e7eb" stroke-width="1"/>
+<text x="60" y="614.0" font-family="Arial, Helvetica, sans-serif" font-size="10" font-weight="400" fill="#4b5563" text-anchor="start">60</text>
+<line x1="98" y1="610" x2="98" y2="860" stroke="#94a3b8"/>
+<line x1="98" y1="860" x2="790" y2="860" stroke="#94a3b8"/>
+<text x="57" y="720" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="400" fill="#4b5563" text-anchor="start">Operable hours (%)</text>
+<rect x="98" y="585" width="12" height="12" fill="#b45309"/>
+<text x="116" y="595" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" fill="#111827" text-anchor="start">AS-BUILT: [N] only</text>
+<rect x="248" y="585" width="12" height="12" fill="#15803d"/>
+<text x="266" y="595" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" fill="#111827" text-anchor="start">[N] + [S]</text>
+<rect x="109.8" y="843.3" width="14" height="16.7" fill="#b45309"/>
+<rect x="127.8" y="831.7" width="14" height="28.3" fill="#15803d"/>
+<text x="114.83333333333333" y="885" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="400" fill="#111827" text-anchor="start">Jan</text>
+<rect x="167.5" y="830.8" width="14" height="29.2" fill="#b45309"/>
+<rect x="185.5" y="812.9" width="14" height="47.1" fill="#15803d"/>
+<text x="172.5" y="885" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="400" fill="#111827" text-anchor="start">Feb</text>
+<rect x="225.2" y="811.7" width="14" height="48.3" fill="#b45309"/>
+<rect x="243.2" y="778.8" width="14" height="81.2" fill="#15803d"/>
+<text x="230.16666666666666" y="885" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="400" fill="#111827" text-anchor="start">Mar</text>
+<rect x="282.8" y="777.9" width="14" height="82.1" fill="#b45309"/>
+<rect x="300.8" y="726.7" width="14" height="133.3" fill="#15803d"/>
+<text x="287.8333333333333" y="885" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="400" fill="#111827" text-anchor="start">Apr</text>
+<rect x="340.5" y="745.4" width="14" height="114.6" fill="#b45309"/>
+<rect x="358.5" y="681.7" width="14" height="178.3" fill="#15803d"/>
+<text x="345.49999999999994" y="885" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="400" fill="#111827" text-anchor="start">May</text>
+<rect x="398.2" y="710.0" width="14" height="150.0" fill="#b45309"/>
+<rect x="416.2" y="653.8" width="14" height="206.2" fill="#15803d"/>
+<text x="403.16666666666663" y="885" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="400" fill="#111827" text-anchor="start">Jun</text>
+<rect x="455.8" y="698.3" width="14" height="161.7" fill="#b45309"/>
+<rect x="473.8" y="651.7" width="14" height="208.3" fill="#15803d"/>
+<text x="460.8333333333333" y="885" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="400" fill="#111827" text-anchor="start">Jul</text>
+<rect x="513.5" y="730.0" width="14" height="130.0" fill="#b45309"/>
+<rect x="531.5" y="689.6" width="14" height="170.4" fill="#15803d"/>
+<text x="518.5" y="885" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="400" fill="#111827" text-anchor="start">Aug</text>
+<rect x="571.2" y="780.8" width="14" height="79.2" fill="#b45309"/>
+<rect x="589.2" y="744.2" width="14" height="115.8" fill="#15803d"/>
+<text x="576.1666666666666" y="885" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="400" fill="#111827" text-anchor="start">Sep</text>
+<rect x="628.8" y="825.0" width="14" height="35.0" fill="#b45309"/>
+<rect x="646.8" y="799.2" width="14" height="60.8" fill="#15803d"/>
+<text x="633.8333333333334" y="885" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="400" fill="#111827" text-anchor="start">Oct</text>
+<rect x="686.5" y="839.2" width="14" height="20.8" fill="#b45309"/>
+<rect x="704.5" y="824.6" width="14" height="35.4" fill="#15803d"/>
+<text x="691.5" y="885" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="400" fill="#111827" text-anchor="start">Nov</text>
+<rect x="744.2" y="845.0" width="14" height="15.0" fill="#b45309"/>
+<rect x="762.2" y="834.2" width="14" height="25.8" fill="#15803d"/>
+<text x="749.1666666666666" y="885" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="400" fill="#111827" text-anchor="start">Dec</text>
+<line x1="60" y1="972" x2="790" y2="972" stroke="#cbd5e1"/>
+<text x="60" y="990" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="400" fill="#4b5563" text-anchor="start">DES Simulator · NORA3 56.95°N 1.87°W</text>
+<text x="650" y="990" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="400" fill="#4b5563" text-anchor="start">© SeaOps Solutions</text>
+<text x="60" y="1026" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="800" fill="#dc2626" text-anchor="start">PRINT / REDMARK VERSION — white background, dark text, simplified fills. Client comments can be marked directly on this page.</text>
+<text x="60" y="1046" font-family="Arial, Helvetica, sans-serif" font-size="10" font-weight="400" fill="#4b5563" text-anchor="start">Source values are approximate bar-read values from the supplied infographic; source-stated annual metrics remain authoritative pending native data.</text>
+</svg>

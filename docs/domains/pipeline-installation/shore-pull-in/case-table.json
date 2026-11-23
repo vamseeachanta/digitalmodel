@@ -1,0 +1,447 @@
+{
+  "revision": "6",
+  "revisions": [
+    {
+      "revision": "1",
+      "date": "2026-10-15",
+      "change": "Initial surface pull-in preparation with traced scenario assumptions and independent force balance."
+    },
+    {
+      "revision": "2",
+      "date": "2026-10-15",
+      "change": "Record the five unmeasured wall and coating inputs with explicit labels and bases, and carry audited provenance into prepared outputs."
+    },
+    {
+      "revision": "3",
+      "date": "2026-10-15",
+      "change": "Carry case friction into prepared pipe line types, declare nine study parameters without source claims, and state the native geometry limits."
+    },
+    {
+      "revision": "4",
+      "date": "2026-10-17",
+      "change": "Apply the ruled 21 m depth, 2000 m supported length and 21 m incline rise; gate geometry, pin hand forces, verify dataset anchors and clarify source limits."
+    },
+    {
+      "revision": "5",
+      "date": "2026-10-18",
+      "change": "Pin surface endpoints, hull and winch formats, remove undeclared ramps and regenerate reproducible bundles; replace copy links with official bibliography, audit geometry evidence and qualify unavailable primary texts as assumptions."
+    },
+    {
+      "revision": "6",
+      "date": "2026-10-18",
+      "change": "Place hull symmetry, water-surface and line-end selectors before dependent fields, retain generator browser group order and regenerate model bytes and digests for the serialization changes."
+    }
+  ],
+  "public_dataset": {
+    "url": "https://api.github.com/repositories/574746314/contents/packages/worldenergydata-vessel_fleet/src/worldenergydata/vessel_fleet/_data/curated/construction_vessels.csv?ref=0cef59201f817c28d91ef25e1bfcba99bfc9d588",
+    "retrieval_date": "2026-10-15",
+    "record_count": 161,
+    "sha256": "7147f215e3ab2c4e3890e10daf51ff2f6504cc0782abb5139e23ad529b801884",
+    "commit": "0cef59201f817c28d91ef25e1bfcba99bfc9d588",
+    "path": "packages/worldenergydata-vessel_fleet/src/worldenergydata/vessel_fleet/_data/curated/construction_vessels.csv",
+    "csv_line": 68,
+    "columns": {
+      "LOA_M": "182.6",
+      "BEAM_M": "25.9",
+      "DRAFT_M": "15.5",
+      "PIPELAY_MIN_DIAMETER_IN": "2.0",
+      "PIPELAY_CAPACITY_IN": "36.0",
+      "PIPELAY_MIN_WATER_DEPTH_M": "10.7"
+    }
+  },
+  "sources": {
+    "assumptions": {
+      "url": "https://api.github.com/repositories/590299785/contents/docs/domains/pipeline-installation/slay-campaign/case-table.yml?ref=096b76dc242841726c5c8b41ca8f18b55fdab1fa",
+      "retrieval_date": "2026-10-15",
+      "record_count": 1,
+      "sha256": "0b5a1e30ed1c89ac9eef83226e68565b064204d3dae4ef3303f05a246d0f2ab0",
+      "locator": "Public repository numerical scenario inputs; not measured pipe or hull response data."
+    },
+    "defaults": {
+      "url": "https://api.github.com/repositories/590299785/contents/src/digitalmodel/solvers/orcaflex/modular_generator/schema/root.py?ref=096b76dc242841726c5c8b41ca8f18b55fdab1fa",
+      "retrieval_date": "2026-10-15",
+      "record_count": 1,
+      "sha256": "d3be7c7c3a08cdeb2b09ca33c7fc9bca0aeb58443df5e86014299eb4a2eee6b4",
+      "locator": "ProjectInputSpec and builders; numerical preparation defaults, not qualified design data."
+    },
+    "friction": {
+      "url": "https://api.research-repository.uwa.edu.au/ws/files/7389516/geolett.14.pdf",
+      "retrieval_date": "2026-10-15",
+      "record_count": 1,
+      "sha256": "75c5212a12cf67a51e4bb90907670b587c30cc8914014ff903e001c4b818a489",
+      "locator": "Cyclic consolidation and axial friction for seabed pipelines (2014), Results: Sliding resistance and pore pressure dissipation, p. 166: initial factor 0.32 and drained limit tan(phi); Table 1, p. 166: triaxial friction angle 23.5 degrees. PDF opened and text checked 2026-10-17. Fully rough modified Cam clay; not a site-wide soil bound."
+    },
+    "pull-paper": {
+      "url": "https://multiphasesystems.online/2018/pdf/mfs2018.3.005.pdf",
+      "retrieval_date": "2026-10-15",
+      "record_count": 1,
+      "sha256": "71cfc93ae47792948688514fbdd30ef24fbe6ff82bcf1d373d004d04bc28d7a4",
+      "locator": "The algorithm for determining the pulling force while dragging a pipeline (2018), pp. 38-39, equations (5)-(6) and force summation. Context only; no numeric input or surface pull-in validation is transferred."
+    },
+    "dataset": {
+      "url": "https://api.github.com/repositories/574746314/contents/packages/worldenergydata-vessel_fleet/src/worldenergydata/vessel_fleet/_data/curated/construction_vessels.csv?ref=0cef59201f817c28d91ef25e1bfcba99bfc9d588",
+      "retrieval_date": "2026-10-15",
+      "record_count": 161,
+      "sha256": "7147f215e3ab2c4e3890e10daf51ff2f6504cc0782abb5139e23ad529b801884",
+      "commit": "0cef59201f817c28d91ef25e1bfcba99bfc9d588",
+      "path": "packages/worldenergydata-vessel_fleet/src/worldenergydata/vessel_fleet/_data/curated/construction_vessels.csv",
+      "csv_line": 68,
+      "columns": {
+        "LOA_M": "182.6",
+        "BEAM_M": "25.9",
+        "DRAFT_M": "15.5",
+        "PIPELAY_MIN_DIAMETER_IN": "2.0",
+        "PIPELAY_CAPACITY_IN": "36.0",
+        "PIPELAY_MIN_WATER_DEPTH_M": "10.7"
+      }
+    },
+    "unit-conversion": {
+      "url": "https://api.github.com/repositories/590299785/contents/src/digitalmodel/subsea/vertical_riser/vertical_riser_components.py?ref=096b76dc242841726c5c8b41ca8f18b55fdab1fa",
+      "retrieval_date": "2026-10-15",
+      "record_count": 1,
+      "sha256": "2d81029862cdcfbb480238ab4a5ad07e22d4fc3f1558a176df77d6a0c72634bc",
+      "locator": "Pipe OD conversion from inch to m, line 195; metre-per-inch factor also used at line 199."
+    },
+    "pianc-catalog": {
+      "url": "https://www.pianc.org/publication/harbour-approach-channels-design-guidelines/",
+      "retrieval_date": "2026-10-18",
+      "record_count": 1,
+      "sha256": "3998899e51c721893d3aa31b26a69f5dcd05eb4222c3bb54ea417d4c2cf4868d",
+      "locator": "Official publisher catalogue, MarCom WG 121, description: supersedes the joint PIANC-IAPH report Approach Channels - A Guide for Design (1997), MarCom WG 30. Bibliographic metadata only; no primary-text locator or numerical criterion is confirmed."
+    },
+    "pianc-publication-list": {
+      "url": "https://www.pianc.org/wp-content/uploads/2026/09/Searchable-List-of-All-PIANC-Publications-September-2026.pdf",
+      "retrieval_date": "2026-10-18",
+      "record_count": 1,
+      "sha256": "6932f058087272353a124571137597f9706479de97907bd186449dc2dd9daf70",
+      "locator": "Official publisher publication list, 1997 row: MarCom WG 30 (2), Approach Channels - A Guide for Design, joint PIANC-IAPH report. Bibliographic metadata only; no numerical criterion or primary-text locator is confirmed."
+    }
+  },
+  "input_sources": {
+    "gravity_m_s2": {
+      "source": "assumptions",
+      "qualification": "scenario assumption"
+    },
+    "steel_density_te_m3": {
+      "source": "assumptions",
+      "qualification": "scenario assumption"
+    },
+    "water_density_te_m3": {
+      "source": "assumptions",
+      "qualification": "scenario assumption"
+    },
+    "seabed.slope": {
+      "source": "assumptions",
+      "qualification": "scenario assumption"
+    },
+    "seabed.stiffness.normal": {
+      "source": "assumptions",
+      "qualification": "scenario assumption",
+      "unit": "kN/m/m2"
+    },
+    "seabed.stiffness.shear": {
+      "source": "assumptions",
+      "qualification": "scenario assumption",
+      "unit": "kN/m/m2"
+    },
+    "pipeline.dimensions.outer_diameter": {
+      "source": "dataset",
+      "qualification": "public numerical anchor",
+      "derivation": "PIPELAY_CAPACITY_IN times metre-per-inch conversion from the unit-conversion source."
+    },
+    "pipeline.dimensions.wall_thickness": {
+      "label": "assumed, based on previous experience",
+      "basis": "Generic pipe diameter-to-wall ratio D/t = 36"
+    },
+    "pipeline.coatings.corrosion.thickness": {
+      "label": "assumed, based on previous experience",
+      "basis": "Generic polyethylene-type corrosion coating"
+    },
+    "pipeline.coatings.corrosion.density": {
+      "label": "assumed, based on previous experience",
+      "basis": "Generic polyethylene-type corrosion coating"
+    },
+    "pipeline.coatings.weight.0.thickness": {
+      "label": "assumed, based on previous experience",
+      "basis": "Generic high-density concrete weight coating at 3.0 te/m3"
+    },
+    "pipeline.coatings.weight.0.density": {
+      "label": "assumed, based on previous experience",
+      "basis": "Generic high-density concrete weight coating at 3.0 te/m3"
+    },
+    "pipeline.segments.0.length": {
+      "source": "assumptions",
+      "qualification": "scenario assumption",
+      "unit": "m",
+      "basis": "The cited generic S-lay case table at 096b76dc, line 52, assigns 2000 m. The equilibrium profile is only an order-of-magnitude cross-check, not site bathymetry."
+    },
+    "pipeline.segments.0.segment_length": {
+      "source": "assumptions",
+      "qualification": "scenario assumption"
+    },
+    "equipment.vessel.properties.loa": {
+      "source": "dataset",
+      "qualification": "public numerical anchor",
+      "unit": "m"
+    },
+    "equipment.vessel.properties.beam": {
+      "source": "dataset",
+      "qualification": "public numerical anchor",
+      "unit": "m"
+    },
+    "equipment.vessel.properties.draft": {
+      "source": "dataset",
+      "qualification": "public numerical anchor",
+      "unit": "m"
+    },
+    "equipment.vessel.properties.gmt": {
+      "source": "assumptions",
+      "qualification": "scenario assumption",
+      "unit": "m"
+    },
+    "equipment.vessel.properties.cog.0": {
+      "source": "assumptions",
+      "qualification": "scenario assumption",
+      "unit": "m"
+    },
+    "equipment.vessel.properties.cog.1": {
+      "source": "assumptions",
+      "qualification": "scenario assumption",
+      "unit": "m"
+    },
+    "equipment.vessel.properties.cog.2": {
+      "source": "assumptions",
+      "qualification": "scenario assumption",
+      "unit": "m"
+    },
+    "equipment.vessel.properties.gyration_radii.0": {
+      "source": "assumptions",
+      "qualification": "scenario assumption",
+      "unit": "m"
+    },
+    "equipment.vessel.properties.gyration_radii.1": {
+      "source": "assumptions",
+      "qualification": "scenario assumption",
+      "unit": "m"
+    },
+    "equipment.vessel.properties.gyration_radii.2": {
+      "source": "assumptions",
+      "qualification": "scenario assumption",
+      "unit": "m"
+    },
+    "tail_tension_kn": {
+      "qualification": "study parameter chosen for this preparation; not sourced or measured",
+      "basis": "Use an unloaded trailing end for the reference force balance, in kN."
+    },
+    "winch_efficiency": {
+      "qualification": "study parameter chosen for this preparation; not sourced or measured",
+      "basis": "Use ideal transmission to isolate the pipe pull from mechanical losses, dimensionless."
+    },
+    "cases.0.friction": {
+      "source": "friction",
+      "qualification": "public numerical anchor"
+    },
+    "cases.0.rise_m": {
+      "qualification": "study parameter chosen for this preparation; not sourced or measured",
+      "basis": "Define the initial-friction reference on a level supported route, in m."
+    },
+    "cases.0.buoyancy_fraction": {
+      "qualification": "study parameter chosen for this preparation; not sourced or measured",
+      "basis": "Define the initial-friction reference without buoyancy aids, dimensionless."
+    },
+    "cases.1.friction": {
+      "source": "friction",
+      "qualification": "public numerical anchor"
+    },
+    "cases.1.rise_m": {
+      "qualification": "study parameter chosen for this preparation; not sourced or measured",
+      "basis": "Keep the drained-friction comparison on a level supported route, in m."
+    },
+    "cases.1.buoyancy_fraction": {
+      "qualification": "study parameter chosen for this preparation; not sourced or measured",
+      "basis": "Keep the drained-friction comparison without buoyancy aids, dimensionless."
+    },
+    "cases.2.friction": {
+      "source": "friction",
+      "qualification": "public numerical anchor"
+    },
+    "cases.2.rise_m": {
+      "qualification": "study parameter chosen for this preparation; not sourced or measured",
+      "basis": "Rise from the 21 m hull standoff depth to mean sea level over 2000 m, mean slope 1:95.2 (0.6 degrees); analytical comparison only, absent from the flat native geometry."
+    },
+    "cases.2.buoyancy_fraction": {
+      "qualification": "study parameter chosen for this preparation; not sourced or measured",
+      "basis": "Offset half the submerged weight in the analytical comparison, dimensionless; absent from the native model."
+    },
+    "water_depth_m": {
+      "qualification": "study parameter chosen for this preparation; not sourced or measured",
+      "unit": "m",
+      "basis": "Round max(10.7 m minimum lay depth, 1.3 times 15.5 m draft = 20.2 m) up to 21 m. The depth/draft ratio and the 1 m weather limit are assumed, based on previous experience; the unavailable PIANC primary text is not numerical evidence. This is a study condition, not an operational clearance qualification."
+    }
+  },
+  "basis": {
+    "gravity_m_s2": 9.80665,
+    "steel_density_te_m3": 7.85,
+    "water_density_te_m3": 1.025,
+    "seabed": {
+      "slope": 0,
+      "stiffness": {
+        "normal": 1000,
+        "shear": 100
+      }
+    },
+    "pipeline": {
+      "name": "Generic pipe",
+      "material": "X65",
+      "dimensions": {
+        "outer_diameter": 0.9144,
+        "wall_thickness": 0.0254
+      },
+      "coatings": {
+        "corrosion": {
+          "thickness": 0.004,
+          "density": 0.95
+        },
+        "weight": [
+          {
+            "name": "CWC",
+            "thickness": 0.1,
+            "density": 3.0
+          }
+        ]
+      },
+      "segments": [
+        {
+          "type": "X65+CWC",
+          "length": 2000,
+          "segment_length": 5
+        }
+      ]
+    },
+    "equipment": {
+      "vessel": {
+        "name": "Generic lay hull",
+        "properties": {
+          "loa": 182.6,
+          "beam": 25.9,
+          "draft": 15.5,
+          "gmt": 2.5,
+          "cog": [
+            0,
+            0,
+            3
+          ],
+          "gyration_radii": [
+            10,
+            30,
+            30
+          ]
+        }
+      }
+    },
+    "tail_tension_kn": 0,
+    "winch_efficiency": 1,
+    "water_depth_m": 21
+  },
+  "cases": [
+    {
+      "id": "level-initial",
+      "friction": 0.32,
+      "rise_m": 0,
+      "buoyancy_fraction": 0
+    },
+    {
+      "id": "level-drained",
+      "friction": 0.4348123749609336,
+      "rise_m": 0,
+      "buoyancy_fraction": 0
+    },
+    {
+      "id": "incline-aided",
+      "friction": 0.32,
+      "rise_m": 21,
+      "buoyancy_fraction": 0.5
+    }
+  ],
+  "known_limits": [
+    "Four dataset anchors supply pipe outer diameter and hull length, beam and draft; three friction-paper entries supply the case friction. Fifteen inherited scenario assumptions supply gravity, steel and water density, seabed slope and stiffness, supported length, mesh length, hull GM, centre of gravity and radii of gyration. Five wall and coating properties are assumed, based on previous experience, with bases below. Nine declared study parameters supply water depth, tail tension, winch efficiency, and each case rise and buoyancy fraction. No measured pipe property is claimed.",
+    "The diameter bounds and hull geometry are public dataset anchors; no vessel identity or equipment capacity is retained.",
+    "Friction anchors describe the cited soft-clay numerical model; breakout, drainage evolution, adhesion, bends, bending stress and hydrodynamic loads are not represented.",
+    "The prepared native models carry each case axial and lateral pipe seabed friction, a flat seabed and no buoyancy aids. Lateral friction uses the same scalar factor as axial friction; directional soil behaviour remains unqualified. The generator S-lay end arrangement connects the winch from the lay hull to free pipe end A, with end B anchored; it is not a qualified shore-pull topology. Case rise and buoyancy fraction enter the analytical check only; native contact geometry does not represent them.",
+    "Native execution remains refused; a qualified adapter and an approved manifest digest are required. Native criteria, timing and results are not evaluated (https://github.com/vamseeachanta/digitalmodel/issues/1739, https://github.com/vamseeachanta/digitalmodel/issues/133).",
+    "HDD, trenching, roller/beach stress, flooding and sinking stability, and method selection remain open (https://github.com/vamseeachanta/digitalmodel/issues/1739). Floating-tow equipment and broader campaign qualification remain open (https://github.com/vamseeachanta/digitalmodel/issues/133).",
+    "Optional standard design-factor and strain-limit settings from the shared builder are omitted; no standard-based acceptance check is performed.",
+    "The unchanged dataset record (CSV line 68; header is line 1) is internally inconsistent: draft 15.5 m exceeds minimum lay depth 10.7 m. The 21 m depth meets both numerical requirements using max(10.7, 1.3*15.5); the incorrect field is not established.",
+    "Winch efficiency 1.0 is ideal: winch demand equals head tension. No shore winch capacity is supplied; the capacity comparison is Not Evaluated. Generated tensioner capacity is a schema placeholder equal to demand, not equipment capability.",
+    "Builder defaults outside the numeric-input audit include elastic modulus 207 GPa, Poisson ratio 0.293, drag coefficients, other line-type friction, winch wire and supports. The defaults source identifies the schema entry point only; these defaults are not qualified design inputs. Undeclared fixed ramp shapes are removed from the surface preparation.",
+    "Recorded declarations of criteria timestamps are not independent proof of historical ordering. Geometry criteria are specific to the one-segment, surface-origin template and the assumed wave limit of 1 m; no wider topology or clearance acceptance is claimed.",
+    "Model bundles are reproduced on this branch. Preparation explicitly sets surface-origin endpoints, released anchor bending, named hull draughts and staged winch tension; undeclared ramps are removed. Canonical serialization and schema-variant tests check independence from the reviewed shared-generator differences. A future integration tree still requires its own full check.",
+    "The geometry primary texts were not retrieved: the PIANC section and USACE table locators are unconfirmed. The depth/draft ratio and profile coefficients are assumed, based on previous experience. Official publisher metadata confirms only that the 1997 PIANC WG 30 report is superseded by WG 121; it supplies no numerical geometry evidence."
+  ],
+  "criteria_evidence": {
+    "sha256": "3fcdde8e11fa21a2cba037eb194b62ba50fb9a9538af4196f65bab91750551b2",
+    "recorded_utc": "2026-10-18T02:35:09.158264+00:00",
+    "first_generation_utc": "2026-10-18T02:35:09.158275+00:00",
+    "qualification": "Recorded declarations; not independent historical ordering evidence."
+  },
+  "assumed_inputs": [
+    {
+      "input": "pipeline.dimensions.wall_thickness",
+      "value": 0.0254,
+      "unit": "m",
+      "label": "assumed, based on previous experience",
+      "basis": "Generic pipe diameter-to-wall ratio D/t = 36"
+    },
+    {
+      "input": "pipeline.coatings.corrosion.thickness",
+      "value": 0.004,
+      "unit": "m",
+      "label": "assumed, based on previous experience",
+      "basis": "Generic polyethylene-type corrosion coating"
+    },
+    {
+      "input": "pipeline.coatings.corrosion.density",
+      "value": 0.95,
+      "unit": "te/m3",
+      "label": "assumed, based on previous experience",
+      "basis": "Generic polyethylene-type corrosion coating"
+    },
+    {
+      "input": "pipeline.coatings.weight.0.thickness",
+      "value": 0.1,
+      "unit": "m",
+      "label": "assumed, based on previous experience",
+      "basis": "Generic high-density concrete weight coating at 3.0 te/m3"
+    },
+    {
+      "input": "pipeline.coatings.weight.0.density",
+      "value": 3.0,
+      "unit": "te/m3",
+      "label": "assumed, based on previous experience",
+      "basis": "Generic high-density concrete weight coating at 3.0 te/m3"
+    }
+  ],
+  "geometry_basis": {
+    "pianc": {
+      "citation": "PIANC/IAPH (1997), Approach Channels - A Guide for Design, MarCom WG 30 (2), publisher PIANC; superseded by MarCom WG 121 (2014), Harbour Approach Channels - Design Guidelines.",
+      "locator": "Section 5.3.2 Depth, p. 20: unconfirmed against primary text.",
+      "evidence_status": "unavailable",
+      "attempt_date": "2026-10-18",
+      "metadata_source": "pianc-catalog",
+      "reason": "The publisher catalogue was retrieved, but the 1997 primary text was not publicly accessible; no copy link is retained.",
+      "qualification": "assumed, based on previous experience",
+      "basis": "The depth/draft ratio 1.3 and weather limit 1 m are retained as generic study assumptions; no value is attributed to the unavailable report."
+    },
+    "profile": {
+      "citation": "USACE, Coastal Engineering Manual, EM 1110-2-1100, Part III, Chapter 3, publisher U.S. Army Corps of Engineers.",
+      "url": "https://www.publications.usace.army.mil/Portals/76/Publications/EngineerManuals/EM_1110-2-1100_Part-III.pdf",
+      "locator": "Section III-3-3c(2), equation III-3-14, p. III-3-22, and Table III-3-3, p. III-3-24: unconfirmed against primary text.",
+      "evidence_status": "unavailable",
+      "attempt_date": "2026-10-18",
+      "reason": "The official publications document and catalogue requests returned HTTP 403; no primary-text digest or retrieval claim is recorded.",
+      "qualification": "assumed, based on previous experience",
+      "basis": "The profile equation and coefficients A = 0.10 to 0.15 m^(1/3) are generic study assumptions, not transcriptions or site measurements.",
+      "derivation": "For the assumed h = A*x^(2/3), x = (21/A)^(3/2) gives 1656.5 to 3043.2 m. The selected 2000 m length is an order-of-magnitude study value; closure depth and site profile are not established."
+    }
+  }
+}

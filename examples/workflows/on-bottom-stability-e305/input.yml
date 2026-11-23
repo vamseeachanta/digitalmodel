@@ -1,0 +1,58 @@
+# Synthetic inputs for interface exercises; no standards table values.
+basename: on_bottom_stability_e305
+
+on_bottom_stability_e305:
+  mode: parity
+  g: 10.0
+  outputs:
+    directory: results
+  segments:
+    - id: synthetic_a
+      pipe: &synthetic_pipe
+        steel_od_m: 1.0
+        wall_m: 0.1
+        corrosion_allowance_m: 0.0
+        steel_density_kg_m3: 8.0
+        corrosion_coating_m: 0.0
+        corrosion_coating_density_kg_m3: 0.0
+        concrete_m: 0.1
+        concrete_density_kg_m3: 20.0
+        absorption_mass_fraction: 0.0
+        marine_growth_m: 0.0
+        marine_growth_density_kg_m3: 0.0
+        field_joint_fraction: 0.0
+        field_joint_m: 0.0
+        field_joint_density_kg_m3: 0.0
+        contents_density_kg_m3: 0.0
+        added_mass_kg_m: 0.0
+        water_density_kg_m3: 1.0
+      cases:
+        - &synthetic_wave
+          role: extreme_wave
+          wave_velocity_m_s: 2.0
+          current_m_s: 1.0
+          period_s: 4.0
+          R: 0.5
+          Fw: 3.0
+          cd: 3.0
+          cm: 0.0
+          cl: 2.0
+          mu: 0.5
+          # Both factors are invented placeholders, unrelated to any standard factor.
+          target_safety_factor: 1.25
+          gamma_st: 1.4
+          reduction_application: wave_velocity
+          phase_rad: 0.0
+        - &synthetic_current
+          <<: *synthetic_wave
+          role: extreme_current
+          wave_velocity_m_s: 1.0
+          current_m_s: 2.0
+          period_s: 8.0
+    - id: synthetic_b
+      pipe:
+        <<: *synthetic_pipe
+        concrete_m: 0.2
+      cases:
+        - *synthetic_wave
+        - *synthetic_current

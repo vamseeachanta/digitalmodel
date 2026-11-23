@@ -1,0 +1,26 @@
+{
+  "revision": "report-sha256:32a20aae5326988fde99780be97f72419ceb8e5356ac853c1ea960321cf66e78",
+  "bundle_sha256": "d54737f2bdeb54ac95377116232d6639813534662dceadcacce0d148830401c6",
+  "files": [
+    {
+      "path": "docs/reports/2026-09-14-issue-2121-b1-preparation.html",
+      "sha256": "32a20aae5326988fde99780be97f72419ceb8e5356ac853c1ea960321cf66e78"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-14-issue-2121-b1-checker-observation-limitations.json",
+      "sha256": "86814c0d2f342dfea099ad73d48253900511e6513339e4603869c55df35539dd"
+    },
+    {
+      "path": "examples/ansys/cylinder-benchmark/prepared/basis-criteria.json",
+      "sha256": "ef5e0f749f7322d59dff668656e473c2a5ff8a993898b7fcf493c7e4b6cd6096"
+    }
+  ],
+  "seconds": "1.656999999890104",
+  "exit_code": 1,
+  "stdout_sha256": "f1ce906c600b4062633e296fbae9c9727b502f54e504b736f4c0121ff8c485f2",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "status": "UNAVAILABLE",
+  "reason": "Provider API429 session quota; no review was produced, not a malformed verdict",
+  "provider_message": "You've hit your session limit \u00b7 resets 11:20am (America/Chicago)",
+  "api_error_status": 429
+}

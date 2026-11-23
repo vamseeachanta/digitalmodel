@@ -1,0 +1,234 @@
+# ABOUTME: Field development analysis and visualisation module (WRK-192)
+# ABOUTME: Concept selection framework added in issue #1843.
+# ABOUTME: Economics facade over worldenergydata backends — #1858.
+"""digitalmodel.field_development — layout schematics, concept selection, cost estimation, and economics.
+
+Modules:
+- schematic_generator: Field development layout schematics (WRK-192)
+- concept_selection:   Host facility ranking (TLP/Spar/Semi/FPSO) — #1843
+- capex_estimator:     GoM-benchmark CAPEX estimation — #1843
+- opex_estimator:      Annual OPEX estimation — #1843
+- economics:           Economics facade over worldenergydata backends — #1858
+- benchmarks:          SubseaIQ concept-selection and architecture benchmarks — #1861/#2053
+- timeline:            Milestone-based schedule benchmark analytics — #2060
+- workflow:            End-to-end FDP screening orchestrator — #1858/#1848
+- onshore_layout:      Onshore tracer — YAML layout + terrain routing + screening — #1508
+- layout_model:        Generalized asset schema + waypoint routing + offshore surfaces — #1509
+- screening:           Cable/flowline sizing screens + screening report — #1511
+- visualization:       Generalized layout plots + typed 3D scene export — #1510
+- api:                 Representative API — layout / screen / visualize / analogs — #1512
+"""
+
+from .schematic_generator import generate_field_schematic, SOLVEIG_PHASE2_CONFIG
+from .concept_selection import (
+    HostType,
+    ConceptOption,
+    ConceptSelectionResult,
+    concept_selection,
+    concept_selection_with_benchmarks,
+)
+from .capex_estimator import CAPEXEstimate, estimate_capex
+from .opex_estimator import OPEXEstimate, estimate_opex
+from .economics import (
+    EconomicsInput,
+    EconomicsResult,
+    FiscalRegime,
+    CostEstimates,
+    EvaluationMetrics,
+    evaluate_economics,
+    build_economics_schedule,
+    carbon_sensitivity,
+    DeclineSensitivityResult,
+    decline_sensitivity,
+)
+from .benchmarks import (
+    SubseaProject,
+    ConceptPrediction,
+    concept_probability_matrix,
+    predict_concept_type,
+    validate_against_cases,
+    concept_benchmark_bands,
+    load_projects,
+    DEPTH_BANDS,
+)
+from .timeline import (
+    timeline_duration_stats,
+    duration_stats_by_concept_type,
+    schedule_distributions,
+)
+from .workflow import (
+    FieldDevelopmentSpec,
+    FieldDevelopmentResult,
+    ConceptComparison,
+    evaluate_field_development,
+    compare_concepts,
+)
+from .concept_screening import (
+    ProspectSpec,
+    AxisScores,
+    ConceptScreenResult,
+    ScreeningResult,
+    DEFAULT_WEIGHTS,
+    screen_concepts,
+    estimate_schedule_weeks,
+    estimate_rig_days,
+    capex_line_items,
+    intervention_index,
+    load_params,
+)
+from .concept_comparison_note import (
+    SensitivityRow,
+    weight_sensitivity_sweep,
+    render_comparison_note,
+    build_comparison_note,
+)
+from .onshore_layout import (
+    FieldLayout,
+    TerrainGrid,
+    build_layout,
+    darcy_weisbach_pressure_drop,
+    load_field_config,
+    screen_layout,
+    swamee_jain_friction_factor,
+)
+from .layout_model import (
+    FieldLayoutModel,
+    LayoutAsset,
+    RoutedConnection,
+    build_layout_model,
+    build_layout_model_from_file,
+    layout_model_to_config,
+    layout_summary,
+    load_layout_config,
+    normalize_layout_config,
+    route_connection,
+)
+from .screening import (
+    cable_ampacity_screening,
+    conductor_resistance_ohm_per_m,
+    erosional_velocity_api_rp_14e,
+    flowline_diameter_sweep,
+    load_screening_defaults,
+    screening_report,
+    size_cable,
+    sweep_layout_flowlines,
+    voltage_drop_three_phase_v,
+)
+from .visualization import (
+    export_layout_scene_json,
+    layout_scene_dict,
+    plot_field_layout,
+    render_layout_visualization,
+)
+from .api import (
+    analogs,
+    deep_override,
+    layout,
+    screen,
+    visualize,
+)
+
+__all__ = [
+    # Schematics (WRK-192)
+    "generate_field_schematic",
+    "SOLVEIG_PHASE2_CONFIG",
+    # Concept selection (#1843, #2053)
+    "HostType",
+    "ConceptOption",
+    "ConceptSelectionResult",
+    "concept_selection",
+    "concept_selection_with_benchmarks",
+    # Benchmarks & probability matrix (#1861, #2053)
+    "SubseaProject",
+    "ConceptPrediction",
+    "concept_probability_matrix",
+    "predict_concept_type",
+    "validate_against_cases",
+    "concept_benchmark_bands",
+    "load_projects",
+    "DEPTH_BANDS",
+    # Timeline benchmarks (#2060)
+    "timeline_duration_stats",
+    "duration_stats_by_concept_type",
+    "schedule_distributions",
+    # CAPEX estimation (#1843)
+    "CAPEXEstimate",
+    "estimate_capex",
+    # OPEX estimation (#1843)
+    "OPEXEstimate",
+    "estimate_opex",
+    # Economics facade (#1858)
+    "EconomicsInput",
+    "EconomicsResult",
+    "FiscalRegime",
+    "CostEstimates",
+    "EvaluationMetrics",
+    "evaluate_economics",
+    "build_economics_schedule",
+    "carbon_sensitivity",
+    "DeclineSensitivityResult",
+    "decline_sensitivity",
+    # Workflow orchestrator (#1858/#1848)
+    "FieldDevelopmentSpec",
+    "FieldDevelopmentResult",
+    "ConceptComparison",
+    "evaluate_field_development",
+    "compare_concepts",
+    # Concept screening — four axes (W6)
+    "ProspectSpec",
+    "AxisScores",
+    "ConceptScreenResult",
+    "ScreeningResult",
+    "DEFAULT_WEIGHTS",
+    "screen_concepts",
+    "estimate_schedule_weeks",
+    "estimate_rig_days",
+    "capex_line_items",
+    "intervention_index",
+    "load_params",
+    # Concept comparison note (W6)
+    "SensitivityRow",
+    "weight_sensitivity_sweep",
+    "render_comparison_note",
+    "build_comparison_note",
+    # Onshore layout tracer (#1508)
+    "FieldLayout",
+    "TerrainGrid",
+    "build_layout",
+    "darcy_weisbach_pressure_drop",
+    "load_field_config",
+    "screen_layout",
+    "swamee_jain_friction_factor",
+    # Generalized layout model (#1509)
+    "FieldLayoutModel",
+    "LayoutAsset",
+    "RoutedConnection",
+    "build_layout_model",
+    "build_layout_model_from_file",
+    "layout_model_to_config",
+    "layout_summary",
+    "load_layout_config",
+    "normalize_layout_config",
+    "route_connection",
+    # Screening layer (#1511)
+    "cable_ampacity_screening",
+    "conductor_resistance_ohm_per_m",
+    "erosional_velocity_api_rp_14e",
+    "flowline_diameter_sweep",
+    "load_screening_defaults",
+    "screening_report",
+    "size_cable",
+    "sweep_layout_flowlines",
+    "voltage_drop_three_phase_v",
+    # Visualization & scene export (#1510)
+    "export_layout_scene_json",
+    "layout_scene_dict",
+    "plot_field_layout",
+    "render_layout_visualization",
+    # Representative API (#1512)
+    "analogs",
+    "deep_override",
+    "layout",
+    "screen",
+    "visualize",
+]

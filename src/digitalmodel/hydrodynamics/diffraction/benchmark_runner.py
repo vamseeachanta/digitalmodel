@@ -1,0 +1,1207 @@
+#!/usr/bin/env python3
+"""
+Benchmark Runner - End-to-end orchestration for N-way solver comparison.
+
+ABOUTME: Ties together MultiSolverComparator and BenchmarkPlotter to produce
+a complete benchmark report with JSON export, HTML summary, and plots.
+
+Provides:
+- BenchmarkConfig: Pydantic configuration model
+- BenchmarkRunResult: Dataclass holding orchestration outputs
+- BenchmarkRunner: Main orchestrator class
+- run_benchmark: Convenience function for quick comparisons
+- benchmark_solvers_cmd: Click CLI entry point
+
+Version: 1.0.0
+Status: Benchmark orchestration
+"""
+
+from __future__ import annotations
+
+import json
+import math
+from dataclasses import dataclass, field
+from datetime import datetime
+from enum import Enum
+from pathlib import Path
+from typing import Any, Dict, List, Optional
+
+import click
+import numpy as np
+import yaml
+from pydantic import BaseModel
+
+from digitalmodel.hydrodynamics.diffraction.benchmark_plotter import (
+    BenchmarkPlotter,
+)
+from digitalmodel.hydrodynamics.diffraction.benchmark_helpers import (
+    coefficient_coverage,
+    format_coverage_summary,
+    format_optional_correlation,
+    format_quality_distribution,
+    optional_float,
+    optional_round,
+)
+from digitalmodel.hydrodynamics.diffraction.multi_solver_comparator import (
+    BenchmarkReport,
+    ComparisonPolicy,
+    MultiSolverComparator,
+)
+from digitalmodel.hydrodynamics.diffraction.output_schemas import (
+    DiffractionResults,
+)
+
+
+# ---------------------------------------------------------------------------
+# Serialisation
+# ---------------------------------------------------------------------------
+
+
+class PinnedNullDumper(yaml.Dumper):
+    """YAML dumper that always writes None as ``null``, never ``~``.
+
+    Both spellings are the same value, so nothing about the data depends on
+    which one is emitted -- but ``hydro_data.yml`` is committed evidence and
+    its golden test compares LINES, so an ambient style difference reads as
+    177 lines of drift.
+
+    That is not hypothetical: the #1633 closeout on ace-win-1 failed
+    exactly this way, on a file where no hydrodynamic number had moved. The
+    committed evidence uses ``null``, so pinning to ``null`` keeps it valid
+    and makes the round-trip reproducible on any host.
+
+    Pinned rather than relaxing the golden test to parsed-YAML equality:
+    byte-identity also catches formatting drift, which is worth keeping.
+    """
+
+
+def _represent_none_as_null(dumper: yaml.Dumper, _data: None) -> yaml.Node:
+    return dumper.represent_scalar("tag:yaml.org,2002:null", "null")
+
+
+PinnedNullDumper.add_representer(type(None), _represent_none_as_null)
+
+
+# ---------------------------------------------------------------------------
+# Enums
+# ---------------------------------------------------------------------------
+
+
+class SolverType(str, Enum):
+    """Supported diffraction solver types."""
+
+    AQWA = "aqwa"
+    ORCAWAVE = "orcawave"
+    BEMROSETTA = "bemrosetta"
+
+
+# ---------------------------------------------------------------------------
+# Configuration
+# ---------------------------------------------------------------------------
+
+
+class BenchmarkConfig(BaseModel):
+    """Pydantic configuration for a benchmark run."""
+
+    spec_path: Path = Path(".")
+    solvers: list[SolverType] = [
+        SolverType.AQWA,
+        SolverType.ORCAWAVE,
+        SolverType.BEMROSETTA,
+    ]
+    output_dir: Path = Path("benchmark_output")
+    dry_run: bool = False
+    tolerance: Optional[float] = None
+    solver_relative_uncertainty: Optional[float] = None
+    response_absolute_resolution: Optional[float] = None
+    minimum_explained_variance: Optional[float] = None
+    comparison_justification: Optional[str] = None
+    x_axis: str = "period"
+    headings: Optional[list[float]] = None
+    timeout_seconds: int = 7200
+    reference_solver: Optional[str] = None
+    comparison_order: Optional[list[str]] = None
+
+    # UI / Reporting overrides
+    report_title: Optional[str] = None
+    report_subtitle: Optional[str] = None
+    report_page_title: Optional[str] = None
+    plot_title: Optional[str] = None
+    navigation_html: Optional[str] = None
+
+
+# ---------------------------------------------------------------------------
+# Run result
+# ---------------------------------------------------------------------------
+
+
+@dataclass
+class BenchmarkRunResult:
+    """Container for all outputs produced by a benchmark run."""
+
+    config: Optional[BenchmarkConfig] = None
+    solver_results: Dict[str, DiffractionResults] = field(
+        default_factory=dict,
+    )
+    report: Optional[BenchmarkReport] = None
+    plot_paths: list[Path] = field(default_factory=list)
+    report_json_path: Optional[Path] = None
+    hydro_data_yaml_path: Optional[Path] = None
+    report_html_path: Optional[Path] = None
+    error_message: Optional[str] = None
+    success: bool = False
+
+
+# ---------------------------------------------------------------------------
+# Runner
+# ---------------------------------------------------------------------------
+
+
+class BenchmarkRunner:
+    """Orchestrates comparison, plotting, and report generation.
+
+    Args:
+        config: BenchmarkConfig with run parameters.
+    """
+
+    def __init__(self, config: BenchmarkConfig) -> None:
+        self.config = config
+
+    # ------------------------------------------------------------------
+    # Public API
+    # ------------------------------------------------------------------
+
+    def run_from_results(
+        self,
+        solver_results: Dict[str, DiffractionResults],
+        solver_metadata: Optional[Dict[str, Dict]] = None,
+    ) -> BenchmarkRunResult:
+        """Run benchmark from pre-computed solver results.
+
+        Args:
+            solver_results: Mapping of solver name to DiffractionResults.
+            solver_metadata: Optional per-solver metadata dicts for the
+                input comparison table (geometry, mass, mesh info, etc.).
+
+        Returns:
+            BenchmarkRunResult with all outputs populated.
+        """
+        result = BenchmarkRunResult(
+            config=self.config,
+            solver_results=solver_results,
+        )
+
+        try:
+            output_dir = Path(self.config.output_dir)
+            output_dir.mkdir(parents=True, exist_ok=True)
+
+            # 1. Compare solvers
+            report = self._compare(solver_results)
+            result.report = report
+
+            # 2. Generate plots (skip in dry_run mode)
+            if not self.config.dry_run:
+                plot_paths = self._generate_plots(solver_results, report)
+                result.plot_paths = plot_paths
+
+            # 3. Generate JSON report file
+            result.report_json_path = self._generate_json_report(
+                report, solver_metadata=solver_metadata,
+            )
+
+            # 3b. Generate hydro data YAML
+            result.hydro_data_yaml_path = self._generate_hydro_data_yaml(
+                solver_results, report,
+            )
+
+            # 4. Generate HTML report file
+            result.report_html_path = self._generate_html_report(
+                report,
+                result.plot_paths,
+                solver_results=solver_results,
+                solver_metadata=solver_metadata,
+            )
+
+            result.success = True
+
+        except OSError as exc:
+            result.error_message = str(exc)
+            result.success = False
+
+        return result
+
+    # ------------------------------------------------------------------
+    # Internal: comparison
+    # ------------------------------------------------------------------
+
+    def _compare(
+        self,
+        solver_results: Dict[str, DiffractionResults],
+    ) -> BenchmarkReport:
+        """Run multi-solver comparison and return a BenchmarkReport."""
+        comparator = MultiSolverComparator(
+            solver_results,
+            policy=self._build_comparison_policy(),
+        )
+        order = self.config.comparison_order
+        if order is not None:
+            if len(order) != len(solver_results) or set(order) != set(solver_results):
+                raise ValueError("comparison_order must list each series exactly once")
+            comparator.solver_names = list(order)
+        return comparator.generate_report()
+
+    def _build_comparison_policy(self) -> Optional[ComparisonPolicy]:
+        """Build a policy only from a complete, named uncertainty budget."""
+        if self.config.tolerance is not None:
+            raise ValueError(
+                "tolerance is ambiguous; configure named uncertainty inputs "
+                "and comparison_justification"
+            )
+        inputs = (
+            self.config.solver_relative_uncertainty,
+            self.config.response_absolute_resolution,
+            self.config.minimum_explained_variance,
+            self.config.comparison_justification,
+        )
+        if all(value is None for value in inputs):
+            return None
+        if any(value is None for value in inputs):
+            raise ValueError(
+                "comparison policy requires solver_relative_uncertainty, "
+                "response_absolute_resolution, minimum_explained_variance, "
+                "and comparison_justification"
+            )
+        return ComparisonPolicy.from_uncertainties(
+            solver_relative_uncertainty=self.config.solver_relative_uncertainty,
+            response_absolute_resolution=self.config.response_absolute_resolution,
+            minimum_explained_variance=self.config.minimum_explained_variance,
+            justification=self.config.comparison_justification,
+        )
+
+    # ------------------------------------------------------------------
+    # Internal: plotting
+    # ------------------------------------------------------------------
+
+    def _generate_plots(
+        self,
+        solver_results: Dict[str, DiffractionResults],
+        report: BenchmarkReport,
+    ) -> list[Path]:
+        """Generate all benchmark plots and return their paths."""
+        plotter = BenchmarkPlotter(
+            solver_results,
+            output_dir=self.config.output_dir,
+            x_axis=self.config.x_axis,
+            plot_title=self.config.plot_title,
+        )
+
+        paths = plotter.plot_all(headings=self.config.headings)
+
+        # Pairwise correlation heatmap
+        heatmap_path = plotter.plot_pairwise_correlation_heatmap(report)
+        paths.append(heatmap_path)
+
+        # Difference plot when a reference solver is specified
+        if self.config.reference_solver:
+            diff_path = plotter.plot_difference(
+                reference_solver=self.config.reference_solver,
+                headings=self.config.headings,
+            )
+            paths.append(diff_path)
+
+        return paths
+
+    # ------------------------------------------------------------------
+    # Internal: JSON report
+    # ------------------------------------------------------------------
+
+    def _generate_json_report(
+        self,
+        report: BenchmarkReport,
+        solver_metadata: Optional[Dict[str, Dict]] = None,
+    ) -> Path:
+        """Serialize BenchmarkReport to a JSON file."""
+        output_dir = Path(self.config.output_dir)
+        output_dir.mkdir(parents=True, exist_ok=True)
+        json_path = output_dir / "benchmark_report.json"
+
+        data = self._report_to_dict(report, solver_metadata=solver_metadata)
+
+        with open(json_path, "w", encoding="utf-8") as fh:
+            json.dump(data, fh, indent=2, default=_json_default)
+
+        return json_path
+
+    def _generate_hydro_data_yaml(
+        self,
+        solver_results: Dict[str, DiffractionResults],
+        report: BenchmarkReport,
+    ) -> Path:
+        """Serialize raw hydrodynamic data to a human/agent-readable YAML.
+
+        Exports per-solver RAO arrays (magnitude + phase), added mass and
+        radiation damping 6x6 matrices at every frequency, plus the
+        comparison correlation metrics.  This is the canonical structured
+        data file for each benchmark case.
+        """
+        output_dir = Path(self.config.output_dir)
+        output_dir.mkdir(parents=True, exist_ok=True)
+        yaml_path = output_dir / "hydro_data.yml"
+
+        dof_names = ["surge", "sway", "heave", "roll", "pitch", "yaw"]
+
+        # -- helpers ---------------------------------------------------------
+        def _safe_float(v: float) -> object:
+            """Convert numpy/inf to YAML-safe value."""
+            if isinstance(v, (np.floating, np.integer)):
+                v = float(v)
+            if math.isinf(v):
+                return -1.0  # convention: -1 = infinite
+            if math.isnan(v):
+                return None
+            return round(v, 8)
+
+        def _round_list(arr: np.ndarray, decimals: int = 6) -> list:
+            """Convert ndarray to rounded nested list."""
+            if arr.ndim == 1:
+                return [round(float(x), decimals) for x in arr]
+            return [_round_list(row, decimals) for row in arr]
+
+        # -- build grid section ----------------------------------------------
+        first_result = next(iter(solver_results.values()))
+        freq_data = first_result.raos.surge.frequencies
+        head_data = first_result.raos.surge.headings
+
+        grid: Dict[str, Any] = {
+            "frequencies_rad_s": _round_list(freq_data.values, 6),
+            "periods_s": _round_list(freq_data.periods, 6),
+            "headings_deg": _round_list(head_data.values, 2),
+        }
+
+        # -- build per-solver section ----------------------------------------
+        solvers_data: Dict[str, Any] = {}
+        for solver_name, dr in solver_results.items():
+            raos_dict: Dict[str, Any] = {}
+            for dof_name in dof_names:
+                comp = getattr(dr.raos, dof_name)
+                raos_dict[dof_name] = {
+                    "unit": comp.unit,
+                    "magnitude": _round_list(comp.magnitude, 6),
+                    "phase_deg": _round_list(comp.phase, 4),
+                }
+
+            raw_data_refusals = []
+
+            def matrix_arrays(matrix_set, label):
+                arrays = []
+                for index, sample in enumerate(matrix_set.matrices):
+                    try:
+                        values = np.asarray(sample.matrix, dtype=float)
+                        # Shape follows output_schemas.HydrodynamicMatrix.
+                        if values.shape != (6, 6) or not np.all(np.isfinite(values)):
+                            raise ValueError("invalid matrix array")
+                        arrays.append(_round_list(values, 6))
+                    except (TypeError, ValueError):
+                        arrays.append(None)
+                        raw_data_refusals.append(f"{label}:{index}")
+                return arrays
+
+            am_matrices = matrix_arrays(dr.added_mass, "added_mass")
+            damp_matrices = matrix_arrays(dr.damping, "damping")
+
+            solvers_data[solver_name] = {
+                "vessel_name": dr.vessel_name,
+                "analysis_tool": dr.analysis_tool,
+                "water_depth": _safe_float(dr.water_depth),
+                "phase_convention": dr.phase_convention,
+                "unit_system": dr.unit_system,
+                "raos": raos_dict,
+                "added_mass": am_matrices,
+                "damping": damp_matrices,
+                "raw_data_refusals": raw_data_refusals,
+            }
+
+        # -- build comparison section ----------------------------------------
+        comparison: Dict[str, Any] = {
+            "overall_consensus": report.overall_consensus,
+            "comparison_status": report.comparison_status,
+            "refusal_reasons": report.refusal_reasons,
+        }
+
+        for pair_key, pr in report.pairwise_results.items():
+            rao_corrs: Dict[str, Any] = {}
+            for dof_name, comp in pr.rao_comparisons.items():
+                rao_corrs[dof_name] = {
+                    "magnitude_r": optional_round(
+                        comp.magnitude_stats.correlation, 8,
+                    ),
+                    "magnitude_quality": comp.magnitude_stats.quality,
+                    "sample_count": comp.magnitude_stats.sample_count,
+                    "phase_r": optional_round(
+                        comp.phase_stats.correlation, 8,
+                    ),
+                    "phase_quality": comp.phase_stats.quality,
+                    "magnitude_rms": round(
+                        float(comp.magnitude_stats.rms_error), 8,
+                    ),
+                    "max_magnitude_diff": round(
+                        float(comp.max_magnitude_diff), 8,
+                    ),
+                    "max_phase_diff_deg": round(
+                        float(comp.max_phase_diff), 4,
+                    ),
+                }
+
+            am_corrs = {
+                f"{k[0]},{k[1]}": optional_round(v, 8)
+                for k, v in pr.added_mass_correlations.items()
+            }
+            damp_corrs = {
+                f"{k[0]},{k[1]}": optional_round(v, 8)
+                for k, v in pr.damping_correlations.items()
+            }
+
+            comparison[pair_key] = {
+                "overall_agreement": pr.overall_agreement,
+                "comparison_status": pr.comparison_status,
+                "refusal_reason": pr.refusal_reason,
+                "rao_correlations": rao_corrs,
+                "added_mass_sample_counts": {f"{i},{j}": n for (i, j), n in pr.added_mass_sample_counts.items()},
+                "damping_sample_counts": {f"{i},{j}": n for (i, j), n in pr.damping_sample_counts.items()},
+                "added_mass_correlations": am_corrs,
+                "added_mass_quality": {
+                    f"{k[0]},{k[1]}": v
+                    for k, v in pr.added_mass_quality.items()
+                },
+                "damping_correlations": damp_corrs,
+                "damping_quality": {
+                    f"{k[0]},{k[1]}": v
+                    for k, v in pr.damping_quality.items()
+                },
+            }
+
+        consensus_by_dof: Dict[str, Any] = {}
+        for dof_key, cm in report.consensus_by_dof.items():
+            consensus_by_dof[dof_key] = {
+                "level": cm.consensus_level,
+                "comparison_status": cm.comparison_status,
+                "refusal_reason": cm.refusal_reason,
+                "mean_correlation": optional_round(
+                    cm.mean_pairwise_correlation, 8,
+                ),
+            }
+        comparison["consensus_by_dof"] = consensus_by_dof
+
+        # -- assemble top-level document -------------------------------------
+        doc: Dict[str, Any] = {
+            "metadata": {
+                "vessel_name": report.vessel_name,
+                "generated": datetime.now().strftime("%Y-%m-%dT%H:%M:%S"),
+                "solver_names": report.solver_names,
+            },
+            "grid": grid,
+            "solvers": solvers_data,
+            "comparison": comparison,
+        }
+
+        with open(yaml_path, "w", encoding="utf-8") as fh:
+            yaml.dump(
+                doc,
+                fh,
+                Dumper=PinnedNullDumper,
+                default_flow_style=False,
+                sort_keys=False,
+                allow_unicode=True,
+                width=120,
+            )
+
+        return yaml_path
+
+    def _report_to_dict(
+        self,
+        report: BenchmarkReport,
+        solver_metadata: Optional[Dict[str, Dict]] = None,
+    ) -> Dict[str, Any]:
+        """Convert a BenchmarkReport dataclass to a JSON-safe dict."""
+        pairwise_data = MultiSolverComparator._serialize_pairwise(report.pairwise_results)
+        for pair_key, pr in report.pairwise_results.items():
+            pairwise_data[pair_key]["added_mass_coverage"] = coefficient_coverage(
+                pr.added_mass_quality, pr.added_mass_correlations,
+            )
+            pairwise_data[pair_key]["damping_coverage"] = coefficient_coverage(
+                pr.damping_quality, pr.damping_correlations,
+            )
+
+        consensus_data: Dict[str, Any] = {}
+        for dof_key, cm in report.consensus_by_dof.items():
+            consensus_data[dof_key] = {
+                "consensus_level": cm.consensus_level,
+                "comparison_status": cm.comparison_status,
+                "refusal_reason": cm.refusal_reason,
+                "mean_pairwise_correlation": optional_float(
+                    cm.mean_pairwise_correlation,
+                ),
+                "outlier_solver": cm.outlier_solver,
+                "agreement_pairs": [
+                    list(pair) for pair in cm.agreement_pairs
+                ],
+            }
+
+        data = {
+            "vessel_name": report.vessel_name,
+            "solver_names": report.solver_names,
+            "comparison_date": report.comparison_date,
+            "overall_consensus": report.overall_consensus,
+            "comparison_status": report.comparison_status,
+            "refusal_reasons": report.refusal_reasons,
+            "comparison_policy": report.comparison_policy,
+            "pairwise_results": pairwise_data,
+            "consensus_by_dof": consensus_data,
+            "notes": report.notes,
+        }
+
+        if solver_metadata:
+            # Extract semantic equivalence if present in any of the metadata dicts
+            for meta in solver_metadata.values():
+                if "_semantic_equivalence" in meta:
+                    data["semantic_equivalence"] = meta[
+                        "_semantic_equivalence"
+                    ]
+                    break
+
+        return data
+
+    # ------------------------------------------------------------------
+    # Internal: HTML report
+    # ------------------------------------------------------------------
+
+    def _generate_html_report(
+        self,
+        report: BenchmarkReport,
+        plot_paths: list[Path],
+        solver_results: Optional[Dict[str, DiffractionResults]] = None,
+        solver_metadata: Optional[Dict[str, Dict]] = None,
+    ) -> Path:
+        """Generate a single-page HTML benchmark report.
+
+        Delegates to ``generate_diffraction_report`` from
+        ``report_generator``, interleaving multi-solver benchmark sections
+        at their natural positions in the physics causal chain.
+        """
+        from digitalmodel.hydrodynamics.diffraction.report_generator import (
+            build_report_data_from_solver_results,
+            generate_diffraction_report,
+        )
+
+        output_dir = Path(self.config.output_dir)
+        output_dir.mkdir(parents=True, exist_ok=True)
+        html_path = output_dir / "benchmark_report.html"
+
+        # --- 1. Build DiffractionReportData ---------------------------------
+        # Look for an .owr path in solver_metadata
+        owr_path: Optional[Path] = None
+        if solver_metadata:
+            for meta in solver_metadata.values():
+                for key in ("results_file", "owr_path"):
+                    candidate = meta.get(key)
+                    if candidate and str(candidate).endswith(".owr"):
+                        owr_path = Path(candidate)
+                        break
+                if owr_path:
+                    break
+
+        if solver_results:
+            report_data = build_report_data_from_solver_results(
+                solver_results,
+                owr_path=owr_path,
+                vessel_name=report.vessel_name,
+            )
+        else:
+            from digitalmodel.hydrodynamics.diffraction.report_generator import (
+                DiffractionReportData,
+            )
+            report_data = DiffractionReportData(
+                vessel_name=report.vessel_name,
+                solver_names=report.solver_names,
+            )
+
+        # --- 1b. Apply config overrides -------------------------------------
+        if self.config.report_title:
+            report_data.report_title = self.config.report_title
+        if self.config.report_subtitle:
+            report_data.report_subtitle = self.config.report_subtitle
+        if self.config.navigation_html:
+            if report_data.benchmark_html_sections is None:
+                report_data.benchmark_html_sections = {}
+            report_data.benchmark_html_sections["navigation"] = self.config.navigation_html
+
+        # --- 2. Build benchmark sections via BenchmarkPlotter ---------------
+        input_comparison_html = ""
+        input_files_html = ""
+        mesh_schematic_html = ""
+        hydro_coefficients_html = ""
+        dof_sections_html = ""
+        raw_rao_data_html = ""
+        if solver_results:
+            plotter = BenchmarkPlotter(
+                solver_results,
+                output_dir=output_dir,
+                x_axis=self.config.x_axis,
+                solver_metadata=solver_metadata,
+            )
+            input_comparison_html = plotter.build_input_comparison_html()
+            input_files_html = plotter.build_input_files_html()
+            mesh_schematic_html = plotter.build_mesh_schematic_html()
+            hydro_coefficients_html = plotter.build_hydro_coefficients_html(
+                report,
+            )
+            dof_sections_html = plotter.build_dof_report_sections(
+                report,
+                headings=self.config.headings,
+            )
+            raw_rao_data_html = plotter.build_raw_rao_data_html(
+                headings=self.config.headings,
+            )
+
+        # --- 3. Build consensus summary table -------------------------------
+        consensus_rows = ""
+        for dof_key, cm in report.consensus_by_dof.items():
+            color = {
+                "FULL": "#27ae60",
+                "MAJORITY": "#f39c12",
+                "NO_CONSENSUS": "#e74c3c",
+            }.get(cm.consensus_level, "#999")
+            consensus_rows += (
+                f"<tr>"
+                f"<td><a href='#dof-{dof_key.lower()}'>{dof_key}</a></td>"
+                f"<td style='color:{color};font-weight:600;'>"
+                f"{cm.consensus_level or cm.comparison_status}</td>"
+                f"<td>{format_optional_correlation(cm.mean_pairwise_correlation)}</td>"
+                f"<td>{cm.outlier_solver or '-'}</td>"
+                f"</tr>\n"
+            )
+        consensus_html = (
+            '<h2>Consensus Summary</h2>'
+            '<table style="width:100%;max-width:700px;">'
+            "<tr><th>DOF</th><th>Consensus</th>"
+            "<th>Mean Correlation</th><th>Outlier</th></tr>"
+            f"{consensus_rows}</table>"
+        )
+
+        # --- 4. Build overlay plot links ------------------------------------
+        plot_links = ""
+        for p in plot_paths:
+            try:
+                rel = p.relative_to(output_dir)
+            except ValueError:
+                rel = p
+            plot_links += f'<li><a href="{rel}">{p.name}</a></li>\n'
+        overlay_html = ""
+        if plot_links:
+            overlay_html = (
+                '<h2>Full Overlay Plots</h2>'
+                f'<ul class="plot-links">{plot_links}</ul>'
+            )
+
+        # --- 5. Build executive summary metrics --------------------------------
+        sem_data = None
+        if solver_metadata:
+            for meta in solver_metadata.values():
+                if "_semantic_equivalence" in meta:
+                    sem_data = meta["_semantic_equivalence"]
+                    break
+        benchmark_executive = self._build_benchmark_executive_html(
+            report, semantic=sem_data,
+        )
+
+        # --- 6. Pack into report_data.benchmark_html_sections ---------------
+        # Preserve any keys set earlier (e.g. "navigation" from config)
+        existing = report_data.benchmark_html_sections or {}
+        report_data.benchmark_html_sections = {
+            **existing,
+            "benchmark_executive": benchmark_executive,
+            "input_comparison": input_comparison_html,
+            "input_files": input_files_html,
+            "mesh_schematic": mesh_schematic_html,
+            "consensus_summary": consensus_html,
+            "hydro_coefficients": hydro_coefficients_html,
+            "dof_sections": (
+                f'<h2>Per-DOF Analysis</h2>{dof_sections_html}'
+            ),
+            "raw_rao_data": raw_rao_data_html,
+            "overlay_plots": overlay_html,
+        }
+
+        # --- 7. Set metadata from BenchmarkReport ---------------------------
+        report_data.solver_names = report.solver_names
+        report_data.notes = list(report.notes)
+
+        # --- 8. Generate via unified template --------------------------------
+        from digitalmodel.hydrodynamics.diffraction.report_provenance import result_provenance
+
+        sources = [output_dir / "benchmark_report.json", output_dir / "hydro_data.yml"]
+        if report_data.source_file:
+            sources.append(Path(report_data.source_file))
+        units = "; ".join(
+            f"{name}: {result.unit_system}" for name, result in (solver_results or {}).items()
+        ) or "Per result source"
+        if report_data.source_file:
+            units += "; OrcaWave native report data (te, kN, m, s)"
+        generate_diffraction_report(
+            report_data, html_path, page_title=self.config.report_page_title,
+            provenance=result_provenance(sources, units_system=units),
+        )
+        return html_path
+
+
+    # ------------------------------------------------------------------
+    # Internal: benchmark executive summary HTML
+    # ------------------------------------------------------------------
+
+    @staticmethod
+    def _build_benchmark_executive_html(
+        report: BenchmarkReport,
+        semantic: Optional[Dict[str, Any]] = None,
+    ) -> str:
+        """Build HTML for the executive summary benchmark metrics.
+
+        Returns a compact overview with verdict badge, per-DOF RAO table,
+        hydrodynamic coefficient summary, and semantic equivalence line.
+        """
+        if not report.pairwise_results:
+            return ""
+
+        # Use first pairwise result (typical: 2 solvers → 1 pair)
+        pw_key = next(iter(report.pairwise_results))
+        pw = report.pairwise_results[pw_key]
+
+        # --- 1. Verdict banner -------------------------------------------
+        agreement = pw.overall_agreement or pw.comparison_status
+        badge_colors = {
+            "EXCELLENT": ("#27ae60", "#eafaf1"),
+            "GOOD": ("#2980b9", "#ebf5fb"),
+            "FAIR": ("#f39c12", "#fef9e7"),
+            "POOR": ("#e74c3c", "#fdedec"),
+        }
+        fg, bg = badge_colors.get(agreement, ("#999", "#f5f5f5"))
+        solver_label = f"{pw.solver_a} vs {pw.solver_b}"
+
+        verdict_html = (
+            f'<div style="background:{bg};border-left:4px solid {fg};'
+            f'padding:0.8em 1em;margin:0.8em 0;border-radius:4px;">'
+            f'<span style="font-size:1.3em;font-weight:700;color:{fg};">'
+            f"{agreement}</span>"
+            f'<span style="margin-left:1em;color:#555;">{solver_label}</span>'
+            f"</div>"
+        )
+
+        # --- 2. RAO comparison table (6 DOFs) ----------------------------
+        dof_names = ["surge", "sway", "heave", "roll", "pitch", "yaw"]
+
+        def _color(val: Optional[float]) -> str:
+            if val is None:
+                return "#999"
+            if val >= 0.999:
+                return "#27ae60"
+            if val >= 0.99:
+                return "#f39c12"
+            return "#e74c3c"
+
+        rao_rows = []
+        for dof in dof_names:
+            comp = pw.rao_comparisons.get(dof)
+            if not comp:
+                continue
+            mag_r = comp.magnitude_stats.correlation
+            phase_r = comp.phase_stats.correlation
+            max_mag_diff = comp.max_magnitude_diff
+            max_phase_diff = comp.max_phase_diff
+            near_zero = comp.phase_stats.quality == "NULL_RESPONSE"
+
+            signal_label = (
+                '<span style="color:#999;">Near-zero</span>'
+                if near_zero
+                else "Active"
+            )
+            phase_style = (
+                f"color:#999;"
+                if near_zero
+                else f"color:{_color(phase_r)};font-weight:600;"
+            )
+            phase_val = (
+                "-" if near_zero else format_optional_correlation(
+                    phase_r, comp.phase_stats.quality,
+                )
+            )
+            magnitude_val = format_optional_correlation(
+                mag_r, comp.magnitude_stats.quality,
+            )
+
+            rao_rows.append(
+                f"<tr>"
+                f"<td>{dof.capitalize()}</td>"
+                f"<td style='color:{_color(mag_r)};font-weight:600;'>"
+                f"{magnitude_val}</td>"
+                f"<td style='{phase_style}'>{phase_val}</td>"
+                f"<td>{max_mag_diff:.4g}</td>"
+                f"<td>{max_phase_diff:.2f}&deg;</td>"
+                f"<td>{signal_label}</td>"
+                f"</tr>"
+            )
+
+        rao_table = (
+            '<h3 style="margin-top:1em;">RAO Comparison</h3>'
+            '<table style="width:100%;max-width:800px;">'
+            "<thead><tr>"
+            "<th>DOF</th><th>Mag r</th><th>Phase r</th>"
+            "<th>Max |diff|</th><th>Max Phase Diff</th><th>Signal</th>"
+            "</tr></thead>"
+            f"<tbody>{''.join(rao_rows)}</tbody></table>"
+        )
+
+        # --- 3. Hydrodynamic coefficient summary -------------------------
+        def _partition_cells(corrs: Dict) -> Dict[str, list]:
+            """Split 6x6 cell keys into the three summary columns.
+
+            Each column must be summarised over its own cells only. Before
+            #1633 the minima were partitioned here but the quality
+            distribution was not, so the Min Diagonal column printed counts
+            spanning all 36 cells rather than its own 6.
+            """
+            diagonal = [key for key in corrs if key[0] == key[1]]
+            off_diagonal = [key for key in corrs if key[0] != key[1]]
+            return {
+                "diagonal": diagonal,
+                "off_diagonal": off_diagonal,
+                "all": diagonal + off_diagonal,
+            }
+
+        def _min_over(corrs: Dict, keys: list) -> Optional[float]:
+            """Minimum correlation over the given cells, or None if none."""
+            values = [
+                corrs[key]
+                for key in keys
+                if corrs[key] is not None and np.isfinite(corrs[key])
+            ]
+            return min(values) if values else None
+
+        hydro_rows = []
+        for label, corrs in [
+            ("Added Mass", pw.added_mass_correlations),
+            ("Radiation Damping", pw.damping_correlations),
+        ]:
+            if not corrs:
+                continue
+
+            qualities = (
+                pw.added_mass_quality
+                if label == "Added Mass"
+                else pw.damping_quality
+            )
+            partitions = _partition_cells(corrs)
+
+            def _fmt(keys: list) -> str:
+                value = _min_over(corrs, keys)
+                if value is None:
+                    counts: Dict[str, int] = {}
+                    for key in keys:
+                        quality = qualities.get(key)
+                        if quality is None:
+                            continue
+                        counts[quality] = counts.get(quality, 0) + 1
+                    if len(counts) == 1:
+                        return format_optional_correlation(
+                            None, next(iter(counts)),
+                        )
+                    return format_quality_distribution(counts)
+                c = _color(value)
+                return (
+                    f"<span style='color:{c};font-weight:600;'>"
+                    f"{value:.4f}</span>"
+                )
+
+            coverage_text = format_coverage_summary(
+                coefficient_coverage(qualities, corrs),
+            )
+            hydro_rows.append(
+                f"<tr><td>{label}</td>"
+                f"<td>{_fmt(partitions['diagonal'])}</td>"
+                f"<td>{_fmt(partitions['off_diagonal'])}</td>"
+                f"<td>{_fmt(partitions['all'])}</td>"
+                f'<td class="matrix-coverage" style="color:#555;">'
+                f"{coverage_text}</td></tr>"
+            )
+
+        hydro_html = ""
+        if hydro_rows:
+            hydro_html = (
+                '<h3 style="margin-top:1em;">'
+                "Hydrodynamic Coefficients</h3>"
+                '<table style="width:100%;max-width:900px;">'
+                "<thead><tr>"
+                "<th>Matrix</th><th>Min Diagonal r</th>"
+                "<th>Min Off-Diag r</th><th>Min Overall r</th>"
+                "<th>Coverage</th>"
+                "</tr></thead>"
+                f"<tbody>{''.join(hydro_rows)}</tbody></table>"
+                '<p style="font-size:0.85em;color:#777;">'
+                "Each r column is summarised over its own cells only. "
+                "Coverage counts the cells that carried a real comparison; "
+                "the rest are named so an uncompared matrix cannot pass for "
+                "a compared one. "
+                'See <a href="#hydro-coefficients">'
+                "full 6&times;6 heatmaps</a> below.</p>"
+            )
+
+        # --- 4. Semantic equivalence summary --------------------------------
+        semantic_html = ""
+        if semantic:
+            from digitalmodel.hydrodynamics.diffraction.benchmark_input_comparison import (
+                summarize_semantic_equivalence,
+            )
+
+            semantic_summary = summarize_semantic_equivalence(semantic)
+            sig = semantic_summary["significant_count"]
+            cos = semantic_summary["cosmetic_count"]
+            conv = semantic_summary["convention_count"]
+            mat = semantic_summary["match_count"]
+            total = semantic_summary["total"]
+            taxonomy_counts = semantic_summary["taxonomy_counts"]
+
+            if sig == 0:
+                badge = (
+                    '<span style="color:#27ae60;font-weight:600;">'
+                    "0 significant</span>"
+                )
+            else:
+                badge = (
+                    f'<span style="color:#e74c3c;font-weight:600;">'
+                    f"{sig} significant</span>"
+                )
+
+            # Build diff detail lists by level
+            all_diffs = semantic_summary["diffs"]
+            sig_diffs = semantic_summary["significant_diffs"]
+            cos_diffs = semantic_summary["cosmetic_diffs"]
+            conv_diffs = semantic_summary["convention_diffs"]
+
+            # Significant diffs — shown prominently
+            diff_detail = ""
+            if sig_diffs:
+                items = "".join(
+                    f"<li><code>{d['key']}</code>: "
+                    f"{d['owd']} vs {d['spec']}</li>"
+                    for d in sig_diffs
+                )
+                diff_detail = (
+                    f'<ul style="margin:0.3em 0 0 1em;'
+                    f'font-size:0.9em;">{items}</ul>'
+                )
+
+            # Footnote for cosmetic + convention diffs
+            footnote = ""
+            footnote_items = []
+            for d in cos_diffs:
+                footnote_items.append(
+                    f"<code>{d['key']}</code>: "
+                    f"{d['owd']} vs {d['spec']}"
+                )
+            for d in conv_diffs:
+                footnote_items.append(
+                    f"<code>{d['key']}</code>: "
+                    f"{d['owd']} vs {d['spec']}"
+                )
+            if footnote_items:
+                non_significant_taxonomy_summary = ", ".join(
+                    f"{name}={count}"
+                    for name, count in taxonomy_counts.items()
+                    if count and name not in {
+                        "physics_significant",
+                        "solver_mode_significant",
+                    }
+                ) or "none"
+                fn_list = "".join(
+                    f"<li>{item}</li>" for item in footnote_items
+                )
+                footnote = (
+                    '<details style="margin-top:0.5em;'
+                    'font-size:0.85em;color:#777;">'
+                    f"<summary>{cos} cosmetic + {conv} convention "
+                    f"diffs (no solver effect)</summary>"
+                    f'<ul style="margin:0.3em 0 0 1em;">'
+                    f"{fn_list}</ul>"
+                    "<p style='margin:0.3em 0 0 0.5em;"
+                    "font-style:italic;'>"
+                    "Cosmetic: GUI pens, naming, output flags. "
+                    "Convention: same physics, different "
+                    f"representation (e.g. freq vs period). Taxonomy counts: {non_significant_taxonomy_summary}. "
+                    "QTF-related settings are dormant when "
+                    "QTF is disabled.</p>"
+                    "</details>"
+                )
+
+            taxonomy_summary = ", ".join(
+                f"{name}={count}"
+                for name, count in taxonomy_counts.items()
+                if count
+            ) or "none"
+
+            semantic_html = (
+                '<h3 style="margin-top:1em;">'
+                "Semantic Equivalence</h3>"
+                f'<p style="margin:0.3em 0;">'
+                f"{mat}/{total} match, {badge}, "
+                f"{conv} convention, {cos} cosmetic"
+                f"</p>"
+                f"<p style='margin:0.2em 0 0.4em 0;font-size:0.9em;color:#555;'>"
+                f"Taxonomy: {taxonomy_summary}</p>"
+                f"{diff_detail}{footnote}"
+            )
+
+        return f"{verdict_html}{rao_table}{hydro_html}{semantic_html}"
+
+
+# ---------------------------------------------------------------------------
+# JSON serialization helper
+# ---------------------------------------------------------------------------
+
+
+def _json_default(obj: object) -> object:
+    """Fallback serializer for numpy types."""
+    if isinstance(obj, np.integer):
+        return int(obj)
+    if isinstance(obj, np.floating):
+        return float(obj)
+    if isinstance(obj, np.ndarray):
+        return obj.tolist()
+    raise TypeError(f"Object of type {type(obj)} is not serializable")
+
+
+# ---------------------------------------------------------------------------
+# Convenience function
+# ---------------------------------------------------------------------------
+
+
+def run_benchmark(
+    solver_results: Dict[str, DiffractionResults],
+    output_dir: Path = Path("benchmark_output"),
+    solver_relative_uncertainty: Optional[float] = None,
+    response_absolute_resolution: Optional[float] = None,
+    minimum_explained_variance: Optional[float] = None,
+    comparison_justification: Optional[str] = None,
+) -> BenchmarkRunResult:
+    """Convenience wrapper: configure and run a benchmark in one call.
+
+    Args:
+        solver_results: Mapping of solver name to DiffractionResults.
+        output_dir: Directory for output artifacts.
+        solver_relative_uncertainty: Per-solver relative uncertainty.
+        response_absolute_resolution: Smallest resolved response magnitude.
+        minimum_explained_variance: Required shared signal variance.
+        comparison_justification: Provenance for the uncertainty budget.
+
+    Returns:
+        BenchmarkRunResult with all outputs populated.
+    """
+    config = BenchmarkConfig(
+        output_dir=output_dir,
+        solver_relative_uncertainty=solver_relative_uncertainty,
+        response_absolute_resolution=response_absolute_resolution,
+        minimum_explained_variance=minimum_explained_variance,
+        comparison_justification=comparison_justification,
+    )
+    runner = BenchmarkRunner(config)
+    return runner.run_from_results(solver_results)
+
+
+# ---------------------------------------------------------------------------
+# CLI
+# ---------------------------------------------------------------------------
+
+
+@click.command("benchmark-solvers")
+@click.argument("spec_path", type=click.Path(exists=True))
+@click.option(
+    "--solvers",
+    "-s",
+    multiple=True,
+    default=["aqwa", "orcawave", "bemrosetta"],
+)
+@click.option(
+    "--output",
+    "-o",
+    type=click.Path(),
+    default="benchmark_output",
+)
+@click.option("--dry-run", is_flag=True)
+@click.option("--solver-relative-uncertainty", type=float, default=None)
+@click.option("--response-absolute-resolution", type=float, default=None)
+@click.option("--minimum-explained-variance", type=float, default=None)
+@click.option("--comparison-justification", type=str, default=None)
+@click.option(
+    "--x-axis",
+    type=click.Choice(["period", "frequency"]),
+    default="period",
+)
+@click.option(
+    "--headings",
+    type=str,
+    default=None,
+    help="Comma-separated heading angles",
+)
+@click.option(
+    "--reference",
+    type=str,
+    default=None,
+    help="Reference solver for difference plots",
+)
+def benchmark_solvers_cmd(
+    spec_path: str,
+    solvers: tuple[str, ...],
+    output: str,
+    dry_run: bool,
+    solver_relative_uncertainty: Optional[float],
+    response_absolute_resolution: Optional[float],
+    minimum_explained_variance: Optional[float],
+    comparison_justification: Optional[str],
+    x_axis: str,
+    headings: Optional[str],
+    reference: Optional[str],
+) -> None:
+    """Run N-way solver benchmark comparison."""
+    heading_list: Optional[List[float]] = None
+    if headings:
+        heading_list = [float(h.strip()) for h in headings.split(",")]
+
+    config = BenchmarkConfig(
+        spec_path=Path(spec_path),
+        solvers=[SolverType(s) for s in solvers],
+        output_dir=Path(output),
+        dry_run=dry_run,
+        solver_relative_uncertainty=solver_relative_uncertainty,
+        response_absolute_resolution=response_absolute_resolution,
+        minimum_explained_variance=minimum_explained_variance,
+        comparison_justification=comparison_justification,
+        x_axis=x_axis,
+        headings=heading_list,
+        reference_solver=reference,
+    )
+    runner = BenchmarkRunner(config)
+
+    click.echo(
+        f"Benchmark configuration: {len(config.solvers)} solvers",
+    )
+    click.echo(f"Output directory: {config.output_dir}")
+
+    if dry_run:
+        click.echo(
+            click.style(
+                "[DRY RUN] No solvers will be executed.",
+                fg="yellow",
+            ),
+        )
+
+    # Actual solver execution is future work; for now report setup
+    click.echo(
+        click.style("[OK] Benchmark setup complete.", fg="green"),
+    )

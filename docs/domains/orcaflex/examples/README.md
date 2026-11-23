@@ -1,0 +1,59 @@
+# OrcaFlex Examples Collection
+
+This directory contains the comprehensive collection of OrcaFlex examples downloaded from the official Orcina portal, converted to YAML format, and analyzed for feature extraction.
+
+## Directory Structure
+
+```
+examples/
+|-- raw/              # 67 YAML files in 48 immediate folders
+|-- yml/              # 62 YAML files in 47 immediate folders
+|-- modular/          # 638 YAML files in 50 immediate folders
+|-- metadata/         # Feature analysis and metadata
+|-- catalog/          # Searchable catalog and index
+|-- qa/               # QA documentation
+|-- gom_scr_design_study/  # Design study documents
+`-- README.md
+```
+
+## Collection Status
+
+- **Converted YAML files**: 62 in `yml/` (recursive `*.yml` count)
+- **Held folders**: 47 immediate directories in `yml/`; file and folder counts are distinct
+- **Last Updated**: 2026-06-10
+
+## Usage
+
+### Accessing Examples
+
+All examples are organized by category in their respective directories. Each example includes:
+- Original file (in `raw/`)
+- YAML conversion (in `yml/`)
+- Feature analysis (in `metadata/`)
+
+### Searching Examples
+
+Use the catalog index in `catalog/` to search examples by:
+- Model components (vessels, lines, buoys)
+- Analysis types (static, dynamic, fatigue)
+- Environmental conditions
+- Industry applications
+
+## Integration with OrcaFlex Module Agent
+
+The examples and extracted knowledge are integrated into the OrcaFlex module agent at `agents/orcaflex/`. The agent uses this knowledge to:
+- Reference real examples when answering questions
+- Provide code snippets based on official patterns
+- Explain concepts with practical implementations
+- Suggest best practices from Orcina's guidelines
+
+## Data Sources
+
+All examples are sourced from:
+- [Orcina Examples Portal](https://www.orcina.com/resources/examples/)
+- Official OrcaFlex documentation
+- Technical notes and validation cases
+
+## License and Terms
+
+These examples are provided by Orcina for educational and reference purposes. Please refer to Orcina's terms of use for specific licensing information.

@@ -1,0 +1,64 @@
+schema_version: 1
+document: docs/research/ffs-api-579-parts-8-11-13-14-public-source-review.md
+issue: 2203
+source_of_entries: research note on the issue
+checked: '2026-10-11'
+sources:
+- id: S1
+  citation: '"Fitness-For-Service Example Problem Manual", API 579-2/ASME FFS-2 2009, dated August 11, 2009, file hosted on the standards body''s site.'
+  urls:
+  - https://www.asme.org/getmedia/4fe70cf9-8738-4285-aa49-9d68ea6d6e34/21639.pdf
+  access_note: table of contents opened; examples not read
+- id: S2
+  citation: Table of contents headed "API 579-1/ASME FFS-1, December 2021".
+  urls:
+  - https://www.asme.org/getmedia/5726e673-eb65-456e-913d-3d0dce0359ff/asme-ffs-1_2021_toc.pdf
+  access_note: opened
+- id: S3
+  citation: '"Fitness-For-Service API 579-1/ASME FFS-1: Substantive Changes to the 2016 Edition", practitioner article, 30 March 2017.'
+  urls:
+  - https://becht.com/?p=989
+  access_note: opened
+- id: S4
+  citation: '"FFS Forum: Understanding Part 8 Assessment of Weld Misalignment and Shell Out-of-Round", Inspectioneering Journal, January/February 2024.'
+  urls:
+  - https://inspectioneering.com/journal/2024-02-29/10939/ffs-forum-understanding-part-8-assessment-of-weld-misalignment-and-shell-out-of
+  access_note: visible part opened; body behind registration
+- id: S5
+  citation: 'Osage, Dong, Spring, "Fatigue assessment of welded joints in API 579-1/ASME FFS-1 2016: existing methods and new developments", Fatigue Design 2017 proceedings, DOI 10.1016/j.proeng.2018.02.049, listed as open access.'
+  urls:
+  - https://findanexpert.unimelb.edu.au/scholarlywork/1818212-fatigue-assessment-of-welded-joints-in-api-579-1-asme-ffs-1-2016-existing-methods-and-new-developments
+  access_note: record opened; paper not read
+- id: S6
+  citation: '"Understanding Fire Damage Assessments", practitioner article, 25 April 2023.'
+  urls:
+  - https://e2g.com/?p=20603
+  access_note: opened
+- id: S7
+  citation: '"Fire-damage assessment cuts reconstruction cost, plant downtime", Oil & Gas Journal, 18 September 2000.'
+  urls:
+  - https://www.ogj.com/general-interest/companies/article/17216136/fire-damage-assessment-cuts-reconstruction-cost-plant-downtime
+  access_note: opened
+- id: S8
+  citation: Journal of High Pressure Institute of Japan, volume 57, issue 5 (2019), seven free-access review articles on Parts 1-9, including "Assessment of Weld Misalignment and Shell Distortions (Part8)" and "Fitness-For-Service Assessment for Hydrogen Damages (Part. 7)".
+  urls:
+  - https://www.jstage.jst.go.jp/browse/hpi/57/5/_contents/-char/en
+  access_note: contents page opened; articles not read
+- id: S9
+  citation: Herucakra, Adnyani, Prasetyo, Rizkhita, "Fitness for Service (FFS) and Fatigue Assessment for Shell Distorted Steel Storage Tank Based on API 579-1/ASME FFS-1", Journal of Materials Exploration and Findings 3(1), 2024, CC BY 4.0.
+  urls:
+  - https://scholarhub.ui.ac.id/jmef/vol3/iss1/3
+  access_note: abstract opened
+could_not_verify:
+- Any usage-frequency statistics by part or by sector.
+- Whether a newer example problem manual exists and what it contains for Part 14.
+- The Part 7 / Part 13 boundary for laminations, and the inspection inputs for Part 13.
+- Offshore or marine published cases for any of the four parts.
+bottom_line:
+- '**No published data on how often each part is used was found**, for offshore, marine or any other sector. A targeted search returned only vendor articles without numbers. Every statement about usage below is qualitative and sourced; treat "how often" as unanswered.'
+- '**Open worked examples exist for three of the four parts.** A file on the standards body''s own site is the 2009 example problem manual, whose contents list six example problems for Part 8, three for Part 11 and two for Part 13 [S1]. Part 14 did not exist then; its open material is a conference overview paper [S5].'
+- 'The tracker''s sequencing (8, 14, 13, 11) is supportable. The one change worth considering is moving Part 11 out of the engine queue altogether: its published practice is field-led (zone mapping, hardness, replication), not calculation-led [S6, S7].'
+- 'One gap in the map: Part 12 (dents, gouges and dent-gouge combinations) is listed in the standard''s contents [S2] but is in neither this tracker nor the companion issue''s list as quoted here. Confirm it is covered elsewhere.'
+# Counted bold spellings: **unverified** (legend and body), **not verified** (body).
+# No bold **Unverified** or **Not opened** marks occur in the note.
+unverified_mark_count: 3

@@ -1,0 +1,6181 @@
+{
+  "owner": "digitalmodel",
+  "dataset": "rao_database",
+  "basis": {
+    "frequencies": "rad/s",
+    "directions": "deg",
+    "phases": "deg",
+    "translations": "m/m",
+    "rotations": "rad/m"
+  },
+  "basis_qualification": "Legacy storage declaration only; source units are recorded per source; unstated units are neither inferred nor converted",
+  "readiness": "benchmark fixtures; engineering coordinate/reference qualification unverified",
+  "reuse": "Existing in-repository fixtures; repository LICENSE applies; no new upstream rights claimed",
+  "regenerate": "PYTHONPATH=src uv run --no-sources python scripts/populate_rao_database.py --retrieved-on 2026-10-11",
+  "comparison_criterion": "Named box pair only: per-source half decimal export unit (10**(order - observed significant digits + 1)/2) plus binary spacing; circular phase residual includes full-turn spacing. Generic deduplication requires exact arrays and matching basis.",
+  "database_sha256": "90d3bc8c8c13bd13ef0083687c3cd0bbc82dbae25caf3100edd9149836d3be96",
+  "database_bytes": 82852,
+  "entries": [
+    {
+      "variation_id": "test01_unit_box",
+      "frequency_count": 50,
+      "heading_count": 2,
+      "sources": [
+        {
+          "path": "tests/fixtures/solver/test01_unit_box.xlsx",
+          "sha256": "c51bf630758e597160b517c7ade4798f6139f7664b327fc466da6b1180336fe8",
+          "revision": "83e2fafb017db1125ee4eaed314df708a9729747",
+          "retrieved_on": "2026-10-11",
+          "format": "pipeline",
+          "worksheet": "RAOs",
+          "table": "all displacement RAO rows and headings",
+          "units": {
+            "frequencies": {
+              "labels": [
+                {
+                  "text": "Frequency (rad/s)",
+                  "sheet": "RAOs",
+                  "cell": "A1"
+                }
+              ],
+              "source_unit": "rad/s",
+              "stored_unit": "rad/s",
+              "conversion": "none"
+            },
+            "directions": {
+              "labels": [
+                {
+                  "text": "Surge_Mag_H0.0",
+                  "sheet": "RAOs",
+                  "cell": "C1"
+                },
+                {
+                  "text": "Surge_Mag_H27.0",
+                  "sheet": "RAOs",
+                  "cell": "O1"
+                },
+                {
+                  "text": "Heading range (deg)",
+                  "sheet": "Summary",
+                  "cell": "A8"
+                },
+                {
+                  "text": "Heading (deg)",
+                  "sheet": "Discretization",
+                  "cell": "A54"
+                }
+              ],
+              "source_unit": "deg",
+              "stored_unit": "deg",
+              "conversion": "none"
+            },
+            "surge": {
+              "labels": [
+                {
+                  "text": "Surge_Mag_H0.0",
+                  "sheet": "RAOs",
+                  "cell": "C1"
+                },
+                {
+                  "text": "Surge_Mag_H27.0",
+                  "sheet": "RAOs",
+                  "cell": "O1"
+                }
+              ],
+              "source_unit": "not stated in source",
+              "stored_unit": "not stated in source",
+              "conversion": "none"
+            },
+            "sway": {
+              "labels": [
+                {
+                  "text": "Sway_Mag_H0.0",
+                  "sheet": "RAOs",
+                  "cell": "E1"
+                },
+                {
+                  "text": "Sway_Mag_H27.0",
+                  "sheet": "RAOs",
+                  "cell": "Q1"
+                }
+              ],
+              "source_unit": "not stated in source",
+              "stored_unit": "not stated in source",
+              "conversion": "none"
+            },
+            "heave": {
+              "labels": [
+                {
+                  "text": "Heave_Mag_H0.0",
+                  "sheet": "RAOs",
+                  "cell": "G1"
+                },
+                {
+                  "text": "Heave_Mag_H27.0",
+                  "sheet": "RAOs",
+                  "cell": "S1"
+                }
+              ],
+              "source_unit": "not stated in source",
+              "stored_unit": "not stated in source",
+              "conversion": "none"
+            },
+            "roll": {
+              "labels": [
+                {
+                  "text": "Roll_Mag_H0.0",
+                  "sheet": "RAOs",
+                  "cell": "I1"
+                },
+                {
+                  "text": "Roll_Mag_H27.0",
+                  "sheet": "RAOs",
+                  "cell": "U1"
+                }
+              ],
+              "source_unit": "not stated in source",
+              "stored_unit": "not stated in source",
+              "conversion": "none"
+            },
+            "pitch": {
+              "labels": [
+                {
+                  "text": "Pitch_Mag_H0.0",
+                  "sheet": "RAOs",
+                  "cell": "K1"
+                },
+                {
+                  "text": "Pitch_Mag_H27.0",
+                  "sheet": "RAOs",
+                  "cell": "W1"
+                }
+              ],
+              "source_unit": "not stated in source",
+              "stored_unit": "not stated in source",
+              "conversion": "none"
+            },
+            "yaw": {
+              "labels": [
+                {
+                  "text": "Yaw_Mag_H0.0",
+                  "sheet": "RAOs",
+                  "cell": "M1"
+                },
+                {
+                  "text": "Yaw_Mag_H27.0",
+                  "sheet": "RAOs",
+                  "cell": "Y1"
+                }
+              ],
+              "source_unit": "not stated in source",
+              "stored_unit": "not stated in source",
+              "conversion": "none"
+            },
+            "phases": {
+              "labels": [
+                {
+                  "text": "Surge_Phase_H0.0",
+                  "sheet": "RAOs",
+                  "cell": "D1"
+                },
+                {
+                  "text": "Sway_Phase_H0.0",
+                  "sheet": "RAOs",
+                  "cell": "F1"
+                },
+                {
+                  "text": "Heave_Phase_H0.0",
+                  "sheet": "RAOs",
+                  "cell": "H1"
+                },
+                {
+                  "text": "Roll_Phase_H0.0",
+                  "sheet": "RAOs",
+                  "cell": "J1"
+                },
+                {
+                  "text": "Pitch_Phase_H0.0",
+                  "sheet": "RAOs",
+                  "cell": "L1"
+                },
+                {
+                  "text": "Yaw_Phase_H0.0",
+                  "sheet": "RAOs",
+                  "cell": "N1"
+                },
+                {
+                  "text": "Surge_Phase_H27.0",
+                  "sheet": "RAOs",
+                  "cell": "P1"
+                },
+                {
+                  "text": "Sway_Phase_H27.0",
+                  "sheet": "RAOs",
+                  "cell": "R1"
+                },
+                {
+                  "text": "Heave_Phase_H27.0",
+                  "sheet": "RAOs",
+                  "cell": "T1"
+                },
+                {
+                  "text": "Roll_Phase_H27.0",
+                  "sheet": "RAOs",
+                  "cell": "V1"
+                },
+                {
+                  "text": "Pitch_Phase_H27.0",
+                  "sheet": "RAOs",
+                  "cell": "X1"
+                },
+                {
+                  "text": "Yaw_Phase_H27.0",
+                  "sheet": "RAOs",
+                  "cell": "Z1"
+                }
+              ],
+              "source_unit": "not stated in source",
+              "stored_unit": "not stated in source",
+              "conversion": "none"
+            }
+          },
+          "source": {
+            "description": "not stated in source",
+            "solver": {
+              "statement": "OrcaWave / OrcFxAPI.Diffraction",
+              "sheet": "Summary",
+              "cells": [
+                "A3",
+                "B3"
+              ]
+            },
+            "version": "not stated in source",
+            "model_or_run": {
+              "statement": "test01",
+              "sheet": "Summary",
+              "cells": [
+                "A2",
+                "B2"
+              ]
+            },
+            "date": "not stated in source"
+          },
+          "loading_condition": {
+            "draft": "not stated in source",
+            "displacement": "not stated in source",
+            "mass": "not stated in source",
+            "centre_of_gravity": "not stated in source",
+            "centre_of_mass": "not stated in source",
+            "radii_of_gyration": "not stated in source",
+            "water_depth": "not stated in source",
+            "body_origin": "not stated in source",
+            "mesh_position": "not stated in source",
+            "body_position": "not stated in source",
+            "volume": "not stated in source",
+            "moments_of_inertia": "not stated in source",
+            "inertia_tensor_origin": "not stated in source",
+            "radii_of_gyration_origin": "not stated in source"
+          },
+          "conventions": {
+            "phase_convention": "not stated in source",
+            "response_reference_point": "not stated in source",
+            "heading_convention": "not stated in source"
+          },
+          "url": "../../83e2fafb017db1125ee4eaed314df708a9729747/tests/fixtures/solver/test01_unit_box.xlsx"
+        },
+        {
+          "path": "tests/fixtures/solver/L00_test01.xlsx",
+          "sha256": "8ccf108ac99be19763cafb7df262fc2ac2b90189229729801872a16ef37c380f",
+          "revision": "1c01b3013d01176b10b6347ed956baad84a9ab9b",
+          "retrieved_on": "2026-10-11",
+          "format": "native",
+          "worksheet": "Displacement RAOs",
+          "table": "all displacement RAO rows and headings",
+          "units": {
+            "frequencies": {
+              "labels": [
+                {
+                  "text": "Frequency",
+                  "sheet": "Displacement RAOs",
+                  "cell": "B7"
+                },
+                {
+                  "text": "rad/s",
+                  "sheet": "Displacement RAOs",
+                  "cell": "B9"
+                }
+              ],
+              "source_unit": "rad/s",
+              "stored_unit": "rad/s",
+              "conversion": "none"
+            },
+            "directions": {
+              "labels": [
+                {
+                  "text": "deg",
+                  "sheet": "Displacement RAOs",
+                  "cell": "A9"
+                }
+              ],
+              "source_unit": "deg",
+              "stored_unit": "deg",
+              "conversion": "none"
+            },
+            "surge": {
+              "labels": [
+                {
+                  "text": "m/m",
+                  "sheet": "Displacement RAOs",
+                  "cell": "C9"
+                }
+              ],
+              "source_unit": "m/m",
+              "stored_unit": "m/m",
+              "conversion": "none"
+            },
+            "sway": {
+              "labels": [
+                {
+                  "text": "m/m",
+                  "sheet": "Displacement RAOs",
+                  "cell": "E9"
+                }
+              ],
+              "source_unit": "m/m",
+              "stored_unit": "m/m",
+              "conversion": "none"
+            },
+            "heave": {
+              "labels": [
+                {
+                  "text": "m/m",
+                  "sheet": "Displacement RAOs",
+                  "cell": "G9"
+                }
+              ],
+              "source_unit": "m/m",
+              "stored_unit": "m/m",
+              "conversion": "none"
+            },
+            "roll": {
+              "labels": [
+                {
+                  "text": "rad/m",
+                  "sheet": "Displacement RAOs",
+                  "cell": "I9"
+                }
+              ],
+              "source_unit": "rad/m",
+              "stored_unit": "rad/m",
+              "conversion": "none"
+            },
+            "pitch": {
+              "labels": [
+                {
+                  "text": "rad/m",
+                  "sheet": "Displacement RAOs",
+                  "cell": "K9"
+                }
+              ],
+              "source_unit": "rad/m",
+              "stored_unit": "rad/m",
+              "conversion": "none"
+            },
+            "yaw": {
+              "labels": [
+                {
+                  "text": "rad/m",
+                  "sheet": "Displacement RAOs",
+                  "cell": "M9"
+                }
+              ],
+              "source_unit": "rad/m",
+              "stored_unit": "rad/m",
+              "conversion": "none"
+            },
+            "phases": {
+              "labels": [
+                {
+                  "text": "deg",
+                  "sheet": "Displacement RAOs",
+                  "cell": "D9"
+                },
+                {
+                  "text": "deg",
+                  "sheet": "Displacement RAOs",
+                  "cell": "F9"
+                },
+                {
+                  "text": "deg",
+                  "sheet": "Displacement RAOs",
+                  "cell": "H9"
+                },
+                {
+                  "text": "deg",
+                  "sheet": "Displacement RAOs",
+                  "cell": "J9"
+                },
+                {
+                  "text": "deg",
+                  "sheet": "Displacement RAOs",
+                  "cell": "L9"
+                },
+                {
+                  "text": "deg",
+                  "sheet": "Displacement RAOs",
+                  "cell": "N9"
+                }
+              ],
+              "source_unit": "deg",
+              "stored_unit": "deg",
+              "conversion": "none"
+            }
+          },
+          "source": {
+            "description": {
+              "statement": "OrcaFlex 11.6c: L00_test01.owr (modified 7:45 PM on 9/24/2026 by OrcaFlex 11.6c)",
+              "sheet": "Summary",
+              "cells": [
+                "A2"
+              ]
+            },
+            "solver": {
+              "statement": "OrcaFlex",
+              "sheet": "Summary",
+              "cells": [
+                "A2"
+              ]
+            },
+            "version": {
+              "statement": "11.6c",
+              "sheet": "Summary",
+              "cells": [
+                "A2"
+              ]
+            },
+            "model_or_run": {
+              "statement": "L00_test01.owr",
+              "sheet": "Summary",
+              "cells": [
+                "A2"
+              ]
+            },
+            "date": {
+              "statement": "9/24/2026",
+              "sheet": "Summary",
+              "cells": [
+                "A2"
+              ]
+            }
+          },
+          "loading_condition": {
+            "draft": "not stated in source",
+            "displacement": "not stated in source",
+            "mass": [
+              {
+                "statement": "Mass (te)",
+                "sheet": "Hydrostatics",
+                "cells": [
+                  "A13",
+                  "B13"
+                ],
+                "values": [
+                  [
+                    1.5682740165896558
+                  ]
+                ]
+              }
+            ],
+            "centre_of_gravity": "not stated in source",
+            "centre_of_mass": [
+              {
+                "statement": "Centre of mass Z (m)",
+                "sheet": "Summary",
+                "cells": [
+                  "A113",
+                  "B113"
+                ],
+                "values": [
+                  [
+                    0
+                  ]
+                ]
+              },
+              {
+                "statement": "Centre of mass (m)",
+                "sheet": "Hydrostatics",
+                "cells": [
+                  "A14",
+                  "B14",
+                  "C14",
+                  "D14"
+                ],
+                "values": [
+                  [
+                    0,
+                    0,
+                    0
+                  ]
+                ]
+              }
+            ],
+            "radii_of_gyration": [
+              {
+                "statement": "Radii of gyration (m)",
+                "sheet": "Summary",
+                "cells": [
+                  "A114",
+                  "B114",
+                  "C114",
+                  "D114",
+                  "B115",
+                  "C115",
+                  "D115",
+                  "B116",
+                  "C116",
+                  "D116"
+                ],
+                "values": [
+                  [
+                    1,
+                    0,
+                    0
+                  ],
+                  [
+                    0,
+                    1,
+                    0
+                  ],
+                  [
+                    0,
+                    0,
+                    1
+                  ]
+                ]
+              }
+            ],
+            "water_depth": [
+              {
+                "statement": "Water depth (m)",
+                "sheet": "Summary",
+                "cells": [
+                  "A41",
+                  "B41"
+                ],
+                "values": [
+                  [
+                    "Infinity"
+                  ]
+                ]
+              }
+            ],
+            "body_origin": [
+              {
+                "statement": "Body origin",
+                "sheet": "Summary",
+                "cells": [
+                  "A105",
+                  "B105"
+                ],
+                "values": [
+                  [
+                    "Free surface"
+                  ]
+                ]
+              }
+            ],
+            "mesh_position": [
+              {
+                "statement": "Mesh position (m)",
+                "sheet": "Summary",
+                "cells": [
+                  "A103",
+                  "B103",
+                  "C103",
+                  "D103"
+                ],
+                "values": [
+                  [
+                    0,
+                    0,
+                    0
+                  ]
+                ]
+              }
+            ],
+            "body_position": [
+              {
+                "statement": "Body position (m)",
+                "sheet": "Hydrostatics",
+                "cells": [
+                  "A5",
+                  "B5",
+                  "C5",
+                  "D5"
+                ],
+                "values": [
+                  [
+                    0,
+                    0,
+                    0
+                  ]
+                ]
+              }
+            ],
+            "volume": [
+              {
+                "statement": "Volume (m^3)",
+                "sheet": "Hydrostatics",
+                "cells": [
+                  "A6",
+                  "B6"
+                ],
+                "values": [
+                  [
+                    1.5682740165896558
+                  ]
+                ]
+              }
+            ],
+            "moments_of_inertia": "not stated in source",
+            "inertia_tensor_origin": "not stated in source",
+            "radii_of_gyration_origin": [
+              {
+                "statement": "Radii of gyration origin",
+                "sheet": "Summary",
+                "cells": [
+                  "A117",
+                  "B117"
+                ],
+                "values": [
+                  [
+                    "Body origin"
+                  ]
+                ]
+              }
+            ]
+          },
+          "conventions": {
+            "phase_convention": "not stated in source",
+            "response_reference_point": "not stated in source",
+            "heading_convention": "not stated in source"
+          },
+          "url": "../../1c01b3013d01176b10b6347ed956baad84a9ab9b/tests/fixtures/solver/L00_test01.xlsx"
+        }
+      ],
+      "basis": {
+        "frequencies": "rad/s",
+        "directions": "deg",
+        "phases": "deg",
+        "translations": "m/m",
+        "rotations": "rad/m"
+      },
+      "units": {
+        "tests/fixtures/solver/test01_unit_box.xlsx": {
+          "frequencies": {
+            "labels": [
+              {
+                "text": "Frequency (rad/s)",
+                "sheet": "RAOs",
+                "cell": "A1"
+              }
+            ],
+            "source_unit": "rad/s",
+            "stored_unit": "rad/s",
+            "conversion": "none"
+          },
+          "directions": {
+            "labels": [
+              {
+                "text": "Surge_Mag_H0.0",
+                "sheet": "RAOs",
+                "cell": "C1"
+              },
+              {
+                "text": "Surge_Mag_H27.0",
+                "sheet": "RAOs",
+                "cell": "O1"
+              },
+              {
+                "text": "Heading range (deg)",
+                "sheet": "Summary",
+                "cell": "A8"
+              },
+              {
+                "text": "Heading (deg)",
+                "sheet": "Discretization",
+                "cell": "A54"
+              }
+            ],
+            "source_unit": "deg",
+            "stored_unit": "deg",
+            "conversion": "none"
+          },
+          "surge": {
+            "labels": [
+              {
+                "text": "Surge_Mag_H0.0",
+                "sheet": "RAOs",
+                "cell": "C1"
+              },
+              {
+                "text": "Surge_Mag_H27.0",
+                "sheet": "RAOs",
+                "cell": "O1"
+              }
+            ],
+            "source_unit": "not stated in source",
+            "stored_unit": "not stated in source",
+            "conversion": "none"
+          },
+          "sway": {
+            "labels": [
+              {
+                "text": "Sway_Mag_H0.0",
+                "sheet": "RAOs",
+                "cell": "E1"
+              },
+              {
+                "text": "Sway_Mag_H27.0",
+                "sheet": "RAOs",
+                "cell": "Q1"
+              }
+            ],
+            "source_unit": "not stated in source",
+            "stored_unit": "not stated in source",
+            "conversion": "none"
+          },
+          "heave": {
+            "labels": [
+              {
+                "text": "Heave_Mag_H0.0",
+                "sheet": "RAOs",
+                "cell": "G1"
+              },
+              {
+                "text": "Heave_Mag_H27.0",
+                "sheet": "RAOs",
+                "cell": "S1"
+              }
+            ],
+            "source_unit": "not stated in source",
+            "stored_unit": "not stated in source",
+            "conversion": "none"
+          },
+          "roll": {
+            "labels": [
+              {
+                "text": "Roll_Mag_H0.0",
+                "sheet": "RAOs",
+                "cell": "I1"
+              },
+              {
+                "text": "Roll_Mag_H27.0",
+                "sheet": "RAOs",
+                "cell": "U1"
+              }
+            ],
+            "source_unit": "not stated in source",
+            "stored_unit": "not stated in source",
+            "conversion": "none"
+          },
+          "pitch": {
+            "labels": [
+              {
+                "text": "Pitch_Mag_H0.0",
+                "sheet": "RAOs",
+                "cell": "K1"
+              },
+              {
+                "text": "Pitch_Mag_H27.0",
+                "sheet": "RAOs",
+                "cell": "W1"
+              }
+            ],
+            "source_unit": "not stated in source",
+            "stored_unit": "not stated in source",
+            "conversion": "none"
+          },
+          "yaw": {
+            "labels": [
+              {
+                "text": "Yaw_Mag_H0.0",
+                "sheet": "RAOs",
+                "cell": "M1"
+              },
+              {
+                "text": "Yaw_Mag_H27.0",
+                "sheet": "RAOs",
+                "cell": "Y1"
+              }
+            ],
+            "source_unit": "not stated in source",
+            "stored_unit": "not stated in source",
+            "conversion": "none"
+          },
+          "phases": {
+            "labels": [
+              {
+                "text": "Surge_Phase_H0.0",
+                "sheet": "RAOs",
+                "cell": "D1"
+              },
+              {
+                "text": "Sway_Phase_H0.0",
+                "sheet": "RAOs",
+                "cell": "F1"
+              },
+              {
+                "text": "Heave_Phase_H0.0",
+                "sheet": "RAOs",
+                "cell": "H1"
+              },
+              {
+                "text": "Roll_Phase_H0.0",
+                "sheet": "RAOs",
+                "cell": "J1"
+              },
+              {
+                "text": "Pitch_Phase_H0.0",
+                "sheet": "RAOs",
+                "cell": "L1"
+              },
+              {
+                "text": "Yaw_Phase_H0.0",
+                "sheet": "RAOs",
+                "cell": "N1"
+              },
+              {
+                "text": "Surge_Phase_H27.0",
+                "sheet": "RAOs",
+                "cell": "P1"
+              },
+              {
+                "text": "Sway_Phase_H27.0",
+                "sheet": "RAOs",
+                "cell": "R1"
+              },
+              {
+                "text": "Heave_Phase_H27.0",
+                "sheet": "RAOs",
+                "cell": "T1"
+              },
+              {
+                "text": "Roll_Phase_H27.0",
+                "sheet": "RAOs",
+                "cell": "V1"
+              },
+              {
+                "text": "Pitch_Phase_H27.0",
+                "sheet": "RAOs",
+                "cell": "X1"
+              },
+              {
+                "text": "Yaw_Phase_H27.0",
+                "sheet": "RAOs",
+                "cell": "Z1"
+              }
+            ],
+            "source_unit": "not stated in source",
+            "stored_unit": "not stated in source",
+            "conversion": "none"
+          }
+        },
+        "tests/fixtures/solver/L00_test01.xlsx": {
+          "frequencies": {
+            "labels": [
+              {
+                "text": "Frequency",
+                "sheet": "Displacement RAOs",
+                "cell": "B7"
+              },
+              {
+                "text": "rad/s",
+                "sheet": "Displacement RAOs",
+                "cell": "B9"
+              }
+            ],
+            "source_unit": "rad/s",
+            "stored_unit": "rad/s",
+            "conversion": "none"
+          },
+          "directions": {
+            "labels": [
+              {
+                "text": "deg",
+                "sheet": "Displacement RAOs",
+                "cell": "A9"
+              }
+            ],
+            "source_unit": "deg",
+            "stored_unit": "deg",
+            "conversion": "none"
+          },
+          "surge": {
+            "labels": [
+              {
+                "text": "m/m",
+                "sheet": "Displacement RAOs",
+                "cell": "C9"
+              }
+            ],
+            "source_unit": "m/m",
+            "stored_unit": "m/m",
+            "conversion": "none"
+          },
+          "sway": {
+            "labels": [
+              {
+                "text": "m/m",
+                "sheet": "Displacement RAOs",
+                "cell": "E9"
+              }
+            ],
+            "source_unit": "m/m",
+            "stored_unit": "m/m",
+            "conversion": "none"
+          },
+          "heave": {
+            "labels": [
+              {
+                "text": "m/m",
+                "sheet": "Displacement RAOs",
+                "cell": "G9"
+              }
+            ],
+            "source_unit": "m/m",
+            "stored_unit": "m/m",
+            "conversion": "none"
+          },
+          "roll": {
+            "labels": [
+              {
+                "text": "rad/m",
+                "sheet": "Displacement RAOs",
+                "cell": "I9"
+              }
+            ],
+            "source_unit": "rad/m",
+            "stored_unit": "rad/m",
+            "conversion": "none"
+          },
+          "pitch": {
+            "labels": [
+              {
+                "text": "rad/m",
+                "sheet": "Displacement RAOs",
+                "cell": "K9"
+              }
+            ],
+            "source_unit": "rad/m",
+            "stored_unit": "rad/m",
+            "conversion": "none"
+          },
+          "yaw": {
+            "labels": [
+              {
+                "text": "rad/m",
+                "sheet": "Displacement RAOs",
+                "cell": "M9"
+              }
+            ],
+            "source_unit": "rad/m",
+            "stored_unit": "rad/m",
+            "conversion": "none"
+          },
+          "phases": {
+            "labels": [
+              {
+                "text": "deg",
+                "sheet": "Displacement RAOs",
+                "cell": "D9"
+              },
+              {
+                "text": "deg",
+                "sheet": "Displacement RAOs",
+                "cell": "F9"
+              },
+              {
+                "text": "deg",
+                "sheet": "Displacement RAOs",
+                "cell": "H9"
+              },
+              {
+                "text": "deg",
+                "sheet": "Displacement RAOs",
+                "cell": "J9"
+              },
+              {
+                "text": "deg",
+                "sheet": "Displacement RAOs",
+                "cell": "L9"
+              },
+              {
+                "text": "deg",
+                "sheet": "Displacement RAOs",
+                "cell": "N9"
+              }
+            ],
+            "source_unit": "deg",
+            "stored_unit": "deg",
+            "conversion": "none"
+          }
+        }
+      },
+      "conventions": {
+        "tests/fixtures/solver/test01_unit_box.xlsx": {
+          "phase_convention": "not stated in source",
+          "response_reference_point": "not stated in source",
+          "heading_convention": "not stated in source"
+        },
+        "tests/fixtures/solver/L00_test01.xlsx": {
+          "phase_convention": "not stated in source",
+          "response_reference_point": "not stated in source",
+          "heading_convention": "not stated in source"
+        }
+      },
+      "source": {
+        "tests/fixtures/solver/test01_unit_box.xlsx": {
+          "description": "not stated in source",
+          "solver": {
+            "statement": "OrcaWave / OrcFxAPI.Diffraction",
+            "sheet": "Summary",
+            "cells": [
+              "A3",
+              "B3"
+            ]
+          },
+          "version": "not stated in source",
+          "model_or_run": {
+            "statement": "test01",
+            "sheet": "Summary",
+            "cells": [
+              "A2",
+              "B2"
+            ]
+          },
+          "date": "not stated in source"
+        },
+        "tests/fixtures/solver/L00_test01.xlsx": {
+          "description": {
+            "statement": "OrcaFlex 11.6c: L00_test01.owr (modified 7:45 PM on 9/24/2026 by OrcaFlex 11.6c)",
+            "sheet": "Summary",
+            "cells": [
+              "A2"
+            ]
+          },
+          "solver": {
+            "statement": "OrcaFlex",
+            "sheet": "Summary",
+            "cells": [
+              "A2"
+            ]
+          },
+          "version": {
+            "statement": "11.6c",
+            "sheet": "Summary",
+            "cells": [
+              "A2"
+            ]
+          },
+          "model_or_run": {
+            "statement": "L00_test01.owr",
+            "sheet": "Summary",
+            "cells": [
+              "A2"
+            ]
+          },
+          "date": {
+            "statement": "9/24/2026",
+            "sheet": "Summary",
+            "cells": [
+              "A2"
+            ]
+          }
+        }
+      },
+      "loading_condition": {
+        "tests/fixtures/solver/test01_unit_box.xlsx": {
+          "draft": "not stated in source",
+          "displacement": "not stated in source",
+          "mass": "not stated in source",
+          "centre_of_gravity": "not stated in source",
+          "centre_of_mass": "not stated in source",
+          "radii_of_gyration": "not stated in source",
+          "water_depth": "not stated in source",
+          "body_origin": "not stated in source",
+          "mesh_position": "not stated in source",
+          "body_position": "not stated in source",
+          "volume": "not stated in source",
+          "moments_of_inertia": "not stated in source",
+          "inertia_tensor_origin": "not stated in source",
+          "radii_of_gyration_origin": "not stated in source"
+        },
+        "tests/fixtures/solver/L00_test01.xlsx": {
+          "draft": "not stated in source",
+          "displacement": "not stated in source",
+          "mass": [
+            {
+              "statement": "Mass (te)",
+              "sheet": "Hydrostatics",
+              "cells": [
+                "A13",
+                "B13"
+              ],
+              "values": [
+                [
+                  1.5682740165896558
+                ]
+              ]
+            }
+          ],
+          "centre_of_gravity": "not stated in source",
+          "centre_of_mass": [
+            {
+              "statement": "Centre of mass Z (m)",
+              "sheet": "Summary",
+              "cells": [
+                "A113",
+                "B113"
+              ],
+              "values": [
+                [
+                  0
+                ]
+              ]
+            },
+            {
+              "statement": "Centre of mass (m)",
+              "sheet": "Hydrostatics",
+              "cells": [
+                "A14",
+                "B14",
+                "C14",
+                "D14"
+              ],
+              "values": [
+                [
+                  0,
+                  0,
+                  0
+                ]
+              ]
+            }
+          ],
+          "radii_of_gyration": [
+            {
+              "statement": "Radii of gyration (m)",
+              "sheet": "Summary",
+              "cells": [
+                "A114",
+                "B114",
+                "C114",
+                "D114",
+                "B115",
+                "C115",
+                "D115",
+                "B116",
+                "C116",
+                "D116"
+              ],
+              "values": [
+                [
+                  1,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  1,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  1
+                ]
+              ]
+            }
+          ],
+          "water_depth": [
+            {
+              "statement": "Water depth (m)",
+              "sheet": "Summary",
+              "cells": [
+                "A41",
+                "B41"
+              ],
+              "values": [
+                [
+                  "Infinity"
+                ]
+              ]
+            }
+          ],
+          "body_origin": [
+            {
+              "statement": "Body origin",
+              "sheet": "Summary",
+              "cells": [
+                "A105",
+                "B105"
+              ],
+              "values": [
+                [
+                  "Free surface"
+                ]
+              ]
+            }
+          ],
+          "mesh_position": [
+            {
+              "statement": "Mesh position (m)",
+              "sheet": "Summary",
+              "cells": [
+                "A103",
+                "B103",
+                "C103",
+                "D103"
+              ],
+              "values": [
+                [
+                  0,
+                  0,
+                  0
+                ]
+              ]
+            }
+          ],
+          "body_position": [
+            {
+              "statement": "Body position (m)",
+              "sheet": "Hydrostatics",
+              "cells": [
+                "A5",
+                "B5",
+                "C5",
+                "D5"
+              ],
+              "values": [
+                [
+                  0,
+                  0,
+                  0
+                ]
+              ]
+            }
+          ],
+          "volume": [
+            {
+              "statement": "Volume (m^3)",
+              "sheet": "Hydrostatics",
+              "cells": [
+                "A6",
+                "B6"
+              ],
+              "values": [
+                [
+                  1.5682740165896558
+                ]
+              ]
+            }
+          ],
+          "moments_of_inertia": "not stated in source",
+          "inertia_tensor_origin": "not stated in source",
+          "radii_of_gyration_origin": [
+            {
+              "statement": "Radii of gyration origin",
+              "sheet": "Summary",
+              "cells": [
+                "A117",
+                "B117"
+              ],
+              "values": [
+                [
+                  "Body origin"
+                ]
+              ]
+            }
+          ]
+        }
+      },
+      "box_comparison": {
+        "equivalent": true,
+        "directions_exact": true,
+        "source_significant_digits": [
+          16,
+          17
+        ],
+        "components": {
+          "frequencies": {
+            "units": "rad/s",
+            "within_bounds": true,
+            "max_raw_abs_difference": 1.1102230246251565e-16,
+            "max_comparison_abs_difference": 1.1102230246251565e-16,
+            "max_export_bound": 2.3263568394002503e-15
+          },
+          "amplitudes": {
+            "units": "m/m (translation), rad/m (rotation)",
+            "within_bounds": true,
+            "max_raw_abs_difference": 4.440892098500626e-16,
+            "max_comparison_abs_difference": 4.440892098500626e-16,
+            "max_export_bound": 1.4381784197001253e-15
+          },
+          "phases": {
+            "units": "deg",
+            "within_bounds": true,
+            "max_raw_abs_difference": 360.00000000000006,
+            "max_comparison_abs_difference": 8.526512829121202e-14,
+            "max_export_bound": 1.8289769243681805e-13
+          }
+        }
+      }
+    },
+    {
+      "variation_id": "ellipsoid",
+      "frequency_count": 1,
+      "heading_count": 18,
+      "sources": [
+        {
+          "path": "tests/fixtures/solver/ellipsoid.xlsx",
+          "sha256": "b3e4d5b10dd32fc73d053f3abba252d64090fbef1994d82e20de27354e08c3c7",
+          "revision": "83e2fafb017db1125ee4eaed314df708a9729747",
+          "retrieved_on": "2026-10-11",
+          "format": "pipeline",
+          "worksheet": "RAOs",
+          "table": "all displacement RAO rows and headings",
+          "units": {
+            "frequencies": {
+              "labels": [
+                {
+                  "text": "Frequency (rad/s)",
+                  "sheet": "RAOs",
+                  "cell": "A1"
+                }
+              ],
+              "source_unit": "rad/s",
+              "stored_unit": "rad/s",
+              "conversion": "none"
+            },
+            "directions": {
+              "labels": [
+                {
+                  "text": "Surge_Mag_H0.0",
+                  "sheet": "RAOs",
+                  "cell": "C1"
+                },
+                {
+                  "text": "Surge_Mag_H20.0",
+                  "sheet": "RAOs",
+                  "cell": "O1"
+                },
+                {
+                  "text": "Surge_Mag_H40.0",
+                  "sheet": "RAOs",
+                  "cell": "AA1"
+                },
+                {
+                  "text": "Surge_Mag_H60.0",
+                  "sheet": "RAOs",
+                  "cell": "AM1"
+                },
+                {
+                  "text": "Surge_Mag_H80.0",
+                  "sheet": "RAOs",
+                  "cell": "AY1"
+                },
+                {
+                  "text": "Surge_Mag_H100.0",
+                  "sheet": "RAOs",
+                  "cell": "BK1"
+                },
+                {
+                  "text": "Surge_Mag_H120.0",
+                  "sheet": "RAOs",
+                  "cell": "BW1"
+                },
+                {
+                  "text": "Surge_Mag_H140.0",
+                  "sheet": "RAOs",
+                  "cell": "CI1"
+                },
+                {
+                  "text": "Surge_Mag_H160.0",
+                  "sheet": "RAOs",
+                  "cell": "CU1"
+                },
+                {
+                  "text": "Surge_Mag_H180.0",
+                  "sheet": "RAOs",
+                  "cell": "DG1"
+                },
+                {
+                  "text": "Surge_Mag_H200.0",
+                  "sheet": "RAOs",
+                  "cell": "DS1"
+                },
+                {
+                  "text": "Surge_Mag_H220.0",
+                  "sheet": "RAOs",
+                  "cell": "EE1"
+                },
+                {
+                  "text": "Surge_Mag_H240.0",
+                  "sheet": "RAOs",
+                  "cell": "EQ1"
+                },
+                {
+                  "text": "Surge_Mag_H260.0",
+                  "sheet": "RAOs",
+                  "cell": "FC1"
+                },
+                {
+                  "text": "Surge_Mag_H280.0",
+                  "sheet": "RAOs",
+                  "cell": "FO1"
+                },
+                {
+                  "text": "Surge_Mag_H300.0",
+                  "sheet": "RAOs",
+                  "cell": "GA1"
+                },
+                {
+                  "text": "Surge_Mag_H320.0",
+                  "sheet": "RAOs",
+                  "cell": "GM1"
+                },
+                {
+                  "text": "Surge_Mag_H340.0",
+                  "sheet": "RAOs",
+                  "cell": "GY1"
+                },
+                {
+                  "text": "Heading range (deg)",
+                  "sheet": "Summary",
+                  "cell": "A8"
+                },
+                {
+                  "text": "Heading (deg)",
+                  "sheet": "Discretization",
+                  "cell": "A5"
+                }
+              ],
+              "source_unit": "deg",
+              "stored_unit": "deg",
+              "conversion": "none"
+            },
+            "surge": {
+              "labels": [
+                {
+                  "text": "Surge_Mag_H0.0",
+                  "sheet": "RAOs",
+                  "cell": "C1"
+                },
+                {
+                  "text": "Surge_Mag_H20.0",
+                  "sheet": "RAOs",
+                  "cell": "O1"
+                },
+                {
+                  "text": "Surge_Mag_H40.0",
+                  "sheet": "RAOs",
+                  "cell": "AA1"
+                },
+                {
+                  "text": "Surge_Mag_H60.0",
+                  "sheet": "RAOs",
+                  "cell": "AM1"
+                },
+                {
+                  "text": "Surge_Mag_H80.0",
+                  "sheet": "RAOs",
+                  "cell": "AY1"
+                },
+                {
+                  "text": "Surge_Mag_H100.0",
+                  "sheet": "RAOs",
+                  "cell": "BK1"
+                },
+                {
+                  "text": "Surge_Mag_H120.0",
+                  "sheet": "RAOs",
+                  "cell": "BW1"
+                },
+                {
+                  "text": "Surge_Mag_H140.0",
+                  "sheet": "RAOs",
+                  "cell": "CI1"
+                },
+                {
+                  "text": "Surge_Mag_H160.0",
+                  "sheet": "RAOs",
+                  "cell": "CU1"
+                },
+                {
+                  "text": "Surge_Mag_H180.0",
+                  "sheet": "RAOs",
+                  "cell": "DG1"
+                },
+                {
+                  "text": "Surge_Mag_H200.0",
+                  "sheet": "RAOs",
+                  "cell": "DS1"
+                },
+                {
+                  "text": "Surge_Mag_H220.0",
+                  "sheet": "RAOs",
+                  "cell": "EE1"
+                },
+                {
+                  "text": "Surge_Mag_H240.0",
+                  "sheet": "RAOs",
+                  "cell": "EQ1"
+                },
+                {
+                  "text": "Surge_Mag_H260.0",
+                  "sheet": "RAOs",
+                  "cell": "FC1"
+                },
+                {
+                  "text": "Surge_Mag_H280.0",
+                  "sheet": "RAOs",
+                  "cell": "FO1"
+                },
+                {
+                  "text": "Surge_Mag_H300.0",
+                  "sheet": "RAOs",
+                  "cell": "GA1"
+                },
+                {
+                  "text": "Surge_Mag_H320.0",
+                  "sheet": "RAOs",
+                  "cell": "GM1"
+                },
+                {
+                  "text": "Surge_Mag_H340.0",
+                  "sheet": "RAOs",
+                  "cell": "GY1"
+                }
+              ],
+              "source_unit": "not stated in source",
+              "stored_unit": "not stated in source",
+              "conversion": "none"
+            },
+            "sway": {
+              "labels": [
+                {
+                  "text": "Sway_Mag_H0.0",
+                  "sheet": "RAOs",
+                  "cell": "E1"
+                },
+                {
+                  "text": "Sway_Mag_H20.0",
+                  "sheet": "RAOs",
+                  "cell": "Q1"
+                },
+                {
+                  "text": "Sway_Mag_H40.0",
+                  "sheet": "RAOs",
+                  "cell": "AC1"
+                },
+                {
+                  "text": "Sway_Mag_H60.0",
+                  "sheet": "RAOs",
+                  "cell": "AO1"
+                },
+                {
+                  "text": "Sway_Mag_H80.0",
+                  "sheet": "RAOs",
+                  "cell": "BA1"
+                },
+                {
+                  "text": "Sway_Mag_H100.0",
+                  "sheet": "RAOs",
+                  "cell": "BM1"
+                },
+                {
+                  "text": "Sway_Mag_H120.0",
+                  "sheet": "RAOs",
+                  "cell": "BY1"
+                },
+                {
+                  "text": "Sway_Mag_H140.0",
+                  "sheet": "RAOs",
+                  "cell": "CK1"
+                },
+                {
+                  "text": "Sway_Mag_H160.0",
+                  "sheet": "RAOs",
+                  "cell": "CW1"
+                },
+                {
+                  "text": "Sway_Mag_H180.0",
+                  "sheet": "RAOs",
+                  "cell": "DI1"
+                },
+                {
+                  "text": "Sway_Mag_H200.0",
+                  "sheet": "RAOs",
+                  "cell": "DU1"
+                },
+                {
+                  "text": "Sway_Mag_H220.0",
+                  "sheet": "RAOs",
+                  "cell": "EG1"
+                },
+                {
+                  "text": "Sway_Mag_H240.0",
+                  "sheet": "RAOs",
+                  "cell": "ES1"
+                },
+                {
+                  "text": "Sway_Mag_H260.0",
+                  "sheet": "RAOs",
+                  "cell": "FE1"
+                },
+                {
+                  "text": "Sway_Mag_H280.0",
+                  "sheet": "RAOs",
+                  "cell": "FQ1"
+                },
+                {
+                  "text": "Sway_Mag_H300.0",
+                  "sheet": "RAOs",
+                  "cell": "GC1"
+                },
+                {
+                  "text": "Sway_Mag_H320.0",
+                  "sheet": "RAOs",
+                  "cell": "GO1"
+                },
+                {
+                  "text": "Sway_Mag_H340.0",
+                  "sheet": "RAOs",
+                  "cell": "HA1"
+                }
+              ],
+              "source_unit": "not stated in source",
+              "stored_unit": "not stated in source",
+              "conversion": "none"
+            },
+            "heave": {
+              "labels": [
+                {
+                  "text": "Heave_Mag_H0.0",
+                  "sheet": "RAOs",
+                  "cell": "G1"
+                },
+                {
+                  "text": "Heave_Mag_H20.0",
+                  "sheet": "RAOs",
+                  "cell": "S1"
+                },
+                {
+                  "text": "Heave_Mag_H40.0",
+                  "sheet": "RAOs",
+                  "cell": "AE1"
+                },
+                {
+                  "text": "Heave_Mag_H60.0",
+                  "sheet": "RAOs",
+                  "cell": "AQ1"
+                },
+                {
+                  "text": "Heave_Mag_H80.0",
+                  "sheet": "RAOs",
+                  "cell": "BC1"
+                },
+                {
+                  "text": "Heave_Mag_H100.0",
+                  "sheet": "RAOs",
+                  "cell": "BO1"
+                },
+                {
+                  "text": "Heave_Mag_H120.0",
+                  "sheet": "RAOs",
+                  "cell": "CA1"
+                },
+                {
+                  "text": "Heave_Mag_H140.0",
+                  "sheet": "RAOs",
+                  "cell": "CM1"
+                },
+                {
+                  "text": "Heave_Mag_H160.0",
+                  "sheet": "RAOs",
+                  "cell": "CY1"
+                },
+                {
+                  "text": "Heave_Mag_H180.0",
+                  "sheet": "RAOs",
+                  "cell": "DK1"
+                },
+                {
+                  "text": "Heave_Mag_H200.0",
+                  "sheet": "RAOs",
+                  "cell": "DW1"
+                },
+                {
+                  "text": "Heave_Mag_H220.0",
+                  "sheet": "RAOs",
+                  "cell": "EI1"
+                },
+                {
+                  "text": "Heave_Mag_H240.0",
+                  "sheet": "RAOs",
+                  "cell": "EU1"
+                },
+                {
+                  "text": "Heave_Mag_H260.0",
+                  "sheet": "RAOs",
+                  "cell": "FG1"
+                },
+                {
+                  "text": "Heave_Mag_H280.0",
+                  "sheet": "RAOs",
+                  "cell": "FS1"
+                },
+                {
+                  "text": "Heave_Mag_H300.0",
+                  "sheet": "RAOs",
+                  "cell": "GE1"
+                },
+                {
+                  "text": "Heave_Mag_H320.0",
+                  "sheet": "RAOs",
+                  "cell": "GQ1"
+                },
+                {
+                  "text": "Heave_Mag_H340.0",
+                  "sheet": "RAOs",
+                  "cell": "HC1"
+                }
+              ],
+              "source_unit": "not stated in source",
+              "stored_unit": "not stated in source",
+              "conversion": "none"
+            },
+            "roll": {
+              "labels": [
+                {
+                  "text": "Roll_Mag_H0.0",
+                  "sheet": "RAOs",
+                  "cell": "I1"
+                },
+                {
+                  "text": "Roll_Mag_H20.0",
+                  "sheet": "RAOs",
+                  "cell": "U1"
+                },
+                {
+                  "text": "Roll_Mag_H40.0",
+                  "sheet": "RAOs",
+                  "cell": "AG1"
+                },
+                {
+                  "text": "Roll_Mag_H60.0",
+                  "sheet": "RAOs",
+                  "cell": "AS1"
+                },
+                {
+                  "text": "Roll_Mag_H80.0",
+                  "sheet": "RAOs",
+                  "cell": "BE1"
+                },
+                {
+                  "text": "Roll_Mag_H100.0",
+                  "sheet": "RAOs",
+                  "cell": "BQ1"
+                },
+                {
+                  "text": "Roll_Mag_H120.0",
+                  "sheet": "RAOs",
+                  "cell": "CC1"
+                },
+                {
+                  "text": "Roll_Mag_H140.0",
+                  "sheet": "RAOs",
+                  "cell": "CO1"
+                },
+                {
+                  "text": "Roll_Mag_H160.0",
+                  "sheet": "RAOs",
+                  "cell": "DA1"
+                },
+                {
+                  "text": "Roll_Mag_H180.0",
+                  "sheet": "RAOs",
+                  "cell": "DM1"
+                },
+                {
+                  "text": "Roll_Mag_H200.0",
+                  "sheet": "RAOs",
+                  "cell": "DY1"
+                },
+                {
+                  "text": "Roll_Mag_H220.0",
+                  "sheet": "RAOs",
+                  "cell": "EK1"
+                },
+                {
+                  "text": "Roll_Mag_H240.0",
+                  "sheet": "RAOs",
+                  "cell": "EW1"
+                },
+                {
+                  "text": "Roll_Mag_H260.0",
+                  "sheet": "RAOs",
+                  "cell": "FI1"
+                },
+                {
+                  "text": "Roll_Mag_H280.0",
+                  "sheet": "RAOs",
+                  "cell": "FU1"
+                },
+                {
+                  "text": "Roll_Mag_H300.0",
+                  "sheet": "RAOs",
+                  "cell": "GG1"
+                },
+                {
+                  "text": "Roll_Mag_H320.0",
+                  "sheet": "RAOs",
+                  "cell": "GS1"
+                },
+                {
+                  "text": "Roll_Mag_H340.0",
+                  "sheet": "RAOs",
+                  "cell": "HE1"
+                }
+              ],
+              "source_unit": "not stated in source",
+              "stored_unit": "not stated in source",
+              "conversion": "none"
+            },
+            "pitch": {
+              "labels": [
+                {
+                  "text": "Pitch_Mag_H0.0",
+                  "sheet": "RAOs",
+                  "cell": "K1"
+                },
+                {
+                  "text": "Pitch_Mag_H20.0",
+                  "sheet": "RAOs",
+                  "cell": "W1"
+                },
+                {
+                  "text": "Pitch_Mag_H40.0",
+                  "sheet": "RAOs",
+                  "cell": "AI1"
+                },
+                {
+                  "text": "Pitch_Mag_H60.0",
+                  "sheet": "RAOs",
+                  "cell": "AU1"
+                },
+                {
+                  "text": "Pitch_Mag_H80.0",
+                  "sheet": "RAOs",
+                  "cell": "BG1"
+                },
+                {
+                  "text": "Pitch_Mag_H100.0",
+                  "sheet": "RAOs",
+                  "cell": "BS1"
+                },
+                {
+                  "text": "Pitch_Mag_H120.0",
+                  "sheet": "RAOs",
+                  "cell": "CE1"
+                },
+                {
+                  "text": "Pitch_Mag_H140.0",
+                  "sheet": "RAOs",
+                  "cell": "CQ1"
+                },
+                {
+                  "text": "Pitch_Mag_H160.0",
+                  "sheet": "RAOs",
+                  "cell": "DC1"
+                },
+                {
+                  "text": "Pitch_Mag_H180.0",
+                  "sheet": "RAOs",
+                  "cell": "DO1"
+                },
+                {
+                  "text": "Pitch_Mag_H200.0",
+                  "sheet": "RAOs",
+                  "cell": "EA1"
+                },
+                {
+                  "text": "Pitch_Mag_H220.0",
+                  "sheet": "RAOs",
+                  "cell": "EM1"
+                },
+                {
+                  "text": "Pitch_Mag_H240.0",
+                  "sheet": "RAOs",
+                  "cell": "EY1"
+                },
+                {
+                  "text": "Pitch_Mag_H260.0",
+                  "sheet": "RAOs",
+                  "cell": "FK1"
+                },
+                {
+                  "text": "Pitch_Mag_H280.0",
+                  "sheet": "RAOs",
+                  "cell": "FW1"
+                },
+                {
+                  "text": "Pitch_Mag_H300.0",
+                  "sheet": "RAOs",
+                  "cell": "GI1"
+                },
+                {
+                  "text": "Pitch_Mag_H320.0",
+                  "sheet": "RAOs",
+                  "cell": "GU1"
+                },
+                {
+                  "text": "Pitch_Mag_H340.0",
+                  "sheet": "RAOs",
+                  "cell": "HG1"
+                }
+              ],
+              "source_unit": "not stated in source",
+              "stored_unit": "not stated in source",
+              "conversion": "none"
+            },
+            "yaw": {
+              "labels": [
+                {
+                  "text": "Yaw_Mag_H0.0",
+                  "sheet": "RAOs",
+                  "cell": "M1"
+                },
+                {
+                  "text": "Yaw_Mag_H20.0",
+                  "sheet": "RAOs",
+                  "cell": "Y1"
+                },
+                {
+                  "text": "Yaw_Mag_H40.0",
+                  "sheet": "RAOs",
+                  "cell": "AK1"
+                },
+                {
+                  "text": "Yaw_Mag_H60.0",
+                  "sheet": "RAOs",
+                  "cell": "AW1"
+                },
+                {
+                  "text": "Yaw_Mag_H80.0",
+                  "sheet": "RAOs",
+                  "cell": "BI1"
+                },
+                {
+                  "text": "Yaw_Mag_H100.0",
+                  "sheet": "RAOs",
+                  "cell": "BU1"
+                },
+                {
+                  "text": "Yaw_Mag_H120.0",
+                  "sheet": "RAOs",
+                  "cell": "CG1"
+                },
+                {
+                  "text": "Yaw_Mag_H140.0",
+                  "sheet": "RAOs",
+                  "cell": "CS1"
+                },
+                {
+                  "text": "Yaw_Mag_H160.0",
+                  "sheet": "RAOs",
+                  "cell": "DE1"
+                },
+                {
+                  "text": "Yaw_Mag_H180.0",
+                  "sheet": "RAOs",
+                  "cell": "DQ1"
+                },
+                {
+                  "text": "Yaw_Mag_H200.0",
+                  "sheet": "RAOs",
+                  "cell": "EC1"
+                },
+                {
+                  "text": "Yaw_Mag_H220.0",
+                  "sheet": "RAOs",
+                  "cell": "EO1"
+                },
+                {
+                  "text": "Yaw_Mag_H240.0",
+                  "sheet": "RAOs",
+                  "cell": "FA1"
+                },
+                {
+                  "text": "Yaw_Mag_H260.0",
+                  "sheet": "RAOs",
+                  "cell": "FM1"
+                },
+                {
+                  "text": "Yaw_Mag_H280.0",
+                  "sheet": "RAOs",
+                  "cell": "FY1"
+                },
+                {
+                  "text": "Yaw_Mag_H300.0",
+                  "sheet": "RAOs",
+                  "cell": "GK1"
+                },
+                {
+                  "text": "Yaw_Mag_H320.0",
+                  "sheet": "RAOs",
+                  "cell": "GW1"
+                },
+                {
+                  "text": "Yaw_Mag_H340.0",
+                  "sheet": "RAOs",
+                  "cell": "HI1"
+                }
+              ],
+              "source_unit": "not stated in source",
+              "stored_unit": "not stated in source",
+              "conversion": "none"
+            },
+            "phases": {
+              "labels": [
+                {
+                  "text": "Surge_Phase_H0.0",
+                  "sheet": "RAOs",
+                  "cell": "D1"
+                },
+                {
+                  "text": "Sway_Phase_H0.0",
+                  "sheet": "RAOs",
+                  "cell": "F1"
+                },
+                {
+                  "text": "Heave_Phase_H0.0",
+                  "sheet": "RAOs",
+                  "cell": "H1"
+                },
+                {
+                  "text": "Roll_Phase_H0.0",
+                  "sheet": "RAOs",
+                  "cell": "J1"
+                },
+                {
+                  "text": "Pitch_Phase_H0.0",
+                  "sheet": "RAOs",
+                  "cell": "L1"
+                },
+                {
+                  "text": "Yaw_Phase_H0.0",
+                  "sheet": "RAOs",
+                  "cell": "N1"
+                },
+                {
+                  "text": "Surge_Phase_H20.0",
+                  "sheet": "RAOs",
+                  "cell": "P1"
+                },
+                {
+                  "text": "Sway_Phase_H20.0",
+                  "sheet": "RAOs",
+                  "cell": "R1"
+                },
+                {
+                  "text": "Heave_Phase_H20.0",
+                  "sheet": "RAOs",
+                  "cell": "T1"
+                },
+                {
+                  "text": "Roll_Phase_H20.0",
+                  "sheet": "RAOs",
+                  "cell": "V1"
+                },
+                {
+                  "text": "Pitch_Phase_H20.0",
+                  "sheet": "RAOs",
+                  "cell": "X1"
+                },
+                {
+                  "text": "Yaw_Phase_H20.0",
+                  "sheet": "RAOs",
+                  "cell": "Z1"
+                },
+                {
+                  "text": "Surge_Phase_H40.0",
+                  "sheet": "RAOs",
+                  "cell": "AB1"
+                },
+                {
+                  "text": "Sway_Phase_H40.0",
+                  "sheet": "RAOs",
+                  "cell": "AD1"
+                },
+                {
+                  "text": "Heave_Phase_H40.0",
+                  "sheet": "RAOs",
+                  "cell": "AF1"
+                },
+                {
+                  "text": "Roll_Phase_H40.0",
+                  "sheet": "RAOs",
+                  "cell": "AH1"
+                },
+                {
+                  "text": "Pitch_Phase_H40.0",
+                  "sheet": "RAOs",
+                  "cell": "AJ1"
+                },
+                {
+                  "text": "Yaw_Phase_H40.0",
+                  "sheet": "RAOs",
+                  "cell": "AL1"
+                },
+                {
+                  "text": "Surge_Phase_H60.0",
+                  "sheet": "RAOs",
+                  "cell": "AN1"
+                },
+                {
+                  "text": "Sway_Phase_H60.0",
+                  "sheet": "RAOs",
+                  "cell": "AP1"
+                },
+                {
+                  "text": "Heave_Phase_H60.0",
+                  "sheet": "RAOs",
+                  "cell": "AR1"
+                },
+                {
+                  "text": "Roll_Phase_H60.0",
+                  "sheet": "RAOs",
+                  "cell": "AT1"
+                },
+                {
+                  "text": "Pitch_Phase_H60.0",
+                  "sheet": "RAOs",
+                  "cell": "AV1"
+                },
+                {
+                  "text": "Yaw_Phase_H60.0",
+                  "sheet": "RAOs",
+                  "cell": "AX1"
+                },
+                {
+                  "text": "Surge_Phase_H80.0",
+                  "sheet": "RAOs",
+                  "cell": "AZ1"
+                },
+                {
+                  "text": "Sway_Phase_H80.0",
+                  "sheet": "RAOs",
+                  "cell": "BB1"
+                },
+                {
+                  "text": "Heave_Phase_H80.0",
+                  "sheet": "RAOs",
+                  "cell": "BD1"
+                },
+                {
+                  "text": "Roll_Phase_H80.0",
+                  "sheet": "RAOs",
+                  "cell": "BF1"
+                },
+                {
+                  "text": "Pitch_Phase_H80.0",
+                  "sheet": "RAOs",
+                  "cell": "BH1"
+                },
+                {
+                  "text": "Yaw_Phase_H80.0",
+                  "sheet": "RAOs",
+                  "cell": "BJ1"
+                },
+                {
+                  "text": "Surge_Phase_H100.0",
+                  "sheet": "RAOs",
+                  "cell": "BL1"
+                },
+                {
+                  "text": "Sway_Phase_H100.0",
+                  "sheet": "RAOs",
+                  "cell": "BN1"
+                },
+                {
+                  "text": "Heave_Phase_H100.0",
+                  "sheet": "RAOs",
+                  "cell": "BP1"
+                },
+                {
+                  "text": "Roll_Phase_H100.0",
+                  "sheet": "RAOs",
+                  "cell": "BR1"
+                },
+                {
+                  "text": "Pitch_Phase_H100.0",
+                  "sheet": "RAOs",
+                  "cell": "BT1"
+                },
+                {
+                  "text": "Yaw_Phase_H100.0",
+                  "sheet": "RAOs",
+                  "cell": "BV1"
+                },
+                {
+                  "text": "Surge_Phase_H120.0",
+                  "sheet": "RAOs",
+                  "cell": "BX1"
+                },
+                {
+                  "text": "Sway_Phase_H120.0",
+                  "sheet": "RAOs",
+                  "cell": "BZ1"
+                },
+                {
+                  "text": "Heave_Phase_H120.0",
+                  "sheet": "RAOs",
+                  "cell": "CB1"
+                },
+                {
+                  "text": "Roll_Phase_H120.0",
+                  "sheet": "RAOs",
+                  "cell": "CD1"
+                },
+                {
+                  "text": "Pitch_Phase_H120.0",
+                  "sheet": "RAOs",
+                  "cell": "CF1"
+                },
+                {
+                  "text": "Yaw_Phase_H120.0",
+                  "sheet": "RAOs",
+                  "cell": "CH1"
+                },
+                {
+                  "text": "Surge_Phase_H140.0",
+                  "sheet": "RAOs",
+                  "cell": "CJ1"
+                },
+                {
+                  "text": "Sway_Phase_H140.0",
+                  "sheet": "RAOs",
+                  "cell": "CL1"
+                },
+                {
+                  "text": "Heave_Phase_H140.0",
+                  "sheet": "RAOs",
+                  "cell": "CN1"
+                },
+                {
+                  "text": "Roll_Phase_H140.0",
+                  "sheet": "RAOs",
+                  "cell": "CP1"
+                },
+                {
+                  "text": "Pitch_Phase_H140.0",
+                  "sheet": "RAOs",
+                  "cell": "CR1"
+                },
+                {
+                  "text": "Yaw_Phase_H140.0",
+                  "sheet": "RAOs",
+                  "cell": "CT1"
+                },
+                {
+                  "text": "Surge_Phase_H160.0",
+                  "sheet": "RAOs",
+                  "cell": "CV1"
+                },
+                {
+                  "text": "Sway_Phase_H160.0",
+                  "sheet": "RAOs",
+                  "cell": "CX1"
+                },
+                {
+                  "text": "Heave_Phase_H160.0",
+                  "sheet": "RAOs",
+                  "cell": "CZ1"
+                },
+                {
+                  "text": "Roll_Phase_H160.0",
+                  "sheet": "RAOs",
+                  "cell": "DB1"
+                },
+                {
+                  "text": "Pitch_Phase_H160.0",
+                  "sheet": "RAOs",
+                  "cell": "DD1"
+                },
+                {
+                  "text": "Yaw_Phase_H160.0",
+                  "sheet": "RAOs",
+                  "cell": "DF1"
+                },
+                {
+                  "text": "Surge_Phase_H180.0",
+                  "sheet": "RAOs",
+                  "cell": "DH1"
+                },
+                {
+                  "text": "Sway_Phase_H180.0",
+                  "sheet": "RAOs",
+                  "cell": "DJ1"
+                },
+                {
+                  "text": "Heave_Phase_H180.0",
+                  "sheet": "RAOs",
+                  "cell": "DL1"
+                },
+                {
+                  "text": "Roll_Phase_H180.0",
+                  "sheet": "RAOs",
+                  "cell": "DN1"
+                },
+                {
+                  "text": "Pitch_Phase_H180.0",
+                  "sheet": "RAOs",
+                  "cell": "DP1"
+                },
+                {
+                  "text": "Yaw_Phase_H180.0",
+                  "sheet": "RAOs",
+                  "cell": "DR1"
+                },
+                {
+                  "text": "Surge_Phase_H200.0",
+                  "sheet": "RAOs",
+                  "cell": "DT1"
+                },
+                {
+                  "text": "Sway_Phase_H200.0",
+                  "sheet": "RAOs",
+                  "cell": "DV1"
+                },
+                {
+                  "text": "Heave_Phase_H200.0",
+                  "sheet": "RAOs",
+                  "cell": "DX1"
+                },
+                {
+                  "text": "Roll_Phase_H200.0",
+                  "sheet": "RAOs",
+                  "cell": "DZ1"
+                },
+                {
+                  "text": "Pitch_Phase_H200.0",
+                  "sheet": "RAOs",
+                  "cell": "EB1"
+                },
+                {
+                  "text": "Yaw_Phase_H200.0",
+                  "sheet": "RAOs",
+                  "cell": "ED1"
+                },
+                {
+                  "text": "Surge_Phase_H220.0",
+                  "sheet": "RAOs",
+                  "cell": "EF1"
+                },
+                {
+                  "text": "Sway_Phase_H220.0",
+                  "sheet": "RAOs",
+                  "cell": "EH1"
+                },
+                {
+                  "text": "Heave_Phase_H220.0",
+                  "sheet": "RAOs",
+                  "cell": "EJ1"
+                },
+                {
+                  "text": "Roll_Phase_H220.0",
+                  "sheet": "RAOs",
+                  "cell": "EL1"
+                },
+                {
+                  "text": "Pitch_Phase_H220.0",
+                  "sheet": "RAOs",
+                  "cell": "EN1"
+                },
+                {
+                  "text": "Yaw_Phase_H220.0",
+                  "sheet": "RAOs",
+                  "cell": "EP1"
+                },
+                {
+                  "text": "Surge_Phase_H240.0",
+                  "sheet": "RAOs",
+                  "cell": "ER1"
+                },
+                {
+                  "text": "Sway_Phase_H240.0",
+                  "sheet": "RAOs",
+                  "cell": "ET1"
+                },
+                {
+                  "text": "Heave_Phase_H240.0",
+                  "sheet": "RAOs",
+                  "cell": "EV1"
+                },
+                {
+                  "text": "Roll_Phase_H240.0",
+                  "sheet": "RAOs",
+                  "cell": "EX1"
+                },
+                {
+                  "text": "Pitch_Phase_H240.0",
+                  "sheet": "RAOs",
+                  "cell": "EZ1"
+                },
+                {
+                  "text": "Yaw_Phase_H240.0",
+                  "sheet": "RAOs",
+                  "cell": "FB1"
+                },
+                {
+                  "text": "Surge_Phase_H260.0",
+                  "sheet": "RAOs",
+                  "cell": "FD1"
+                },
+                {
+                  "text": "Sway_Phase_H260.0",
+                  "sheet": "RAOs",
+                  "cell": "FF1"
+                },
+                {
+                  "text": "Heave_Phase_H260.0",
+                  "sheet": "RAOs",
+                  "cell": "FH1"
+                },
+                {
+                  "text": "Roll_Phase_H260.0",
+                  "sheet": "RAOs",
+                  "cell": "FJ1"
+                },
+                {
+                  "text": "Pitch_Phase_H260.0",
+                  "sheet": "RAOs",
+                  "cell": "FL1"
+                },
+                {
+                  "text": "Yaw_Phase_H260.0",
+                  "sheet": "RAOs",
+                  "cell": "FN1"
+                },
+                {
+                  "text": "Surge_Phase_H280.0",
+                  "sheet": "RAOs",
+                  "cell": "FP1"
+                },
+                {
+                  "text": "Sway_Phase_H280.0",
+                  "sheet": "RAOs",
+                  "cell": "FR1"
+                },
+                {
+                  "text": "Heave_Phase_H280.0",
+                  "sheet": "RAOs",
+                  "cell": "FT1"
+                },
+                {
+                  "text": "Roll_Phase_H280.0",
+                  "sheet": "RAOs",
+                  "cell": "FV1"
+                },
+                {
+                  "text": "Pitch_Phase_H280.0",
+                  "sheet": "RAOs",
+                  "cell": "FX1"
+                },
+                {
+                  "text": "Yaw_Phase_H280.0",
+                  "sheet": "RAOs",
+                  "cell": "FZ1"
+                },
+                {
+                  "text": "Surge_Phase_H300.0",
+                  "sheet": "RAOs",
+                  "cell": "GB1"
+                },
+                {
+                  "text": "Sway_Phase_H300.0",
+                  "sheet": "RAOs",
+                  "cell": "GD1"
+                },
+                {
+                  "text": "Heave_Phase_H300.0",
+                  "sheet": "RAOs",
+                  "cell": "GF1"
+                },
+                {
+                  "text": "Roll_Phase_H300.0",
+                  "sheet": "RAOs",
+                  "cell": "GH1"
+                },
+                {
+                  "text": "Pitch_Phase_H300.0",
+                  "sheet": "RAOs",
+                  "cell": "GJ1"
+                },
+                {
+                  "text": "Yaw_Phase_H300.0",
+                  "sheet": "RAOs",
+                  "cell": "GL1"
+                },
+                {
+                  "text": "Surge_Phase_H320.0",
+                  "sheet": "RAOs",
+                  "cell": "GN1"
+                },
+                {
+                  "text": "Sway_Phase_H320.0",
+                  "sheet": "RAOs",
+                  "cell": "GP1"
+                },
+                {
+                  "text": "Heave_Phase_H320.0",
+                  "sheet": "RAOs",
+                  "cell": "GR1"
+                },
+                {
+                  "text": "Roll_Phase_H320.0",
+                  "sheet": "RAOs",
+                  "cell": "GT1"
+                },
+                {
+                  "text": "Pitch_Phase_H320.0",
+                  "sheet": "RAOs",
+                  "cell": "GV1"
+                },
+                {
+                  "text": "Yaw_Phase_H320.0",
+                  "sheet": "RAOs",
+                  "cell": "GX1"
+                },
+                {
+                  "text": "Surge_Phase_H340.0",
+                  "sheet": "RAOs",
+                  "cell": "GZ1"
+                },
+                {
+                  "text": "Sway_Phase_H340.0",
+                  "sheet": "RAOs",
+                  "cell": "HB1"
+                },
+                {
+                  "text": "Heave_Phase_H340.0",
+                  "sheet": "RAOs",
+                  "cell": "HD1"
+                },
+                {
+                  "text": "Roll_Phase_H340.0",
+                  "sheet": "RAOs",
+                  "cell": "HF1"
+                },
+                {
+                  "text": "Pitch_Phase_H340.0",
+                  "sheet": "RAOs",
+                  "cell": "HH1"
+                },
+                {
+                  "text": "Yaw_Phase_H340.0",
+                  "sheet": "RAOs",
+                  "cell": "HJ1"
+                }
+              ],
+              "source_unit": "not stated in source",
+              "stored_unit": "not stated in source",
+              "conversion": "none"
+            }
+          },
+          "source": {
+            "description": "not stated in source",
+            "solver": {
+              "statement": "OrcaWave / OrcFxAPI.Diffraction",
+              "sheet": "Summary",
+              "cells": [
+                "A3",
+                "B3"
+              ]
+            },
+            "version": "not stated in source",
+            "model_or_run": {
+              "statement": "Ellipsoid",
+              "sheet": "Summary",
+              "cells": [
+                "A2",
+                "B2"
+              ]
+            },
+            "date": "not stated in source"
+          },
+          "loading_condition": {
+            "draft": "not stated in source",
+            "displacement": "not stated in source",
+            "mass": "not stated in source",
+            "centre_of_gravity": "not stated in source",
+            "centre_of_mass": "not stated in source",
+            "radii_of_gyration": "not stated in source",
+            "water_depth": "not stated in source",
+            "body_origin": "not stated in source",
+            "mesh_position": "not stated in source",
+            "body_position": "not stated in source",
+            "volume": "not stated in source",
+            "moments_of_inertia": "not stated in source",
+            "inertia_tensor_origin": "not stated in source",
+            "radii_of_gyration_origin": "not stated in source"
+          },
+          "conventions": {
+            "phase_convention": "not stated in source",
+            "response_reference_point": "not stated in source",
+            "heading_convention": "not stated in source"
+          },
+          "url": "../../83e2fafb017db1125ee4eaed314df708a9729747/tests/fixtures/solver/ellipsoid.xlsx"
+        }
+      ],
+      "basis": {
+        "frequencies": "rad/s",
+        "directions": "deg",
+        "phases": "deg",
+        "translations": "m/m",
+        "rotations": "rad/m"
+      },
+      "units": {
+        "tests/fixtures/solver/ellipsoid.xlsx": {
+          "frequencies": {
+            "labels": [
+              {
+                "text": "Frequency (rad/s)",
+                "sheet": "RAOs",
+                "cell": "A1"
+              }
+            ],
+            "source_unit": "rad/s",
+            "stored_unit": "rad/s",
+            "conversion": "none"
+          },
+          "directions": {
+            "labels": [
+              {
+                "text": "Surge_Mag_H0.0",
+                "sheet": "RAOs",
+                "cell": "C1"
+              },
+              {
+                "text": "Surge_Mag_H20.0",
+                "sheet": "RAOs",
+                "cell": "O1"
+              },
+              {
+                "text": "Surge_Mag_H40.0",
+                "sheet": "RAOs",
+                "cell": "AA1"
+              },
+              {
+                "text": "Surge_Mag_H60.0",
+                "sheet": "RAOs",
+                "cell": "AM1"
+              },
+              {
+                "text": "Surge_Mag_H80.0",
+                "sheet": "RAOs",
+                "cell": "AY1"
+              },
+              {
+                "text": "Surge_Mag_H100.0",
+                "sheet": "RAOs",
+                "cell": "BK1"
+              },
+              {
+                "text": "Surge_Mag_H120.0",
+                "sheet": "RAOs",
+                "cell": "BW1"
+              },
+              {
+                "text": "Surge_Mag_H140.0",
+                "sheet": "RAOs",
+                "cell": "CI1"
+              },
+              {
+                "text": "Surge_Mag_H160.0",
+                "sheet": "RAOs",
+                "cell": "CU1"
+              },
+              {
+                "text": "Surge_Mag_H180.0",
+                "sheet": "RAOs",
+                "cell": "DG1"
+              },
+              {
+                "text": "Surge_Mag_H200.0",
+                "sheet": "RAOs",
+                "cell": "DS1"
+              },
+              {
+                "text": "Surge_Mag_H220.0",
+                "sheet": "RAOs",
+                "cell": "EE1"
+              },
+              {
+                "text": "Surge_Mag_H240.0",
+                "sheet": "RAOs",
+                "cell": "EQ1"
+              },
+              {
+                "text": "Surge_Mag_H260.0",
+                "sheet": "RAOs",
+                "cell": "FC1"
+              },
+              {
+                "text": "Surge_Mag_H280.0",
+                "sheet": "RAOs",
+                "cell": "FO1"
+              },
+              {
+                "text": "Surge_Mag_H300.0",
+                "sheet": "RAOs",
+                "cell": "GA1"
+              },
+              {
+                "text": "Surge_Mag_H320.0",
+                "sheet": "RAOs",
+                "cell": "GM1"
+              },
+              {
+                "text": "Surge_Mag_H340.0",
+                "sheet": "RAOs",
+                "cell": "GY1"
+              },
+              {
+                "text": "Heading range (deg)",
+                "sheet": "Summary",
+                "cell": "A8"
+              },
+              {
+                "text": "Heading (deg)",
+                "sheet": "Discretization",
+                "cell": "A5"
+              }
+            ],
+            "source_unit": "deg",
+            "stored_unit": "deg",
+            "conversion": "none"
+          },
+          "surge": {
+            "labels": [
+              {
+                "text": "Surge_Mag_H0.0",
+                "sheet": "RAOs",
+                "cell": "C1"
+              },
+              {
+                "text": "Surge_Mag_H20.0",
+                "sheet": "RAOs",
+                "cell": "O1"
+              },
+              {
+                "text": "Surge_Mag_H40.0",
+                "sheet": "RAOs",
+                "cell": "AA1"
+              },
+              {
+                "text": "Surge_Mag_H60.0",
+                "sheet": "RAOs",
+                "cell": "AM1"
+              },
+              {
+                "text": "Surge_Mag_H80.0",
+                "sheet": "RAOs",
+                "cell": "AY1"
+              },
+              {
+                "text": "Surge_Mag_H100.0",
+                "sheet": "RAOs",
+                "cell": "BK1"
+              },
+              {
+                "text": "Surge_Mag_H120.0",
+                "sheet": "RAOs",
+                "cell": "BW1"
+              },
+              {
+                "text": "Surge_Mag_H140.0",
+                "sheet": "RAOs",
+                "cell": "CI1"
+              },
+              {
+                "text": "Surge_Mag_H160.0",
+                "sheet": "RAOs",
+                "cell": "CU1"
+              },
+              {
+                "text": "Surge_Mag_H180.0",
+                "sheet": "RAOs",
+                "cell": "DG1"
+              },
+              {
+                "text": "Surge_Mag_H200.0",
+                "sheet": "RAOs",
+                "cell": "DS1"
+              },
+              {
+                "text": "Surge_Mag_H220.0",
+                "sheet": "RAOs",
+                "cell": "EE1"
+              },
+              {
+                "text": "Surge_Mag_H240.0",
+                "sheet": "RAOs",
+                "cell": "EQ1"
+              },
+              {
+                "text": "Surge_Mag_H260.0",
+                "sheet": "RAOs",
+                "cell": "FC1"
+              },
+              {
+                "text": "Surge_Mag_H280.0",
+                "sheet": "RAOs",
+                "cell": "FO1"
+              },
+              {
+                "text": "Surge_Mag_H300.0",
+                "sheet": "RAOs",
+                "cell": "GA1"
+              },
+              {
+                "text": "Surge_Mag_H320.0",
+                "sheet": "RAOs",
+                "cell": "GM1"
+              },
+              {
+                "text": "Surge_Mag_H340.0",
+                "sheet": "RAOs",
+                "cell": "GY1"
+              }
+            ],
+            "source_unit": "not stated in source",
+            "stored_unit": "not stated in source",
+            "conversion": "none"
+          },
+          "sway": {
+            "labels": [
+              {
+                "text": "Sway_Mag_H0.0",
+                "sheet": "RAOs",
+                "cell": "E1"
+              },
+              {
+                "text": "Sway_Mag_H20.0",
+                "sheet": "RAOs",
+                "cell": "Q1"
+              },
+              {
+                "text": "Sway_Mag_H40.0",
+                "sheet": "RAOs",
+                "cell": "AC1"
+              },
+              {
+                "text": "Sway_Mag_H60.0",
+                "sheet": "RAOs",
+                "cell": "AO1"
+              },
+              {
+                "text": "Sway_Mag_H80.0",
+                "sheet": "RAOs",
+                "cell": "BA1"
+              },
+              {
+                "text": "Sway_Mag_H100.0",
+                "sheet": "RAOs",
+                "cell": "BM1"
+              },
+              {
+                "text": "Sway_Mag_H120.0",
+                "sheet": "RAOs",
+                "cell": "BY1"
+              },
+              {
+                "text": "Sway_Mag_H140.0",
+                "sheet": "RAOs",
+                "cell": "CK1"
+              },
+              {
+                "text": "Sway_Mag_H160.0",
+                "sheet": "RAOs",
+                "cell": "CW1"
+              },
+              {
+                "text": "Sway_Mag_H180.0",
+                "sheet": "RAOs",
+                "cell": "DI1"
+              },
+              {
+                "text": "Sway_Mag_H200.0",
+                "sheet": "RAOs",
+                "cell": "DU1"
+              },
+              {
+                "text": "Sway_Mag_H220.0",
+                "sheet": "RAOs",
+                "cell": "EG1"
+              },
+              {
+                "text": "Sway_Mag_H240.0",
+                "sheet": "RAOs",
+                "cell": "ES1"
+              },
+              {
+                "text": "Sway_Mag_H260.0",
+                "sheet": "RAOs",
+                "cell": "FE1"
+              },
+              {
+                "text": "Sway_Mag_H280.0",
+                "sheet": "RAOs",
+                "cell": "FQ1"
+              },
+              {
+                "text": "Sway_Mag_H300.0",
+                "sheet": "RAOs",
+                "cell": "GC1"
+              },
+              {
+                "text": "Sway_Mag_H320.0",
+                "sheet": "RAOs",
+                "cell": "GO1"
+              },
+              {
+                "text": "Sway_Mag_H340.0",
+                "sheet": "RAOs",
+                "cell": "HA1"
+              }
+            ],
+            "source_unit": "not stated in source",
+            "stored_unit": "not stated in source",
+            "conversion": "none"
+          },
+          "heave": {
+            "labels": [
+              {
+                "text": "Heave_Mag_H0.0",
+                "sheet": "RAOs",
+                "cell": "G1"
+              },
+              {
+                "text": "Heave_Mag_H20.0",
+                "sheet": "RAOs",
+                "cell": "S1"
+              },
+              {
+                "text": "Heave_Mag_H40.0",
+                "sheet": "RAOs",
+                "cell": "AE1"
+              },
+              {
+                "text": "Heave_Mag_H60.0",
+                "sheet": "RAOs",
+                "cell": "AQ1"
+              },
+              {
+                "text": "Heave_Mag_H80.0",
+                "sheet": "RAOs",
+                "cell": "BC1"
+              },
+              {
+                "text": "Heave_Mag_H100.0",
+                "sheet": "RAOs",
+                "cell": "BO1"
+              },
+              {
+                "text": "Heave_Mag_H120.0",
+                "sheet": "RAOs",
+                "cell": "CA1"
+              },
+              {
+                "text": "Heave_Mag_H140.0",
+                "sheet": "RAOs",
+                "cell": "CM1"
+              },
+              {
+                "text": "Heave_Mag_H160.0",
+                "sheet": "RAOs",
+                "cell": "CY1"
+              },
+              {
+                "text": "Heave_Mag_H180.0",
+                "sheet": "RAOs",
+                "cell": "DK1"
+              },
+              {
+                "text": "Heave_Mag_H200.0",
+                "sheet": "RAOs",
+                "cell": "DW1"
+              },
+              {
+                "text": "Heave_Mag_H220.0",
+                "sheet": "RAOs",
+                "cell": "EI1"
+              },
+              {
+                "text": "Heave_Mag_H240.0",
+                "sheet": "RAOs",
+                "cell": "EU1"
+              },
+              {
+                "text": "Heave_Mag_H260.0",
+                "sheet": "RAOs",
+                "cell": "FG1"
+              },
+              {
+                "text": "Heave_Mag_H280.0",
+                "sheet": "RAOs",
+                "cell": "FS1"
+              },
+              {
+                "text": "Heave_Mag_H300.0",
+                "sheet": "RAOs",
+                "cell": "GE1"
+              },
+              {
+                "text": "Heave_Mag_H320.0",
+                "sheet": "RAOs",
+                "cell": "GQ1"
+              },
+              {
+                "text": "Heave_Mag_H340.0",
+                "sheet": "RAOs",
+                "cell": "HC1"
+              }
+            ],
+            "source_unit": "not stated in source",
+            "stored_unit": "not stated in source",
+            "conversion": "none"
+          },
+          "roll": {
+            "labels": [
+              {
+                "text": "Roll_Mag_H0.0",
+                "sheet": "RAOs",
+                "cell": "I1"
+              },
+              {
+                "text": "Roll_Mag_H20.0",
+                "sheet": "RAOs",
+                "cell": "U1"
+              },
+              {
+                "text": "Roll_Mag_H40.0",
+                "sheet": "RAOs",
+                "cell": "AG1"
+              },
+              {
+                "text": "Roll_Mag_H60.0",
+                "sheet": "RAOs",
+                "cell": "AS1"
+              },
+              {
+                "text": "Roll_Mag_H80.0",
+                "sheet": "RAOs",
+                "cell": "BE1"
+              },
+              {
+                "text": "Roll_Mag_H100.0",
+                "sheet": "RAOs",
+                "cell": "BQ1"
+              },
+              {
+                "text": "Roll_Mag_H120.0",
+                "sheet": "RAOs",
+                "cell": "CC1"
+              },
+              {
+                "text": "Roll_Mag_H140.0",
+                "sheet": "RAOs",
+                "cell": "CO1"
+              },
+              {
+                "text": "Roll_Mag_H160.0",
+                "sheet": "RAOs",
+                "cell": "DA1"
+              },
+              {
+                "text": "Roll_Mag_H180.0",
+                "sheet": "RAOs",
+                "cell": "DM1"
+              },
+              {
+                "text": "Roll_Mag_H200.0",
+                "sheet": "RAOs",
+                "cell": "DY1"
+              },
+              {
+                "text": "Roll_Mag_H220.0",
+                "sheet": "RAOs",
+                "cell": "EK1"
+              },
+              {
+                "text": "Roll_Mag_H240.0",
+                "sheet": "RAOs",
+                "cell": "EW1"
+              },
+              {
+                "text": "Roll_Mag_H260.0",
+                "sheet": "RAOs",
+                "cell": "FI1"
+              },
+              {
+                "text": "Roll_Mag_H280.0",
+                "sheet": "RAOs",
+                "cell": "FU1"
+              },
+              {
+                "text": "Roll_Mag_H300.0",
+                "sheet": "RAOs",
+                "cell": "GG1"
+              },
+              {
+                "text": "Roll_Mag_H320.0",
+                "sheet": "RAOs",
+                "cell": "GS1"
+              },
+              {
+                "text": "Roll_Mag_H340.0",
+                "sheet": "RAOs",
+                "cell": "HE1"
+              }
+            ],
+            "source_unit": "not stated in source",
+            "stored_unit": "not stated in source",
+            "conversion": "none"
+          },
+          "pitch": {
+            "labels": [
+              {
+                "text": "Pitch_Mag_H0.0",
+                "sheet": "RAOs",
+                "cell": "K1"
+              },
+              {
+                "text": "Pitch_Mag_H20.0",
+                "sheet": "RAOs",
+                "cell": "W1"
+              },
+              {
+                "text": "Pitch_Mag_H40.0",
+                "sheet": "RAOs",
+                "cell": "AI1"
+              },
+              {
+                "text": "Pitch_Mag_H60.0",
+                "sheet": "RAOs",
+                "cell": "AU1"
+              },
+              {
+                "text": "Pitch_Mag_H80.0",
+                "sheet": "RAOs",
+                "cell": "BG1"
+              },
+              {
+                "text": "Pitch_Mag_H100.0",
+                "sheet": "RAOs",
+                "cell": "BS1"
+              },
+              {
+                "text": "Pitch_Mag_H120.0",
+                "sheet": "RAOs",
+                "cell": "CE1"
+              },
+              {
+                "text": "Pitch_Mag_H140.0",
+                "sheet": "RAOs",
+                "cell": "CQ1"
+              },
+              {
+                "text": "Pitch_Mag_H160.0",
+                "sheet": "RAOs",
+                "cell": "DC1"
+              },
+              {
+                "text": "Pitch_Mag_H180.0",
+                "sheet": "RAOs",
+                "cell": "DO1"
+              },
+              {
+                "text": "Pitch_Mag_H200.0",
+                "sheet": "RAOs",
+                "cell": "EA1"
+              },
+              {
+                "text": "Pitch_Mag_H220.0",
+                "sheet": "RAOs",
+                "cell": "EM1"
+              },
+              {
+                "text": "Pitch_Mag_H240.0",
+                "sheet": "RAOs",
+                "cell": "EY1"
+              },
+              {
+                "text": "Pitch_Mag_H260.0",
+                "sheet": "RAOs",
+                "cell": "FK1"
+              },
+              {
+                "text": "Pitch_Mag_H280.0",
+                "sheet": "RAOs",
+                "cell": "FW1"
+              },
+              {
+                "text": "Pitch_Mag_H300.0",
+                "sheet": "RAOs",
+                "cell": "GI1"
+              },
+              {
+                "text": "Pitch_Mag_H320.0",
+                "sheet": "RAOs",
+                "cell": "GU1"
+              },
+              {
+                "text": "Pitch_Mag_H340.0",
+                "sheet": "RAOs",
+                "cell": "HG1"
+              }
+            ],
+            "source_unit": "not stated in source",
+            "stored_unit": "not stated in source",
+            "conversion": "none"
+          },
+          "yaw": {
+            "labels": [
+              {
+                "text": "Yaw_Mag_H0.0",
+                "sheet": "RAOs",
+                "cell": "M1"
+              },
+              {
+                "text": "Yaw_Mag_H20.0",
+                "sheet": "RAOs",
+                "cell": "Y1"
+              },
+              {
+                "text": "Yaw_Mag_H40.0",
+                "sheet": "RAOs",
+                "cell": "AK1"
+              },
+              {
+                "text": "Yaw_Mag_H60.0",
+                "sheet": "RAOs",
+                "cell": "AW1"
+              },
+              {
+                "text": "Yaw_Mag_H80.0",
+                "sheet": "RAOs",
+                "cell": "BI1"
+              },
+              {
+                "text": "Yaw_Mag_H100.0",
+                "sheet": "RAOs",
+                "cell": "BU1"
+              },
+              {
+                "text": "Yaw_Mag_H120.0",
+                "sheet": "RAOs",
+                "cell": "CG1"
+              },
+              {
+                "text": "Yaw_Mag_H140.0",
+                "sheet": "RAOs",
+                "cell": "CS1"
+              },
+              {
+                "text": "Yaw_Mag_H160.0",
+                "sheet": "RAOs",
+                "cell": "DE1"
+              },
+              {
+                "text": "Yaw_Mag_H180.0",
+                "sheet": "RAOs",
+                "cell": "DQ1"
+              },
+              {
+                "text": "Yaw_Mag_H200.0",
+                "sheet": "RAOs",
+                "cell": "EC1"
+              },
+              {
+                "text": "Yaw_Mag_H220.0",
+                "sheet": "RAOs",
+                "cell": "EO1"
+              },
+              {
+                "text": "Yaw_Mag_H240.0",
+                "sheet": "RAOs",
+                "cell": "FA1"
+              },
+              {
+                "text": "Yaw_Mag_H260.0",
+                "sheet": "RAOs",
+                "cell": "FM1"
+              },
+              {
+                "text": "Yaw_Mag_H280.0",
+                "sheet": "RAOs",
+                "cell": "FY1"
+              },
+              {
+                "text": "Yaw_Mag_H300.0",
+                "sheet": "RAOs",
+                "cell": "GK1"
+              },
+              {
+                "text": "Yaw_Mag_H320.0",
+                "sheet": "RAOs",
+                "cell": "GW1"
+              },
+              {
+                "text": "Yaw_Mag_H340.0",
+                "sheet": "RAOs",
+                "cell": "HI1"
+              }
+            ],
+            "source_unit": "not stated in source",
+            "stored_unit": "not stated in source",
+            "conversion": "none"
+          },
+          "phases": {
+            "labels": [
+              {
+                "text": "Surge_Phase_H0.0",
+                "sheet": "RAOs",
+                "cell": "D1"
+              },
+              {
+                "text": "Sway_Phase_H0.0",
+                "sheet": "RAOs",
+                "cell": "F1"
+              },
+              {
+                "text": "Heave_Phase_H0.0",
+                "sheet": "RAOs",
+                "cell": "H1"
+              },
+              {
+                "text": "Roll_Phase_H0.0",
+                "sheet": "RAOs",
+                "cell": "J1"
+              },
+              {
+                "text": "Pitch_Phase_H0.0",
+                "sheet": "RAOs",
+                "cell": "L1"
+              },
+              {
+                "text": "Yaw_Phase_H0.0",
+                "sheet": "RAOs",
+                "cell": "N1"
+              },
+              {
+                "text": "Surge_Phase_H20.0",
+                "sheet": "RAOs",
+                "cell": "P1"
+              },
+              {
+                "text": "Sway_Phase_H20.0",
+                "sheet": "RAOs",
+                "cell": "R1"
+              },
+              {
+                "text": "Heave_Phase_H20.0",
+                "sheet": "RAOs",
+                "cell": "T1"
+              },
+              {
+                "text": "Roll_Phase_H20.0",
+                "sheet": "RAOs",
+                "cell": "V1"
+              },
+              {
+                "text": "Pitch_Phase_H20.0",
+                "sheet": "RAOs",
+                "cell": "X1"
+              },
+              {
+                "text": "Yaw_Phase_H20.0",
+                "sheet": "RAOs",
+                "cell": "Z1"
+              },
+              {
+                "text": "Surge_Phase_H40.0",
+                "sheet": "RAOs",
+                "cell": "AB1"
+              },
+              {
+                "text": "Sway_Phase_H40.0",
+                "sheet": "RAOs",
+                "cell": "AD1"
+              },
+              {
+                "text": "Heave_Phase_H40.0",
+                "sheet": "RAOs",
+                "cell": "AF1"
+              },
+              {
+                "text": "Roll_Phase_H40.0",
+                "sheet": "RAOs",
+                "cell": "AH1"
+              },
+              {
+                "text": "Pitch_Phase_H40.0",
+                "sheet": "RAOs",
+                "cell": "AJ1"
+              },
+              {
+                "text": "Yaw_Phase_H40.0",
+                "sheet": "RAOs",
+                "cell": "AL1"
+              },
+              {
+                "text": "Surge_Phase_H60.0",
+                "sheet": "RAOs",
+                "cell": "AN1"
+              },
+              {
+                "text": "Sway_Phase_H60.0",
+                "sheet": "RAOs",
+                "cell": "AP1"
+              },
+              {
+                "text": "Heave_Phase_H60.0",
+                "sheet": "RAOs",
+                "cell": "AR1"
+              },
+              {
+                "text": "Roll_Phase_H60.0",
+                "sheet": "RAOs",
+                "cell": "AT1"
+              },
+              {
+                "text": "Pitch_Phase_H60.0",
+                "sheet": "RAOs",
+                "cell": "AV1"
+              },
+              {
+                "text": "Yaw_Phase_H60.0",
+                "sheet": "RAOs",
+                "cell": "AX1"
+              },
+              {
+                "text": "Surge_Phase_H80.0",
+                "sheet": "RAOs",
+                "cell": "AZ1"
+              },
+              {
+                "text": "Sway_Phase_H80.0",
+                "sheet": "RAOs",
+                "cell": "BB1"
+              },
+              {
+                "text": "Heave_Phase_H80.0",
+                "sheet": "RAOs",
+                "cell": "BD1"
+              },
+              {
+                "text": "Roll_Phase_H80.0",
+                "sheet": "RAOs",
+                "cell": "BF1"
+              },
+              {
+                "text": "Pitch_Phase_H80.0",
+                "sheet": "RAOs",
+                "cell": "BH1"
+              },
+              {
+                "text": "Yaw_Phase_H80.0",
+                "sheet": "RAOs",
+                "cell": "BJ1"
+              },
+              {
+                "text": "Surge_Phase_H100.0",
+                "sheet": "RAOs",
+                "cell": "BL1"
+              },
+              {
+                "text": "Sway_Phase_H100.0",
+                "sheet": "RAOs",
+                "cell": "BN1"
+              },
+              {
+                "text": "Heave_Phase_H100.0",
+                "sheet": "RAOs",
+                "cell": "BP1"
+              },
+              {
+                "text": "Roll_Phase_H100.0",
+                "sheet": "RAOs",
+                "cell": "BR1"
+              },
+              {
+                "text": "Pitch_Phase_H100.0",
+                "sheet": "RAOs",
+                "cell": "BT1"
+              },
+              {
+                "text": "Yaw_Phase_H100.0",
+                "sheet": "RAOs",
+                "cell": "BV1"
+              },
+              {
+                "text": "Surge_Phase_H120.0",
+                "sheet": "RAOs",
+                "cell": "BX1"
+              },
+              {
+                "text": "Sway_Phase_H120.0",
+                "sheet": "RAOs",
+                "cell": "BZ1"
+              },
+              {
+                "text": "Heave_Phase_H120.0",
+                "sheet": "RAOs",
+                "cell": "CB1"
+              },
+              {
+                "text": "Roll_Phase_H120.0",
+                "sheet": "RAOs",
+                "cell": "CD1"
+              },
+              {
+                "text": "Pitch_Phase_H120.0",
+                "sheet": "RAOs",
+                "cell": "CF1"
+              },
+              {
+                "text": "Yaw_Phase_H120.0",
+                "sheet": "RAOs",
+                "cell": "CH1"
+              },
+              {
+                "text": "Surge_Phase_H140.0",
+                "sheet": "RAOs",
+                "cell": "CJ1"
+              },
+              {
+                "text": "Sway_Phase_H140.0",
+                "sheet": "RAOs",
+                "cell": "CL1"
+              },
+              {
+                "text": "Heave_Phase_H140.0",
+                "sheet": "RAOs",
+                "cell": "CN1"
+              },
+              {
+                "text": "Roll_Phase_H140.0",
+                "sheet": "RAOs",
+                "cell": "CP1"
+              },
+              {
+                "text": "Pitch_Phase_H140.0",
+                "sheet": "RAOs",
+                "cell": "CR1"
+              },
+              {
+                "text": "Yaw_Phase_H140.0",
+                "sheet": "RAOs",
+                "cell": "CT1"
+              },
+              {
+                "text": "Surge_Phase_H160.0",
+                "sheet": "RAOs",
+                "cell": "CV1"
+              },
+              {
+                "text": "Sway_Phase_H160.0",
+                "sheet": "RAOs",
+                "cell": "CX1"
+              },
+              {
+                "text": "Heave_Phase_H160.0",
+                "sheet": "RAOs",
+                "cell": "CZ1"
+              },
+              {
+                "text": "Roll_Phase_H160.0",
+                "sheet": "RAOs",
+                "cell": "DB1"
+              },
+              {
+                "text": "Pitch_Phase_H160.0",
+                "sheet": "RAOs",
+                "cell": "DD1"
+              },
+              {
+                "text": "Yaw_Phase_H160.0",
+                "sheet": "RAOs",
+                "cell": "DF1"
+              },
+              {
+                "text": "Surge_Phase_H180.0",
+                "sheet": "RAOs",
+                "cell": "DH1"
+              },
+              {
+                "text": "Sway_Phase_H180.0",
+                "sheet": "RAOs",
+                "cell": "DJ1"
+              },
+              {
+                "text": "Heave_Phase_H180.0",
+                "sheet": "RAOs",
+                "cell": "DL1"
+              },
+              {
+                "text": "Roll_Phase_H180.0",
+                "sheet": "RAOs",
+                "cell": "DN1"
+              },
+              {
+                "text": "Pitch_Phase_H180.0",
+                "sheet": "RAOs",
+                "cell": "DP1"
+              },
+              {
+                "text": "Yaw_Phase_H180.0",
+                "sheet": "RAOs",
+                "cell": "DR1"
+              },
+              {
+                "text": "Surge_Phase_H200.0",
+                "sheet": "RAOs",
+                "cell": "DT1"
+              },
+              {
+                "text": "Sway_Phase_H200.0",
+                "sheet": "RAOs",
+                "cell": "DV1"
+              },
+              {
+                "text": "Heave_Phase_H200.0",
+                "sheet": "RAOs",
+                "cell": "DX1"
+              },
+              {
+                "text": "Roll_Phase_H200.0",
+                "sheet": "RAOs",
+                "cell": "DZ1"
+              },
+              {
+                "text": "Pitch_Phase_H200.0",
+                "sheet": "RAOs",
+                "cell": "EB1"
+              },
+              {
+                "text": "Yaw_Phase_H200.0",
+                "sheet": "RAOs",
+                "cell": "ED1"
+              },
+              {
+                "text": "Surge_Phase_H220.0",
+                "sheet": "RAOs",
+                "cell": "EF1"
+              },
+              {
+                "text": "Sway_Phase_H220.0",
+                "sheet": "RAOs",
+                "cell": "EH1"
+              },
+              {
+                "text": "Heave_Phase_H220.0",
+                "sheet": "RAOs",
+                "cell": "EJ1"
+              },
+              {
+                "text": "Roll_Phase_H220.0",
+                "sheet": "RAOs",
+                "cell": "EL1"
+              },
+              {
+                "text": "Pitch_Phase_H220.0",
+                "sheet": "RAOs",
+                "cell": "EN1"
+              },
+              {
+                "text": "Yaw_Phase_H220.0",
+                "sheet": "RAOs",
+                "cell": "EP1"
+              },
+              {
+                "text": "Surge_Phase_H240.0",
+                "sheet": "RAOs",
+                "cell": "ER1"
+              },
+              {
+                "text": "Sway_Phase_H240.0",
+                "sheet": "RAOs",
+                "cell": "ET1"
+              },
+              {
+                "text": "Heave_Phase_H240.0",
+                "sheet": "RAOs",
+                "cell": "EV1"
+              },
+              {
+                "text": "Roll_Phase_H240.0",
+                "sheet": "RAOs",
+                "cell": "EX1"
+              },
+              {
+                "text": "Pitch_Phase_H240.0",
+                "sheet": "RAOs",
+                "cell": "EZ1"
+              },
+              {
+                "text": "Yaw_Phase_H240.0",
+                "sheet": "RAOs",
+                "cell": "FB1"
+              },
+              {
+                "text": "Surge_Phase_H260.0",
+                "sheet": "RAOs",
+                "cell": "FD1"
+              },
+              {
+                "text": "Sway_Phase_H260.0",
+                "sheet": "RAOs",
+                "cell": "FF1"
+              },
+              {
+                "text": "Heave_Phase_H260.0",
+                "sheet": "RAOs",
+                "cell": "FH1"
+              },
+              {
+                "text": "Roll_Phase_H260.0",
+                "sheet": "RAOs",
+                "cell": "FJ1"
+              },
+              {
+                "text": "Pitch_Phase_H260.0",
+                "sheet": "RAOs",
+                "cell": "FL1"
+              },
+              {
+                "text": "Yaw_Phase_H260.0",
+                "sheet": "RAOs",
+                "cell": "FN1"
+              },
+              {
+                "text": "Surge_Phase_H280.0",
+                "sheet": "RAOs",
+                "cell": "FP1"
+              },
+              {
+                "text": "Sway_Phase_H280.0",
+                "sheet": "RAOs",
+                "cell": "FR1"
+              },
+              {
+                "text": "Heave_Phase_H280.0",
+                "sheet": "RAOs",
+                "cell": "FT1"
+              },
+              {
+                "text": "Roll_Phase_H280.0",
+                "sheet": "RAOs",
+                "cell": "FV1"
+              },
+              {
+                "text": "Pitch_Phase_H280.0",
+                "sheet": "RAOs",
+                "cell": "FX1"
+              },
+              {
+                "text": "Yaw_Phase_H280.0",
+                "sheet": "RAOs",
+                "cell": "FZ1"
+              },
+              {
+                "text": "Surge_Phase_H300.0",
+                "sheet": "RAOs",
+                "cell": "GB1"
+              },
+              {
+                "text": "Sway_Phase_H300.0",
+                "sheet": "RAOs",
+                "cell": "GD1"
+              },
+              {
+                "text": "Heave_Phase_H300.0",
+                "sheet": "RAOs",
+                "cell": "GF1"
+              },
+              {
+                "text": "Roll_Phase_H300.0",
+                "sheet": "RAOs",
+                "cell": "GH1"
+              },
+              {
+                "text": "Pitch_Phase_H300.0",
+                "sheet": "RAOs",
+                "cell": "GJ1"
+              },
+              {
+                "text": "Yaw_Phase_H300.0",
+                "sheet": "RAOs",
+                "cell": "GL1"
+              },
+              {
+                "text": "Surge_Phase_H320.0",
+                "sheet": "RAOs",
+                "cell": "GN1"
+              },
+              {
+                "text": "Sway_Phase_H320.0",
+                "sheet": "RAOs",
+                "cell": "GP1"
+              },
+              {
+                "text": "Heave_Phase_H320.0",
+                "sheet": "RAOs",
+                "cell": "GR1"
+              },
+              {
+                "text": "Roll_Phase_H320.0",
+                "sheet": "RAOs",
+                "cell": "GT1"
+              },
+              {
+                "text": "Pitch_Phase_H320.0",
+                "sheet": "RAOs",
+                "cell": "GV1"
+              },
+              {
+                "text": "Yaw_Phase_H320.0",
+                "sheet": "RAOs",
+                "cell": "GX1"
+              },
+              {
+                "text": "Surge_Phase_H340.0",
+                "sheet": "RAOs",
+                "cell": "GZ1"
+              },
+              {
+                "text": "Sway_Phase_H340.0",
+                "sheet": "RAOs",
+                "cell": "HB1"
+              },
+              {
+                "text": "Heave_Phase_H340.0",
+                "sheet": "RAOs",
+                "cell": "HD1"
+              },
+              {
+                "text": "Roll_Phase_H340.0",
+                "sheet": "RAOs",
+                "cell": "HF1"
+              },
+              {
+                "text": "Pitch_Phase_H340.0",
+                "sheet": "RAOs",
+                "cell": "HH1"
+              },
+              {
+                "text": "Yaw_Phase_H340.0",
+                "sheet": "RAOs",
+                "cell": "HJ1"
+              }
+            ],
+            "source_unit": "not stated in source",
+            "stored_unit": "not stated in source",
+            "conversion": "none"
+          }
+        }
+      },
+      "conventions": {
+        "tests/fixtures/solver/ellipsoid.xlsx": {
+          "phase_convention": "not stated in source",
+          "response_reference_point": "not stated in source",
+          "heading_convention": "not stated in source"
+        }
+      },
+      "source": {
+        "tests/fixtures/solver/ellipsoid.xlsx": {
+          "description": "not stated in source",
+          "solver": {
+            "statement": "OrcaWave / OrcFxAPI.Diffraction",
+            "sheet": "Summary",
+            "cells": [
+              "A3",
+              "B3"
+            ]
+          },
+          "version": "not stated in source",
+          "model_or_run": {
+            "statement": "Ellipsoid",
+            "sheet": "Summary",
+            "cells": [
+              "A2",
+              "B2"
+            ]
+          },
+          "date": "not stated in source"
+        }
+      },
+      "loading_condition": {
+        "tests/fixtures/solver/ellipsoid.xlsx": {
+          "draft": "not stated in source",
+          "displacement": "not stated in source",
+          "mass": "not stated in source",
+          "centre_of_gravity": "not stated in source",
+          "centre_of_mass": "not stated in source",
+          "radii_of_gyration": "not stated in source",
+          "water_depth": "not stated in source",
+          "body_origin": "not stated in source",
+          "mesh_position": "not stated in source",
+          "body_position": "not stated in source",
+          "volume": "not stated in source",
+          "moments_of_inertia": "not stated in source",
+          "inertia_tensor_origin": "not stated in source",
+          "radii_of_gyration_origin": "not stated in source"
+        }
+      }
+    },
+    {
+      "variation_id": "L01_001_ship_raos",
+      "frequency_count": 20,
+      "heading_count": 9,
+      "sources": [
+        {
+          "path": "tests/fixtures/solver/L01_001_ship_raos.xlsx",
+          "sha256": "ae2316caf3a575d9e2f6e4e60ef56b9017161cb11596d2fca73de700ebedf9be",
+          "revision": "1c01b3013d01176b10b6347ed956baad84a9ab9b",
+          "retrieved_on": "2026-10-11",
+          "format": "native",
+          "worksheet": "Displacement RAOs",
+          "table": "all displacement RAO rows and headings",
+          "units": {
+            "frequencies": {
+              "labels": [
+                {
+                  "text": "Period",
+                  "sheet": "Displacement RAOs",
+                  "cell": "B7"
+                },
+                {
+                  "text": "s",
+                  "sheet": "Displacement RAOs",
+                  "cell": "B9"
+                }
+              ],
+              "source_unit": "s",
+              "stored_unit": "rad/s",
+              "conversion": "omega = 2*pi/T"
+            },
+            "directions": {
+              "labels": [
+                {
+                  "text": "deg",
+                  "sheet": "Displacement RAOs",
+                  "cell": "A9"
+                }
+              ],
+              "source_unit": "deg",
+              "stored_unit": "deg",
+              "conversion": "none"
+            },
+            "surge": {
+              "labels": [
+                {
+                  "text": "m/m",
+                  "sheet": "Displacement RAOs",
+                  "cell": "C9"
+                }
+              ],
+              "source_unit": "m/m",
+              "stored_unit": "m/m",
+              "conversion": "none"
+            },
+            "sway": {
+              "labels": [
+                {
+                  "text": "m/m",
+                  "sheet": "Displacement RAOs",
+                  "cell": "E9"
+                }
+              ],
+              "source_unit": "m/m",
+              "stored_unit": "m/m",
+              "conversion": "none"
+            },
+            "heave": {
+              "labels": [
+                {
+                  "text": "m/m",
+                  "sheet": "Displacement RAOs",
+                  "cell": "G9"
+                }
+              ],
+              "source_unit": "m/m",
+              "stored_unit": "m/m",
+              "conversion": "none"
+            },
+            "roll": {
+              "labels": [
+                {
+                  "text": "rad/m",
+                  "sheet": "Displacement RAOs",
+                  "cell": "I9"
+                }
+              ],
+              "source_unit": "rad/m",
+              "stored_unit": "rad/m",
+              "conversion": "none"
+            },
+            "pitch": {
+              "labels": [
+                {
+                  "text": "rad/m",
+                  "sheet": "Displacement RAOs",
+                  "cell": "K9"
+                }
+              ],
+              "source_unit": "rad/m",
+              "stored_unit": "rad/m",
+              "conversion": "none"
+            },
+            "yaw": {
+              "labels": [
+                {
+                  "text": "rad/m",
+                  "sheet": "Displacement RAOs",
+                  "cell": "M9"
+                }
+              ],
+              "source_unit": "rad/m",
+              "stored_unit": "rad/m",
+              "conversion": "none"
+            },
+            "phases": {
+              "labels": [
+                {
+                  "text": "deg",
+                  "sheet": "Displacement RAOs",
+                  "cell": "D9"
+                },
+                {
+                  "text": "deg",
+                  "sheet": "Displacement RAOs",
+                  "cell": "F9"
+                },
+                {
+                  "text": "deg",
+                  "sheet": "Displacement RAOs",
+                  "cell": "H9"
+                },
+                {
+                  "text": "deg",
+                  "sheet": "Displacement RAOs",
+                  "cell": "J9"
+                },
+                {
+                  "text": "deg",
+                  "sheet": "Displacement RAOs",
+                  "cell": "L9"
+                },
+                {
+                  "text": "deg",
+                  "sheet": "Displacement RAOs",
+                  "cell": "N9"
+                }
+              ],
+              "source_unit": "deg",
+              "stored_unit": "deg",
+              "conversion": "none"
+            }
+          },
+          "source": {
+            "description": {
+              "statement": "OrcaFlex 11.6c: L01_001_ship_raos.owr (modified 4:54 PM on 9/24/2026 by OrcaFlex 11.6c)",
+              "sheet": "Summary",
+              "cells": [
+                "A2"
+              ]
+            },
+            "solver": {
+              "statement": "OrcaFlex",
+              "sheet": "Summary",
+              "cells": [
+                "A2"
+              ]
+            },
+            "version": {
+              "statement": "11.6c",
+              "sheet": "Summary",
+              "cells": [
+                "A2"
+              ]
+            },
+            "model_or_run": {
+              "statement": "L01_001_ship_raos.owr",
+              "sheet": "Summary",
+              "cells": [
+                "A2"
+              ]
+            },
+            "date": {
+              "statement": "9/24/2026",
+              "sheet": "Summary",
+              "cells": [
+                "A2"
+              ]
+            }
+          },
+          "loading_condition": {
+            "draft": "not stated in source",
+            "displacement": "not stated in source",
+            "mass": [
+              {
+                "statement": "Mass (te)",
+                "sheet": "Summary",
+                "cells": [
+                  "A102",
+                  "B102"
+                ],
+                "values": [
+                  [
+                    9017.95
+                  ]
+                ]
+              },
+              {
+                "statement": "Mass (te)",
+                "sheet": "Hydrostatics",
+                "cells": [
+                  "A13",
+                  "B13"
+                ],
+                "values": [
+                  [
+                    9017.95
+                  ]
+                ]
+              }
+            ],
+            "centre_of_gravity": "not stated in source",
+            "centre_of_mass": [
+              {
+                "statement": "Centre of mass (m)",
+                "sheet": "Summary",
+                "cells": [
+                  "A101",
+                  "B101",
+                  "C101",
+                  "D101"
+                ],
+                "values": [
+                  [
+                    2.53,
+                    0,
+                    -1.974
+                  ]
+                ]
+              },
+              {
+                "statement": "Centre of mass (m)",
+                "sheet": "Hydrostatics",
+                "cells": [
+                  "A14",
+                  "B14",
+                  "C14",
+                  "D14"
+                ],
+                "values": [
+                  [
+                    2.53,
+                    0,
+                    -1.474
+                  ]
+                ]
+              }
+            ],
+            "radii_of_gyration": "not stated in source",
+            "water_depth": [
+              {
+                "statement": "Water depth (m)",
+                "sheet": "Summary",
+                "cells": [
+                  "A41",
+                  "B41"
+                ],
+                "values": [
+                  [
+                    30
+                  ]
+                ]
+              }
+            ],
+            "body_origin": [
+              {
+                "statement": "Body origin",
+                "sheet": "Summary",
+                "cells": [
+                  "A86",
+                  "B86"
+                ],
+                "values": [
+                  [
+                    "Free surface"
+                  ]
+                ]
+              }
+            ],
+            "mesh_position": [
+              {
+                "statement": "Mesh position (m)",
+                "sheet": "Summary",
+                "cells": [
+                  "A84",
+                  "B84",
+                  "C84",
+                  "D84"
+                ],
+                "values": [
+                  [
+                    0,
+                    0,
+                    0.5
+                  ]
+                ]
+              }
+            ],
+            "body_position": [
+              {
+                "statement": "Body position (m)",
+                "sheet": "Hydrostatics",
+                "cells": [
+                  "A5",
+                  "B5",
+                  "C5",
+                  "D5"
+                ],
+                "values": [
+                  [
+                    0,
+                    0,
+                    0
+                  ]
+                ]
+              }
+            ],
+            "volume": [
+              {
+                "statement": "Volume (m^3)",
+                "sheet": "Hydrostatics",
+                "cells": [
+                  "A6",
+                  "B6"
+                ],
+                "values": [
+                  [
+                    41088.192433980956
+                  ]
+                ]
+              }
+            ],
+            "moments_of_inertia": [
+              {
+                "statement": "Moments of inertia (te.m^2)",
+                "sheet": "Summary",
+                "cells": [
+                  "A103",
+                  "B103",
+                  "C103",
+                  "D103",
+                  "B104",
+                  "C104",
+                  "D104",
+                  "B105",
+                  "C105",
+                  "D105"
+                ],
+                "values": [
+                  [
+                    254937.4465,
+                    0,
+                    0
+                  ],
+                  [
+                    0,
+                    5979802.645,
+                    0
+                  ],
+                  [
+                    0,
+                    0,
+                    5979802.645
+                  ]
+                ]
+              }
+            ],
+            "inertia_tensor_origin": [
+              {
+                "statement": "Inertia tensor origin",
+                "sheet": "Summary",
+                "cells": [
+                  "A106",
+                  "B106"
+                ],
+                "values": [
+                  [
+                    "Centre of mass"
+                  ]
+                ]
+              }
+            ],
+            "radii_of_gyration_origin": "not stated in source"
+          },
+          "conventions": {
+            "phase_convention": "not stated in source",
+            "response_reference_point": "not stated in source",
+            "heading_convention": "not stated in source"
+          },
+          "url": "../../1c01b3013d01176b10b6347ed956baad84a9ab9b/tests/fixtures/solver/L01_001_ship_raos.xlsx"
+        }
+      ],
+      "basis": {
+        "frequencies": "rad/s",
+        "directions": "deg",
+        "phases": "deg",
+        "translations": "m/m",
+        "rotations": "rad/m"
+      },
+      "units": {
+        "tests/fixtures/solver/L01_001_ship_raos.xlsx": {
+          "frequencies": {
+            "labels": [
+              {
+                "text": "Period",
+                "sheet": "Displacement RAOs",
+                "cell": "B7"
+              },
+              {
+                "text": "s",
+                "sheet": "Displacement RAOs",
+                "cell": "B9"
+              }
+            ],
+            "source_unit": "s",
+            "stored_unit": "rad/s",
+            "conversion": "omega = 2*pi/T"
+          },
+          "directions": {
+            "labels": [
+              {
+                "text": "deg",
+                "sheet": "Displacement RAOs",
+                "cell": "A9"
+              }
+            ],
+            "source_unit": "deg",
+            "stored_unit": "deg",
+            "conversion": "none"
+          },
+          "surge": {
+            "labels": [
+              {
+                "text": "m/m",
+                "sheet": "Displacement RAOs",
+                "cell": "C9"
+              }
+            ],
+            "source_unit": "m/m",
+            "stored_unit": "m/m",
+            "conversion": "none"
+          },
+          "sway": {
+            "labels": [
+              {
+                "text": "m/m",
+                "sheet": "Displacement RAOs",
+                "cell": "E9"
+              }
+            ],
+            "source_unit": "m/m",
+            "stored_unit": "m/m",
+            "conversion": "none"
+          },
+          "heave": {
+            "labels": [
+              {
+                "text": "m/m",
+                "sheet": "Displacement RAOs",
+                "cell": "G9"
+              }
+            ],
+            "source_unit": "m/m",
+            "stored_unit": "m/m",
+            "conversion": "none"
+          },
+          "roll": {
+            "labels": [
+              {
+                "text": "rad/m",
+                "sheet": "Displacement RAOs",
+                "cell": "I9"
+              }
+            ],
+            "source_unit": "rad/m",
+            "stored_unit": "rad/m",
+            "conversion": "none"
+          },
+          "pitch": {
+            "labels": [
+              {
+                "text": "rad/m",
+                "sheet": "Displacement RAOs",
+                "cell": "K9"
+              }
+            ],
+            "source_unit": "rad/m",
+            "stored_unit": "rad/m",
+            "conversion": "none"
+          },
+          "yaw": {
+            "labels": [
+              {
+                "text": "rad/m",
+                "sheet": "Displacement RAOs",
+                "cell": "M9"
+              }
+            ],
+            "source_unit": "rad/m",
+            "stored_unit": "rad/m",
+            "conversion": "none"
+          },
+          "phases": {
+            "labels": [
+              {
+                "text": "deg",
+                "sheet": "Displacement RAOs",
+                "cell": "D9"
+              },
+              {
+                "text": "deg",
+                "sheet": "Displacement RAOs",
+                "cell": "F9"
+              },
+              {
+                "text": "deg",
+                "sheet": "Displacement RAOs",
+                "cell": "H9"
+              },
+              {
+                "text": "deg",
+                "sheet": "Displacement RAOs",
+                "cell": "J9"
+              },
+              {
+                "text": "deg",
+                "sheet": "Displacement RAOs",
+                "cell": "L9"
+              },
+              {
+                "text": "deg",
+                "sheet": "Displacement RAOs",
+                "cell": "N9"
+              }
+            ],
+            "source_unit": "deg",
+            "stored_unit": "deg",
+            "conversion": "none"
+          }
+        }
+      },
+      "conventions": {
+        "tests/fixtures/solver/L01_001_ship_raos.xlsx": {
+          "phase_convention": "not stated in source",
+          "response_reference_point": "not stated in source",
+          "heading_convention": "not stated in source"
+        }
+      },
+      "source": {
+        "tests/fixtures/solver/L01_001_ship_raos.xlsx": {
+          "description": {
+            "statement": "OrcaFlex 11.6c: L01_001_ship_raos.owr (modified 4:54 PM on 9/24/2026 by OrcaFlex 11.6c)",
+            "sheet": "Summary",
+            "cells": [
+              "A2"
+            ]
+          },
+          "solver": {
+            "statement": "OrcaFlex",
+            "sheet": "Summary",
+            "cells": [
+              "A2"
+            ]
+          },
+          "version": {
+            "statement": "11.6c",
+            "sheet": "Summary",
+            "cells": [
+              "A2"
+            ]
+          },
+          "model_or_run": {
+            "statement": "L01_001_ship_raos.owr",
+            "sheet": "Summary",
+            "cells": [
+              "A2"
+            ]
+          },
+          "date": {
+            "statement": "9/24/2026",
+            "sheet": "Summary",
+            "cells": [
+              "A2"
+            ]
+          }
+        }
+      },
+      "loading_condition": {
+        "tests/fixtures/solver/L01_001_ship_raos.xlsx": {
+          "draft": "not stated in source",
+          "displacement": "not stated in source",
+          "mass": [
+            {
+              "statement": "Mass (te)",
+              "sheet": "Summary",
+              "cells": [
+                "A102",
+                "B102"
+              ],
+              "values": [
+                [
+                  9017.95
+                ]
+              ]
+            },
+            {
+              "statement": "Mass (te)",
+              "sheet": "Hydrostatics",
+              "cells": [
+                "A13",
+                "B13"
+              ],
+              "values": [
+                [
+                  9017.95
+                ]
+              ]
+            }
+          ],
+          "centre_of_gravity": "not stated in source",
+          "centre_of_mass": [
+            {
+              "statement": "Centre of mass (m)",
+              "sheet": "Summary",
+              "cells": [
+                "A101",
+                "B101",
+                "C101",
+                "D101"
+              ],
+              "values": [
+                [
+                  2.53,
+                  0,
+                  -1.974
+                ]
+              ]
+            },
+            {
+              "statement": "Centre of mass (m)",
+              "sheet": "Hydrostatics",
+              "cells": [
+                "A14",
+                "B14",
+                "C14",
+                "D14"
+              ],
+              "values": [
+                [
+                  2.53,
+                  0,
+                  -1.474
+                ]
+              ]
+            }
+          ],
+          "radii_of_gyration": "not stated in source",
+          "water_depth": [
+            {
+              "statement": "Water depth (m)",
+              "sheet": "Summary",
+              "cells": [
+                "A41",
+                "B41"
+              ],
+              "values": [
+                [
+                  30
+                ]
+              ]
+            }
+          ],
+          "body_origin": [
+            {
+              "statement": "Body origin",
+              "sheet": "Summary",
+              "cells": [
+                "A86",
+                "B86"
+              ],
+              "values": [
+                [
+                  "Free surface"
+                ]
+              ]
+            }
+          ],
+          "mesh_position": [
+            {
+              "statement": "Mesh position (m)",
+              "sheet": "Summary",
+              "cells": [
+                "A84",
+                "B84",
+                "C84",
+                "D84"
+              ],
+              "values": [
+                [
+                  0,
+                  0,
+                  0.5
+                ]
+              ]
+            }
+          ],
+          "body_position": [
+            {
+              "statement": "Body position (m)",
+              "sheet": "Hydrostatics",
+              "cells": [
+                "A5",
+                "B5",
+                "C5",
+                "D5"
+              ],
+              "values": [
+                [
+                  0,
+                  0,
+                  0
+                ]
+              ]
+            }
+          ],
+          "volume": [
+            {
+              "statement": "Volume (m^3)",
+              "sheet": "Hydrostatics",
+              "cells": [
+                "A6",
+                "B6"
+              ],
+              "values": [
+                [
+                  41088.192433980956
+                ]
+              ]
+            }
+          ],
+          "moments_of_inertia": [
+            {
+              "statement": "Moments of inertia (te.m^2)",
+              "sheet": "Summary",
+              "cells": [
+                "A103",
+                "B103",
+                "C103",
+                "D103",
+                "B104",
+                "C104",
+                "D104",
+                "B105",
+                "C105",
+                "D105"
+              ],
+              "values": [
+                [
+                  254937.4465,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  5979802.645,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  5979802.645
+                ]
+              ]
+            }
+          ],
+          "inertia_tensor_origin": [
+            {
+              "statement": "Inertia tensor origin",
+              "sheet": "Summary",
+              "cells": [
+                "A106",
+                "B106"
+              ],
+              "values": [
+                [
+                  "Centre of mass"
+                ]
+              ]
+            }
+          ],
+          "radii_of_gyration_origin": "not stated in source"
+        }
+      }
+    },
+    {
+      "variation_id": "L02_OC4_semi_sub",
+      "frequency_count": 32,
+      "heading_count": 9,
+      "sources": [
+        {
+          "path": "tests/fixtures/solver/L02_OC4_semi_sub.xlsx",
+          "sha256": "3a560ee394e31037b6ffdd696db9a768bfa79051dde2210e4fcd0a272625f131",
+          "revision": "901eb148155ddb73eb65f46ab02046b5f8b30b5d",
+          "retrieved_on": "2026-10-11",
+          "format": "pipeline",
+          "worksheet": "RAOs",
+          "table": "all displacement RAO rows and headings",
+          "units": {
+            "frequencies": {
+              "labels": [
+                {
+                  "text": "Frequency (rad/s)",
+                  "sheet": "RAOs",
+                  "cell": "A1"
+                }
+              ],
+              "source_unit": "rad/s",
+              "stored_unit": "rad/s",
+              "conversion": "none"
+            },
+            "directions": {
+              "labels": [
+                {
+                  "text": "Surge_Mag_H0.0",
+                  "sheet": "RAOs",
+                  "cell": "C1"
+                },
+                {
+                  "text": "Surge_Mag_H22.5",
+                  "sheet": "RAOs",
+                  "cell": "O1"
+                },
+                {
+                  "text": "Surge_Mag_H45.0",
+                  "sheet": "RAOs",
+                  "cell": "AA1"
+                },
+                {
+                  "text": "Surge_Mag_H67.5",
+                  "sheet": "RAOs",
+                  "cell": "AM1"
+                },
+                {
+                  "text": "Surge_Mag_H90.0",
+                  "sheet": "RAOs",
+                  "cell": "AY1"
+                },
+                {
+                  "text": "Surge_Mag_H112.5",
+                  "sheet": "RAOs",
+                  "cell": "BK1"
+                },
+                {
+                  "text": "Surge_Mag_H135.0",
+                  "sheet": "RAOs",
+                  "cell": "BW1"
+                },
+                {
+                  "text": "Surge_Mag_H157.5",
+                  "sheet": "RAOs",
+                  "cell": "CI1"
+                },
+                {
+                  "text": "Surge_Mag_H180.0",
+                  "sheet": "RAOs",
+                  "cell": "CU1"
+                }
+              ],
+              "source_unit": "not stated in source",
+              "stored_unit": "not stated in source",
+              "conversion": "none"
+            },
+            "surge": {
+              "labels": [
+                {
+                  "text": "Surge_Mag_H0.0",
+                  "sheet": "RAOs",
+                  "cell": "C1"
+                },
+                {
+                  "text": "Surge_Mag_H22.5",
+                  "sheet": "RAOs",
+                  "cell": "O1"
+                },
+                {
+                  "text": "Surge_Mag_H45.0",
+                  "sheet": "RAOs",
+                  "cell": "AA1"
+                },
+                {
+                  "text": "Surge_Mag_H67.5",
+                  "sheet": "RAOs",
+                  "cell": "AM1"
+                },
+                {
+                  "text": "Surge_Mag_H90.0",
+                  "sheet": "RAOs",
+                  "cell": "AY1"
+                },
+                {
+                  "text": "Surge_Mag_H112.5",
+                  "sheet": "RAOs",
+                  "cell": "BK1"
+                },
+                {
+                  "text": "Surge_Mag_H135.0",
+                  "sheet": "RAOs",
+                  "cell": "BW1"
+                },
+                {
+                  "text": "Surge_Mag_H157.5",
+                  "sheet": "RAOs",
+                  "cell": "CI1"
+                },
+                {
+                  "text": "Surge_Mag_H180.0",
+                  "sheet": "RAOs",
+                  "cell": "CU1"
+                }
+              ],
+              "source_unit": "not stated in source",
+              "stored_unit": "not stated in source",
+              "conversion": "none"
+            },
+            "sway": {
+              "labels": [
+                {
+                  "text": "Sway_Mag_H0.0",
+                  "sheet": "RAOs",
+                  "cell": "E1"
+                },
+                {
+                  "text": "Sway_Mag_H22.5",
+                  "sheet": "RAOs",
+                  "cell": "Q1"
+                },
+                {
+                  "text": "Sway_Mag_H45.0",
+                  "sheet": "RAOs",
+                  "cell": "AC1"
+                },
+                {
+                  "text": "Sway_Mag_H67.5",
+                  "sheet": "RAOs",
+                  "cell": "AO1"
+                },
+                {
+                  "text": "Sway_Mag_H90.0",
+                  "sheet": "RAOs",
+                  "cell": "BA1"
+                },
+                {
+                  "text": "Sway_Mag_H112.5",
+                  "sheet": "RAOs",
+                  "cell": "BM1"
+                },
+                {
+                  "text": "Sway_Mag_H135.0",
+                  "sheet": "RAOs",
+                  "cell": "BY1"
+                },
+                {
+                  "text": "Sway_Mag_H157.5",
+                  "sheet": "RAOs",
+                  "cell": "CK1"
+                },
+                {
+                  "text": "Sway_Mag_H180.0",
+                  "sheet": "RAOs",
+                  "cell": "CW1"
+                }
+              ],
+              "source_unit": "not stated in source",
+              "stored_unit": "not stated in source",
+              "conversion": "none"
+            },
+            "heave": {
+              "labels": [
+                {
+                  "text": "Heave_Mag_H0.0",
+                  "sheet": "RAOs",
+                  "cell": "G1"
+                },
+                {
+                  "text": "Heave_Mag_H22.5",
+                  "sheet": "RAOs",
+                  "cell": "S1"
+                },
+                {
+                  "text": "Heave_Mag_H45.0",
+                  "sheet": "RAOs",
+                  "cell": "AE1"
+                },
+                {
+                  "text": "Heave_Mag_H67.5",
+                  "sheet": "RAOs",
+                  "cell": "AQ1"
+                },
+                {
+                  "text": "Heave_Mag_H90.0",
+                  "sheet": "RAOs",
+                  "cell": "BC1"
+                },
+                {
+                  "text": "Heave_Mag_H112.5",
+                  "sheet": "RAOs",
+                  "cell": "BO1"
+                },
+                {
+                  "text": "Heave_Mag_H135.0",
+                  "sheet": "RAOs",
+                  "cell": "CA1"
+                },
+                {
+                  "text": "Heave_Mag_H157.5",
+                  "sheet": "RAOs",
+                  "cell": "CM1"
+                },
+                {
+                  "text": "Heave_Mag_H180.0",
+                  "sheet": "RAOs",
+                  "cell": "CY1"
+                }
+              ],
+              "source_unit": "not stated in source",
+              "stored_unit": "not stated in source",
+              "conversion": "none"
+            },
+            "roll": {
+              "labels": [
+                {
+                  "text": "Roll_Mag_H0.0",
+                  "sheet": "RAOs",
+                  "cell": "I1"
+                },
+                {
+                  "text": "Roll_Mag_H22.5",
+                  "sheet": "RAOs",
+                  "cell": "U1"
+                },
+                {
+                  "text": "Roll_Mag_H45.0",
+                  "sheet": "RAOs",
+                  "cell": "AG1"
+                },
+                {
+                  "text": "Roll_Mag_H67.5",
+                  "sheet": "RAOs",
+                  "cell": "AS1"
+                },
+                {
+                  "text": "Roll_Mag_H90.0",
+                  "sheet": "RAOs",
+                  "cell": "BE1"
+                },
+                {
+                  "text": "Roll_Mag_H112.5",
+                  "sheet": "RAOs",
+                  "cell": "BQ1"
+                },
+                {
+                  "text": "Roll_Mag_H135.0",
+                  "sheet": "RAOs",
+                  "cell": "CC1"
+                },
+                {
+                  "text": "Roll_Mag_H157.5",
+                  "sheet": "RAOs",
+                  "cell": "CO1"
+                },
+                {
+                  "text": "Roll_Mag_H180.0",
+                  "sheet": "RAOs",
+                  "cell": "DA1"
+                }
+              ],
+              "source_unit": "not stated in source",
+              "stored_unit": "not stated in source",
+              "conversion": "none"
+            },
+            "pitch": {
+              "labels": [
+                {
+                  "text": "Pitch_Mag_H0.0",
+                  "sheet": "RAOs",
+                  "cell": "K1"
+                },
+                {
+                  "text": "Pitch_Mag_H22.5",
+                  "sheet": "RAOs",
+                  "cell": "W1"
+                },
+                {
+                  "text": "Pitch_Mag_H45.0",
+                  "sheet": "RAOs",
+                  "cell": "AI1"
+                },
+                {
+                  "text": "Pitch_Mag_H67.5",
+                  "sheet": "RAOs",
+                  "cell": "AU1"
+                },
+                {
+                  "text": "Pitch_Mag_H90.0",
+                  "sheet": "RAOs",
+                  "cell": "BG1"
+                },
+                {
+                  "text": "Pitch_Mag_H112.5",
+                  "sheet": "RAOs",
+                  "cell": "BS1"
+                },
+                {
+                  "text": "Pitch_Mag_H135.0",
+                  "sheet": "RAOs",
+                  "cell": "CE1"
+                },
+                {
+                  "text": "Pitch_Mag_H157.5",
+                  "sheet": "RAOs",
+                  "cell": "CQ1"
+                },
+                {
+                  "text": "Pitch_Mag_H180.0",
+                  "sheet": "RAOs",
+                  "cell": "DC1"
+                }
+              ],
+              "source_unit": "not stated in source",
+              "stored_unit": "not stated in source",
+              "conversion": "none"
+            },
+            "yaw": {
+              "labels": [
+                {
+                  "text": "Yaw_Mag_H0.0",
+                  "sheet": "RAOs",
+                  "cell": "M1"
+                },
+                {
+                  "text": "Yaw_Mag_H22.5",
+                  "sheet": "RAOs",
+                  "cell": "Y1"
+                },
+                {
+                  "text": "Yaw_Mag_H45.0",
+                  "sheet": "RAOs",
+                  "cell": "AK1"
+                },
+                {
+                  "text": "Yaw_Mag_H67.5",
+                  "sheet": "RAOs",
+                  "cell": "AW1"
+                },
+                {
+                  "text": "Yaw_Mag_H90.0",
+                  "sheet": "RAOs",
+                  "cell": "BI1"
+                },
+                {
+                  "text": "Yaw_Mag_H112.5",
+                  "sheet": "RAOs",
+                  "cell": "BU1"
+                },
+                {
+                  "text": "Yaw_Mag_H135.0",
+                  "sheet": "RAOs",
+                  "cell": "CG1"
+                },
+                {
+                  "text": "Yaw_Mag_H157.5",
+                  "sheet": "RAOs",
+                  "cell": "CS1"
+                },
+                {
+                  "text": "Yaw_Mag_H180.0",
+                  "sheet": "RAOs",
+                  "cell": "DE1"
+                }
+              ],
+              "source_unit": "not stated in source",
+              "stored_unit": "not stated in source",
+              "conversion": "none"
+            },
+            "phases": {
+              "labels": [
+                {
+                  "text": "Surge_Phase_H0.0",
+                  "sheet": "RAOs",
+                  "cell": "D1"
+                },
+                {
+                  "text": "Sway_Phase_H0.0",
+                  "sheet": "RAOs",
+                  "cell": "F1"
+                },
+                {
+                  "text": "Heave_Phase_H0.0",
+                  "sheet": "RAOs",
+                  "cell": "H1"
+                },
+                {
+                  "text": "Roll_Phase_H0.0",
+                  "sheet": "RAOs",
+                  "cell": "J1"
+                },
+                {
+                  "text": "Pitch_Phase_H0.0",
+                  "sheet": "RAOs",
+                  "cell": "L1"
+                },
+                {
+                  "text": "Yaw_Phase_H0.0",
+                  "sheet": "RAOs",
+                  "cell": "N1"
+                },
+                {
+                  "text": "Surge_Phase_H22.5",
+                  "sheet": "RAOs",
+                  "cell": "P1"
+                },
+                {
+                  "text": "Sway_Phase_H22.5",
+                  "sheet": "RAOs",
+                  "cell": "R1"
+                },
+                {
+                  "text": "Heave_Phase_H22.5",
+                  "sheet": "RAOs",
+                  "cell": "T1"
+                },
+                {
+                  "text": "Roll_Phase_H22.5",
+                  "sheet": "RAOs",
+                  "cell": "V1"
+                },
+                {
+                  "text": "Pitch_Phase_H22.5",
+                  "sheet": "RAOs",
+                  "cell": "X1"
+                },
+                {
+                  "text": "Yaw_Phase_H22.5",
+                  "sheet": "RAOs",
+                  "cell": "Z1"
+                },
+                {
+                  "text": "Surge_Phase_H45.0",
+                  "sheet": "RAOs",
+                  "cell": "AB1"
+                },
+                {
+                  "text": "Sway_Phase_H45.0",
+                  "sheet": "RAOs",
+                  "cell": "AD1"
+                },
+                {
+                  "text": "Heave_Phase_H45.0",
+                  "sheet": "RAOs",
+                  "cell": "AF1"
+                },
+                {
+                  "text": "Roll_Phase_H45.0",
+                  "sheet": "RAOs",
+                  "cell": "AH1"
+                },
+                {
+                  "text": "Pitch_Phase_H45.0",
+                  "sheet": "RAOs",
+                  "cell": "AJ1"
+                },
+                {
+                  "text": "Yaw_Phase_H45.0",
+                  "sheet": "RAOs",
+                  "cell": "AL1"
+                },
+                {
+                  "text": "Surge_Phase_H67.5",
+                  "sheet": "RAOs",
+                  "cell": "AN1"
+                },
+                {
+                  "text": "Sway_Phase_H67.5",
+                  "sheet": "RAOs",
+                  "cell": "AP1"
+                },
+                {
+                  "text": "Heave_Phase_H67.5",
+                  "sheet": "RAOs",
+                  "cell": "AR1"
+                },
+                {
+                  "text": "Roll_Phase_H67.5",
+                  "sheet": "RAOs",
+                  "cell": "AT1"
+                },
+                {
+                  "text": "Pitch_Phase_H67.5",
+                  "sheet": "RAOs",
+                  "cell": "AV1"
+                },
+                {
+                  "text": "Yaw_Phase_H67.5",
+                  "sheet": "RAOs",
+                  "cell": "AX1"
+                },
+                {
+                  "text": "Surge_Phase_H90.0",
+                  "sheet": "RAOs",
+                  "cell": "AZ1"
+                },
+                {
+                  "text": "Sway_Phase_H90.0",
+                  "sheet": "RAOs",
+                  "cell": "BB1"
+                },
+                {
+                  "text": "Heave_Phase_H90.0",
+                  "sheet": "RAOs",
+                  "cell": "BD1"
+                },
+                {
+                  "text": "Roll_Phase_H90.0",
+                  "sheet": "RAOs",
+                  "cell": "BF1"
+                },
+                {
+                  "text": "Pitch_Phase_H90.0",
+                  "sheet": "RAOs",
+                  "cell": "BH1"
+                },
+                {
+                  "text": "Yaw_Phase_H90.0",
+                  "sheet": "RAOs",
+                  "cell": "BJ1"
+                },
+                {
+                  "text": "Surge_Phase_H112.5",
+                  "sheet": "RAOs",
+                  "cell": "BL1"
+                },
+                {
+                  "text": "Sway_Phase_H112.5",
+                  "sheet": "RAOs",
+                  "cell": "BN1"
+                },
+                {
+                  "text": "Heave_Phase_H112.5",
+                  "sheet": "RAOs",
+                  "cell": "BP1"
+                },
+                {
+                  "text": "Roll_Phase_H112.5",
+                  "sheet": "RAOs",
+                  "cell": "BR1"
+                },
+                {
+                  "text": "Pitch_Phase_H112.5",
+                  "sheet": "RAOs",
+                  "cell": "BT1"
+                },
+                {
+                  "text": "Yaw_Phase_H112.5",
+                  "sheet": "RAOs",
+                  "cell": "BV1"
+                },
+                {
+                  "text": "Surge_Phase_H135.0",
+                  "sheet": "RAOs",
+                  "cell": "BX1"
+                },
+                {
+                  "text": "Sway_Phase_H135.0",
+                  "sheet": "RAOs",
+                  "cell": "BZ1"
+                },
+                {
+                  "text": "Heave_Phase_H135.0",
+                  "sheet": "RAOs",
+                  "cell": "CB1"
+                },
+                {
+                  "text": "Roll_Phase_H135.0",
+                  "sheet": "RAOs",
+                  "cell": "CD1"
+                },
+                {
+                  "text": "Pitch_Phase_H135.0",
+                  "sheet": "RAOs",
+                  "cell": "CF1"
+                },
+                {
+                  "text": "Yaw_Phase_H135.0",
+                  "sheet": "RAOs",
+                  "cell": "CH1"
+                },
+                {
+                  "text": "Surge_Phase_H157.5",
+                  "sheet": "RAOs",
+                  "cell": "CJ1"
+                },
+                {
+                  "text": "Sway_Phase_H157.5",
+                  "sheet": "RAOs",
+                  "cell": "CL1"
+                },
+                {
+                  "text": "Heave_Phase_H157.5",
+                  "sheet": "RAOs",
+                  "cell": "CN1"
+                },
+                {
+                  "text": "Roll_Phase_H157.5",
+                  "sheet": "RAOs",
+                  "cell": "CP1"
+                },
+                {
+                  "text": "Pitch_Phase_H157.5",
+                  "sheet": "RAOs",
+                  "cell": "CR1"
+                },
+                {
+                  "text": "Yaw_Phase_H157.5",
+                  "sheet": "RAOs",
+                  "cell": "CT1"
+                },
+                {
+                  "text": "Surge_Phase_H180.0",
+                  "sheet": "RAOs",
+                  "cell": "CV1"
+                },
+                {
+                  "text": "Sway_Phase_H180.0",
+                  "sheet": "RAOs",
+                  "cell": "CX1"
+                },
+                {
+                  "text": "Heave_Phase_H180.0",
+                  "sheet": "RAOs",
+                  "cell": "CZ1"
+                },
+                {
+                  "text": "Roll_Phase_H180.0",
+                  "sheet": "RAOs",
+                  "cell": "DB1"
+                },
+                {
+                  "text": "Pitch_Phase_H180.0",
+                  "sheet": "RAOs",
+                  "cell": "DD1"
+                },
+                {
+                  "text": "Yaw_Phase_H180.0",
+                  "sheet": "RAOs",
+                  "cell": "DF1"
+                }
+              ],
+              "source_unit": "not stated in source",
+              "stored_unit": "not stated in source",
+              "conversion": "none"
+            }
+          },
+          "source": {
+            "description": "not stated in source",
+            "solver": {
+              "statement": "OrcaWave / OrcFxAPI.Diffraction",
+              "sheet": "Summary",
+              "cells": [
+                "A3",
+                "B3"
+              ]
+            },
+            "version": "not stated in source",
+            "model_or_run": {
+              "statement": "L02_OC4_semi_sub",
+              "sheet": "Summary",
+              "cells": [
+                "A2",
+                "B2"
+              ]
+            },
+            "date": "not stated in source"
+          },
+          "loading_condition": {
+            "draft": "not stated in source",
+            "displacement": "not stated in source",
+            "mass": "not stated in source",
+            "centre_of_gravity": "not stated in source",
+            "centre_of_mass": "not stated in source",
+            "radii_of_gyration": "not stated in source",
+            "water_depth": "not stated in source",
+            "body_origin": "not stated in source",
+            "mesh_position": "not stated in source",
+            "body_position": "not stated in source",
+            "volume": "not stated in source",
+            "moments_of_inertia": "not stated in source",
+            "inertia_tensor_origin": "not stated in source",
+            "radii_of_gyration_origin": "not stated in source"
+          },
+          "conventions": {
+            "phase_convention": "not stated in source",
+            "response_reference_point": "not stated in source",
+            "heading_convention": "not stated in source"
+          },
+          "url": "../../901eb148155ddb73eb65f46ab02046b5f8b30b5d/tests/fixtures/solver/L02_OC4_semi_sub.xlsx"
+        }
+      ],
+      "basis": {
+        "frequencies": "rad/s",
+        "directions": "deg",
+        "phases": "deg",
+        "translations": "m/m",
+        "rotations": "rad/m"
+      },
+      "units": {
+        "tests/fixtures/solver/L02_OC4_semi_sub.xlsx": {
+          "frequencies": {
+            "labels": [
+              {
+                "text": "Frequency (rad/s)",
+                "sheet": "RAOs",
+                "cell": "A1"
+              }
+            ],
+            "source_unit": "rad/s",
+            "stored_unit": "rad/s",
+            "conversion": "none"
+          },
+          "directions": {
+            "labels": [
+              {
+                "text": "Surge_Mag_H0.0",
+                "sheet": "RAOs",
+                "cell": "C1"
+              },
+              {
+                "text": "Surge_Mag_H22.5",
+                "sheet": "RAOs",
+                "cell": "O1"
+              },
+              {
+                "text": "Surge_Mag_H45.0",
+                "sheet": "RAOs",
+                "cell": "AA1"
+              },
+              {
+                "text": "Surge_Mag_H67.5",
+                "sheet": "RAOs",
+                "cell": "AM1"
+              },
+              {
+                "text": "Surge_Mag_H90.0",
+                "sheet": "RAOs",
+                "cell": "AY1"
+              },
+              {
+                "text": "Surge_Mag_H112.5",
+                "sheet": "RAOs",
+                "cell": "BK1"
+              },
+              {
+                "text": "Surge_Mag_H135.0",
+                "sheet": "RAOs",
+                "cell": "BW1"
+              },
+              {
+                "text": "Surge_Mag_H157.5",
+                "sheet": "RAOs",
+                "cell": "CI1"
+              },
+              {
+                "text": "Surge_Mag_H180.0",
+                "sheet": "RAOs",
+                "cell": "CU1"
+              }
+            ],
+            "source_unit": "not stated in source",
+            "stored_unit": "not stated in source",
+            "conversion": "none"
+          },
+          "surge": {
+            "labels": [
+              {
+                "text": "Surge_Mag_H0.0",
+                "sheet": "RAOs",
+                "cell": "C1"
+              },
+              {
+                "text": "Surge_Mag_H22.5",
+                "sheet": "RAOs",
+                "cell": "O1"
+              },
+              {
+                "text": "Surge_Mag_H45.0",
+                "sheet": "RAOs",
+                "cell": "AA1"
+              },
+              {
+                "text": "Surge_Mag_H67.5",
+                "sheet": "RAOs",
+                "cell": "AM1"
+              },
+              {
+                "text": "Surge_Mag_H90.0",
+                "sheet": "RAOs",
+                "cell": "AY1"
+              },
+              {
+                "text": "Surge_Mag_H112.5",
+                "sheet": "RAOs",
+                "cell": "BK1"
+              },
+              {
+                "text": "Surge_Mag_H135.0",
+                "sheet": "RAOs",
+                "cell": "BW1"
+              },
+              {
+                "text": "Surge_Mag_H157.5",
+                "sheet": "RAOs",
+                "cell": "CI1"
+              },
+              {
+                "text": "Surge_Mag_H180.0",
+                "sheet": "RAOs",
+                "cell": "CU1"
+              }
+            ],
+            "source_unit": "not stated in source",
+            "stored_unit": "not stated in source",
+            "conversion": "none"
+          },
+          "sway": {
+            "labels": [
+              {
+                "text": "Sway_Mag_H0.0",
+                "sheet": "RAOs",
+                "cell": "E1"
+              },
+              {
+                "text": "Sway_Mag_H22.5",
+                "sheet": "RAOs",
+                "cell": "Q1"
+              },
+              {
+                "text": "Sway_Mag_H45.0",
+                "sheet": "RAOs",
+                "cell": "AC1"
+              },
+              {
+                "text": "Sway_Mag_H67.5",
+                "sheet": "RAOs",
+                "cell": "AO1"
+              },
+              {
+                "text": "Sway_Mag_H90.0",
+                "sheet": "RAOs",
+                "cell": "BA1"
+              },
+              {
+                "text": "Sway_Mag_H112.5",
+                "sheet": "RAOs",
+                "cell": "BM1"
+              },
+              {
+                "text": "Sway_Mag_H135.0",
+                "sheet": "RAOs",
+                "cell": "BY1"
+              },
+              {
+                "text": "Sway_Mag_H157.5",
+                "sheet": "RAOs",
+                "cell": "CK1"
+              },
+              {
+                "text": "Sway_Mag_H180.0",
+                "sheet": "RAOs",
+                "cell": "CW1"
+              }
+            ],
+            "source_unit": "not stated in source",
+            "stored_unit": "not stated in source",
+            "conversion": "none"
+          },
+          "heave": {
+            "labels": [
+              {
+                "text": "Heave_Mag_H0.0",
+                "sheet": "RAOs",
+                "cell": "G1"
+              },
+              {
+                "text": "Heave_Mag_H22.5",
+                "sheet": "RAOs",
+                "cell": "S1"
+              },
+              {
+                "text": "Heave_Mag_H45.0",
+                "sheet": "RAOs",
+                "cell": "AE1"
+              },
+              {
+                "text": "Heave_Mag_H67.5",
+                "sheet": "RAOs",
+                "cell": "AQ1"
+              },
+              {
+                "text": "Heave_Mag_H90.0",
+                "sheet": "RAOs",
+                "cell": "BC1"
+              },
+              {
+                "text": "Heave_Mag_H112.5",
+                "sheet": "RAOs",
+                "cell": "BO1"
+              },
+              {
+                "text": "Heave_Mag_H135.0",
+                "sheet": "RAOs",
+                "cell": "CA1"
+              },
+              {
+                "text": "Heave_Mag_H157.5",
+                "sheet": "RAOs",
+                "cell": "CM1"
+              },
+              {
+                "text": "Heave_Mag_H180.0",
+                "sheet": "RAOs",
+                "cell": "CY1"
+              }
+            ],
+            "source_unit": "not stated in source",
+            "stored_unit": "not stated in source",
+            "conversion": "none"
+          },
+          "roll": {
+            "labels": [
+              {
+                "text": "Roll_Mag_H0.0",
+                "sheet": "RAOs",
+                "cell": "I1"
+              },
+              {
+                "text": "Roll_Mag_H22.5",
+                "sheet": "RAOs",
+                "cell": "U1"
+              },
+              {
+                "text": "Roll_Mag_H45.0",
+                "sheet": "RAOs",
+                "cell": "AG1"
+              },
+              {
+                "text": "Roll_Mag_H67.5",
+                "sheet": "RAOs",
+                "cell": "AS1"
+              },
+              {
+                "text": "Roll_Mag_H90.0",
+                "sheet": "RAOs",
+                "cell": "BE1"
+              },
+              {
+                "text": "Roll_Mag_H112.5",
+                "sheet": "RAOs",
+                "cell": "BQ1"
+              },
+              {
+                "text": "Roll_Mag_H135.0",
+                "sheet": "RAOs",
+                "cell": "CC1"
+              },
+              {
+                "text": "Roll_Mag_H157.5",
+                "sheet": "RAOs",
+                "cell": "CO1"
+              },
+              {
+                "text": "Roll_Mag_H180.0",
+                "sheet": "RAOs",
+                "cell": "DA1"
+              }
+            ],
+            "source_unit": "not stated in source",
+            "stored_unit": "not stated in source",
+            "conversion": "none"
+          },
+          "pitch": {
+            "labels": [
+              {
+                "text": "Pitch_Mag_H0.0",
+                "sheet": "RAOs",
+                "cell": "K1"
+              },
+              {
+                "text": "Pitch_Mag_H22.5",
+                "sheet": "RAOs",
+                "cell": "W1"
+              },
+              {
+                "text": "Pitch_Mag_H45.0",
+                "sheet": "RAOs",
+                "cell": "AI1"
+              },
+              {
+                "text": "Pitch_Mag_H67.5",
+                "sheet": "RAOs",
+                "cell": "AU1"
+              },
+              {
+                "text": "Pitch_Mag_H90.0",
+                "sheet": "RAOs",
+                "cell": "BG1"
+              },
+              {
+                "text": "Pitch_Mag_H112.5",
+                "sheet": "RAOs",
+                "cell": "BS1"
+              },
+              {
+                "text": "Pitch_Mag_H135.0",
+                "sheet": "RAOs",
+                "cell": "CE1"
+              },
+              {
+                "text": "Pitch_Mag_H157.5",
+                "sheet": "RAOs",
+                "cell": "CQ1"
+              },
+              {
+                "text": "Pitch_Mag_H180.0",
+                "sheet": "RAOs",
+                "cell": "DC1"
+              }
+            ],
+            "source_unit": "not stated in source",
+            "stored_unit": "not stated in source",
+            "conversion": "none"
+          },
+          "yaw": {
+            "labels": [
+              {
+                "text": "Yaw_Mag_H0.0",
+                "sheet": "RAOs",
+                "cell": "M1"
+              },
+              {
+                "text": "Yaw_Mag_H22.5",
+                "sheet": "RAOs",
+                "cell": "Y1"
+              },
+              {
+                "text": "Yaw_Mag_H45.0",
+                "sheet": "RAOs",
+                "cell": "AK1"
+              },
+              {
+                "text": "Yaw_Mag_H67.5",
+                "sheet": "RAOs",
+                "cell": "AW1"
+              },
+              {
+                "text": "Yaw_Mag_H90.0",
+                "sheet": "RAOs",
+                "cell": "BI1"
+              },
+              {
+                "text": "Yaw_Mag_H112.5",
+                "sheet": "RAOs",
+                "cell": "BU1"
+              },
+              {
+                "text": "Yaw_Mag_H135.0",
+                "sheet": "RAOs",
+                "cell": "CG1"
+              },
+              {
+                "text": "Yaw_Mag_H157.5",
+                "sheet": "RAOs",
+                "cell": "CS1"
+              },
+              {
+                "text": "Yaw_Mag_H180.0",
+                "sheet": "RAOs",
+                "cell": "DE1"
+              }
+            ],
+            "source_unit": "not stated in source",
+            "stored_unit": "not stated in source",
+            "conversion": "none"
+          },
+          "phases": {
+            "labels": [
+              {
+                "text": "Surge_Phase_H0.0",
+                "sheet": "RAOs",
+                "cell": "D1"
+              },
+              {
+                "text": "Sway_Phase_H0.0",
+                "sheet": "RAOs",
+                "cell": "F1"
+              },
+              {
+                "text": "Heave_Phase_H0.0",
+                "sheet": "RAOs",
+                "cell": "H1"
+              },
+              {
+                "text": "Roll_Phase_H0.0",
+                "sheet": "RAOs",
+                "cell": "J1"
+              },
+              {
+                "text": "Pitch_Phase_H0.0",
+                "sheet": "RAOs",
+                "cell": "L1"
+              },
+              {
+                "text": "Yaw_Phase_H0.0",
+                "sheet": "RAOs",
+                "cell": "N1"
+              },
+              {
+                "text": "Surge_Phase_H22.5",
+                "sheet": "RAOs",
+                "cell": "P1"
+              },
+              {
+                "text": "Sway_Phase_H22.5",
+                "sheet": "RAOs",
+                "cell": "R1"
+              },
+              {
+                "text": "Heave_Phase_H22.5",
+                "sheet": "RAOs",
+                "cell": "T1"
+              },
+              {
+                "text": "Roll_Phase_H22.5",
+                "sheet": "RAOs",
+                "cell": "V1"
+              },
+              {
+                "text": "Pitch_Phase_H22.5",
+                "sheet": "RAOs",
+                "cell": "X1"
+              },
+              {
+                "text": "Yaw_Phase_H22.5",
+                "sheet": "RAOs",
+                "cell": "Z1"
+              },
+              {
+                "text": "Surge_Phase_H45.0",
+                "sheet": "RAOs",
+                "cell": "AB1"
+              },
+              {
+                "text": "Sway_Phase_H45.0",
+                "sheet": "RAOs",
+                "cell": "AD1"
+              },
+              {
+                "text": "Heave_Phase_H45.0",
+                "sheet": "RAOs",
+                "cell": "AF1"
+              },
+              {
+                "text": "Roll_Phase_H45.0",
+                "sheet": "RAOs",
+                "cell": "AH1"
+              },
+              {
+                "text": "Pitch_Phase_H45.0",
+                "sheet": "RAOs",
+                "cell": "AJ1"
+              },
+              {
+                "text": "Yaw_Phase_H45.0",
+                "sheet": "RAOs",
+                "cell": "AL1"
+              },
+              {
+                "text": "Surge_Phase_H67.5",
+                "sheet": "RAOs",
+                "cell": "AN1"
+              },
+              {
+                "text": "Sway_Phase_H67.5",
+                "sheet": "RAOs",
+                "cell": "AP1"
+              },
+              {
+                "text": "Heave_Phase_H67.5",
+                "sheet": "RAOs",
+                "cell": "AR1"
+              },
+              {
+                "text": "Roll_Phase_H67.5",
+                "sheet": "RAOs",
+                "cell": "AT1"
+              },
+              {
+                "text": "Pitch_Phase_H67.5",
+                "sheet": "RAOs",
+                "cell": "AV1"
+              },
+              {
+                "text": "Yaw_Phase_H67.5",
+                "sheet": "RAOs",
+                "cell": "AX1"
+              },
+              {
+                "text": "Surge_Phase_H90.0",
+                "sheet": "RAOs",
+                "cell": "AZ1"
+              },
+              {
+                "text": "Sway_Phase_H90.0",
+                "sheet": "RAOs",
+                "cell": "BB1"
+              },
+              {
+                "text": "Heave_Phase_H90.0",
+                "sheet": "RAOs",
+                "cell": "BD1"
+              },
+              {
+                "text": "Roll_Phase_H90.0",
+                "sheet": "RAOs",
+                "cell": "BF1"
+              },
+              {
+                "text": "Pitch_Phase_H90.0",
+                "sheet": "RAOs",
+                "cell": "BH1"
+              },
+              {
+                "text": "Yaw_Phase_H90.0",
+                "sheet": "RAOs",
+                "cell": "BJ1"
+              },
+              {
+                "text": "Surge_Phase_H112.5",
+                "sheet": "RAOs",
+                "cell": "BL1"
+              },
+              {
+                "text": "Sway_Phase_H112.5",
+                "sheet": "RAOs",
+                "cell": "BN1"
+              },
+              {
+                "text": "Heave_Phase_H112.5",
+                "sheet": "RAOs",
+                "cell": "BP1"
+              },
+              {
+                "text": "Roll_Phase_H112.5",
+                "sheet": "RAOs",
+                "cell": "BR1"
+              },
+              {
+                "text": "Pitch_Phase_H112.5",
+                "sheet": "RAOs",
+                "cell": "BT1"
+              },
+              {
+                "text": "Yaw_Phase_H112.5",
+                "sheet": "RAOs",
+                "cell": "BV1"
+              },
+              {
+                "text": "Surge_Phase_H135.0",
+                "sheet": "RAOs",
+                "cell": "BX1"
+              },
+              {
+                "text": "Sway_Phase_H135.0",
+                "sheet": "RAOs",
+                "cell": "BZ1"
+              },
+              {
+                "text": "Heave_Phase_H135.0",
+                "sheet": "RAOs",
+                "cell": "CB1"
+              },
+              {
+                "text": "Roll_Phase_H135.0",
+                "sheet": "RAOs",
+                "cell": "CD1"
+              },
+              {
+                "text": "Pitch_Phase_H135.0",
+                "sheet": "RAOs",
+                "cell": "CF1"
+              },
+              {
+                "text": "Yaw_Phase_H135.0",
+                "sheet": "RAOs",
+                "cell": "CH1"
+              },
+              {
+                "text": "Surge_Phase_H157.5",
+                "sheet": "RAOs",
+                "cell": "CJ1"
+              },
+              {
+                "text": "Sway_Phase_H157.5",
+                "sheet": "RAOs",
+                "cell": "CL1"
+              },
+              {
+                "text": "Heave_Phase_H157.5",
+                "sheet": "RAOs",
+                "cell": "CN1"
+              },
+              {
+                "text": "Roll_Phase_H157.5",
+                "sheet": "RAOs",
+                "cell": "CP1"
+              },
+              {
+                "text": "Pitch_Phase_H157.5",
+                "sheet": "RAOs",
+                "cell": "CR1"
+              },
+              {
+                "text": "Yaw_Phase_H157.5",
+                "sheet": "RAOs",
+                "cell": "CT1"
+              },
+              {
+                "text": "Surge_Phase_H180.0",
+                "sheet": "RAOs",
+                "cell": "CV1"
+              },
+              {
+                "text": "Sway_Phase_H180.0",
+                "sheet": "RAOs",
+                "cell": "CX1"
+              },
+              {
+                "text": "Heave_Phase_H180.0",
+                "sheet": "RAOs",
+                "cell": "CZ1"
+              },
+              {
+                "text": "Roll_Phase_H180.0",
+                "sheet": "RAOs",
+                "cell": "DB1"
+              },
+              {
+                "text": "Pitch_Phase_H180.0",
+                "sheet": "RAOs",
+                "cell": "DD1"
+              },
+              {
+                "text": "Yaw_Phase_H180.0",
+                "sheet": "RAOs",
+                "cell": "DF1"
+              }
+            ],
+            "source_unit": "not stated in source",
+            "stored_unit": "not stated in source",
+            "conversion": "none"
+          }
+        }
+      },
+      "conventions": {
+        "tests/fixtures/solver/L02_OC4_semi_sub.xlsx": {
+          "phase_convention": "not stated in source",
+          "response_reference_point": "not stated in source",
+          "heading_convention": "not stated in source"
+        }
+      },
+      "source": {
+        "tests/fixtures/solver/L02_OC4_semi_sub.xlsx": {
+          "description": "not stated in source",
+          "solver": {
+            "statement": "OrcaWave / OrcFxAPI.Diffraction",
+            "sheet": "Summary",
+            "cells": [
+              "A3",
+              "B3"
+            ]
+          },
+          "version": "not stated in source",
+          "model_or_run": {
+            "statement": "L02_OC4_semi_sub",
+            "sheet": "Summary",
+            "cells": [
+              "A2",
+              "B2"
+            ]
+          },
+          "date": "not stated in source"
+        }
+      },
+      "loading_condition": {
+        "tests/fixtures/solver/L02_OC4_semi_sub.xlsx": {
+          "draft": "not stated in source",
+          "displacement": "not stated in source",
+          "mass": "not stated in source",
+          "centre_of_gravity": "not stated in source",
+          "centre_of_mass": "not stated in source",
+          "radii_of_gyration": "not stated in source",
+          "water_depth": "not stated in source",
+          "body_origin": "not stated in source",
+          "mesh_position": "not stated in source",
+          "body_position": "not stated in source",
+          "volume": "not stated in source",
+          "moments_of_inertia": "not stated in source",
+          "inertia_tensor_origin": "not stated in source",
+          "radii_of_gyration_origin": "not stated in source"
+        }
+      }
+    }
+  ]
+}

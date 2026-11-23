@@ -1,0 +1,107 @@
+---
+parameters:
+  file_io_01: &file_io_01 tests\data\tad\3001546558_broom_stick_plot_data.csv
+  label_01: &label_01 broom_stick_data_df
+  file_io_02: &file_io_02 tests\data\tad\3001546558_bst_plot_data.csv
+  label_02: &label_02 bst_plot_data_df
+  file_io_03: &file_io_03 tests\data\tad\3001546558_drag_bst_plot.csv
+  label_03: &label_03 drag_bst_plot_df
+
+default:
+  log_level: DEBUG
+  config:
+    overwrite:
+      output: True
+
+files:
+  -
+    file_type: csv
+    io: *file_io_01
+    label: *label_01
+    data_type: DataFrame
+  -
+    file_type: csv
+    io: *file_io_02
+    label: *label_02
+    data_type: DataFrame
+  -
+    file_type: csv
+    io: *file_io_03
+    label: *label_03
+    data_type: DataFrame
+
+plot: []
+
+plot_multiple:
+
+  -
+    file_name_extension: TAD Verification
+    nrows: 2
+    ncols: 1
+    suptitle: TAD Verification
+    sets:
+
+    -
+      title: Run from Datalink
+      xlabel: Hook Load (klbs)
+      ylabel: Measured Depth (ft)
+      xticklabels: NULL
+      autofmt:
+        xdate: False
+      grid: True
+      legend: True
+      legend_location: best
+      data:
+       -
+          df: input_data_broom_stick_data_df
+          filter:
+          - column: friction_factor
+            value: 0.45
+          label: [broom_stick_plot_data]
+          x: [hookload]
+          y: [depth]
+          scale:
+            columns: [hookload]
+            factors: [1]
+          plt_kind: line
+          marker: NULL
+
+    -
+      title: Run from ODA
+      xlabel: Hook Load (klbs)
+      ylabel: Measured Depth (ft)
+      xticklabels: NULL
+      autofmt:
+        xdate: False
+      grid: True
+      legend: True
+      legend_location: best
+      data:
+       -
+          df: input_data_bst_plot_data_df
+          filter:
+          - column: friction_factor
+            value: 0.45
+          label: [bst_plot_data_df]
+          x: [hookload]
+          y: [depth]
+          scale:
+            columns: [hookload]
+            factors: [1]
+          plt_kind: line
+          marker:
+            type: 'o'
+            size: 3
+            edge_color: None
+       -
+          df: input_data_drag_bst_plot_df
+          filter:
+          - column: friction_factor
+            value: 0.45
+          label: [drag_bst_plot_df]
+          x: [hookload]
+          y: [depth]
+          scale:
+            columns: [hookload]
+            factors: [1]
+          plt_kind: line

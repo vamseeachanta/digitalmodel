@@ -1,0 +1,20 @@
+{
+  "model": "a01_catenary_riser",
+  "source": "docs\\modules\\orcaflex\\library\\tier2_fast\\a01_catenary_riser\\monolithic\\A01 Catenary riser.dat",
+  "statics_time_seconds": 0.27,
+  "object_count": 12,
+  "lines": {
+    "Catenary Hose": {
+      "line_name": "Catenary Hose",
+      "total_length_m": 130.0,
+      "num_sections": 3,
+      "end_a_tension_kN": 132.37869525651703,
+      "end_b_tension_kN": 11.875170402569715,
+      "end_a_bending_kNm": 0.0,
+      "end_b_bending_kNm": 0.0,
+      "max_tension_kN": 132.37869525651703,
+      "min_tension_kN": 11.775708628084125,
+      "max_bending_kNm": 9.501998999632983
+    }
+  }
+}

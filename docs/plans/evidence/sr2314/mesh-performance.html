@@ -1,0 +1,53 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><title>sr2314 mixed-cut mesh performance qualification</title><style>body{font:16px/1.5 system-ui;max-width:1100px;margin:3rem auto;padding:0 1rem}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#eef2f5;padding:1rem}table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}td,th{border:1px solid #bcc6cf;padding:.4rem;text-align:right}caption{caption-side:bottom;text-align:left;padding:.5rem 0}</style>
+<h1>Mixed-cut mesh performance qualification — sr2314</h1>
+<p>Both implementations meet sr2314-v1 absolute criteria on the off-row/off-column analytic case. The revised implementation also meets the comparison-v1 no-regression guard: time ratio 0.778182496 ≤1.10 and Linux peak-RSS ratio 0.986268391 ≤1.05. All quantities and metadata in result.to_dict() match exactly under canonical JSON hashing, including the section-dependent A_M, C_M, C_P and half-breadth grid. The comparison CLI reports qualified=true and no binding mismatches.</p>
+<p>Criteria provenance: comparison-v1 was chosen after exploratory measurements and before later reruns; no committed preregistration evidence is asserted. It is an after-exploration no-regression guard, not an independently preregistered speedup criterion. Absolute criteria are recorded in the issue plan. These results qualify one synthetic case; no universal timing or minimum speedup conclusion follows.</p>
+<table><thead><tr><th>Implementation</th><th>Validation + hydrostatics (s)</th><th>Complete-process peak RSS (bytes)</th><th>Volume relative error (1)</th><th>Area relative error (1)</th><th>A_M (m²)</th><th>C_M (1)</th><th>C_P (1)</th></tr></thead><tbody><tr><td>Baseline</td><td>24.910109427</td><td>901730304</td><td>5.01033016242e-06</td><td>4.85711833642e-07</td><td>39.72984249</td><td>0.665171882903</td><td>0.666666000032</td></tr><tr><td>Revised</td><td>19.384611130</td><td>889348096</td><td>5.01033016242e-06</td><td>4.85711833642e-07</td><td>39.72984249</td><td>0.665171882903</td><td>0.666666000032</td></tr></tbody><caption>Table 1. Fresh sequential processes on identical analytic inputs and pinned dependencies; 1,009,998 source faces and ten requested grid stations plus midship.</caption></table>
+<h2>Analytic case and mixed cuts</h2><p>The source Wigley mesh has L=100 m, B=10 m and design draft T=6 m, sampled on uniform nx=1000,nz=250 grids. The condition draft is t=5.973 m, between z rows 5.952 and 5.976 m. Ten transverse stations −44.95…45.05 m lie between the 0.1 m x columns; the midship section is at x=0. Grid waterlines are 1,3,5.973 m. All inputs are analytic synthetic geometry; no client or measured data is consumed.</p>
+<p>With y=(B/2)(1−(2x/L)²)(1−((z−T)/T)²), the partial-draft midship area is A_M=B(t²/T−t³/(3T²))=39.7300018225 m²; V=(2L/3)A_M=2648.66678817 m³. The design-draft comparator 2BT/3=40 m² is not substituted for the partial-draft value. Wetted area is independently integrated over x∈[−L/2,L/2], z∈[0,t] using the analytic surface derivatives; the reference is 1439.14696964 m². Computed A_M relative discrepancy is 4.01038233333e-06; no new A_M accuracy threshold is introduced.</p>
+<p>The cut leaves 998000 physical faces. Their minimum area is 0.000131256564908 m², below the source minimum 0.0012000015268 m²; their mean is 0.00144203033129 m² versus source mean 0.00268834633288 m². Thus the scale case exercises newly clipped physical triangles rather than only complete source faces. It does not by itself prove behavior below the old source-area threshold; targeted near-vertex unit regressions cover that finding.</p>
+<p>Both implementations execute eleven _section calls at eleven unique stations. The benchmark does not evidence cache reuse. Repeated-station caching is established only by <a href="../../../../tests/naval_architecture/test_mesh_r02.py">test_repeated_stations_compute_once</a>; compact mixed cuts are exercised here through the off-column section grid and compared through the complete result digest.</p>
+<h2>Timing, memory and qualification</h2><p>Final measurements were read back on 2026-10-10 UTC (local date 2026-10-09). Linux Python 3.11.14, NumPy 2.4.4, SciPy 1.17.1 and PyYAML 6.0.3 are used in separate fresh processes. Wall time includes TriMesh validation and compute_hydrostatics. Fixture generation, reference quadrature and the additional diagnostic clip for physical-area statistics are excluded from the timed region. Memory is resource.ru_maxrss, a process high-water mark rather than a current allocation; Linux KiB is converted to bytes by ×1024. The complete-process peak includes the untimed phases. Off Linux the byte conversion is not assumed; unavailable resource support yields unavailable RSS and qualified=false.</p>
+<table><thead><tr><th>Implementation</th><th>Before timed region (KiB)</th><th>After timed region (KiB)</th><th>After diagnostic clip (KiB)</th></tr></thead><tbody><tr><td>Baseline</td><td>503200</td><td>880596</td><td>880596</td></tr><tr><td>Revised</td><td>495268</td><td>868504</td><td>868504</td></tr></tbody><caption>Table 2. High-water RSS observations expose generator memory and the scope of the measured timed region.</caption></table>
+<p>Absolute limits: source faces ≥1,000,000; volume relative error ≤1e-4; wetted-area relative error ≤5e-4; validation + hydrostatics time &lt;120 s; process peak RSS &lt;2 GiB. Every absolute bound is derived from CRITERIA. Comparison additionally requires legacy/current roles, distinct implementation digests, matching input arrays and draft, fixture/script digests, NumPy/SciPy/Python/platform, and criteria. Both embedded full-result digests are recomputed before equality is accepted. The comparison binds canonical records and the actual compared JSON-file byte digests.</p>
+<h2>Retained records and reproduction</h2><p>Baseline source revision: 4f7bfc0c, original mesh_hydrostatics.py SHA-256 ad745569961e8dcb59fcfe1c931dad2655003fa886d702be1c1f7653ad00cc1b; its equality to the locally retained baseline source is independently verified. Current facade SHA-256: e99c234625c87a57eca43bce42e0948c7108201668d6908d78f786a7137bb44b. All current module digests were checked against final filesystem bytes after measurement; the benchmark script and unchanged hull fixture are also bound.</p><p>Full records: <a href="mesh-benchmark-baseline.json">baseline</a>, <a href="mesh-benchmark-current.json">current</a>, <a href="mesh-benchmark-comparison.json">comparison</a>. Each result record retains the complete result.to_dict() object and digest. Earlier aligned-grid exploratory metrics are superseded by this mixed-cut evidence.</p><pre>PYTHONPATH=src UV_CACHE_DIR=/tmp/sr2314-uv-cache uv run --no-project --with numpy==2.4.4 --with scipy==1.17.1 --with pyyaml==6.0.3 python scripts/validation/benchmark_mesh_hydrostatics.py --legacy-file &lt;retained-original-mesh.py&gt;
+PYTHONPATH=src UV_CACHE_DIR=/tmp/sr2314-uv-cache uv run --no-project --with numpy==2.4.4 --with scipy==1.17.1 --with pyyaml==6.0.3 python scripts/validation/benchmark_mesh_hydrostatics.py
+PYTHONPATH=src UV_CACHE_DIR=/tmp/sr2314-uv-cache uv run --no-project --with numpy==2.4.4 --with scipy==1.17.1 --with pyyaml==6.0.3 python scripts/validation/benchmark_mesh_hydrostatics.py --compare docs/plans/evidence/sr2314/mesh-benchmark-baseline.json docs/plans/evidence/sr2314/mesh-benchmark-current.json</pre><p>The baseline source location is substituted above with an environment-independent placeholder; source bytes and their digest identify the baseline. Current and comparison commands are shown exactly. No production method is altered by the benchmark.</p>
+<p>TDD review correction: six regressions initially failed for the partial-draft case, script/SciPy/output binding and self-comparison refusal. A separate stale-output-digest mutation failed before embedded-output integrity was checked. Final focused verification returned 33 passed: ten benchmark tests, three Holtrop diagnostic tests and twenty existing Holtrop method tests. The design-draft cap-exclusion test asserts exactly 4nxnz physical faces. Benchmark source is 196 lines; largest function is 39 lines.</p><details><summary>Source and record digest bindings</summary><pre>{
+  &quot;baseline_sources&quot;: {
+    &quot;hull_fixtures.py&quot;: &quot;d0ab75f251489f0e4052d84d30d2c7de7252d23c498c31b85aef1735614f7044&quot;,
+    &quot;original_mesh.py&quot;: &quot;ad745569961e8dcb59fcfe1c931dad2655003fa886d702be1c1f7653ad00cc1b&quot;
+  },
+  &quot;current_sources&quot;: {
+    &quot;hull_fixtures.py&quot;: &quot;d0ab75f251489f0e4052d84d30d2c7de7252d23c498c31b85aef1735614f7044&quot;,
+    &quot;mesh_clipping.py&quot;: &quot;a176d01ecd176184558ebed3364e03d8301f0c74ca1c48df0b768dacc3078902&quot;,
+    &quot;mesh_geometry.py&quot;: &quot;3a7f0676a8749723d8b99a1c864fee87d650eff45808460f49431270c2365783&quot;,
+    &quot;mesh_hydrostatics.py&quot;: &quot;e99c234625c87a57eca43bce42e0948c7108201668d6908d78f786a7137bb44b&quot;,
+    &quot;mesh_results.py&quot;: &quot;758311c7d3f5f5a653a6f18b93298ea8cbf4b87d3b25152cbd16eec019e125c6&quot;,
+    &quot;mesh_sections.py&quot;: &quot;9fa9e20563e06c1398a7bdd8f3e56198feadeaaf18bdcd959bb5a42303d47893&quot;,
+    &quot;mesh_topology.py&quot;: &quot;d54bf4712ada0dc6ebdc339f700b898c130b1e28ef8cef02addb092bec96dc08&quot;,
+    &quot;mesh_validation.py&quot;: &quot;885d88f96be708fe94b290ae703917ed03d4c5502e823da0f4a6b7be13e61e6b&quot;
+  },
+  &quot;benchmark_script_sha256&quot;: &quot;ecf599b49217a40432c991af9a2b51e28fbdfca1220904735754c520b8ee51b8&quot;,
+  &quot;full_result_sha256&quot;: &quot;55c6d7a6e779bc54c004e51002d3b8af6ac1b06d520cdb71f4df26ea69790dec&quot;,
+  &quot;comparison&quot;: {
+    &quot;criteria&quot;: {
+      &quot;revision&quot;: &quot;sr2314-comparison-v1&quot;,
+      &quot;wall_time_ratio_max&quot;: 1.1,
+      &quot;rss_ratio_max&quot;: 1.05
+    },
+    &quot;mismatches&quot;: [],
+    &quot;compared_record_sha256&quot;: {
+      &quot;baseline&quot;: &quot;c4a49640edd7abfdaa87e033fae86cf9bed082529bfc9ed901989bd0bc4711dc&quot;,
+      &quot;current&quot;: &quot;95c63d90fcb3238038a2c777bece669378a04d03e3e8c5394e1dd7ca668ea2f7&quot;
+    },
+    &quot;record_digest_scope&quot;: &quot;canonical-json&quot;,
+    &quot;wall_time_ratio&quot;: 0.7781824959999037,
+    &quot;rss_ratio&quot;: 0.9862683909533998,
+    &quot;qualified&quot;: true,
+    &quot;compared_file_sha256&quot;: {
+      &quot;baseline&quot;: &quot;fe80d4e5d7abab9d7060b44a09f83e1a50b25ebb7733105b98fbb69463510526&quot;,
+      &quot;current&quot;: &quot;909bf77ecdb537a6bf267cd5ba736117979d510daf2bf3815545bd3bf178f5a2&quot;
+    }
+  }
+}</pre></details></html>

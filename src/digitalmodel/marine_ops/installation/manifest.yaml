@@ -1,0 +1,56 @@
+# manifest.yaml -- Machine-readable traceability for CI and website (D-05/D-06)
+module: marine_ops/installation
+description: "Subsea structure installation analysis — crane tip motion, splash zone, operability"
+primary_standard:
+  id: DNV-RP-H103
+  edition: 2011
+  title: "Modelling and Analysis of Marine Operations"
+functions:
+  - name: crane_tip_raos
+    clause: "N/A (geometric transfer)"
+    equation: "x_tip = x_cog + R × r (DNV-RP-C205 §7.2)"
+    description: "Compute RAOs at crane tip from vessel CoG RAOs via geometric transfer function"
+    inputs: [vessel, crane_tip]
+    outputs: [crane_tip_rao_dict]
+  - name: crane_tip_significant_motion
+    clause: "N/A (spectral method)"
+    equation: "sig_motion = 2*sqrt(m0), m0 = ∫ RAO² S(w) dw"
+    description: "Significant single-amplitude crane tip motion from spectral integration"
+    inputs: [tip_rao_amplitude, hs_m, tp_s, frequencies]
+    outputs: [significant_motion_m]
+  - name: slamming_force
+    clause: "S4.3.4"
+    equation: "F_slam = 0.5 ρ C_s A_p v²"
+    description: "Slamming force at water entry"
+    inputs: [structure, lowering_velocity_m_s, wave_particle_velocity_m_s, rho_w]
+    outputs: [slamming_force_N]
+  - name: varying_buoyancy_force
+    clause: "S4.4"
+    equation: "F_var = ρ g A_wp ζ_a"
+    description: "Peak varying buoyancy force in splash zone"
+    inputs: [structure, wave_amplitude_m, rho_w]
+    outputs: [varying_buoyancy_N]
+  - name: splash_zone_assessment
+    clause: "S4"
+    equation: "Combined slamming + varying buoyancy assessment"
+    description: "Complete splash zone force assessment with min/max hook loads"
+    inputs: [InstallationCase, crane_tip_velocity_m_s]
+    outputs: [SplashZoneResult]
+  - name: compute_operability
+    clause: "N/A (engineering practice)"
+    equation: "Hs_limit per Tp from allowable crane tip motion criteria"
+    description: "Hs/Tp operational limits for vessel/structure pair"
+    inputs: [vessel, structure, criteria, tp_range_s]
+    outputs: [OperabilityResult]
+  - name: weather_window_operability
+    clause: "N/A (statistical)"
+    equation: "% = Σ(operable bins) / Σ(total bins) × 100"
+    description: "Percentage operability from wave scatter diagram"
+    inputs: [OperabilityResult, scatter_hs, scatter_tp, scatter_counts]
+    outputs: [operability_pct]
+  - name: screen_vessels
+    clause: "N/A (comparison)"
+    equation: "N vessels × M structures → operability matrix"
+    description: "Multi-vessel screening and ranking"
+    inputs: [vessels, structures, criteria, tp_range_s]
+    outputs: [VesselScreeningResult]

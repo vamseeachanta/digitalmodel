@@ -1,0 +1,128 @@
+{
+  "basis_description": "Pilot design inputs: two discrete dimensions per axis; second value is 1.1 times the merged reference dimension. Box loading and its centre of gravity follow the merged public solver script. Analytic ship mass and inertia use a homogeneous solid closed at the waterplane, with the centre of gravity at its volume centroid. No measured loading is asserted.",
+  "box_gyradii_m": [
+    7,
+    29,
+    29
+  ],
+  "box_resolution": [
+    50,
+    10,
+    8
+  ],
+  "cog_draft_fraction": -0.25,
+  "convergence_resolutions": [
+    [
+      25,
+      5,
+      4
+    ],
+    [
+      50,
+      10,
+      8
+    ],
+    [
+      75,
+      15,
+      12
+    ]
+  ],
+  "dimensions": {
+    "beam_m": [
+      20.0,
+      22.0
+    ],
+    "draft_m": [
+      8.0,
+      8.8
+    ],
+    "length_m": [
+      100.0,
+      110.00000000000001
+    ]
+  },
+  "gravity_m_s2": 9.80665,
+  "heading_deg": [
+    0,
+    90
+  ],
+  "irregular_frequency_band_reason": "Assumed screening range from 1 percent below to 3 percent above the estimated interior mode, with inclusive edges. The affected range reaches at least +2.2 percent above the estimate; the retained box_00 and box_04 samples bound the lower side. The band edges have not been measured.",
+  "irregular_frequency_lower_fraction": -0.01,
+  "irregular_frequency_upper_fraction": 0.03,
+  "omega_rad_s": [
+    0.2,
+    0.34,
+    0.55,
+    0.83,
+    1.04,
+    1.32
+  ],
+  "reference_dimensions_m": [
+    100,
+    20,
+    8
+  ],
+  "reference_file": "docs/reports/2026-10-09-compute-program/barge-capytaine.json",
+  "rho_kg_m3": 1025.0,
+  "schema_version": 1,
+  "ship_inertia_method": "Signed tetrahedral integrals about the waterplane origin, where lid moments vanish, transferred to the uniform-density volume centroid by the parallel-axis theorem; the wetted radiation mesh is unchanged.",
+  "ship_target_panels": 365,
+  "source_revision": "096b76dc242841726c5c8b41ca8f18b55fdab1fa",
+  "sources": [
+    {
+      "record_count": 20,
+      "repository_path": "docs/reports/2026-10-09-compute-program/barge-capytaine.json",
+      "retrieved_on": "2026-10-15",
+      "rights": "Existing public repository source under its repository license",
+      "sha256": "72de177cd9ea6a945ebdeccfd6f4fc1550d1bc6c031f170df0ddbea30eee4d40",
+      "source_id": "public-benchmark-hulls",
+      "source_url": "../../../../../blob/096b76dc242841726c5c8b41ca8f18b55fdab1fa/docs/reports/2026-10-09-compute-program/barge-capytaine.json"
+    },
+    {
+      "record_count": 1,
+      "repository_path": "docs/reports/2026-10-09-compute-program/capytaine_barge.py",
+      "retrieved_on": "2026-10-15",
+      "rights": "Existing public repository source under its repository license",
+      "sha256": "15fa466cb0adc4dd962aaf5dd12046dc74e58133aeac8a0d81ce8c667f495f08",
+      "source_id": "public-benchmark-hulls",
+      "source_url": "../../../../../blob/096b76dc242841726c5c8b41ca8f18b55fdab1fa/docs/reports/2026-10-09-compute-program/capytaine_barge.py"
+    },
+    {
+      "record_count": 1,
+      "repository_path": "src/digitalmodel/solvers/benchmark/cases.py",
+      "retrieved_on": "2026-10-15",
+      "rights": "Existing public repository source under its repository license",
+      "sha256": "38b3fd76a0c26279b17356d3c50de2d4563a35c45259df39a5a243dabeb7651e",
+      "source_id": "public-benchmark-hulls",
+      "source_url": "../../../../../blob/096b76dc242841726c5c8b41ca8f18b55fdab1fa/src/digitalmodel/solvers/benchmark/cases.py"
+    },
+    {
+      "record_count": 1,
+      "repository_path": "src/digitalmodel/hydrodynamics/hull_library/parametric_form.py",
+      "retrieved_on": "2026-10-15",
+      "rights": "Existing public repository source under its repository license",
+      "sha256": "524ac040ed2bf927040e98cd5d8a3c30a2db0406b992582f12c0219799c3cbcd",
+      "source_id": "public-benchmark-hulls",
+      "source_url": "../../../../../blob/096b76dc242841726c5c8b41ca8f18b55fdab1fa/src/digitalmodel/hydrodynamics/hull_library/parametric_form.py"
+    },
+    {
+      "record_count": 1,
+      "repository_path": "src/digitalmodel/hydrodynamics/hull_library/mesh_generator.py",
+      "retrieved_on": "2026-10-15",
+      "rights": "Existing public repository source under its repository license",
+      "sha256": "dd62cbc0d2509ba39d5afa730b699455bdd1059c9ddc7b48245b4971fc3221ea",
+      "source_id": "public-benchmark-hulls",
+      "source_url": "../../../../../blob/096b76dc242841726c5c8b41ca8f18b55fdab1fa/src/digitalmodel/hydrodynamics/hull_library/mesh_generator.py"
+    },
+    {
+      "http_status": 200,
+      "record_count": 1,
+      "retrieved_on": "2026-10-15T01:40:39Z",
+      "sha256": "357df5703c990cb94016e2a91eb6113e9f9059403ff62f621557d56c7d4c7eb1",
+      "source_url": "https://capytaine.org/stable/theory_manual/theory.html",
+      "use": "Phase convention documentation; saved source copy remains execution scratch"
+    }
+  ],
+  "water_depth_m": 200.0
+}

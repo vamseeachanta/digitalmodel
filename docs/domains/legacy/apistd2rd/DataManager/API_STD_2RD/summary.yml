@@ -1,0 +1,42 @@
+default:
+  logLevel: DEBUG
+
+ymlFiles:
+  Folder: results
+  FileNameFilter: "Summary_*.yml"
+
+dataFrame:
+  label: PcSummary
+  columns:
+    - FileName
+    - Nominal OD
+    - Design WT
+    - Pc
+    - Method1Utilization, Normal Operating Pressure, SLS
+    - Method1Utilization, Installation, ALS
+    - Method1Utilization, Design Pressure, ALS
+  data:
+  -
+    L1: geometry
+    L2: NominalOD
+    L3: NULL
+  -
+    L1: geometry
+    L2: DesignWT
+    L3: NULL
+  -
+    L1: Method1ALS
+    L2: Pc
+    L3: NULL
+  -
+    L1: LoadingConditionResults
+    L2: 0
+    L3: Method1Utilization
+  -
+    L1: LoadingConditionResults
+    L2: 1
+    L3: Method1Utilization
+  -
+    L1: LoadingConditionResults
+    L2: 2
+    L3: Method1Utilization

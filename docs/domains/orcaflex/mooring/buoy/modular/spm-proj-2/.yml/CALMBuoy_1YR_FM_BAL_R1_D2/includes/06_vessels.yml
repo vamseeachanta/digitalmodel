@@ -1,0 +1,47 @@
+# Vessels Configuration
+# Generated from: CALMBuoy_1YR_FM_BAL_R1_D2.yml
+# Date: 2026-01-18 22:20:08
+Vessels:
+- Name: Vessel
+  VesselType: Vessel Type1
+  Draught: Draught1
+  Length: ~
+  Connection: Free
+  InitialPosition:
+  - 0
+  - -246.434082
+  - 0
+  Orientation:
+  - 0
+  - 0
+  - 90
+  IncludedInStatics: 6 DOF
+  PrimaryMotion: Calculated (6 DOF)
+  SuperimposedMotion: None
+  IncludeAppliedLoads: Yes
+  IncludeWaveLoad1stOrder: Yes
+  IncludeWaveDriftLoad2ndOrder: Yes
+  IncludeWaveDriftDamping: Yes
+  IncludeSumFrequencyLoad: No
+  IncludeAddedMassAndDamping: Yes
+  IncludeManoeuvringLoad: No
+  IncludeOtherDamping: Yes
+  IncludeCurrentLoad: Yes
+  IncludeWindLoad: Yes
+  PrimaryMotionIsTreatedAs: Both low and wave frequency
+  PrimaryMotionDividingPeriod: 80
+  CalculationMode: QTF modification
+  GlobalAppliedLoads:
+  - Origin:
+    - 0
+    - 0
+    - 0
+    Force:
+    - 0
+    - 0
+    - 0
+    Moment:
+    - 0
+    - 0
+    - 0
+  ShadedDrawingCullingMode: Anticlockwise

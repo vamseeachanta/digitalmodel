@@ -1,0 +1,15 @@
+{
+  "criteria_recorded_at": "2026-10-14T17:09:55.396453+00:00",
+  "criteria_sha256": "b9fbf416fb2411b50cf7e82733a8b5afac6817e8c6cdf9ad9097bc3c565a53ea",
+  "intended_use": "Numerical method comparison; no inspected asset disposition.",
+  "retained": "Compact metrics and model basis; no sample arrays retained.",
+  "sha256": {
+    "build.py": "25878999d198fdf0a7ea57bc9e7ab09cd5ea304da50b5b11f23a1a340dd83587",
+    "criteria.json": "b9fbf416fb2411b50cf7e82733a8b5afac6817e8c6cdf9ad9097bc3c565a53ea",
+    "report.html": "a39205f0337b525f9700a8ab3f2ca254f3a11ca48f2259c79748e0d62e8a13d6",
+    "results.json": "489afc334214b6e4bba9c9ce33dc365c398de13c149141227ebc45c69cd72fd4",
+    "run-record.jsonl": "0bcfbcc960389c0323cb4f95c8097064449f6df6b01196ce405f264fb180a8d7",
+    "sources.json": "4fe526e9a7ab23e90d79ef626e045e846ac76f1b9ba5d0bd513334cdfd4e67bf"
+  },
+  "started_at": "2026-10-14T17:09:55.396544+00:00"
+}

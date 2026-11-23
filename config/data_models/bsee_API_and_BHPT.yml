@@ -1,0 +1,40 @@
+default:
+  log_level: DEBUG
+  config:
+    overwrite:
+      output: True
+  analysis:
+    db:
+      simple: False
+    run_example: False
+
+input_data:
+#    TODO ensure consistent design between Excel data, db data and text files and .csv files
+
+  source: zip
+  sets:
+    -
+      label_array: NULL
+      df_columns: NULL
+      header: NULL
+      encoding: ISO-8859-1
+      io: data_manager\data\bsee\APIRawData.zip
+      output:
+        target: db
+        if_exists: 'replace'
+    -
+      label_array: NULL
+      df_columns: NULL
+      header: NULL
+      encoding: ISO-8859-1
+      io: data_manager\data\bsee\BHPSRawData.zip
+      output:
+        target: db
+        if_exists: 'replace'
+
+db:
+  server_type: mssql
+  server: localhost\SQLEXPRESS
+  user: NULL
+  password: NULL
+  database: bsee

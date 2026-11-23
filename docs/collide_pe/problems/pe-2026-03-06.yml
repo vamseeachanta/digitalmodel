@@ -1,0 +1,23 @@
+id: pe-2026-03-06
+date: "2026-03-06"
+slug: pe-problem-of-the-day-3-6-2026
+source_url: https://app.collide.io/posts/pe-problem-of-the-day-3-6-2026
+title: "PE Problem of the Day 3/6/2026 — drive mechanism in unconventional wells"
+posted_by: Yogashri Pradhan
+tags: [production, upstream, reservoir-engineering]
+type: conceptual
+
+statement: >
+  What drive mechanism is present in unconventional (shale/tight) oil wells?
+
+find:
+  - "Name the drive mechanism"
+
+solution:
+  method: "Petroleum-engineering concept recall (no calculation)."
+  answer: "Depletion drive — pressure depletion / solution-gas drive within the stimulated rock volume. Unconventional wells have essentially no natural water or gas-cap drive, hence steep decline and low recovery."
+  confidence: high
+  solved_by: "petroleum-engineering domain knowledge (Deckhand wells-subsurface pack / Claude API solver)"
+
+# Knowledge dot: the concept lives in llm-wiki (Deckhand wells-subsurface pack source).
+wiki_concept: wikis/reservoir-engineering/wiki/concepts/reservoir-drive-mechanisms.md

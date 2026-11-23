@@ -1,0 +1,880 @@
+"""Reverse parsers: read AQWA .dat and OrcaWave .yml into DiffractionSpec (WRK-063).
+
+These parsers read solver-specific input files and produce canonical
+DiffractionSpec objects. Combined with the forward backends (WRK-058, WRK-059),
+this enables full cross-conversion:
+
+    AQWA .dat  -> AQWAInputParser  -> DiffractionSpec -> to_yaml()  -> spec.yml
+    OrcaWave .yml -> OrcaWaveInputParser -> DiffractionSpec -> to_yaml() -> spec.yml
+
+And therefore:
+    AQWA .dat -> spec.yml -> OrcaWave .yml
+    OrcaWave .yml -> spec.yml -> AQWA .dat
+"""
+
+from __future__ import annotations
+
+import math
+import re
+import warnings
+from pathlib import Path
+from typing import Any, Optional
+
+import yaml
+
+from digitalmodel.hydrodynamics.diffraction.diffraction_units import (
+    density_t_m3_to_kg_m3,
+    hz_to_rad_per_s,
+    inertia_t_m2_to_kg_m2,
+    period_s_to_rad_per_s,
+    tonnes_to_kg,
+)
+from digitalmodel.hydrodynamics.diffraction.input_schemas import (
+    AnalysisType,
+    DiffractionSpec,
+    EnvironmentSpec,
+    FrequencyInputType,
+    FrequencySpec,
+    MetadataSpec,
+    OutputSpec,
+    SolverOptions,
+    VesselGeometry,
+    VesselInertia,
+    VesselSpec,
+    WaveHeadingSpec,
+)
+
+
+# ---------------------------------------------------------------------------
+# Constants
+# ---------------------------------------------------------------------------
+
+# AQWA uses a large depth to represent infinite / deep water
+_AQWA_DEEP_WATER_THRESHOLD = 5000.0
+
+# Regex for matching floats in AQWA .dat lines
+_FLOAT_PATTERN = re.compile(r"[-+]?\d*\.?\d+(?:[Ee][-+]?\d+)?")
+
+# AQWA deck header pattern
+_DECK_PATTERN = re.compile(r"DECK\s+(\d+)", re.IGNORECASE)
+
+
+# ---------------------------------------------------------------------------
+# AQWAInputParser
+# ---------------------------------------------------------------------------
+
+
+class AQWAInputParser:
+    """Parse AQWA .dat input file into DiffractionSpec.
+
+    This is the reverse of AQWABackend: it reads AQWA deck/card format
+    and extracts the information needed to populate a canonical spec.
+
+    Supports single-body models. Multi-body parsing is deferred.
+
+    Example::
+
+        parser = AQWAInputParser()
+        spec = parser.parse(Path("analysis.dat"))
+        spec.to_yaml("spec.yml")
+    """
+
+    def parse(self, dat_path: Path) -> DiffractionSpec:
+        """Read AQWA .dat and extract sections into canonical spec.
+
+        Parameters
+        ----------
+        dat_path : Path
+            Path to the AQWA .dat input file.
+
+        Returns
+        -------
+        DiffractionSpec
+            Canonical specification parsed from the .dat file.
+        """
+        dat_path = Path(dat_path)
+        decks = self._read_decks(dat_path)
+
+        metadata = self._parse_deck0(decks.get(0, []))
+        environment = self._parse_environment(decks.get(5, []))
+        frequencies = self._parse_frequencies(decks.get(6, []))
+        headings = self._parse_headings(decks.get(6, []))
+        mass = self._parse_mass(decks.get(3, []))
+        inertia_tensor = self._parse_inertia(decks.get(4, []))
+        vessel_name = self._parse_vessel_name(decks.get(0, []), metadata)
+        solver_options = self._parse_solver_options(decks)
+
+        # Build the vessel spec
+        vessel_inertia = VesselInertia(
+            mass=mass,
+            centre_of_gravity=[0.0, 0.0, 0.0],
+            inertia_tensor=inertia_tensor,
+        )
+
+        vessel_geometry = VesselGeometry(
+            mesh_file="mesh.gdf",
+            mesh_format="auto",
+            symmetry="none",
+        )
+
+        vessel = VesselSpec(
+            name=vessel_name,
+            geometry=vessel_geometry,
+            inertia=vessel_inertia,
+        )
+
+        return DiffractionSpec(
+            version="1.0",
+            analysis_type=AnalysisType.DIFFRACTION,
+            vessel=vessel,
+            environment=environment,
+            frequencies=frequencies,
+            wave_headings=headings,
+            solver_options=solver_options,
+            outputs=OutputSpec(),
+            metadata=metadata,
+        )
+
+    # -----------------------------------------------------------------
+    # Deck reading
+    # -----------------------------------------------------------------
+
+    def _read_decks(self, dat_path: Path) -> dict[int, list[str]]:
+        """Split a .dat file into deck-keyed line lists."""
+        decks: dict[int, list[str]] = {}
+        current_deck: Optional[int] = None
+
+        with open(dat_path, "r", encoding="utf-8", errors="ignore") as f:
+            for raw_line in f:
+                line = raw_line.rstrip("\n")
+                deck_match = _DECK_PATTERN.search(line)
+                if deck_match:
+                    current_deck = int(deck_match.group(1))
+                    decks.setdefault(current_deck, [])
+                    continue
+                if current_deck is not None:
+                    decks[current_deck].append(line)
+
+        return decks
+
+    # -----------------------------------------------------------------
+    # Deck 0 — JOB / metadata
+    # -----------------------------------------------------------------
+
+    def _parse_deck0(self, lines: list[str]) -> MetadataSpec:
+        """Extract metadata from deck 0 (JOB, TITLE)."""
+        project = None
+        for line in lines:
+            stripped = line.strip()
+            upper = stripped.upper()
+            if upper.startswith("TITLE"):
+                # Title text comes after the TITLE keyword. Slice the
+                # STRIPPED line: the match above is against the stripped
+                # line, so slicing the raw (possibly indented) line would
+                # cut into the keyword/title text.
+                title_text = stripped[len("TITLE"):].strip()
+                if title_text:
+                    project = title_text
+                break
+
+        return MetadataSpec(project=project)
+
+    def _parse_vessel_name(
+        self, deck0_lines: list[str], metadata: MetadataSpec
+    ) -> str:
+        """Derive a vessel name from available metadata."""
+        if metadata.project:
+            return metadata.project
+        return "AQWA_Vessel"
+
+    def _parse_solver_options(
+        self, decks: dict[int, list[str]]
+    ) -> SolverOptions:
+        """Extract solver options from OPTIONS cards."""
+        remove_irreg = False
+        qtf = False
+
+        for lines in decks.values():
+            for line in lines:
+                upper = line.upper()
+                if "OPTIONS" in upper:
+                    if "LHFR" in upper:
+                        remove_irreg = True
+                    if "MQTF" in upper:
+                        qtf = True
+
+        return SolverOptions(
+            remove_irregular_frequencies=remove_irreg,
+            qtf_calculation=qtf,
+        )
+
+    # -----------------------------------------------------------------
+    # Deck 5 — Environment (GLOB)
+    # -----------------------------------------------------------------
+
+    def _parse_environment(self, lines: list[str]) -> EnvironmentSpec:
+        """Extract water depth, density, and gravity from deck 5 GLOB cards."""
+        water_depth: float | str = 100.0
+        water_density: float = 1025.0
+        gravity: float = 9.80665
+
+        for line in lines:
+            upper = line.upper().strip()
+            if "DPTH" in upper:
+                floats = _FLOAT_PATTERN.findall(line)
+                if floats:
+                    depth_val = float(floats[-1])
+                    if depth_val >= _AQWA_DEEP_WATER_THRESHOLD:
+                        water_depth = "infinite"
+                    else:
+                        water_depth = depth_val
+            elif "DENS" in upper:
+                floats = _FLOAT_PATTERN.findall(line)
+                if floats:
+                    water_density = float(floats[-1])
+            elif "ACCG" in upper:
+                floats = _FLOAT_PATTERN.findall(line)
+                if floats:
+                    gravity = float(floats[-1])
+
+        return EnvironmentSpec(
+            water_depth=water_depth,
+            water_density=water_density,
+            gravity=gravity,
+        )
+
+    # -----------------------------------------------------------------
+    # Deck 6 — Frequencies (HRTZ)
+    # -----------------------------------------------------------------
+
+    def _parse_frequencies(self, lines: list[str]) -> FrequencySpec:
+        """Extract frequencies from HRTZ cards in deck 6.
+
+        AQWA stores frequencies in Hz. The canonical spec uses rad/s.
+        Conversion: omega = 2 * pi * f
+        """
+        freq_hz_list: list[float] = []
+
+        for line in lines:
+            upper = line.upper()
+            if "HRTZ" in upper:
+                floats = _FLOAT_PATTERN.findall(line)
+                if floats:
+                    freq_hz = float(floats[-1])
+                    if freq_hz > 0:
+                        freq_hz_list.append(freq_hz)
+
+        # Convert Hz to rad/s
+        freq_rad_s = [hz_to_rad_per_s(f) for f in freq_hz_list]
+
+        if not freq_rad_s:
+            raise ValueError(
+                "AQWA input requires at least one positive frequency "
+                "on an HRTZ card in deck 6."
+            )
+
+        return FrequencySpec(
+            input_type=FrequencyInputType.FREQUENCY,
+            values=freq_rad_s,
+        )
+
+    # -----------------------------------------------------------------
+    # Deck 6 — Headings (DIRN)
+    # -----------------------------------------------------------------
+
+    def _parse_headings(self, lines: list[str]) -> WaveHeadingSpec:
+        """Extract wave headings from DIRN cards in deck 6.
+
+        AQWA stores headings in degrees and may write the full symmetric
+        expansion (e.g. -180..180 for a half-symmetry model whose spec
+        only contained 0..180).  Detect symmetric expansion and recover
+        the canonical [0, 180] range.
+        """
+        raw_headings: list[float] = []
+
+        for line in lines:
+            upper = line.upper()
+            if "DIRN" in upper:
+                floats = _FLOAT_PATTERN.findall(line)
+                if floats:
+                    heading_deg = float(floats[-1])
+                    raw_headings.append(heading_deg)
+
+        if not raw_headings:
+            return WaveHeadingSpec(values=[0.0])
+
+        # Detect symmetric expansion: if headings span negative values,
+        # AQWA has mirrored the [0, 180] spec to [-180, 180].
+        # Recover the original by keeping only non-negative headings.
+        has_negative = any(h < 0 for h in raw_headings)
+        if has_negative:
+            heading_list = sorted(set(h for h in raw_headings if h >= 0))
+            # AQWABackend._expand_headings_for_aqwa unconditionally injects
+            # -180, 0 and 180 when it mirrors the heading range, and the
+            # DIRN cards carry no record of which headings the original
+            # spec contained.  The recovered set is AQWA-analysis
+            # equivalent (re-expansion yields the identical DIRN set), but
+            # 0 and 180 deg may not have been in the original spec.  Warn
+            # rather than guess: the ambiguity cannot be resolved from the
+            # .dat file alone.
+            if 0.0 in heading_list or 180.0 in heading_list:
+                warnings.warn(
+                    "AQWA DIRN cards contain a symmetric heading expansion; "
+                    "the recovered headings include 0/180 deg which the "
+                    "AQWA writer injects unconditionally and may not have "
+                    "been in the original spec. The recovered set is "
+                    "analysis-equivalent for AQWA but may be a superset of "
+                    "the original spec headings.",
+                    UserWarning,
+                    stacklevel=2,
+                )
+        else:
+            heading_list = sorted(set(raw_headings))
+
+        return WaveHeadingSpec(values=heading_list)
+
+    # -----------------------------------------------------------------
+    # Deck 3 — Mass (MATE)
+    # -----------------------------------------------------------------
+
+    def _parse_mass(self, lines: list[str]) -> float:
+        """Extract vessel mass from deck 3 MATE cards.
+
+        The mass line format is:
+            <struct_id>         <ref_node>  <mass_value>
+        """
+        total_mass = 0.0
+
+        for line in lines:
+            stripped = line.strip()
+            if not stripped or stripped.startswith("*"):
+                continue
+            upper = stripped.upper()
+            if "MATE" in upper or "END" in upper or "DECK" in upper:
+                continue
+            # Parse float values from mass lines
+            floats = _FLOAT_PATTERN.findall(line)
+            if len(floats) >= 1:
+                try:
+                    mass_val = float(floats[-1])
+                    if mass_val > 0:
+                        total_mass += mass_val
+                except ValueError:
+                    continue
+
+        return total_mass if total_mass > 0 else 1.0
+
+    # -----------------------------------------------------------------
+    # Deck 4 — Inertia (GEOM / PMAS)
+    # -----------------------------------------------------------------
+
+    def _parse_inertia(self, lines: list[str]) -> dict[str, float]:
+        """Extract inertia tensor from deck 4 GEOM/PMAS cards.
+
+        The PMAS line format:
+            <struct_id>PMAS     <ref_node> <Ixx> <Ixy> <Ixz> <Iyy> <Iyz> <Izz>
+        """
+        ixx = 0.0
+        ixy = 0.0
+        ixz = 0.0
+        iyy = 0.0
+        iyz = 0.0
+        izz = 0.0
+
+        for line in lines:
+            upper = line.upper()
+            if "PMAS" in upper:
+                floats = _FLOAT_PATTERN.findall(line)
+                # The PMAS line has: struct_id, ref_node, Ixx, Ixy, Ixz, Iyy, Iyz, Izz
+                # We need the last 6 floats
+                if len(floats) >= 6:
+                    vals = [float(v) for v in floats[-6:]]
+                    ixx += vals[0]
+                    ixy += vals[1]
+                    ixz += vals[2]
+                    iyy += vals[3]
+                    iyz += vals[4]
+                    izz += vals[5]
+
+        return {
+            "Ixx": ixx,
+            "Iyy": iyy,
+            "Izz": izz,
+            "Ixy": ixy,
+            "Ixz": ixz,
+            "Iyz": iyz,
+        }
+
+
+# ---------------------------------------------------------------------------
+# OrcaWaveInputParser
+# ---------------------------------------------------------------------------
+
+
+class OrcaWaveInputParser:
+    """Parse OrcaWave .yml project file into DiffractionSpec.
+
+    This is the reverse of OrcaWaveBackend: it reads OrcaWave YAML
+    format and maps the fields to a canonical DiffractionSpec.
+
+    Supports single-body and multi-body models.
+
+    Example::
+
+        parser = OrcaWaveInputParser()
+        spec = parser.parse(Path("project.yml"))
+        spec.to_yaml("spec.yml")
+    """
+
+    def parse(self, yml_path: Path) -> DiffractionSpec:
+        """Read OrcaWave YAML and extract into canonical spec.
+
+        Parameters
+        ----------
+        yml_path : Path
+            Path to the OrcaWave .yml project file.
+
+        Returns
+        -------
+        DiffractionSpec
+            Canonical specification parsed from the .yml file.
+        """
+        yml_path = Path(yml_path)
+
+        with open(yml_path, "r", encoding="utf-8") as f:
+            data = yaml.safe_load(f)
+
+        matrix_bodies = data.get("Bodies", [])
+        has_external = any(
+            key.startswith("BodyExternal") and isinstance(value, list)
+            for body in matrix_bodies for key, value in body.items()
+        )
+        if has_external and data.get("UnitsSystem") != "SI":
+            raise ValueError("External matrix parsing requires explicit OrcaWave SI units")
+        environment = self._parse_environment(data)
+        frequencies = self._parse_frequencies(data)
+        headings = self._parse_headings(data)
+        solver_options = self._parse_solver_options(data)
+
+        bodies = data.get("Bodies", [])
+
+        if len(bodies) == 1:
+            vessel = self._parse_single_body(bodies[0])
+            return DiffractionSpec(
+                version="1.0",
+                analysis_type=AnalysisType.DIFFRACTION,
+                vessel=vessel,
+                environment=environment,
+                frequencies=frequencies,
+                wave_headings=headings,
+                solver_options=solver_options,
+                outputs=OutputSpec(),
+                metadata=MetadataSpec(),
+            )
+        elif len(bodies) > 1:
+            from digitalmodel.hydrodynamics.diffraction.input_schemas import BodySpec
+
+            body_specs = [self._parse_body_spec(b) for b in bodies]
+            return DiffractionSpec(
+                version="1.0",
+                analysis_type=AnalysisType.DIFFRACTION,
+                bodies=body_specs,
+                environment=environment,
+                frequencies=frequencies,
+                wave_headings=headings,
+                solver_options=solver_options,
+                outputs=OutputSpec(),
+                metadata=MetadataSpec(),
+            )
+        else:
+            raise ValueError(
+                f"No bodies found in OrcaWave YAML: {yml_path}"
+            )
+
+    # -----------------------------------------------------------------
+    # Environment
+    # -----------------------------------------------------------------
+
+    def _parse_environment(self, data: dict[str, Any]) -> EnvironmentSpec:
+        """Extract environment from OrcaWave YAML data."""
+        water_depth_raw = data.get("WaterDepth", 100.0)
+
+        if isinstance(water_depth_raw, str) and water_depth_raw.lower() in (
+            "infinity",
+            "inf",
+        ):
+            water_depth: float | str = "infinite"
+        else:
+            water_depth = float(water_depth_raw)
+
+        # OrcaWave SI: density in t/m^3 -> spec uses kg/m^3
+        water_density_raw = data.get("WaterDensity", 1.025)
+        water_density = density_t_m3_to_kg_m3(float(water_density_raw))
+
+        return EnvironmentSpec(
+            water_depth=water_depth,
+            water_density=water_density,
+        )
+
+    # -----------------------------------------------------------------
+    # Frequencies
+    # -----------------------------------------------------------------
+
+    def _parse_frequencies(self, data: dict[str, Any]) -> FrequencySpec:
+        """Extract frequencies from OrcaWave YAML data.
+
+        OrcaWave typically stores periods in seconds. The canonical spec
+        can store either. We convert periods to rad/s frequencies for
+        consistency.
+        """
+        referred_by = data.get("WavesReferredToBy", "period (s)")
+        values = data.get("PeriodOrFrequency", [])
+
+        if not values:
+            raise ValueError("No frequency data found in OrcaWave YAML")
+
+        if "period" in referred_by.lower():
+            # Convert periods (s) to frequencies (rad/s)
+            freq_rad_s = [
+                period_s_to_rad_per_s(float(t)) for t in values if float(t) > 0
+            ]
+            return FrequencySpec(
+                input_type=FrequencyInputType.FREQUENCY,
+                values=freq_rad_s,
+            )
+        else:
+            # Already frequencies
+            return FrequencySpec(
+                input_type=FrequencyInputType.FREQUENCY,
+                values=[float(v) for v in values],
+            )
+
+    # -----------------------------------------------------------------
+    # Headings
+    # -----------------------------------------------------------------
+
+    def _parse_headings(self, data: dict[str, Any]) -> WaveHeadingSpec:
+        """Extract wave headings from OrcaWave YAML data."""
+        headings = data.get("WaveHeading", [0.0])
+        return WaveHeadingSpec(
+            values=[float(h) for h in headings],
+        )
+
+    # -----------------------------------------------------------------
+    # Solver options
+    # -----------------------------------------------------------------
+
+    def _parse_solver_options(self, data: dict[str, Any]) -> SolverOptions:
+        """Extract solver options from OrcaWave YAML data."""
+        # SolveType carries the analysis intent (linear, mean drift,
+        # diagonal/full QTF).  It must be read explicitly: inferring QTF
+        # intent from QuadraticLoadPressureIntegration alone silently drops
+        # control-surface QTF solves (pressure integration = No).
+        solve_type = self._reverse_solve_type(
+            data.get("SolveType", "Potential and source formulations")
+        )
+
+        qtf_pressure = data.get("QuadraticLoadPressureIntegration", False)
+        # YAML 1.1 may parse Yes/No as True/False
+        qtf_enabled = (
+            solve_type in ("diagonal_qtf", "full_qtf")
+            or qtf_pressure is True
+            or (isinstance(qtf_pressure, str) and qtf_pressure.lower() == "yes")
+        )
+
+        remove_irreg = False
+        for body in data.get("Bodies", []) or []:
+            add_interior = body.get("BodyAddInteriorSurfacePanels", False)
+            if add_interior is True or (
+                isinstance(add_interior, str) and add_interior.lower() == "yes"
+            ):
+                remove_irreg = True
+                break
+
+        return SolverOptions(
+            solve_type=solve_type,
+            remove_irregular_frequencies=remove_irreg,
+            qtf_calculation=qtf_enabled,
+        )
+
+    # -----------------------------------------------------------------
+    # Body parsing
+    # -----------------------------------------------------------------
+
+    def _parse_single_body(self, body_data: dict[str, Any]) -> VesselSpec:
+        """Parse a single OrcaWave body dict into a VesselSpec."""
+        name = body_data.get("BodyName", "Unknown")
+        mesh_file = body_data.get("BodyMeshFileName", "mesh.gdf")
+        mesh_format = self._reverse_mesh_format(
+            body_data.get("BodyMeshFormat", "Auto")
+        )
+        mesh_symmetry = self._reverse_symmetry(
+            body_data.get("BodyMeshSymmetry", "None")
+        )
+        length_units = body_data.get("BodyMeshLengthUnits", "m")
+
+        geometry = VesselGeometry(
+            mesh_file=mesh_file,
+            mesh_format=mesh_format,
+            symmetry=mesh_symmetry,
+            length_units=length_units,
+        )
+
+        # Mass / inertia mode
+        inertia_spec = str(body_data.get("BodyInertiaSpecifiedBy", ""))
+        cog = body_data.get("BodyCentreOfMass", [0.0, 0.0, 0.0])
+        inertia_kwargs: dict[str, Any]
+        if "free-floating body" in inertia_spec.lower():
+            radii = self._parse_radii_of_gyration(body_data)
+            cog_z = float(body_data.get("BodyCentreOfMassZRelativeToFreeSurface", 0.0))
+            inertia_kwargs = {
+                "mode": "free_floating",
+                "mass": 1.0,
+                "centre_of_gravity": [0.0, 0.0, cog_z],
+                "radii_of_gyration": radii,
+                "cog_z": cog_z,
+            }
+        else:
+            # OrcaWave SI uses tonnes -> spec uses kg
+            mass_tonnes = float(body_data.get("BodyMass", 0.0))
+            mass_kg = tonnes_to_kg(mass_tonnes)
+            inertia_tensor = self._parse_body_inertia(body_data, mass_tonnes)
+            inertia_kwargs = {
+                "mass": mass_kg,
+                "centre_of_gravity": [float(c) for c in cog],
+                "inertia_tensor": inertia_tensor,
+                "inertia_tensor_origin": self._reverse_tensor_origin(
+                    body_data.get("BodyInertiaTensorOriginType", "Body origin")
+                ),
+            }
+
+        inertia = VesselInertia(**inertia_kwargs)
+
+        # External stiffness
+        external_stiffness = self._parse_6x6_matrix(body_data, "Stiffness")
+        external_damping = self._parse_6x6_matrix(body_data, "Damping")
+        matrix_metadata = {}
+        for kind, matrix in (("stiffness", external_stiffness),
+                             ("damping", external_damping)):
+            if matrix is not None:
+                from .external_matrix_contract import ORCAWAVE_ORIGINS
+
+                origin = body_data.get(f"BodyExternal{kind.title()}MatrixOriginType")
+                reverse_origins = {value: key for key, value in ORCAWAVE_ORIGINS.items()}
+                if origin not in reverse_origins:
+                    raise ValueError(f"Missing or unsupported external {kind} reference point")
+                matrix_metadata[f"external_{kind}_units"] = "SI"
+                matrix_metadata[f"external_{kind}_reference_point"] = reverse_origins[origin]
+
+        # Fixed DOFs
+        fixed_dofs = self._parse_fixed_dofs(body_data)
+
+        return VesselSpec(
+            name=name,
+            geometry=geometry,
+            inertia=inertia,
+            external_stiffness=external_stiffness,
+            external_damping=external_damping,
+            **matrix_metadata,
+            fixed_dofs=fixed_dofs if fixed_dofs else None,
+        )
+
+    def _parse_body_spec(self, body_data: dict[str, Any]) -> Any:
+        """Parse a body into a BodySpec (for multi-body)."""
+        from digitalmodel.hydrodynamics.diffraction.input_schemas import BodySpec
+
+        vessel = self._parse_single_body(body_data)
+        position = body_data.get("BodyMeshPosition", [0.0, 0.0, 0.0])
+        attitude = body_data.get("BodyMeshAttitude", [0.0, 0.0, 0.0])
+        connection = body_data.get("BodyConnectionParent", "Free")
+
+        return BodySpec(
+            vessel=vessel,
+            position=[float(p) for p in position],
+            attitude=[float(a) for a in attitude],
+            connection_parent=connection if connection != "Free" else None,
+        )
+
+    def _parse_radii_of_gyration(self, body_data: dict[str, Any]) -> list[float]:
+        """Extract radii of gyration for free-floating bodies."""
+        radii_key = (
+            "BodyRadiiOfGyrationRx, "
+            "BodyRadiiOfGyrationRy, "
+            "BodyRadiiOfGyrationRz"
+        )
+        radii_data = body_data.get(radii_key)
+        if isinstance(radii_data, list) and len(radii_data) >= 3:
+            row0 = radii_data[0]
+            row1 = radii_data[1]
+            row2 = radii_data[2]
+            return [
+                float(row0[0]) if len(row0) > 0 else 0.0,
+                float(row1[1]) if len(row1) > 1 else 0.0,
+                float(row2[2]) if len(row2) > 2 else 0.0,
+            ]
+        return [1.0, 1.0, 1.0]
+
+    def _parse_body_inertia(
+        self, body_data: dict[str, Any], mass_tonnes: float
+    ) -> dict[str, float]:
+        """Extract inertia tensor from body data.
+
+        OrcaWave stores inertia in t.m^2 for SI. The spec uses kg.m^2.
+        Conversion: multiply by 1000.
+        """
+        inertia_key = (
+            "BodyInertiaTensorRx, "
+            "BodyInertiaTensorRy, "
+            "BodyInertiaTensorRz"
+        )
+
+        tensor_data = body_data.get(inertia_key)
+
+        if tensor_data is not None and isinstance(tensor_data, list):
+            # 3x3 matrix
+            if len(tensor_data) >= 3:
+                row0 = tensor_data[0]
+                row1 = tensor_data[1]
+                row2 = tensor_data[2]
+
+                # Convert t.m^2 to kg.m^2
+                ixx = inertia_t_m2_to_kg_m2(float(row0[0])) if len(row0) > 0 else 0.0
+                ixy = inertia_t_m2_to_kg_m2(float(row0[1])) if len(row0) > 1 else 0.0
+                ixz = inertia_t_m2_to_kg_m2(float(row0[2])) if len(row0) > 2 else 0.0
+                iyy = inertia_t_m2_to_kg_m2(float(row1[1])) if len(row1) > 1 else 0.0
+                iyz = inertia_t_m2_to_kg_m2(float(row1[2])) if len(row1) > 2 else 0.0
+                izz = inertia_t_m2_to_kg_m2(float(row2[2])) if len(row2) > 2 else 0.0
+
+                return {
+                    "Ixx": ixx,
+                    "Iyy": iyy,
+                    "Izz": izz,
+                    "Ixy": ixy,
+                    "Ixz": ixz,
+                    "Iyz": iyz,
+                }
+
+        # Fallback: use mass with unit radii of gyration
+        mass_kg = tonnes_to_kg(mass_tonnes)
+        return {
+            "Ixx": mass_kg,
+            "Iyy": mass_kg,
+            "Izz": mass_kg,
+            "Ixy": 0.0,
+            "Ixz": 0.0,
+            "Iyz": 0.0,
+        }
+
+    def _parse_6x6_matrix(
+        self, body_data: dict[str, Any], matrix_type: str
+    ) -> Optional[list[list[float]]]:
+        """Extract a 6x6 matrix (stiffness or damping) from body data."""
+        # Search for the composite key
+        for key in body_data:
+            if key.startswith(f"BodyExternal{matrix_type}Matrix") and isinstance(body_data[key], list):
+                matrix = body_data[key]
+                if len(matrix) == 6 and all(
+                    isinstance(row, list) and len(row) == 6
+                    for row in matrix
+                ):
+                    # Check if it's all zeros
+                    all_zero = all(
+                        all(v == 0 for v in row) for row in matrix
+                    )
+                    if all_zero:
+                        return None
+                    from .external_matrix_contract import ORCAWAVE_PER_CANONICAL
+
+                    return [[float(v) / ORCAWAVE_PER_CANONICAL for v in row] for row in matrix]
+                raise ValueError(f"External {matrix_type} matrix must be 6x6")
+        return None
+
+    def _parse_fixed_dofs(
+        self, body_data: dict[str, Any]
+    ) -> list[str]:
+        """Extract fixed DOFs from body data."""
+        dof_map = {
+            "BodyFixedDOFx": "surge",
+            "BodyFixedDOFy": "sway",
+            "BodyFixedDOFz": "heave",
+            "BodyFixedDOFRx": "roll",
+            "BodyFixedDOFRy": "pitch",
+            "BodyFixedDOFRz": "yaw",
+        }
+        fixed = []
+        for key, dof_name in dof_map.items():
+            val = body_data.get(key, False)
+            # YAML 1.1 maps Yes/No to True/False
+            if val is True or (isinstance(val, str) and val.lower() == "yes"):
+                fixed.append(dof_name)
+        return fixed
+
+    # -----------------------------------------------------------------
+    # Reverse mapping helpers
+    # -----------------------------------------------------------------
+
+    @staticmethod
+    def _reverse_mesh_format(orcawave_fmt: str) -> str:
+        """Map OrcaWave mesh format string back to spec enum value."""
+        fmt_map = {
+            "wamit gdf": "gdf",
+            "aqwa dat": "aqwa_dat",
+            "gmsh msh": "msh",
+            "wavefront obj": "obj",
+            "auto": "auto",
+        }
+        try:
+            return fmt_map[orcawave_fmt.lower()]
+        except KeyError as exc:
+            raise ValueError(f"Unsupported OrcaWave mesh format {orcawave_fmt!r}") from exc
+
+    @staticmethod
+    def _reverse_tensor_origin(orcawave_origin: str) -> str:
+        """Map OrcaWave BodyInertiaTensorOriginType back to spec value.
+
+        Exact reverse of orcawave_backend._TENSOR_ORIGIN_MAP.
+        """
+        origin_map = {
+            "body origin": "body_origin",
+            "centre of mass": "centre_of_mass",
+        }
+        return origin_map.get(str(orcawave_origin).lower(), "body_origin")
+
+    @staticmethod
+    def _reverse_solve_type(orcawave_solve_type: str) -> str:
+        """Map OrcaWave SolveType string back to spec enum value.
+
+        Exact reverse of orcawave_backend._SOLVE_TYPE_MAP.
+        """
+        solve_map = {
+            "potential formulation only": "potential_only",
+            "potential and source formulations": "potential_and_source",
+            "potential and source + mean drift (momentum conservation)": (
+                "mean_drift"
+            ),
+            "potential and source + diagonal qtf": "diagonal_qtf",
+            "full qtf calculation": "full_qtf",
+        }
+        return solve_map.get(
+            str(orcawave_solve_type).lower(), "potential_and_source"
+        )
+
+    @staticmethod
+    def _reverse_symmetry(orcawave_sym: str) -> str:
+        """Refuse partial-mesh expansion that cannot round-trip as a full mesh."""
+        if str(orcawave_sym).lower() != "none":
+            raise ValueError(
+                f"Unsupported OrcaWave mesh symmetry {orcawave_sym!r}; "
+                "provide a full mesh with BodyMeshSymmetry None"
+            )
+        return "none"
+
+
+# ---------------------------------------------------------------------------
+# Public API
+# ---------------------------------------------------------------------------
+
+__all__ = [
+    "AQWAInputParser",
+    "OrcaWaveInputParser",
+]

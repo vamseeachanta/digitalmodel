@@ -1,0 +1,76 @@
+{
+  "issue": 2121,
+  "review_type": "Codex factual consistency check; not substitute for required Claude plan review",
+  "plan_sha256": "00d859a66d01304eed40d7af6d288436415aa656d0e6d33542fd21e1f228170f",
+  "verdict": "MINOR",
+  "implementation_authorization": "No implementation or solve performed; required independent plan review remains pending",
+  "canonical_matrix": {
+    "owner": "digitalmodel",
+    "path": "examples/ansys/analysis-evidence/manifest.json",
+    "schema_version": "ansys-evidence-1",
+    "dataset_id": "ansys-retained-evidence",
+    "revision": "r1",
+    "raw_sha256": "e6a2b9e78d5ffab5ee70b3162934f4b75a35b97750a0a324bba71404042aa247",
+    "package_hash": "ff1e1525d47463581fc95f50681b01b73d02f93947e32a6db788a6fabfce24e5",
+    "cases": 8,
+    "responses": 94,
+    "native_cases": 6,
+    "qualified_responses": 0,
+    "findings": 13,
+    "verification_reference_present": false
+  },
+  "target": {
+    "historical_cases": 8,
+    "historical_responses": 94,
+    "cylinder_cases": 4,
+    "station_responses_per_case": 63,
+    "support_responses_per_case": 1,
+    "total_cases": 12,
+    "total_responses": 350
+  },
+  "findings": [
+    {
+      "id": "M1",
+      "severity": "MINOR",
+      "claim": "Historical row preservation needs a normalization step before existing build_package API.",
+      "evidence": "build_package hashes each supplied case including any existing row_hash. Empirical existing-row digest differs when old row_hash is included; removing it reproduces original row_hash exactly.",
+      "required_clarification": "Specify removal of derived case/package hash fields before rebuilding, then assert all eight resulting historical case records and row hashes equal r1."
+    },
+    {
+      "id": "M2",
+      "severity": "MINOR",
+      "claim": "Unattempted source kind and evidence references should be prescribed alongside the proposed execution/calculation status mapping.",
+      "evidence": "validate_case requires source_kind and nonempty evidence; every response needs an evidence ID; build_package resolves every supplied reference even when required=false.",
+      "required_clarification": "Use source_kind=unverified for pending native observations, evidence tied to retained deck/case manifest and criteria, no invented or unreachable native-output references. Retain calculated-null/not_evaluated distinction and explicit unattempted reason. Freeze unique response names for all station/quantity pairs and RFY."
+    },
+    {
+      "id": "M3",
+      "severity": "MINOR",
+      "claim": "Finding applicability language must retain existing fail-closed lookup semantics.",
+      "evidence": "analysis_lookup._check_provenance unions all package findings with response findings and only accepts authority disposition=resolved plus justification and live evidence. It does not recognize not_applicable as an alternative gate state.",
+      "required_clarification": "Document justified applicability disposition through the existing authority record; preserve historical13 findings and do not omit them or introduce an unsupported bypass status."
+    }
+  ],
+  "supported_conclusions": [
+    "Count arithmetic is correct:94+4*(9*7+1)=350.",
+    "Proposed unknown/not_evaluated/null literals are supported by current validators.",
+    "Native completion, numerical outcome and qualified lookup remain explicitly separate in plan.",
+    "Existing dataset owner/id and immutable publication API are reused.",
+    "No additional database or schema replacement is needed for initial diagnostic revision."
+  ],
+  "source_hashes": {
+    "docs/plans/2026-09-14-issue-2121-result-matrix-integration.html": "00d859a66d01304eed40d7af6d288436415aa656d0e6d33542fd21e1f228170f",
+    "examples/ansys/analysis-evidence/manifest.json": "e6a2b9e78d5ffab5ee70b3162934f4b75a35b97750a0a324bba71404042aa247",
+    "examples/ansys/analysis-evidence/intake.json": "3e641f8e3e82db665f42d7f793eeeb769cc712935f6c47f0c713818a5bb0e0d8",
+    "examples/ansys/analysis-evidence/responses.csv": "39cf726b6bc177c9256a4cb12d2e3946d26fa25399ea6346825c4215ecf6adf6",
+    "src/digitalmodel/ansys/analysis_evidence.py": "ee4cd981296f306f5ca86087287ead8a36878295ff7a3f018e795580d84f40a7",
+    "src/digitalmodel/ansys/analysis_records.py": "06dce5eb10d244c48df0fa1075bf48010170a668b81cd45694eb43fe3d349511",
+    "src/digitalmodel/ansys/analysis_lookup.py": "c1d29198f818e3b1063f3194dfe54a9c2bea023a84ffd5c2088b7eb245ea4e92"
+  },
+  "cleanup": {
+    "classification": "EXPECTED",
+    "private_receipt_only_write": true,
+    "source_edits": false,
+    "native_or_provider_invocation": false
+  }
+}

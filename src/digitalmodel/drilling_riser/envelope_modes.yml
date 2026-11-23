@@ -1,0 +1,29 @@
+# Operating-mode -> active envelope-limit set (#1281a, epic #1279 child C).
+#
+# This file selects WHICH limits gate each operating mode. The criteria VALUES
+# are NOT here — they resolve through cited getters (riser_database.getters:
+# flex-joint angle -> API RP 16Q, von Mises design factor -> API STD 2RD).
+# The physical response is standard-independent. criteria_sets chooses the
+# allowable thresholds at query time; AMJIG values resolve wiki-side only.
+#
+# Limit names must match the keys produced by
+# drilling_riser.envelope.compute_operating_envelope.
+criteria_sets:
+  16q:
+    description: Plain API RP 16Q / API STD 2RD criteria.
+  16q-amjig:
+    description: API RP 16Q augmented with AMJIG per-category ceilings.
+
+modes:
+  drilling:
+    # connected + drilling: the full operating limit set applies
+    active_limits: [flexjoint_angle, von_mises, stroke, moonpool, wh_moment]
+  connected:
+    # connected non-drilling / extreme: same physical limits, criteria escalate
+    # (per-category ceilings are #1281b)
+    active_limits: [flexjoint_angle, von_mises, stroke, moonpool, wh_moment]
+  hang_off:
+    # riser disconnected from the well and hung off: flex-joint angle, moonpool
+    # clearance and the wellhead-moment (well disconnected) are not the governing
+    # gates; tension/stroke dominate
+    active_limits: [von_mises, stroke]

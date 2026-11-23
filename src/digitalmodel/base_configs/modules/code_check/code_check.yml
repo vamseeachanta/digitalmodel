@@ -1,0 +1,22 @@
+basename: code_check
+
+code_check:
+  code: API_RP_2RD
+  inputs:
+    outer_diameter: 0.2731
+    wall_thickness: 0.0254
+    smys: 448000000.0
+    smts: 531000000.0
+    design_factor: 0.67
+    temperature_derating: 1.0
+    arc_lengths: [0.0]
+    effective_tension_kN: [1000.0]
+    bending_moment_kNm: [150.0]
+    pressure_diff_MPa: [0.0]
+  output_dir: results
+
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: true

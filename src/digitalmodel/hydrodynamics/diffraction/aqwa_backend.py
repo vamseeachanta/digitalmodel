@@ -1,0 +1,937 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
+"""AQWA input backend: convert DiffractionSpec to AQWA .dat files (WRK-058).
+
+Supports two output modes:
+- Single: all decks concatenated into one .dat file
+- Modular: each deck written to a separate file in an output directory
+
+The backend maps the solver-agnostic DiffractionSpec fields to AQWA-specific
+deck/card format, using fixed-column FORTRAN-style formatting consistent with
+the conventions in aqwa_dat_files.py.
+
+Mesh data (Deck 1 node coordinates, Deck 2 element connectivity) is parsed
+from GDF mesh files and emitted in AQWA's fixed-column format.
+"""
+
+from __future__ import annotations
+
+from digitalmodel.hydrodynamics.diffraction.external_matrix_contract import (
+    native_matrix,
+    validate_aqwa_matrix_axes,
+    write_matrix_provenance,
+)
+
+import math
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Optional
+
+import numpy as np
+from scipy.spatial import cKDTree
+
+from digitalmodel.hydrodynamics.diffraction.diffraction_units import rad_per_s_to_hz
+from digitalmodel.hydrodynamics.diffraction.input_schemas import (
+    DiffractionSpec,
+    VesselGeometry,
+    VesselInertia,
+)
+
+from digitalmodel.hydrodynamics.diffraction.mesh_preflight import (
+    buoyancy_preflight, expand_sector, read_gdf_mesh, validate_symmetry,
+)
+
+
+# ---------------------------------------------------------------------------
+# Mesh data container
+# ---------------------------------------------------------------------------
+
+
+@dataclass
+class ParsedMesh:
+    """Container for parsed mesh data from GDF files."""
+
+    vertices: np.ndarray  # (N, 3) array of node coordinates
+    panels: np.ndarray  # (M, 4) array of panel vertex indices
+    name: str = ""
+    symmetry_flags: tuple[int, int] = (0, 0)  # WAMIT v7.4, section 6.1.
+
+    @property
+    def n_vertices(self) -> int:
+        """Return the mesh node count."""
+        return len(self.vertices)
+
+    @property
+    def n_panels(self) -> int:
+        """Return the mesh panel count."""
+        return len(self.panels)
+
+
+# ---------------------------------------------------------------------------
+# Constants
+# ---------------------------------------------------------------------------
+
+# AQWA uses a large depth to represent "infinite" / deep water
+_DEEP_WATER_DEPTH = 10000.0
+
+# Two parts per million of the longitudinal mesh extent allow submillimetre
+# centreline roundoff on long hulls: 180 m * 2e-6 = 0.00036 m. The floor retains
+# the previous 10 nm resolution for degenerate longitudinal extents. This is
+# a mesh-preparation tolerance, not a solver accuracy claim.
+_XZ_RELATIVE_TOLERANCE = 2e-6
+_XZ_MIN_TOLERANCE = 1e-8
+
+# Column-formatting helpers (mirrors aqwa_dat_files.py white_space convention)
+_WS = " "
+
+
+# ---------------------------------------------------------------------------
+# Formatting helpers
+# ---------------------------------------------------------------------------
+
+
+def _deck_banner(deck_num: int) -> list[str]:
+    """Return the 3-line banner for a deck separator."""
+    stars = "*" * 80
+    label = f" DECK{deck_num:>3d} "
+    pad_total = 80 - len(label)
+    left = pad_total // 2
+    right = pad_total - left
+    mid = "*" * left + label + "*" * right
+    return [stars, mid, stars]
+
+
+def _fmt_coord(value: float) -> str:
+    """Format a coordinate value in 10-char AQWA field.
+
+    Always includes a decimal point (required by AQWA v252+).
+    Matches Workbench output format: e.g. ``149.10987``, ``-18.016252``, ``0.``
+
+    The value is written at the highest precision that fits nine characters, so the field keeps a
+    leading blank as a separator. Five significant figures, used before, moved hull nodes by up to
+    5 mm (182.3698 written as 182.37) and overflowed the field for small negative values such as
+    -0.00032717, which AQWA rejects as an embedded space in the COOR card.
+    """
+    value = float(value)
+    if not math.isfinite(value):
+        raise ValueError(f"coordinate must be finite, got {value!r}")
+    if value == 0.0:
+        return f"{'0.':>10s}"
+    candidates = []
+    for d in range(8, -1, -1):
+        s = f"{value:.{d}f}"
+        if "." not in s:
+            s += "."
+        if s.rstrip("0").endswith("."):
+            s = s.rstrip("0") if s.rstrip("0") != "-." else s
+        candidates.append(s)
+    for p in range(6, -1, -1):
+        m, ex = f"{value:.{p}e}".split("e")
+        if "." not in m:
+            m += "."
+        candidates.append(f"{m}e{int(ex)}")
+    fitting = [s for s in candidates if len(s) <= 9]
+    best = min(fitting, key=lambda s: (abs(float(s) - value), len(s)))
+    return f"{best:>10s}"
+
+
+def _fmt_float(value: float, width: int = 10) -> str:
+    """Format a float for AQWA fixed-width fields.
+
+    Uses scientific notation for large/small values, otherwise fixed-point.
+    """
+    abs_val = abs(value)
+    if abs_val == 0.0:
+        return f"{0.0:>{width}.1f}"
+    if abs_val >= 1e7 or abs_val < 1e-2:
+        return f"{value:>{width}.3e}"
+    if abs_val >= 1000:
+        return f"{value:>{width}.0f}"
+    return f"{value:>{width}g}"
+
+
+# ---------------------------------------------------------------------------
+# AQWABackend
+# ---------------------------------------------------------------------------
+
+
+class AQWABackend:
+    """Generate AQWA .dat input files from a DiffractionSpec.
+
+    Public API
+    ----------
+    generate_single(spec, output_dir, spec_dir=None) -> Path
+        Write all decks into a single .dat file.
+    generate_modular(spec, output_dir, spec_dir=None) -> Path
+        Write each deck into a separate file inside *output_dir*.
+
+    The ``build_deck*`` methods are also public so individual card
+    blocks can be inspected or tested in isolation.
+
+    Parameters
+    ----------
+    spec_dir : Path, optional
+        Directory containing the spec YAML file. Used to resolve relative
+        mesh file paths. If not provided, mesh paths must be absolute.
+    """
+
+    def __init__(self) -> None:
+        """Initialize the mesh cache and relative-path context."""
+        self._spec_dir: Optional[Path] = None
+        self._mesh_cache: dict[str, ParsedMesh] = {}
+        self.preflight_reports: list[dict] = []
+
+    # -----------------------------------------------------------------
+    # Public entry points
+    # -----------------------------------------------------------------
+
+    def generate_single(
+        self,
+        spec: DiffractionSpec,
+        output_dir: Path,
+        spec_dir: Optional[Path] = None,
+    ) -> Path:
+        """Generate a single .dat file containing all decks.
+
+        Parameters
+        ----------
+        spec : DiffractionSpec
+            Canonical analysis specification.
+        output_dir : Path
+            Directory where the .dat file will be written.
+        spec_dir : Path, optional
+            Directory containing the spec YAML file, for resolving
+            relative mesh paths.
+
+        Returns
+        -------
+        Path
+            Path to the generated .dat file.
+        """
+        output_dir = Path(output_dir)
+        output_dir.mkdir(parents=True, exist_ok=True)
+
+        self._spec_dir = Path(spec_dir) if spec_dir is not None else spec._source_dir
+        self._mesh_cache.clear()
+        self.preflight_reports = buoyancy_preflight(spec, self._spec_dir)
+
+        all_cards = self._assemble_all_decks(spec)
+        file_name = self._make_filename(spec)
+        output_path = output_dir / file_name
+
+        # AQWA on Windows expects CRLF line endings
+        # Use newline='\n' to preserve the explicit native CRLF content.
+        content = "\r\n".join(all_cards) + "\r\n"
+        with open(output_path, "w", encoding="utf-8", newline="\n") as f:
+            f.write(content)
+        write_matrix_provenance(spec, output_dir, "aqwa")
+        return output_path
+
+    def generate_modular(
+        self,
+        spec: DiffractionSpec,
+        output_dir: Path,
+        spec_dir: Optional[Path] = None,
+    ) -> Path:
+        """Generate modular deck files, one per deck.
+
+        Parameters
+        ----------
+        spec : DiffractionSpec
+            Canonical analysis specification.
+        output_dir : Path
+            Directory where deck files will be written.
+        spec_dir : Path, optional
+            Directory containing the spec YAML file, for resolving
+            relative mesh paths.
+
+        Returns
+        -------
+        Path
+            Path to the output directory containing the deck files.
+        """
+        output_dir = Path(output_dir)
+        output_dir.mkdir(parents=True, exist_ok=True)
+
+        self._spec_dir = Path(spec_dir) if spec_dir is not None else spec._source_dir
+        self._mesh_cache.clear()
+        self.preflight_reports = buoyancy_preflight(spec, self._spec_dir)
+
+        deck_builders = self._ordered_deck_builders(spec)
+        header = self._workbench_header()
+        for idx, (deck_num, cards) in enumerate(deck_builders):
+            file_name = f"deck_{idx:02d}_{deck_num:02d}.dat"
+            file_path = output_dir / file_name
+            # Prepend the Workbench-compatible file header to the first
+            # deck file so concatenating modular outputs reproduces the
+            # single-file output byte-for-byte (after whitespace strip).
+            file_cards = header + cards if idx == 0 else cards
+            file_path.write_text("\r\n".join(file_cards) + "\r\n", encoding="utf-8", newline="\n")
+
+        write_matrix_provenance(spec, output_dir, "aqwa")
+        return output_dir
+
+    # -----------------------------------------------------------------
+    # Internal assembly
+    # -----------------------------------------------------------------
+
+    def _assemble_all_decks(self, spec: DiffractionSpec) -> list[str]:
+        """Concatenate all deck card blocks in order."""
+        all_cards: list[str] = self._workbench_header()
+        for _deck_num, cards in self._ordered_deck_builders(spec):
+            all_cards.extend(cards)
+        return all_cards
+
+    @staticmethod
+    def _workbench_header() -> list[str]:
+        """Workbench-compatible file header (required by AQWA v252+)."""
+        ruler1 = "*********1*********2*********3*********4*********5*********6*********7*********8"
+        ruler2 = "*2345678901234567890123456789012345678901234567890123456789012345678901234567890"
+        return [
+            ruler1,
+            ruler2,
+            "*" * 80,
+            "***************** File generated by digitalmodel AQWA backend *****************",
+            "*" * 80,
+        ]
+
+    def _ordered_deck_builders(
+        self, spec: DiffractionSpec
+    ) -> list[tuple[int, list[str]]]:
+        """Return (deck_number, cards) pairs in canonical order."""
+        decks = [
+            (0, self.build_deck0(spec)),
+            (1, self.build_deck1(spec)),
+            (2, self.build_deck2(spec)),
+            (3, self.build_deck3(spec)),
+            (4, self.build_deck4(spec)),
+            (5, self.build_deck5(spec)),
+            (6, self.build_deck6(spec)),
+            (7, self.build_deck7(spec)),
+            (8, self.build_deck8(spec)),
+        ]
+        # AQWA LINE reads decks 0-20; fill remaining with NONE
+        for d in range(9, 21):
+            decks.append((d, self._build_none_deck(d)))
+        return decks
+
+    def _make_filename(self, spec: DiffractionSpec) -> str:
+        """Derive a .dat filename from the spec metadata."""
+        project = spec.metadata.project or "aqwa_analysis"
+        safe_name = project.replace(" ", "_").replace("/", "_").replace("\\", "_")
+        return f"{safe_name}.dat"
+
+    def _resolve_mesh_path(self, mesh_file: str) -> Path:
+        """Resolve a mesh file path, relative to spec_dir if needed."""
+        mesh_path = Path(mesh_file)
+        if mesh_path.is_absolute():
+            return mesh_path
+        if self._spec_dir is not None:
+            return (self._spec_dir / mesh_file).resolve()
+        return mesh_path
+
+    def _load_mesh(self, mesh_file: str) -> Optional[ParsedMesh]:
+        """Load and parse a GDF mesh file.
+
+        Returns None if the mesh file cannot be loaded.
+        Results are cached by mesh_file path.
+        """
+        if mesh_file in self._mesh_cache:
+            return self._mesh_cache[mesh_file]
+
+        mesh_path = self._resolve_mesh_path(mesh_file)
+        if not mesh_path.exists():
+            return None
+        # This backend currently parses WAMIT GDF only. Other declared mesh
+        # formats retain the existing warning-only fallback until a dedicated
+        # parser is implemented; malformed existing GDF files fail closed.
+        if mesh_path.suffix.lower() != ".gdf":
+            return None
+
+        mesh = self._parse_gdf(mesh_path)
+        self._mesh_cache[mesh_file] = mesh
+        return mesh
+
+    def _load_body_mesh(self, geometry: VesselGeometry) -> Optional[ParsedMesh]:
+        """Validate the declared sector and prepare AQWA body panels.
+
+        Xz cuts emit the nonnegative-y half with SYMX. Other declared cuts
+        are reflected to a full body before emission.
+
+        Classification, mirror matching and centreline snapping use the same
+        tolerance: max(1e-8 m, 2e-6 times the longitudinal mesh extent).
+        The cached source coordinates remain unchanged.
+        """
+        mesh = self._load_mesh(geometry.mesh_file)
+        if mesh is None and (
+            geometry.mesh_format == "gdf"
+            or Path(geometry.mesh_file).suffix.lower() == ".gdf"
+            or geometry.symmetry != "none"
+        ):
+            mesh_path = self._resolve_mesh_path(geometry.mesh_file)
+            if (
+                geometry.mesh_format == "gdf"
+                and mesh_path.is_file()
+                and mesh_path.suffix.lower() != ".gdf"
+            ):
+                found_suffix = repr(mesh_path.suffix) if mesh_path.suffix else "no suffix"
+                raise ValueError(
+                    "AQWA requires a '.gdf' suffix for declared GDF mesh "
+                    f"{mesh_path.name!r}; found {found_suffix}"
+                )
+            raise ValueError(
+                f"GDF symmetry for spec symmetry {geometry.symmetry!r} "
+                "requires a loaded and verified GDF mesh"
+            )
+        if mesh is not None:
+            mesh = ParsedMesh(
+                mesh.vertices.copy(), mesh.panels, mesh.name, mesh.symmetry_flags
+            )
+            validate_symmetry(
+                mesh.symmetry_flags, geometry.symmetry, mesh.vertices, mesh.panels
+            )
+            expanded = expand_sector(mesh)
+            mesh = ParsedMesh(expanded.vertices, expanded.panels, name=mesh.name)
+        if geometry.symmetry != "xz":
+            return mesh
+        if mesh is None:
+            raise ValueError("xz symmetry requires a loaded and verified full-body GDF mesh")
+
+        tolerance = max(
+            _XZ_MIN_TOLERANCE,
+            _XZ_RELATIVE_TOLERANCE * float(np.ptp(mesh.vertices[:, 0])),
+        )
+        panel_y = mesh.vertices[mesh.panels, 1]
+        below = np.any(panel_y < -tolerance, axis=1)
+        above = np.any(panel_y > tolerance, axis=1)
+        plane = np.flatnonzero(~below & ~above)
+        if len(plane):
+            numbers = ", ".join(str(int(index) + 1) for index in plane)
+            raise ValueError(f"xz symmetry forbids panels in the y = 0 plane: {numbers}")
+        # A full body must be split at y = 0 before halving; no clipping.
+        straddling = np.flatnonzero(below & above)
+        if len(straddling):
+            panel_numbers = ", ".join(str(int(index) + 1) for index in straddling)
+            raise ValueError(
+                "xz symmetry requires panels split at y = 0; "
+                f"straddling panels: {panel_numbers}"
+            )
+        self._verify_xz_mirrors(mesh, tolerance)
+        panels = mesh.panels[~below]
+        if not len(panels):
+            raise ValueError("xz symmetry mesh has no nonnegative-y panels")
+
+        used_nodes, remapped = np.unique(panels, return_inverse=True)
+        vertices = mesh.vertices[used_nodes].copy()
+        on_plane = np.abs(vertices[:, 1]) <= tolerance
+        vertices[on_plane, 1] = 0.0
+        return ParsedMesh(
+            vertices=vertices,
+            panels=remapped.reshape(panels.shape),
+            name=mesh.name,
+        )
+
+    @staticmethod
+    def _verify_xz_mirrors(mesh: ParsedMesh, tolerance: float) -> None:
+        """Reject full-body panels without a reflected vertex-set counterpart."""
+        vertices = mesh.vertices.copy()
+        # Snap only the comparison copy, using the classification tolerance.
+        vertices[np.abs(vertices[:, 1]) <= tolerance, 1] = 0.0
+        # GDF triangles repeat a corner; that corner may differ on the mirror.
+        points = [np.unique(vertices[panel], axis=0) for panel in mesh.panels]
+        centres = np.array([panel.mean(axis=0) for panel in points])
+        tree = cKDTree(centres)
+        unmatched = []
+        for index, panel in enumerate(points):
+            mirror = panel * [1, -1, 1]
+            candidates = tree.query_ball_point(mirror.mean(axis=0), tolerance * math.sqrt(3))
+            if not any(
+                candidate != index and AQWABackend._same_vertex_set(
+                    mirror, points[candidate], tolerance
+                ) for candidate in candidates
+            ):
+                unmatched.append(index + 1)
+        if unmatched:
+            numbers = ", ".join(map(str, unmatched))
+            raise ValueError(f"xz symmetry requires a full mirrored body; unmatched panels: {numbers}")
+
+    @staticmethod
+    def _same_vertex_set(first: np.ndarray, second: np.ndarray, tolerance: float) -> bool:
+        """Match each distinct vertex to a counterpart within the coordinate tolerance."""
+        if len(first) != len(second):
+            return False
+        close = np.all(np.abs(first[:, None, :] - second[None, :, :]) <= tolerance, axis=2)
+        return bool(np.all(np.any(close, axis=0)) and np.all(np.any(close, axis=1)))
+
+    def _parse_gdf(self, file_path: Path) -> ParsedMesh:
+        """Parse a WAMIT GDF mesh file.
+
+        GDF format:
+        - Line 1: Header comment (title)
+        - Line 2: ULEN GRAV (unit length and gravity)
+        - Line 3: ISX ISY (symmetry flags)
+        - Line 4: NPAN (number of panels)
+        - Lines 5+: 4 vertices per panel (X Y Z for each vertex)
+        """
+        mesh = read_gdf_mesh(file_path)
+        return ParsedMesh(mesh.vertices, mesh.panels, mesh.name, mesh.symmetry_flags)
+
+    # -----------------------------------------------------------------
+    # Deck 0 — JOB control
+    # -----------------------------------------------------------------
+
+    def build_deck0(self, spec: DiffractionSpec) -> list[str]:
+        """Build Deck 0: JOB control cards."""
+        cards: list[str] = []
+        cards.extend(_deck_banner(0))
+
+        # JOB card
+        cards.append("JOB AQWA  LINE")
+
+        # TITLE card
+        title = spec.metadata.project or spec.metadata.description or ""
+        cards.append(f"TITLE               {title}")
+
+        # NUM_CORES (required by AQWA v252+)
+        cards.append("NUM_CORES         4")
+
+        # OPTIONS GOON — continue past non-fatal mesh errors
+        cards.append("OPTIONS GOON ")
+
+        # AHD1 has to precede the OPTIONS card carrying END, which closes the
+        # options list, and must not come between REST and RESTART: AQWA
+        # requires the RESTART card to follow the REST option directly and
+        # otherwise stops in the preliminary data check.
+        cards.extend(self._build_ah1_option(spec))
+
+        # Feature options, ending the list
+        options = self._build_options(spec)
+        cards.append(f"OPTIONS {options}")
+
+        # RESTART, immediately after the REST option
+        cards.append("RESTART  1  5")
+
+        return cards
+
+    def _build_options(self, spec: DiffractionSpec) -> str:
+        """Map solver_options to AQWA OPTIONS string."""
+        opts: list[str] = []
+        if spec.solver_options.remove_irregular_frequencies:
+            opts.append("LHFR")
+        if spec.solver_options.qtf_calculation:
+            opts.append("MQTF")
+        opts.append("REST")
+        opts.append("END")
+        return " ".join(opts)
+
+    def _build_ah1_option(self, spec: DiffractionSpec) -> list[str]:
+        """Return OPTIONS AHD1 card when output_ah1 is enabled."""
+        if spec.solver_options.output_ah1:
+            return ["OPTIONS AHD1"]
+        return []
+
+    # -----------------------------------------------------------------
+    # Deck 1 — Node coordinates
+    # -----------------------------------------------------------------
+
+    def build_deck1(self, spec: DiffractionSpec) -> list[str]:
+        """Build Deck 1: node coordinate cards.
+
+        Parses mesh files referenced in the spec and emits node
+        coordinates in AQWA's fixed-column format.
+        """
+        cards: list[str] = []
+        cards.extend(_deck_banner(1))
+        cards.append(f"{_WS:>10s}COOR")
+        cards.append(f"{_WS:>6s}NOD5")
+
+        bodies = spec.get_bodies()
+        for struct_idx, body in enumerate(bodies, start=1):
+            mesh_file = body.vessel.geometry.mesh_file
+            mesh = self._load_body_mesh(body.vessel.geometry)
+
+            cards.append(f"{_WS:>6s}STRC{_WS:>4s}{struct_idx:>5d}")
+
+            if mesh is not None:
+                # Emit node coordinates in AQWA Workbench format
+                # Format: I6 struct, I5 node, 9-space pad, 3×F10 coordinates
+                # Coordinates must always include decimal point (AQWA v252+)
+                for node_idx, vertex in enumerate(mesh.vertices, start=1):
+                    cards.append(
+                        f"{struct_idx:>6d}{node_idx:>5d}         "
+                        f"{_fmt_coord(vertex[0])}"
+                        f"{_fmt_coord(vertex[1])}"
+                        f"{_fmt_coord(vertex[2])}"
+                    )
+
+                # Add CoG node (element 98000) for mass reference
+                cog = body.vessel.inertia.centre_of_gravity
+                cards.append(
+                    f"{struct_idx:>6d}{98000:>5d}         "
+                    f"{_fmt_coord(cog[0])}"
+                    f"{_fmt_coord(cog[1])}"
+                    f"{_fmt_coord(cog[2])}"
+                )
+            else:
+                # Fallback: emit warning comment if mesh cannot be loaded
+                cards.append(f"* WARNING: Mesh file '{mesh_file}' could not be loaded")
+
+        cards.append(" END")
+        return cards
+
+    # -----------------------------------------------------------------
+    # Deck 2 — Element connectivity
+    # -----------------------------------------------------------------
+
+    def build_deck2(self, spec: DiffractionSpec) -> list[str]:
+        """Build Deck 2: element connectivity cards.
+
+        Parses mesh files referenced in the spec and emits panel
+        (element) connectivity in AQWA TPPL/QPPL format.
+        """
+        cards: list[str] = []
+        cards.extend(_deck_banner(2))
+        cards.append("          ELM1")
+
+        bodies = spec.get_bodies()
+        for struct_idx, body in enumerate(bodies, start=1):
+            mesh_file = body.vessel.geometry.mesh_file
+            mesh = self._load_body_mesh(body.vessel.geometry)
+            vessel_name = body.vessel.name or "body"
+
+            if body.vessel.geometry.symmetry == "xz":
+                # Structure-prefixed option in ELM1, matching the ILID layout.
+                cards.append(f"     {struct_idx}SYMX")
+
+            # Compute bounding box from mesh vertices
+            if mesh is not None and len(mesh.vertices) > 0:
+                xmin = float(mesh.vertices[:, 0].min()) - 1.0
+                xmax = float(mesh.vertices[:, 0].max()) + 1.0
+                ymin = float(mesh.vertices[:, 1].min()) - 1.0
+                ymax = float(mesh.vertices[:, 1].max()) + 1.0
+            else:
+                xmin, xmax, ymin, ymax = -100.0, 100.0, -100.0, 100.0
+
+            # SEAG card — resolution only (non-Workbench mode accepts 2 params)
+            cards.append(f"      SEAG          ( 81, 51)")
+            # ZLWL (waterline) card
+            wl_z = body.vessel.geometry.waterline_z or 0.0
+            cards.append(f"      ZLWL          ({wl_z:>9.1f})")
+            # ILID AUTO — internal lid for irregular frequency removal
+            # Only emit when remove_irregular_frequencies is enabled,
+            # matching the LHFR option set in Deck 0.
+            if spec.solver_options.remove_irregular_frequencies:
+                lid_group = 21
+                cards.append(f"     {struct_idx}ILID AUTO   {lid_group}")
+            # Group ID comment
+            group_id = 15
+            cards.append(f"* Group ID    {group_id} is body named {vessel_name}")
+
+            if mesh is not None:
+                # DIFF marks elements as diffracting. GDF triangles contain
+                # three unique vertices in four slots and must be emitted as
+                # three-node TPPL; true quadrilaterals use four-node QPPL.
+                for elem_idx, panel in enumerate(mesh.panels, start=1):
+                    # Panel contains 0-based indices, convert to 1-based
+                    nodes = [int(node) + 1 for node in panel]
+                    ordered_unique = list(dict.fromkeys(nodes))
+                    repeated_positions = [
+                        index
+                        for index, node in enumerate(nodes)
+                        if nodes.count(node) == 2
+                    ]
+                    is_triangle = len(ordered_unique) == 3 and repeated_positions in (
+                        [0, 1],
+                        [1, 2],
+                        [2, 3],
+                        [0, 3],
+                    )
+                    if len(ordered_unique) == 4:
+                        n1, n2, n3, n4 = ordered_unique
+                        card = (
+                            f"     {struct_idx}QPPL DIFF   {group_id}({struct_idx})"
+                            f"({n1:>5d})({n2:>5d})({n3:>5d})({n4:>5d})"
+                        )
+                    elif is_triangle:
+                        n1, n2, n3 = ordered_unique
+                        card = (
+                            f"     {struct_idx}TPPL DIFF   {group_id}({struct_idx})"
+                            f"({n1:>5d})({n2:>5d})({n3:>5d})"
+                        )
+                    else:
+                        raise ValueError(
+                            f"Invalid panel {elem_idx} on structure {struct_idx}: "
+                            "expected four unique nodes or a triangle with a "
+                            "cyclic-adjacent repeated node"
+                        )
+                    cards.append(f"{card}  Aqwa Elem No: {elem_idx:>4d}")
+            else:
+                cards.append(f"* WARNING: Mesh file '{mesh_file}' could not be loaded")
+
+            # PMAS element — point mass at CoG node (98000)
+            pmas_group = 18
+            cards.append(
+                f"     {struct_idx}PMAS        {pmas_group}({struct_idx})"
+                f"({98000:>5d})({98000:>5d})({98000:>5d})"
+            )
+
+        cards.append(" END")
+        cards.append(f"{_WS:>10s}FINI")
+        return cards
+
+    # -----------------------------------------------------------------
+    # Deck 3 — Mass properties (MATE)
+    # -----------------------------------------------------------------
+
+    def build_deck3(self, spec: DiffractionSpec) -> list[str]:
+        """Build Deck 3: mass property cards."""
+        cards: list[str] = []
+        cards.extend(_deck_banner(3))
+        cards.append(f"{_WS:>10s}MATE")
+
+        bodies = spec.get_bodies()
+        for idx, body in enumerate(bodies, start=1):
+            mass = body.vessel.inertia.mass
+            # Reference node 98000 is AQWA convention for CoG
+            mass_str = _fmt_float(mass)
+            cards.append(f"{_WS:>5s}{idx:>1d}{_WS:>9s}98000{mass_str}")
+
+        cards.append(" END")
+        return cards
+
+    # -----------------------------------------------------------------
+    # Deck 4 — Inertia properties (GEOM / PMAS)
+    # -----------------------------------------------------------------
+
+    def build_deck4(self, spec: DiffractionSpec) -> list[str]:
+        """Build Deck 4: inertia property cards."""
+        cards: list[str] = []
+        cards.extend(_deck_banner(4))
+        cards.append(f"{_WS:>10s}GEOM")
+
+        bodies = spec.get_bodies()
+        for idx, body in enumerate(bodies, start=1):
+            ixx, iyy, izz, ixy, ixz, iyz = self._compute_inertia(body.vessel.inertia)
+            cards.append(
+                f"{_WS:>5s}{idx:>1d}PMAS{_WS:>5s}98000"
+                f"{_fmt_float(ixx)}{_fmt_float(ixy)}{_fmt_float(ixz)}"
+                f"{_fmt_float(iyy)}{_fmt_float(iyz)}{_fmt_float(izz)}"
+            )
+
+        cards.append(" END")
+        return cards
+
+    @staticmethod
+    def _compute_inertia(
+        inertia: VesselInertia,
+    ) -> tuple[float, float, float, float, float, float]:
+        """Return (Ixx, Iyy, Izz, Ixy, Ixz, Iyz) from spec inertia.
+
+        If an explicit inertia_tensor is provided it takes precedence;
+        otherwise the moments are computed from mass and radii of gyration.
+        """
+        if inertia.inertia_tensor is not None:
+            t = inertia.inertia_tensor
+            return (
+                t.get("Ixx", 0.0),
+                t.get("Iyy", 0.0),
+                t.get("Izz", 0.0),
+                t.get("Ixy", 0.0),
+                t.get("Ixz", 0.0),
+                t.get("Iyz", 0.0),
+            )
+        # Compute from radii of gyration: I = m * k^2
+        mass = inertia.mass
+        kxx, kyy, kzz = inertia.radii_of_gyration  # type: ignore[misc]
+        return (
+            mass * kxx**2,
+            mass * kyy**2,
+            mass * kzz**2,
+            0.0,
+            0.0,
+            0.0,
+        )
+
+    # -----------------------------------------------------------------
+    # Deck 5 — Global environment (GLOB)
+    # -----------------------------------------------------------------
+
+    def build_deck5(self, spec: DiffractionSpec) -> list[str]:
+        """Build Deck 5: environment (GLOB) cards."""
+        cards: list[str] = []
+        cards.extend(_deck_banner(5))
+        cards.append(f"{_WS:>10s}GLOB")
+
+        depth = self._resolve_water_depth(spec.environment.water_depth)
+        depth_str = _fmt_float(depth)
+        cards.append(f"{_WS:>6s}DPTH{depth_str}")
+
+        density_str = _fmt_float(spec.environment.water_density)
+        cards.append(f"{_WS:>6s}DENS{density_str}")
+
+        gravity_str = f"{spec.environment.gravity:>10g}"
+        cards.append(f"{_WS:>6s}ACCG{gravity_str}")
+
+        cards.append(" END")
+        return cards
+
+    # -----------------------------------------------------------------
+    # Deck 7 — Wave force spectrum (WFS1) — required but empty for LINE
+    # -----------------------------------------------------------------
+
+    def build_deck7(self, spec: DiffractionSpec) -> list[str]:
+        """Build Deck 7: wave force spectrum with optional FIDP/SSTF cards.
+
+        Emit FIDP damping and SSTF additional structural stiffness.
+        Source: AQWA Reference Manual 2025 R1 sections 11.6.1 and 11.7.1.
+        All-zero matrices are skipped.
+        """
+        cards: list[str] = []
+        cards.extend(_deck_banner(7))
+        bodies = spec.get_bodies()
+        for index, body in enumerate(bodies, start=1):
+            # AQWA Reference Manual 2025 R1 chapter 11: one WFS* per body.
+            header = f"WFS{index}" if index < 10 else f"WF{index}"
+            cards.append(f"{_WS:>10s}{header}")
+            validate_aqwa_matrix_axes(body)
+            vessel = body.vessel
+            for kind, keyword in (("damping", "FIDP"), ("stiffness", "SSTF")):
+                matrix = native_matrix(vessel, kind, "aqwa")
+                if matrix is not None and self._matrix_has_nonzero(matrix):
+                    cards.extend(self._build_matrix_cards(matrix, keyword=keyword))
+            cards.append(" END")
+
+        return cards
+
+    @staticmethod
+    def _matrix_has_nonzero(matrix: list[list[float]]) -> bool:
+        """Return True if the 6x6 matrix contains any non-zero values."""
+        return any(val != 0.0 for row in matrix for val in row)
+
+    @staticmethod
+    def _build_matrix_cards(
+        matrix: list[list[float]],
+        keyword: str = "FIDP",
+    ) -> list[str]:
+        """Build AQWA 6x6 matrix cards (FIDP or SSTF format).
+
+        Each row of the 6x6 matrix becomes one card line with the format::
+
+            <6 spaces><keyword><5 spaces><row_idx (5-wide)><6 x 10-char values>
+
+        Values use scientific notation with 3 decimal places.
+        """
+        cards: list[str] = []
+        for row_idx, row in enumerate(matrix, start=1):
+            # Format each value as 10-char right-aligned scientific notation
+            val_fields = "".join(f"{f'{v:.3e}':>10s}" for v in row)
+            # Build the card line matching legacy column layout
+            cards.append(
+                f"{' ':>1s}{' ':>3s}{' ':>2s}{keyword:>4s}"
+                f"{' ':>5s}{row_idx:>5d}{val_fields}"
+            )
+        return cards
+
+    # -----------------------------------------------------------------
+    # Deck 8 — Drift coefficient (DRC1) — required but empty for LINE
+    # -----------------------------------------------------------------
+
+    def build_deck8(self, spec: DiffractionSpec) -> list[str]:
+        """Build Deck 8: drift coefficients (empty for diffraction)."""
+        cards: list[str] = []
+        cards.extend(_deck_banner(8))
+        cards.append(f"{_WS:>10s}DRC1")
+        cards.append("* No data defined for this structure")
+        cards.append(" END")
+        return cards
+
+    @staticmethod
+    def _build_none_deck(deck_num: int) -> list[str]:
+        """Build an empty NONE deck placeholder."""
+        return [f"{_WS:>10s}NONE"]
+
+    @staticmethod
+    def _resolve_water_depth(depth: float | str) -> float:
+        """Convert spec water depth to a numeric AQWA value."""
+        if isinstance(depth, str) and depth.lower() in (
+            "infinite",
+            "inf",
+            "deep",
+        ):
+            return _DEEP_WATER_DEPTH
+        return float(depth)
+
+    @staticmethod
+    def _expand_headings_for_aqwa(
+        headings: list[float], symmetry: bool = False
+    ) -> list[float]:
+        """Use 0..180 for xz symmetry, otherwise expand to -180..+180.
+
+        Symmetric headings are folded into the solved half-plane. For bodies
+        without symmetry, mirror intermediate positive headings and retain the
+        existing full-range endpoint convention.
+        """
+        if symmetry:
+            folded = {round(min(h % 360, 360 - h % 360), 6) for h in headings}
+            return sorted(folded | {0, 180})
+
+        h_set = set(headings)
+        # Mirror positive headings to negative side
+        for h in headings:
+            if 0 < h < 180:
+                h_set.add(-h)
+        # Ensure -180 and +180 are present
+        h_set.discard(0)  # will re-add at correct position
+        h_set.add(-180)
+        h_set.add(0)
+        h_set.add(180)
+        return sorted(h_set)
+
+    # -----------------------------------------------------------------
+    # Deck 6 — Frequencies and directions (FDR1, HRTZ, DIRN)
+    # -----------------------------------------------------------------
+
+    def build_deck6(self, spec: DiffractionSpec) -> list[str]:
+        """Build Deck 6: frequency/direction cards."""
+        cards: list[str] = []
+        cards.extend(_deck_banner(6))
+        cards.append(f"{_WS:>10s}FDR1")
+
+        # Frequencies: convert rad/s -> Hz for AQWA HRTZ cards
+        freqs_rad = spec.frequencies.to_frequencies_rad_s()
+        freqs_hz = [rad_per_s_to_hz(w) for w in freqs_rad]
+        if any(not np.isfinite(value) or value <= 0 for value in freqs_hz):
+            raise ValueError("AQWA frequencies must be finite and greater than zero")
+        if len(freqs_hz) != len(set(freqs_hz)):
+            raise ValueError("AQWA frequencies must be unique")
+        freqs_hz.sort()
+        freq_strings = [f"{freq_hz:g}" for freq_hz in freqs_hz]
+        if len(freq_strings) != len(set(freq_strings)):
+            raise ValueError("AQWA frequencies must be unique after HRTZ formatting")
+
+        for i, freq_value in enumerate(freq_strings, start=1):
+            freq_str = f"{freq_value:>10s}"
+            cards.append(f"{_WS:>5s}1HRTZ{i:>5d}{i:>5d}{freq_str}")
+
+        # Geometry controls the solved half-plane. A heading flag alone must
+        # not shorten the range for a full body; mixed bodies need the full
+        # range unless every body uses the xz half-mesh.
+        headings = spec.wave_headings.to_heading_list()
+        bodies = spec.get_bodies()
+        for body in bodies:
+            if body.vessel.geometry.symmetry == "xz":
+                self._load_body_mesh(body.vessel.geometry)
+        symmetry = all(
+            body.vessel.geometry.symmetry == "xz" for body in bodies
+        )
+        aqwa_headings = self._expand_headings_for_aqwa(headings, symmetry=symmetry)
+        heading_strings = [f"{heading:g}" for heading in aqwa_headings]
+        if len(heading_strings) != len(set(heading_strings)):
+            raise ValueError("AQWA headings must be unique after DIRN formatting")
+        for i, heading in enumerate(heading_strings, start=1):
+            heading_str = f"{heading:>10s}"
+            cards.append(f"{_WS:>5s}1DIRN{i:>5d}{i:>5d}{heading_str}")
+
+        cards.append(" END")
+        return cards

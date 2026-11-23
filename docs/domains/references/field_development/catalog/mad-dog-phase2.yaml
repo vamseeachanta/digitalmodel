@@ -1,0 +1,65 @@
+# =============================================================================
+# Field Development Case Study: Mad Dog Phase 2 (Argos FPS)
+# Schema version: 1.0
+# =============================================================================
+
+id: mad-dog-phase2
+name: "Mad Dog Phase 2 (Argos)"
+operator: "BP Exploration and Production Inc."
+
+partners:
+  - name: "BHP Petroleum (Americas) Inc."
+    interest_pct: 23.9
+  - name: "Union Oil Company of California (Chevron)"
+    interest_pct: 13.4
+
+basin: GoM
+subregion: "Gulf of Mexico — Green Canyon"
+country: "United States"
+water_depth_m: 1340
+field_type: deepwater
+
+development_type: semi_submersible
+
+sanction_year: 2017
+production_start_year: 2023
+
+reserves_mmboe: 140
+peak_production_mboe_d: 140
+
+capex_bn_usd: 9.0
+capex_confidence: disclosed
+
+npv_assumptions:
+  oil_price_usd_bbl: 50
+  discount_rate_pct: 10
+  npv_bn_usd: null
+  source: >
+    BP FID announcement 2017; Wood Mackenzie public commentary.
+    Original concept re-scoped from 16 bn to ~9 bn via hull redesign
+    and scope reduction (2016). Basis: 50 USD/bbl long-run real, 10% WACC.
+
+data_sources:
+  - name: "BP — Mad Dog Phase 2 FID press release 2017"
+    url: "https://www.bp.com/en/global/corporate/news-and-insights/press-releases/bp-takes-fid-on-mad-dog-phase-2-project.html"
+    accessed: "2026-02-10"
+  - name: "BSEE — Green Canyon production data"
+    url: "https://www.data.bsee.gov"
+    accessed: "2026-02-10"
+
+notes: >
+  Mad Dog Phase 2 (Argos) achieved first oil in January 2023, eight years after
+  the original concept was redesigned from a high-cost 16 bn USD scheme to a
+  leaner 9 bn USD semi-submersible FPS. The redesign reduced topsides weight by
+  20% and cut unit CAPEX substantially. Argos is a polyester-moored semi with 16
+  production/injection wells and nameplate capacity of 140 mboe/d. Reference
+  case for GoM deepwater cost reduction via concept simplification.
+
+tags:
+  - GoM
+  - semi_submersible
+  - deepwater
+  - BP
+  - cost_reduction
+  - benchmark
+  - WRK-191

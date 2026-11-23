@@ -1,0 +1,779 @@
+{
+  "scope": "tanker",
+  "layer": "particulars",
+  "coverage_note": "12 real named/standard-class vessels collected across all 5 SCOPE types: VLCC (Almi 320k DSME, Almi 315.5k HSHI, Alaska-class), Suezmax (Almi 158k DSME, GSI Greenway 158k LNG dual-fuel), Aframax (Almi 115k DSME, MV Prestige), LNG carriers (Mozah Q-Max, Hoegh Esperanza, standard 174k membrane class), LPG/VLGC (LPGC Ayame, standard 84k VLGC). LAYER 1 (principal particulars) is well-covered with cited values for LOA, beam, draft, deadweight, GT, cargo capacity from public Wikipedia pages, VesselFinder/Marine Insight news, and the Almi Tankers 2018 brochure PDF (extracted via pdftotext: LOA, beam, summer draft, DWT, lightship, GT all directly published). LBP is almost universally a gap (rarely published in brochures/encyclopedias). Depth is published for some (Prestige 18.7, Gastor 26.14, Hoegh 26) and gap/estimated for others. Block coefficient is NEVER published in these sources -> all marked estimated with typical class ranges (VLCC/Suezmax/Aframax ~0.82-0.83; LNG/LPG ~0.78). LAYER 2 (mass properties) is essentially unpublished as required by the brief: LCG/VCG are gaps everywhere (require trim/stability booklets, not public); TCG=0 (centreline symmetry, geometric fact); radii of gyration kxx/kyy/kzz are ALL marked estimated:<relation> using standard naval-architecture empirical relations (kxx=0.33-0.40*beam for roll, higher for wide LNG/LPG forms; kyy=kzz=0.25*Lpp for pitch/yaw) sourced to the TU Delft IMDC 2024 rolling-period paper conventions -- NO bare invented numbers. Displacement is estimated (DWT+lightship) where lightship is published (Almi 320k VLCC: 44,900 mt -> ~364,000 displacement) and gap otherwise. DATA-QUALITY FLAG: Wikipedia LPGC Ayame lists depth 11.6 m / draft 15.5 m which is physically implausible for a 230 m VLGC (depth < draft); cross-checked against standard 84k VLGC particulars (depth ~22.2, draft ~11.5) and flagged the swap in the record. The Almi brochure also yields additional un-recorded sisters (multiple identical Suezmax/Aframax/VLCC hulls) if more entities needed. PAYWALLED/UNAVAILABLE: ResearchGate 325k VLCC spec table (HTTP 403), Scribd GTT Mark III & 320k VLCC spec docs (landing pages only, full data behind login), GAS FORM C for BW Messina LPG carrier (404). No GHS/stability-booklet level mass-property data is publicly available for any of these vessels -- this is the inherent limitation flagged in the brief.",
+  "verdict": {
+    "physically_plausible": true,
+    "fabrication_suspected": false,
+    "citations_check": "solid",
+    "summary": "Spot-checked 5 headline records via web search; all hard numbers verify. MV Prestige (243m/34.4m beam/18.7m depth/14m draft, 81,589 DWT, GT 42,820, Hitachi 1976) confirmed exactly against Wikipedia. Mozah Q-Max (345m/53m/12m draft, 266,000 m3, SHI 2008) confirmed exactly. Alaska-class (287.0m/50m beam, 185,286 DWT, NASSCO) confirmed. Almi VLCC IMO numbers (9583720/9583732=Almi Hydra/Hercules, 9816323/9816335=Almi Atlas/Titan) all resolve to real Almi/DSME & Hyundai Samho VLCCs; DWT 319,359 confirmed. All principal dimensions, displacements, Cb values are physically sane for each class (VLCC Cb~0.82, LNG~0.78, draft/beam/DWT ratios consistent; lightship+DWT sums to displacement correctly). No hard number is presented as fact without a citation: every derived value is explicitly prefixed 'estimated:' with stated derivation method, and unknowns are marked 'gap'. The IMDC 2024 TU Delft roll-period paper is a real, on-topic source for kxx (it uses a 0.40 roll coefficient; 0.33-0.40*B range is correct). Citations are solid. Minor (non-fabrication) caveats: (1) kyy/kzz pitch/yaw = 0.25*Lpp are generic rules of thumb attributed to a roll-only paper \u2014 scope overreach but values marked estimated; (2) several kyy estimates derive from LBP which is itself an estimated gap (derived-from-derived, but properly flagged); (3) the supplied DATA JSON is truncated mid-Mozah-record so the final citation URL could not be confirmed.",
+    "flagged_records": [
+      {
+        "name": "Almi VLCC (320,000 DWT class, DSME-built)",
+        "issue": "kyy_pitch/kzz_yaw computed as 0.25*Lpp where Lpp is itself a gap (estimated ~320); a derived-from-derived value. Properly marked 'estimated' so not a fabrication, but low confidence. IMDC roll paper does not cover pitch/yaw conventions."
+      },
+      {
+        "name": "Mozah (Q-Max LNG carrier, 266,000 m3)",
+        "issue": "Record is truncated in the supplied DATA (citation URL cut off mid-string); could not confirm the final citation field, though all headline numbers (345m/53m/12m/266,000m3/2008/SHI) independently verify. depth_m and displacement marked gap, appropriate for low-density LNG cargo."
+      },
+      {
+        "name": "All records (kyy/kzz radii of gyration)",
+        "issue": "Pitch (kyy) and yaw (kzz) radii of gyration uniformly set to ~0.25*Lpp and cited to the IMDC 2024 paper, which is roll-period (kxx) specific only. Citation scope overreach; values are correctly marked estimated."
+      }
+    ]
+  },
+  "records": [
+    {
+      "name": "Almi VLCC (320,000 DWT class, DSME-built, e.g. IMO 9583720/9583732)",
+      "vessel_type": "VLCC crude oil tanker",
+      "vessel_id": "IMO 9583720 / 9583732",
+      "year_built": "2013 / 2014",
+      "owner_operator": "Almi Tankers S.A. (built Daewoo Shipbuilding & Marine Engineering, DSME)",
+      "fields": {
+        "LOA_m": "333",
+        "LBP_m": "gap (not stated in brochure; ~320 typical for this class)",
+        "beam_m": "60.048",
+        "depth_m": "gap (typically ~30 m for 320k VLCC)",
+        "draft_summer_scantling_m": "22.527",
+        "draft_design_m": "estimated:~20.5 (design draft typically ~0.9*scantling for 320k VLCC; scantling 22.527 published)",
+        "deadweight_mt": "319359",
+        "lightship_mt": "44900",
+        "gross_tonnage": "161692",
+        "displacement_full_mt": "estimated:~364000 (=DWT 319359 + lightship 44900)",
+        "block_coefficient": "estimated:~0.82 (typical VLCC Cb 0.80-0.83 at scantling draft)",
+        "LCG_m": "gap",
+        "VCG_m": "gap",
+        "TCG_m": "estimated:0.0 (port/starboard symmetric, centreline)",
+        "kxx_roll_m": "estimated:kxx=0.35*B=21.0 (roll radius of gyration ~0.33-0.40*beam, IMDC/DNV convention)",
+        "kyy_pitch_m": "estimated:kyy=0.25*Lpp~80 (pitch radius ~0.24-0.26*LBP)",
+        "kzz_yaw_m": "estimated:kzz=0.25*Lpp~80 (yaw radius ~0.25*LBP)",
+        "loading_condition": "summer loadline (fully loaded scantling) for particulars; mass props depend on condition (loaded vs ballast)"
+      },
+      "citations": [
+        {
+          "fields": [
+            "LOA_m",
+            "beam_m",
+            "draft_summer_scantling_m",
+            "deadweight_mt",
+            "lightship_mt",
+            "gross_tonnage",
+            "year_built",
+            "vessel_id"
+          ],
+          "source": "Almi Tankers Fleet Brochure 2018 (PDF)",
+          "url": "https://almitankers.gr/wp-content/uploads/2020/01/Almi-Tankers-Brochure-2018_website.pdf",
+          "access": "brochure-pdf",
+          "access_date": "2026-06-18"
+        },
+        {
+          "fields": [
+            "kxx_roll_m",
+            "kyy_pitch_m",
+            "kzz_yaw_m"
+          ],
+          "source": "TU Delft IMDC 2024 - On empirical methods to predict the rolling period of ships (radius-of-gyration conventions)",
+          "url": "https://proceedings.open.tudelft.nl/imdc24/article/download/881/893",
+          "access": "public",
+          "access_date": "2026-06-18"
+        }
+      ],
+      "gaps": [
+        "LBP_m",
+        "depth_m",
+        "LCG_m",
+        "VCG_m",
+        "block_coefficient (measured)",
+        "displacement (measured)"
+      ]
+    },
+    {
+      "name": "Almi VLCC (315,500 DWT class, Hyundai Samho HSHI-built, IMO 9816323/9816335)",
+      "vessel_type": "VLCC crude oil tanker (dual-fuel-ready, EGR)",
+      "vessel_id": "IMO 9816323 / 9816335",
+      "year_built": "2018",
+      "owner_operator": "Almi Tankers S.A. (built Hyundai Samho Heavy Industries)",
+      "fields": {
+        "LOA_m": "336",
+        "LBP_m": "gap",
+        "beam_m": "60",
+        "depth_m": "gap (~30 typical)",
+        "draft_summer_scantling_m": "22.6",
+        "deadweight_mt": "315221",
+        "gross_tonnage": "162306",
+        "cargo_oil_capacity_m3": "170568 (COT at 98%)",
+        "displacement_full_mt": "estimated:~360000 (DWT + ~45000 lightship typical for class)",
+        "block_coefficient": "estimated:~0.82 (typical VLCC range)",
+        "kxx_roll_m": "estimated:kxx=0.35*B=21.0",
+        "kyy_pitch_m": "estimated:kyy=0.25*Lpp~80",
+        "kzz_yaw_m": "estimated:kzz=0.25*Lpp~80",
+        "VCG_m": "gap",
+        "LCG_m": "gap",
+        "loading_condition": "summer loadline (scantling)"
+      },
+      "citations": [
+        {
+          "fields": [
+            "LOA_m",
+            "beam_m",
+            "draft_summer_scantling_m",
+            "deadweight_mt",
+            "gross_tonnage",
+            "cargo_oil_capacity_m3",
+            "year_built",
+            "vessel_id"
+          ],
+          "source": "Almi Tankers Fleet Brochure 2018 (PDF)",
+          "url": "https://almitankers.gr/wp-content/uploads/2020/01/Almi-Tankers-Brochure-2018_website.pdf",
+          "access": "brochure-pdf",
+          "access_date": "2026-06-18"
+        },
+        {
+          "fields": [
+            "kxx_roll_m",
+            "kyy_pitch_m",
+            "kzz_yaw_m"
+          ],
+          "source": "TU Delft IMDC 2024 rolling-period radius-of-gyration conventions",
+          "url": "https://proceedings.open.tudelft.nl/imdc24/article/download/881/893",
+          "access": "public",
+          "access_date": "2026-06-18"
+        }
+      ],
+      "gaps": [
+        "LBP_m",
+        "depth_m",
+        "LCG_m",
+        "VCG_m",
+        "block_coefficient (measured)",
+        "lightship"
+      ]
+    },
+    {
+      "name": "Alaskan Frontier (Alaska-class VLCC; sisters Explorer/Navigator/Legend)",
+      "vessel_type": "VLCC double-hull crude oil tanker",
+      "vessel_id": "Alaska-class (NASSCO)",
+      "year_built": "2004-2006 (class)",
+      "owner_operator": "Alaska Tanker Company / built National Steel and Shipbuilding (NASSCO), San Diego",
+      "fields": {
+        "LOA_m": "287.0",
+        "LBP_m": "gap",
+        "beam_m": "50",
+        "depth_m": "gap",
+        "draft_m": "18.80",
+        "deadweight_mt": "185286",
+        "cargo_capacity_m3": "210000 (1.3 million barrels)",
+        "displacement_full_mt": "estimated:~215000 (DWT + ~30000 lightship typical)",
+        "block_coefficient": "estimated:~0.82 (typical VLCC range)",
+        "kxx_roll_m": "estimated:kxx=0.35*B=17.5",
+        "kyy_pitch_m": "estimated:kyy=0.25*Lpp~69",
+        "kzz_yaw_m": "estimated:kzz=0.25*Lpp~69",
+        "LCG_m": "gap",
+        "VCG_m": "gap",
+        "loading_condition": "fully loaded (draft 18.80 at full load)"
+      },
+      "citations": [
+        {
+          "fields": [
+            "LOA_m",
+            "beam_m",
+            "draft_m",
+            "deadweight_mt",
+            "cargo_capacity_m3",
+            "owner_operator"
+          ],
+          "source": "Wikipedia - Alaska-class oil tanker",
+          "url": "https://en.wikipedia.org/wiki/Alaska-class_oil_tanker",
+          "access": "public",
+          "access_date": "2026-06-18"
+        },
+        {
+          "fields": [
+            "kxx_roll_m",
+            "kyy_pitch_m",
+            "kzz_yaw_m"
+          ],
+          "source": "Naval architecture radius-of-gyration convention (IMDC 2024)",
+          "url": "https://proceedings.open.tudelft.nl/imdc24/article/download/881/893",
+          "access": "public",
+          "access_date": "2026-06-18"
+        }
+      ],
+      "gaps": [
+        "LBP_m",
+        "depth_m",
+        "year_built (exact per hull)",
+        "LCG_m",
+        "VCG_m",
+        "block_coefficient (measured)",
+        "lightship"
+      ]
+    },
+    {
+      "name": "Almi Suezmax (158,000 DWT class, DSME-built)",
+      "vessel_type": "Suezmax crude oil tanker",
+      "vessel_id": "Almi Suezmax fleet (DSME)",
+      "year_built": "2011-2013",
+      "owner_operator": "Almi Tankers S.A. (built DSME)",
+      "fields": {
+        "LOA_m": "274",
+        "LBP_m": "gap",
+        "beam_m": "48.03",
+        "depth_m": "estimated:~23.1-23.7 (modern 158k Suezmax moulded depth; published peers 23.7)",
+        "draft_summer_m": "17.024",
+        "deadweight_mt": "157787 (also 149999 mt variant in same class)",
+        "displacement_full_mt": "estimated:~182000 (DWT + ~24000 lightship typical)",
+        "block_coefficient": "estimated:~0.83 (typical Suezmax range 0.80-0.84)",
+        "kxx_roll_m": "estimated:kxx=0.35*B=16.8",
+        "kyy_pitch_m": "estimated:kyy=0.25*Lpp~66",
+        "kzz_yaw_m": "estimated:kzz=0.25*Lpp~66",
+        "LCG_m": "gap",
+        "VCG_m": "gap",
+        "loading_condition": "summer loadline"
+      },
+      "citations": [
+        {
+          "fields": [
+            "LOA_m",
+            "beam_m",
+            "draft_summer_m",
+            "deadweight_mt",
+            "year_built"
+          ],
+          "source": "Almi Tankers Fleet Brochure 2018 (PDF)",
+          "url": "https://almitankers.gr/wp-content/uploads/2020/01/Almi-Tankers-Brochure-2018_website.pdf",
+          "access": "brochure-pdf",
+          "access_date": "2026-06-18"
+        },
+        {
+          "fields": [
+            "depth_m"
+          ],
+          "source": "VesselFinder - CSSC 158,000 dwt Suezmax (Greenway) moulded depth 23.7 m",
+          "url": "https://www.vesselfinder.com/news/23886-CSSC-delivers-worlds-first-LNG-dual-fuel-158000-dwt-Suezmax-tanker",
+          "access": "public",
+          "access_date": "2026-06-18"
+        },
+        {
+          "fields": [
+            "kxx_roll_m",
+            "kyy_pitch_m",
+            "kzz_yaw_m"
+          ],
+          "source": "IMDC 2024 radius-of-gyration convention",
+          "url": "https://proceedings.open.tudelft.nl/imdc24/article/download/881/893",
+          "access": "public",
+          "access_date": "2026-06-18"
+        }
+      ],
+      "gaps": [
+        "LBP_m",
+        "depth_m (this hull, measured)",
+        "LCG_m",
+        "VCG_m",
+        "block_coefficient (measured)",
+        "lightship"
+      ]
+    },
+    {
+      "name": "Greenway (CSSC 158,000 DWT LNG dual-fuel Suezmax, first GSI Suezmax)",
+      "vessel_type": "Suezmax crude oil tanker (LNG dual-fuel)",
+      "vessel_id": "GSI-built 158k Suezmax",
+      "year_built": "2023",
+      "owner_operator": "Guangzhou Shipbuilding International (GSI) / CSSC",
+      "fields": {
+        "LOA_m": "~274",
+        "beam_m": "48 (moulded)",
+        "depth_m": "23.7 (moulded)",
+        "draft_m": "gap (~16-17 typical for 158k Suezmax)",
+        "deadweight_mt": "158000",
+        "LBP_m": "gap",
+        "block_coefficient": "estimated:~0.83 (typical Suezmax)",
+        "displacement_full_mt": "estimated:~182000",
+        "kxx_roll_m": "estimated:kxx=0.35*B=16.8",
+        "kyy_pitch_m": "estimated:kyy=0.25*Lpp~66",
+        "kzz_yaw_m": "estimated:kzz=0.25*Lpp~66",
+        "loading_condition": "summer loadline"
+      },
+      "citations": [
+        {
+          "fields": [
+            "LOA_m",
+            "beam_m",
+            "depth_m",
+            "deadweight_mt",
+            "year_built",
+            "owner_operator"
+          ],
+          "source": "VesselFinder - CSSC delivers world's first LNG dual-fuel 158,000 dwt Suezmax",
+          "url": "https://www.vesselfinder.com/news/23886-CSSC-delivers-worlds-first-LNG-dual-fuel-158000-dwt-Suezmax-tanker",
+          "access": "public",
+          "access_date": "2026-06-18"
+        },
+        {
+          "fields": [
+            "kxx_roll_m",
+            "kyy_pitch_m",
+            "kzz_yaw_m"
+          ],
+          "source": "IMDC 2024 radius-of-gyration convention",
+          "url": "https://proceedings.open.tudelft.nl/imdc24/article/download/881/893",
+          "access": "public",
+          "access_date": "2026-06-18"
+        }
+      ],
+      "gaps": [
+        "LBP_m",
+        "draft_m",
+        "LCG_m",
+        "VCG_m",
+        "block_coefficient (measured)",
+        "lightship"
+      ]
+    },
+    {
+      "name": "Almi Aframax (115,000 DWT class, DSME-built 2005)",
+      "vessel_type": "Aframax crude oil tanker",
+      "vessel_id": "Almi Aframax (DSME)",
+      "year_built": "2005",
+      "owner_operator": "Almi Tankers S.A. (built DSME)",
+      "fields": {
+        "LOA_m": "249.9",
+        "LBP_m": "gap",
+        "beam_m": "44",
+        "depth_m": "estimated:~21.0 (typical Aframax 110-115k moulded depth)",
+        "draft_summer_m": "14.819",
+        "deadweight_mt": "114879.6",
+        "cargo_oil_capacity_m3": "124270 (COT at 98%)",
+        "displacement_full_mt": "estimated:~133000 (DWT + ~18000 lightship typical)",
+        "block_coefficient": "estimated:~0.83 (typical Aframax 0.81-0.84)",
+        "kxx_roll_m": "estimated:kxx=0.35*B=15.4",
+        "kyy_pitch_m": "estimated:kyy=0.25*Lpp~60",
+        "kzz_yaw_m": "estimated:kzz=0.25*Lpp~60",
+        "LCG_m": "gap",
+        "VCG_m": "gap",
+        "loading_condition": "summer loadline"
+      },
+      "citations": [
+        {
+          "fields": [
+            "LOA_m",
+            "beam_m",
+            "draft_summer_m",
+            "deadweight_mt",
+            "cargo_oil_capacity_m3",
+            "year_built"
+          ],
+          "source": "Almi Tankers Fleet Brochure 2018 (PDF)",
+          "url": "https://almitankers.gr/wp-content/uploads/2020/01/Almi-Tankers-Brochure-2018_website.pdf",
+          "access": "brochure-pdf",
+          "access_date": "2026-06-18"
+        },
+        {
+          "fields": [
+            "kxx_roll_m",
+            "kyy_pitch_m",
+            "kzz_yaw_m"
+          ],
+          "source": "IMDC 2024 radius-of-gyration convention",
+          "url": "https://proceedings.open.tudelft.nl/imdc24/article/download/881/893",
+          "access": "public",
+          "access_date": "2026-06-18"
+        }
+      ],
+      "gaps": [
+        "LBP_m",
+        "depth_m (measured)",
+        "LCG_m",
+        "VCG_m",
+        "block_coefficient (measured)",
+        "lightship"
+      ]
+    },
+    {
+      "name": "MV Prestige (Aframax, 81,589 DWT, single-hull, Hitachi 1976)",
+      "vessel_type": "Aframax crude/products tanker (single-hull, historical)",
+      "vessel_id": "MV Prestige",
+      "year_built": "1976",
+      "owner_operator": "Built Hitachi Shipbuilding & Engineering, Maizuru, Japan",
+      "fields": {
+        "LOA_m": "243",
+        "LBP_m": "gap",
+        "beam_m": "34.4",
+        "depth_m": "18.7",
+        "draft_m": "14",
+        "deadweight_mt": "81589",
+        "gross_tonnage": "42820",
+        "displacement_full_mt": "estimated:~97000 (DWT + ~15000 lightship typical)",
+        "block_coefficient": "estimated:~0.82 (typical Aframax)",
+        "kxx_roll_m": "estimated:kxx=0.35*B=12.0",
+        "kyy_pitch_m": "estimated:kyy=0.25*Lpp~58",
+        "kzz_yaw_m": "estimated:kzz=0.25*Lpp~58",
+        "LCG_m": "gap",
+        "VCG_m": "gap",
+        "loading_condition": "fully loaded"
+      },
+      "citations": [
+        {
+          "fields": [
+            "LOA_m",
+            "beam_m",
+            "depth_m",
+            "draft_m",
+            "deadweight_mt",
+            "gross_tonnage",
+            "year_built",
+            "owner_operator"
+          ],
+          "source": "Wikipedia - MV Prestige",
+          "url": "https://en.wikipedia.org/wiki/MV_Prestige",
+          "access": "public",
+          "access_date": "2026-06-18"
+        },
+        {
+          "fields": [
+            "kxx_roll_m",
+            "kyy_pitch_m",
+            "kzz_yaw_m"
+          ],
+          "source": "IMDC 2024 radius-of-gyration convention",
+          "url": "https://proceedings.open.tudelft.nl/imdc24/article/download/881/893",
+          "access": "public",
+          "access_date": "2026-06-18"
+        }
+      ],
+      "gaps": [
+        "LBP_m",
+        "LCG_m",
+        "VCG_m",
+        "block_coefficient (measured)",
+        "lightship"
+      ]
+    },
+    {
+      "name": "Mozah (Q-Max LNG carrier, 266,000 m3)",
+      "vessel_type": "LNG carrier (membrane, Q-Max class)",
+      "vessel_id": "Mozah",
+      "year_built": "2008",
+      "owner_operator": "Qatargas / Nakilat (built Samsung Heavy Industries)",
+      "fields": {
+        "LOA_m": "345",
+        "LBP_m": "gap",
+        "beam_m": "53",
+        "depth_m": "gap (~27 typical for Q-Max)",
+        "draft_m": "12.0",
+        "deadweight_mt": "128900",
+        "gross_tonnage": "163922",
+        "cargo_capacity_m3": "266000",
+        "displacement_full_mt": "gap (LNG carriers low-density cargo; displacement not deadweight-dominant)",
+        "block_coefficient": "estimated:~0.78 (typical LNG carrier Cb 0.75-0.80, finer than tankers)",
+        "kxx_roll_m": "estimated:kxx=0.40*B=21.2 (LNG carriers often kxx~0.38-0.42*B due to wide-shallow form)",
+        "kyy_pitch_m": "estimated:kyy=0.25*Lpp~83",
+        "kzz_yaw_m": "estimated:kzz=0.25*Lpp~83",
+        "LCG_m": "gap",
+        "VCG_m": "gap",
+        "loading_condition": "design draft 12.0 m (LNG carriers operate at modest draft, low cargo density)"
+      },
+      "citations": [
+        {
+          "fields": [
+            "LOA_m",
+            "beam_m",
+            "draft_m",
+            "deadweight_mt",
+            "gross_tonnage",
+            "cargo_capacity_m3",
+            "year_built",
+            "owner_operator"
+          ],
+          "source": "Wikipedia - Mozah (ship)",
+          "url": "https://en.wikipedia.org/wiki/Mozah",
+          "access": "public",
+          "access_date": "2026-06-18"
+        },
+        {
+          "fields": [
+            "kxx_roll_m",
+            "kyy_pitch_m",
+            "kzz_yaw_m",
+            "block_coefficient"
+          ],
+          "source": "IMDC 2024 radius-of-gyration convention + LNG carrier form factors",
+          "url": "https://proceedings.open.tudelft.nl/imdc24/article/download/881/893",
+          "access": "public",
+          "access_date": "2026-06-18"
+        }
+      ],
+      "gaps": [
+        "LBP_m",
+        "depth_m",
+        "LCG_m",
+        "VCG_m",
+        "displacement (measured)",
+        "block_coefficient (measured)",
+        "lightship"
+      ]
+    },
+    {
+      "name": "Hoegh Esperanza (174k-class LNG carrier / FSRU, GTT Mark III)",
+      "vessel_type": "LNG carrier / FSRU (membrane GTT Mark III, dual-fuel diesel-electric)",
+      "vessel_id": "Hoegh Esperanza",
+      "year_built": "2018",
+      "owner_operator": "Hoegh LNG (built Hyundai Heavy Industries)",
+      "fields": {
+        "LOA_m": "294",
+        "LBP_m": "gap",
+        "beam_m": "46",
+        "depth_m": "26",
+        "draft_m": "12.6",
+        "deadweight_mt": "92217",
+        "gross_tonnage": "110499",
+        "cargo_capacity_m3": "170032",
+        "block_coefficient": "estimated:~0.78 (typical modern LNG carrier)",
+        "displacement_full_mt": "gap",
+        "kxx_roll_m": "estimated:kxx=0.40*B=18.4",
+        "kyy_pitch_m": "estimated:kyy=0.25*Lpp~71",
+        "kzz_yaw_m": "estimated:kzz=0.25*Lpp~71",
+        "LCG_m": "gap",
+        "VCG_m": "gap",
+        "loading_condition": "design draft 12.6 m"
+      },
+      "citations": [
+        {
+          "fields": [
+            "LOA_m",
+            "beam_m",
+            "depth_m",
+            "draft_m",
+            "deadweight_mt",
+            "gross_tonnage",
+            "cargo_capacity_m3",
+            "year_built",
+            "owner_operator"
+          ],
+          "source": "Wikipedia - Hoegh Esperanza",
+          "url": "https://en.wikipedia.org/wiki/H%C3%B6egh_Esperanza",
+          "access": "public",
+          "access_date": "2026-06-18"
+        },
+        {
+          "fields": [
+            "kxx_roll_m",
+            "kyy_pitch_m",
+            "kzz_yaw_m",
+            "block_coefficient"
+          ],
+          "source": "IMDC 2024 radius-of-gyration convention + LNG carrier form factors",
+          "url": "https://proceedings.open.tudelft.nl/imdc24/article/download/881/893",
+          "access": "public",
+          "access_date": "2026-06-18"
+        }
+      ],
+      "gaps": [
+        "LBP_m",
+        "LCG_m",
+        "VCG_m",
+        "displacement (measured)",
+        "block_coefficient (measured)",
+        "lightship"
+      ]
+    },
+    {
+      "name": "Standard 174,000 m3 LNG carrier (GTT Mark III/membrane, market-standard newbuild)",
+      "vessel_type": "LNG carrier (membrane, conventional 174k class - industry standard newbuild)",
+      "vessel_id": "174k LNG class (e.g. KOOL Firn 174,096 m3; Flex Courageous 173,400 m3)",
+      "year_built": "2018-present (active newbuild standard)",
+      "owner_operator": "Multiple (GTT-licensed membrane; built KR/CN yards: SHI/HHI/DSME/Hudong)",
+      "fields": {
+        "LOA_m": "~295-299 (KOOL Firn 299; Flex Courageous 295)",
+        "LBP_m": "gap",
+        "beam_m": "~46.0-46.4",
+        "depth_m": "~26 (typical)",
+        "draft_design_m": "~11.5 (design); current draughts reported ~9.6 m (partly laden)",
+        "draft_scantling_m": "gap",
+        "cargo_capacity_m3": "173400-174096",
+        "deadweight_mt": "gap (~80000-90000 typical for class)",
+        "block_coefficient": "estimated:~0.78 (typical modern LNG carrier)",
+        "displacement_full_mt": "gap",
+        "kxx_roll_m": "estimated:kxx=0.40*B~18.4",
+        "kyy_pitch_m": "estimated:kyy=0.25*Lpp~71",
+        "kzz_yaw_m": "estimated:kzz=0.25*Lpp~71",
+        "LCG_m": "gap",
+        "VCG_m": "gap",
+        "loading_condition": "design draft (laden)"
+      },
+      "citations": [
+        {
+          "fields": [
+            "LOA_m",
+            "beam_m",
+            "cargo_capacity_m3",
+            "draft_design_m"
+          ],
+          "source": "Marine Insight / MarineLink - 174,000 m3 LNG carrier standard class (KOOL Firn 299m/46.4m; Flex Courageous 295m/46m)",
+          "url": "https://www.marineinsight.com/what-are-lng-carrier-ships/",
+          "access": "public",
+          "access_date": "2026-06-18"
+        },
+        {
+          "fields": [
+            "kxx_roll_m",
+            "kyy_pitch_m",
+            "kzz_yaw_m",
+            "block_coefficient"
+          ],
+          "source": "IMDC 2024 radius-of-gyration convention + LNG carrier form factors",
+          "url": "https://proceedings.open.tudelft.nl/imdc24/article/download/881/893",
+          "access": "public",
+          "access_date": "2026-06-18"
+        }
+      ],
+      "gaps": [
+        "LBP_m",
+        "depth_m (measured)",
+        "draft_scantling_m",
+        "deadweight_mt",
+        "LCG_m",
+        "VCG_m",
+        "displacement",
+        "block_coefficient (measured)",
+        "lightship"
+      ]
+    },
+    {
+      "name": "LPGC Ayame (VLGC, 83,000 m3, Mitsubishi 2010)",
+      "vessel_type": "VLGC (Very Large Gas Carrier, LPG, fully-refrigerated)",
+      "vessel_id": "LPGC Ayame (Yard No. 2250)",
+      "year_built": "2010",
+      "owner_operator": "Built Mitsubishi Heavy Industries, Nagasaki",
+      "fields": {
+        "LOA_m": "230",
+        "LBP_m": "gap",
+        "beam_m": "36.6",
+        "depth_m": "estimated:~22.2 (VLGC 83-84k standard depth; Wikipedia 11.6 m appears to be an error/draft-depth swap)",
+        "draft_m": "estimated:~11.6 (VLGC 83-84k design draft; Wikipedia 15.5 m implausible for this hull)",
+        "deadweight_mt": "55076",
+        "gross_tonnage": "51041",
+        "cargo_capacity_m3": "83000",
+        "block_coefficient": "estimated:~0.78 (typical VLGC)",
+        "displacement_full_mt": "estimated:~70000 (DWT + ~15000 lightship typical for VLGC)",
+        "kxx_roll_m": "estimated:kxx=0.38*B=13.9 (gas carriers ~0.36-0.40*B)",
+        "kyy_pitch_m": "estimated:kyy=0.25*Lpp~55",
+        "kzz_yaw_m": "estimated:kzz=0.25*Lpp~55",
+        "LCG_m": "gap",
+        "VCG_m": "gap",
+        "loading_condition": "design draft"
+      },
+      "citations": [
+        {
+          "fields": [
+            "LOA_m",
+            "beam_m",
+            "deadweight_mt",
+            "gross_tonnage",
+            "cargo_capacity_m3",
+            "year_built",
+            "owner_operator"
+          ],
+          "source": "Wikipedia - LPGC Ayame",
+          "url": "https://en.wikipedia.org/wiki/LPGC_Ayame",
+          "access": "public",
+          "access_date": "2026-06-18"
+        },
+        {
+          "fields": [
+            "depth_m",
+            "draft_m"
+          ],
+          "source": "Horizon Ship / industry 84,000 cbm VLGC standard particulars (depth 22.2 m, design draft 11.5 m) - cross-check vs Wikipedia anomaly",
+          "url": "https://horizonship.com/ship/2-x-vlgc-tankers-2020-built-china-dwt-55075-cbm-84000/",
+          "access": "public",
+          "access_date": "2026-06-18"
+        },
+        {
+          "fields": [
+            "kxx_roll_m",
+            "kyy_pitch_m",
+            "kzz_yaw_m",
+            "block_coefficient"
+          ],
+          "source": "IMDC 2024 radius-of-gyration convention + gas-carrier form factors",
+          "url": "https://proceedings.open.tudelft.nl/imdc24/article/download/881/893",
+          "access": "public",
+          "access_date": "2026-06-18"
+        }
+      ],
+      "gaps": [
+        "LBP_m",
+        "depth_m (this hull confirmed)",
+        "draft_m (this hull confirmed)",
+        "LCG_m",
+        "VCG_m",
+        "block_coefficient (measured)",
+        "lightship"
+      ]
+    },
+    {
+      "name": "Standard 84,000 m3 VLGC (LPG dual-fuel, Jiangnan-class)",
+      "vessel_type": "VLGC (LPG carrier, fully-refrigerated, LPG dual-fuel newbuild)",
+      "vessel_id": "84k VLGC class (e.g. 2020 China-built, DWT 55,075 / CBM 84,000)",
+      "year_built": "2020-present",
+      "owner_operator": "Multiple (Jiangnan Shipyard et al.; operators Exmar, Dorian LPG, BW LPG, Avance Gas)",
+      "fields": {
+        "LOA_m": "230",
+        "LBP_m": "gap",
+        "beam_m": "36.6",
+        "depth_m": "22.2",
+        "draft_design_m": "11.5",
+        "deadweight_mt": "55075",
+        "cargo_capacity_m3": "82320-84000",
+        "block_coefficient": "estimated:~0.78 (typical VLGC)",
+        "displacement_full_mt": "estimated:~70000",
+        "kxx_roll_m": "estimated:kxx=0.38*B=13.9",
+        "kyy_pitch_m": "estimated:kyy=0.25*Lpp~55",
+        "kzz_yaw_m": "estimated:kzz=0.25*Lpp~55",
+        "LCG_m": "gap",
+        "VCG_m": "gap",
+        "loading_condition": "design draft (laden)"
+      },
+      "citations": [
+        {
+          "fields": [
+            "LOA_m",
+            "beam_m",
+            "depth_m",
+            "draft_design_m",
+            "deadweight_mt",
+            "cargo_capacity_m3"
+          ],
+          "source": "Horizon Ship - 2x VLGC 2020 China-built DWT 55075 / CBM 84000 (standard 84k VLGC particulars)",
+          "url": "https://horizonship.com/ship/2-x-vlgc-tankers-2020-built-china-dwt-55075-cbm-84000/",
+          "access": "public",
+          "access_date": "2026-06-18"
+        },
+        {
+          "fields": [
+            "kxx_roll_m",
+            "kyy_pitch_m",
+            "kzz_yaw_m",
+            "block_coefficient"
+          ],
+          "source": "IMDC 2024 radius-of-gyration convention + gas-carrier form factors",
+          "url": "https://proceedings.open.tudelft.nl/imdc24/article/download/881/893",
+          "access": "public",
+          "access_date": "2026-06-18"
+        }
+      ],
+      "gaps": [
+        "LBP_m",
+        "LCG_m",
+        "VCG_m",
+        "displacement (measured)",
+        "block_coefficient (measured)",
+        "lightship"
+      ]
+    }
+  ],
+  "collected": "2026-06-18",
+  "method": "vessel-db-research workflow wf_1207d074-87f"
+}

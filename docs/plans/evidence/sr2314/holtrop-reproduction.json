@@ -1,0 +1,225 @@
+{
+  "reference_status": "unverified_approximate_fixture_values",
+  "purpose": "issue-2020 reproduction; not engineering acceptance",
+  "source_sha256": {
+    "tests/fixtures/test_vectors/naval_architecture/holtrop_mennen.yaml": "c9bc0d6b30d8db1efbeff8bd147a689901afae5b5aad3009a4521d2f4e1f1b6e",
+    "src/digitalmodel/naval_architecture/holtrop_mennen.py": "e24a22120fb9ac2660dfecba8e49d1fa9a6cef6c7f805fe5f1e3da407a40aa77",
+    "src/digitalmodel/naval_architecture/holtrop_coefficients.py": "7be63f297c6e42996adf23cabfa71aaaebd5c63feda629bfba7ccfd21fa4fc4c"
+  },
+  "constants": {
+    "rho_kg_m3": 1025.0,
+    "nu_m2_s": 1.1892e-06,
+    "g_m_s2": 9.80665
+  },
+  "error_definition": "100 * (computed_ct / fixture_ct_approx - 1)",
+  "ct_normalization": "RT / (0.5 * rho * V^2 * S); S is Holtrop-regression wetted surface, not mesh S",
+  "fixed_speed": [
+    {
+      "id": "series60_cb060",
+      "speed_ms": 7.72,
+      "lwl_m": 121.92,
+      "froude_number": 0.22326440317117074,
+      "wetted_surface_m2": 2429.2460603931177,
+      "form_factor": 1.101890912401969,
+      "rf_n": 116939.11195036361,
+      "rw_n": 31284.493021286667,
+      "ra_n": 35459.828842913805,
+      "rt_n": 195598.46662666264,
+      "viscous_ct": 0.001736594476196964,
+      "wave_ct": 0.000421627708379435,
+      "ca": 0.0004778995895631695,
+      "floor_ct": 0.0022144940657601335,
+      "ct": 0.002636121774139569,
+      "ct_approx": 0.00385,
+      "error_pct": -31.529304567803408
+    },
+    {
+      "id": "tanker_cb080",
+      "speed_ms": 7.72,
+      "lwl_m": 205.0,
+      "froude_number": 0.1721789408775901,
+      "wetted_surface_m2": 9598.835040052367,
+      "form_factor": 1.2782995720357273,
+      "rf_n": 433257.6756825705,
+      "rw_n": 115729.0856289307,
+      "ra_n": 103348.7671636336,
+      "rt_n": 772910.9541987882,
+      "viscous_ct": 0.0018889997933822674,
+      "wave_ct": 0.0003947258087071646,
+      "ca": 0.000352499334768404,
+      "floor_ct": 0.0022414991281506716,
+      "ct": 0.002636224936857836,
+      "ct_approx": 0.00175,
+      "error_pct": 50.64142496330491
+    }
+  ],
+  "common_froude": [
+    {
+      "froude_number": 0.15,
+      "rows": [
+        {
+          "id": "series60_cb060",
+          "speed_ms": 5.186675455433855,
+          "lwl_m": 121.92,
+          "froude_number": 0.15,
+          "wetted_surface_m2": 2429.2460603931177,
+          "form_factor": 1.101890912401969,
+          "rf_n": 55530.12176194174,
+          "rw_n": 1119.0897418117545,
+          "ra_n": 16005.90305190977,
+          "rt_n": 78313.12932777993,
+          "viscous_ct": 0.0018269375517848496,
+          "wave_ct": 3.3413455433392666e-05,
+          "ca": 0.0004778995895631695,
+          "floor_ct": 0.002304837141348019,
+          "ct": 0.0023382505967814117
+        },
+        {
+          "id": "tanker_cb080",
+          "speed_ms": 6.725561175470787,
+          "lwl_m": 205.0,
+          "froude_number": 0.15,
+          "wetted_surface_m2": 9598.835040052367,
+          "form_factor": 1.2782995720357273,
+          "rf_n": 334427.02348120965,
+          "rw_n": 31729.31822950739,
+          "ra_n": 78438.22447193136,
+          "rt_n": 537665.4636946511,
+          "viscous_ct": 0.0019211645059470665,
+          "wave_ct": 0.00014259072848542967,
+          "ca": 0.000352499334768404,
+          "floor_ct": 0.0022736638407154708,
+          "ct": 0.0024162545692009
+        }
+      ],
+      "tanker_relative_to_series60_pct": 3.335997113690903
+    },
+    {
+      "froude_number": 0.2,
+      "rows": [
+        {
+          "id": "series60_cb060",
+          "speed_ms": 6.915567273911808,
+          "lwl_m": 121.92,
+          "froude_number": 0.2,
+          "wetted_surface_m2": 2429.2460603931177,
+          "form_factor": 1.101890912401969,
+          "rf_n": 95152.23023955674,
+          "rw_n": 14032.966926552752,
+          "ra_n": 28454.938758950717,
+          "rt_n": 147335.28348125087,
+          "viscous_ct": 0.0017609076315302512,
+          "wave_ct": 0.00023568313365086963,
+          "ca": 0.0004778995895631695,
+          "floor_ct": 0.0022388072210934207,
+          "ct": 0.00247449035474429
+        },
+        {
+          "id": "tanker_cb080",
+          "speed_ms": 8.967414900627716,
+          "lwl_m": 205.0,
+          "froude_number": 0.2,
+          "wetted_surface_m2": 9598.835040052367,
+          "form_factor": 1.2782995720357273,
+          "rf_n": 574051.873587288,
+          "rw_n": 397725.4596618793,
+          "ra_n": 139445.73239454464,
+          "rt_n": 1270981.4563893615,
+          "viscous_ct": 0.0018549698551671614,
+          "wave_ct": 0.001005394410741787,
+          "ca": 0.000352499334768404,
+          "floor_ct": 0.0022074691899355656,
+          "ct": 0.0032128636006773523
+        }
+      ],
+      "tanker_relative_to_series60_pct": 29.839406911301715
+    },
+    {
+      "froude_number": 0.25,
+      "rows": [
+        {
+          "id": "series60_cb060",
+          "speed_ms": 8.64445909238976,
+          "lwl_m": 121.92,
+          "froude_number": 0.25,
+          "wetted_surface_m2": 2429.2460603931177,
+          "form_factor": 1.101890912401969,
+          "rf_n": 144556.60512590816,
+          "rw_n": 67190.79602725957,
+          "ra_n": 44460.84181086048,
+          "rt_n": 270937.2473540381,
+          "viscous_ct": 0.0017121251940034573,
+          "wave_ct": 0.0007222187555613565,
+          "ca": 0.0004778995895631695,
+          "floor_ct": 0.002190024783566627,
+          "ct": 0.0029122435391279833
+        },
+        {
+          "id": "tanker_cb080",
+          "speed_ms": 11.209268625784645,
+          "lwl_m": 205.0,
+          "froude_number": 0.25,
+          "wetted_surface_m2": 9598.835040052367,
+          "form_factor": 1.2782995720357273,
+          "rf_n": 873254.4210025016,
+          "rw_n": 1937388.2342423382,
+          "ra_n": 217883.95686647602,
+          "rt_n": 3271552.943754619,
+          "viscous_ct": 0.00180595317058409,
+          "wave_ct": 0.0031343659881166476,
+          "ca": 0.000352499334768404,
+          "floor_ct": 0.002158452505352494,
+          "ct": 0.005292818493469142
+        }
+      ],
+      "tanker_relative_to_series60_pct": 81.7436770777068
+    },
+    {
+      "froude_number": 0.3,
+      "rows": [
+        {
+          "id": "series60_cb060",
+          "speed_ms": 10.37335091086771,
+          "lwl_m": 121.92,
+          "froude_number": 0.3,
+          "wetted_surface_m2": 2429.2460603931177,
+          "form_factor": 1.101890912401969,
+          "rf_n": 203496.58200376932,
+          "rw_n": 181899.95619875862,
+          "ra_n": 64023.61220763908,
+          "rt_n": 470154.60282121314,
+          "viscous_ct": 0.001673756222417255,
+          "wave_ct": 0.001357778972654921,
+          "ca": 0.0004778995895631695,
+          "floor_ct": 0.0021516558119804245,
+          "ct": 0.003509434784635345
+        },
+        {
+          "id": "tanker_cb080",
+          "speed_ms": 13.451122350941574,
+          "lwl_m": 205.0,
+          "froude_number": 0.3,
+          "wetted_surface_m2": 9598.835040052367,
+          "form_factor": 1.2782995720357273,
+          "rf_n": 1230594.1305164176,
+          "rw_n": 5579420.439525744,
+          "ra_n": 313752.89788772544,
+          "rt_n": 7466241.287802284,
+          "viscous_ct": 0.0017673315841563327,
+          "wave_ct": 0.00626844247994754,
+          "ca": 0.000352499334768404,
+          "floor_ct": 0.0021198309189247367,
+          "ct": 0.008388273398872277
+        }
+      ],
+      "tanker_relative_to_series60_pct": 139.02063761369706
+    }
+  ],
+  "form_factor_diagnostic": {
+    "computed": 1.1201416007041778,
+    "unverified_fixture_range": {
+      "k1_plus_1_min": 1.18,
+      "k1_plus_1_max": 1.25
+    }
+  }
+}

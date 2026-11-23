@@ -1,0 +1,40 @@
+{
+  "case_id": "R08-W1-SCR",
+  "sea_state": {
+    "id": "S1",
+    "Hs_m": 2.0,
+    "Tp_s": 8.0,
+    "direction_deg": 0.0,
+    "occurrence": 0.2
+  },
+  "hot_spots": [
+    {
+      "name": "touchdown",
+      "arc_length_m": 1000.0,
+      "stress_range_MPa": 100.0,
+      "cycles_per_year": 1000000.0,
+      "scf": 1.0
+    },
+    {
+      "name": "hang_off",
+      "arc_length_m": 0.0,
+      "stress_range_MPa": 50.0,
+      "cycles_per_year": 1000000.0,
+      "scf": 1.0
+    }
+  ],
+  "sn_curve": {
+    "name": "ASSUMED synthetic power law",
+    "m": 3.0,
+    "log_a": 12.0,
+    "thickness_correction": 1.0,
+    "source": "ASSUMED"
+  },
+  "damage_per_year": 0.2,
+  "run": {
+    "input_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "result_file": "synthetic-results.json",
+    "date": "2026-10-25"
+  },
+  "life_years": 5.0
+}

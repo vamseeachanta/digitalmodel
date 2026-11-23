@@ -1,0 +1,122 @@
+# Line Types Configuration
+# Template: CALM Buoy Mooring System
+LineTypes:
+  # Mooring chain - 84mm R4 studless
+  - Name: Chain_84mm_R4
+    Category: General
+    OD: 0.084
+    ID: 0
+    CentreOfMass: [0, 0]
+    BulkModulus: Infinity
+    MassPerUnitLength: 0.141
+    CompressionIsLimited: Yes
+    AllowableTension: ~
+    MinRadius: [~, ~]
+    EI: [0, ~]
+    EA: 612e3
+    PoissonRatio: 0.5
+    ExpansionTable: None
+    GJ: 0
+    TensionTorqueCoupling: 0
+    OuterContactDiameter: 0.168
+    InnerContactDiameter: ~
+    ClashStiffness: 0
+    Ca: [1, ~, 0.07]
+    Cm: [~, ~, ~]
+    Cs: 0
+    Ce: 0
+    Cd: [1.0, ~, 0.4]
+    Cl: 0
+    NormalDragLiftDiameter: 0.134
+    AxialDragLiftDiameter: 0.014
+    StressOD: ~
+    StressID: ~
+    AllowableStress: ~
+    TensileStressLoadingFactor: 1
+    BendingStressLoadingFactor: 1
+    ShearStressLoadingFactor: 1
+    TorsionalStressLoadingFactor: 1
+    SeabedLateralFrictionCoefficient: 0.5
+    SeabedAxialFrictionCoefficient: ~
+    RayleighDampingCoefficients: (no damping)
+    Pen: [2, Solid, $FF8000]
+
+  # Hawser line - HMPE rope
+  - Name: Hawser_HMPE_80mm
+    Category: General
+    OD: 0.08
+    ID: 0
+    CentreOfMass: [0, 0]
+    BulkModulus: Infinity
+    MassPerUnitLength: 0.0055
+    CompressionIsLimited: Yes
+    AllowableTension: ~
+    MinRadius: [~, ~]
+    EI: [0, ~]
+    EA: 1200
+    PoissonRatio: 0.5
+    ExpansionTable: None
+    GJ: 0
+    TensionTorqueCoupling: 0
+    OuterContactDiameter: ~
+    InnerContactDiameter: ~
+    ClashStiffness: 0
+    Ca: [1, ~, 0.01]
+    Cm: [~, ~, ~]
+    Cs: 0
+    Ce: 0
+    Cd: [Generic Drag, ~, 0.008]
+    Cl: 0
+    NormalDragLiftDiameter: ~
+    AxialDragLiftDiameter: ~
+    StressOD: ~
+    StressID: ~
+    AllowableStress: ~
+    TensileStressLoadingFactor: 1
+    BendingStressLoadingFactor: 1
+    ShearStressLoadingFactor: 1
+    TorsionalStressLoadingFactor: 1
+    SeabedLateralFrictionCoefficient: 0.5
+    SeabedAxialFrictionCoefficient: ~
+    RayleighDampingCoefficients: (no damping)
+    Pen: [1, Solid, Yellow]
+
+  # Floating hose
+  - Name: Floating_Hose_500mm
+    Category: General
+    OD: 0.64
+    ID: 0.5
+    CentreOfMass: [0, 0]
+    BulkModulus: Infinity
+    MassPerUnitLength: 0.182
+    CompressionIsLimited: No
+    AllowableTension: ~
+    MinRadius: [1.95, ~]
+    EI: [75, ~]
+    EA: 17e3
+    PoissonRatio: 0.5
+    ExpansionTable: None
+    GJ: 0
+    TensionTorqueCoupling: 0
+    OuterContactDiameter: ~
+    InnerContactDiameter: ~
+    ClashStiffness: 0
+    Ca: [1, ~, 0]
+    Cm: [~, ~, ~]
+    Cs: 0
+    Ce: 0
+    Cd: [Generic Drag, ~, 0.008]
+    Cl: 0
+    NormalDragLiftDiameter: ~
+    AxialDragLiftDiameter: ~
+    StressOD: ~
+    StressID: ~
+    AllowableStress: ~
+    TensileStressLoadingFactor: 1
+    BendingStressLoadingFactor: 1
+    ShearStressLoadingFactor: 1
+    TorsionalStressLoadingFactor: 1
+    SeabedLateralFrictionCoefficient: 0.5
+    SeabedAxialFrictionCoefficient: ~
+    RayleighDampingCoefficients: (no damping)
+    Pen: [2, Solid, Green]

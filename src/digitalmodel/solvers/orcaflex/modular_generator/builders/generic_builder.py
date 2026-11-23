@@ -1,0 +1,405 @@
+"""Builder for generic OrcaFlex model objects.
+
+This builder handles generic (non-pipeline, non-riser) OrcaFlex models.
+It iterates all fields in the GenericModel spec and emits the corresponding
+OrcaFlex YAML sections, using typed fields for known properties and the
+properties dict for pass-through values.
+
+OrcaFlex loads YAML sections sequentially and validates references as it
+goes. The builder must therefore emit sections in dependency order so that
+definitions (LineTypes, ClumpTypes, StiffenerTypes, SupportTypes, etc.)
+precede objects that reference them (Lines, Shapes, etc.).
+"""
+
+from __future__ import annotations
+
+import logging
+from typing import Any
+
+from ..schema.generic import (
+    FIELD_TO_SECTION,
+    SINGLETON_SECTIONS,
+    TYPED_FIELD_MAP,
+    GenericObject,
+    GenericVariableData,
+)
+from .base import BaseBuilder
+from .registry import BuilderRegistry
+
+logger = logging.getLogger(__name__)
+
+# Map spec field name -> context registration key for known entity types.
+# Only fields that have a corresponding attribute on BuilderContext are listed.
+_FIELD_TO_CONTEXT_KEY: dict[str, str] = {
+    "line_types": "line_type_names",
+    "vessel_types": "vessel_type_names",
+    "vessels": "vessel_names",
+    "lines": "line_names",
+    "buoys_6d": "buoy_names_6d",
+    "buoys_3d": "buoy_names_3d",
+    "shapes": "shape_names",
+    "winches": "winch_names",
+}
+
+# OrcaFlex YAML section dependency order.  Sections appearing earlier in this
+# list are emitted first so that definitions are available before references.
+# Derived from monolithic model.SaveData() output order.
+_SECTION_ORDER: list[str] = [
+    "General",
+    "VariableData",
+    "ExpansionTables",
+    # RayleighDampingCoefficients defines named damping sets referenced by
+    # Lines — must precede LineTypes/Lines but has no upstream references.
+    "RayleighDampingCoefficients",
+    # Type definitions (must precede instances)
+    "LineTypes",
+    "VesselTypes",
+    "ClumpTypes",
+    "WingTypes",
+    "FlexJointTypes",
+    "DragChainTypes",
+    "StiffenerTypes",
+    "SupportTypes",
+    "MorisonElementTypes",
+    # Object instances
+    "P-yModels",
+    "WakeModels",
+    "Vessels",
+    "Lines",
+    "Shapes",
+    "6DBuoys",
+    "3DBuoys",
+    "Constraints",
+    "Links",
+    "Winches",
+    "FlexJoints",
+    "DragChains",
+    "Turbines",
+    "AttachedBuoys",
+    "MultibodyGroups",
+    # Singleton sections that reference LineTypes, Shapes, etc. by name —
+    # must appear AFTER type definitions and object instances.
+    "FrictionCoefficients",
+    "LineContactData",
+    "CodeChecks",
+    "Shear7Data",
+    "VIVAData",
+    "BrowserGroups",
+    "Groups",
+]
+
+# OrcaFlex properties that must appear before other properties within an
+# object dict.  These "mode" properties change the available property set,
+# so they must be set first.  Order matters within this list too.
+_PRIORITY_KEYS: list[str] = [
+    "Name",
+    "Category",        # LineTypes: General vs Homogeneous pipe
+    "ShapeType",       # Shapes: Drawing, Elastic solid, etc.
+    "Shape",           # Shapes: Block, Cylinder, etc. (controls Size semantics)
+    "BuoyType",        # 6DBuoys: Spar buoy, Lumped buoy, etc.
+    "Connection",      # Various: affects available sub-properties
+    "InFrameConnection",   # Constraints: resets InFrameInitialPosition when set
+    "OutFrameConnection",  # Constraints: resets OutFrame position when set
+    "ConstraintType",      # Constraints: must precede DOFFree, stiffness props
+    "LinkType",        # Links: Tether, Spring/damper, etc.
+    "Geometry",        # SupportTypes: U shaped, etc.
+    "WaveType",        # Environment wave trains
+    "DegreesOfFreedomInStatics",  # 6DBuoys: must precede stiffness props
+]
+
+# General-section keys to skip when emitting general_properties.
+# These are view/display/cosmetic properties that OrcaFlex exports via
+# SaveData() but which can be dormant (not settable) depending on the
+# current view mode.  Setting a dormant property triggers a
+# "Change not allowed" error at load time.
+_SKIP_GENERAL_KEYS: set[str] = {
+    # Default view settings
+    "DefaultViewAngle1",
+    "DefaultViewAngle2",
+    "DefaultViewCentre",
+    "DefaultViewSize",
+    "DefaultViewOrientation",
+    "DefaultViewResetWhenConnectedObjectMoved",
+    "DefaultViewDistortionX",
+    "DefaultViewDistortionY",
+    "DefaultViewDistortionZ",
+    "DefaultViewAzimuth",
+    "DefaultViewElevation",
+    "DefaultViewMode",
+    # Default shaded view settings (dormant unless view mode is Shaded)
+    "DefaultShadedFillMode",
+    "DefaultShadedProjectionMode",
+    # Drawing cosmetics
+    "BackgroundColour",
+    "WireframeMode",
+    # Sea surface / seabed rendering
+    "SeaSurfaceTranslucency",
+    "SeabedTranslucency",
+    "SeaSurfaceGridDensity",
+    "SeabedGridDensity",
+    "SeaSurfacePen",
+    # Model state bookkeeping
+    "ModelState",
+    # Temperature units — display-only, encoding of degree symbol (°)
+    # differs between UTF-8 and Latin-1 causing OrcFxAPI "not found" errors
+    "TemperatureUnits",
+    # Variable time-step max — only settable when ImplicitUseVariableTimeStep
+    # is True or "Yes" in implicit mode; dormant otherwise.
+    # NOT skipped when general_properties re-enables variable time stepping
+    # (see build()) — stripping it then would silently revert the model to
+    # OrcaFlex's default max step and change dynamics results.
+    "ImplicitVariableMaxTimeStep",
+}
+
+# VariableData row-table key by (lower-cased) data_type.  Grounded in the
+# golden monolithic examples (docs/domains/orcaflex/examples/yml): every
+# row-table category uses "IndependentValue, DependentValue" except
+# coatings/linings which uses layer columns (e.g. "A05 Catenary with
+# semisub.yml" VariableData.Coatingsorlinings).
+_VARIABLE_DATA_ROW_KEYS: dict[str, str] = {
+    "coatingsorlinings": "LayerThickness, LayerMaterialDensity",
+}
+_DEFAULT_VARIABLE_DATA_ROW_KEY = "IndependentValue, DependentValue"
+
+# Object-level properties to strip from ALL object types during
+# ``_merge_object()``.  These are mode-dependent dormant properties that
+# OrcaFlex exports via ``SaveData()`` but rejects on load when the
+# controlling mode property has a different value.  For example,
+# ``ApplySeabedContactLoadsAtCentreline`` is only settable for LineType
+# categories that support centreline seabed contact.
+#
+# Unlike ``_SKIP_GENERAL_KEYS`` (which filters only the General section),
+# this set applies to every object emitted by the generic builder.
+_SKIP_OBJECT_KEYS: set[str] = {
+    # LineType / Line seabed properties — only valid for certain categories
+    "ApplySeabedContactLoadsAtCentreline",
+    # Environment seabed damping — only valid when SeabedModel != "Elastic"
+    "SeabedDamping",
+}
+
+
+@BuilderRegistry.register("20_generic_objects.yml", order=200)
+class GenericModelBuilder(BaseBuilder):
+    """Builds all OrcaFlex object sections for generic models.
+
+    Iterates the GenericModel specification and emits:
+    - List sections (LineTypes, Vessels, Lines, etc.) as lists of dicts
+    - Singleton sections (SolidFrictionCoefficients, etc.) as flat dicts
+    - General section overrides merged into a "General" key
+
+    Each list object is merged via ``_merge_object`` which combines typed
+    fields (e.g. ``name`` -> ``Name``) with the pass-through ``properties``
+    dict, giving typed fields priority on conflict.
+
+    Reference: OrcaFlex data model documentation.
+    """
+
+    def should_generate(self) -> bool:
+        """Only generate for generic models."""
+        return self.spec.is_generic()
+
+    def build(self) -> dict[str, Any]:
+        """Build all OrcaFlex sections from the generic model spec.
+
+        Returns:
+            Dictionary keyed by OrcaFlex section name (e.g. "LineTypes",
+            "Vessels", "SolidFrictionCoefficients", "General") with the
+            corresponding list-of-dicts or flat dict values.
+        """
+        generic = self.spec.generic
+        result: dict[str, Any] = {}
+
+        # Process list-based object sections
+        for field_name, section_key in FIELD_TO_SECTION.items():
+            # VariableData needs special nested-by-category handling
+            if field_name == "variable_data_sources":
+                continue
+
+            objects: list[GenericObject] = getattr(generic, field_name, [])
+            if not objects:
+                continue
+
+            merged = [self._merge_object(obj) for obj in objects]
+            result[section_key] = merged
+
+            # Register entity names into context where applicable
+            context_key = _FIELD_TO_CONTEXT_KEY.get(field_name)
+            if context_key is not None:
+                names = [obj.name for obj in objects]
+                self._register_entity(context_key, names)
+
+        # VariableData: group by data_type into nested sub-categories
+        # OrcaFlex expects: VariableData: { Dragcoefficient: [...], ... }
+        if generic.variable_data_sources:
+            var_data = self._build_variable_data(generic.variable_data_sources)
+            if var_data:
+                result["VariableData"] = var_data
+
+        # Process singleton sections
+        for section_key, field_name in SINGLETON_SECTIONS.items():
+            singleton = getattr(generic, field_name, None)
+            if singleton is None:
+                continue
+            if singleton.data:
+                if isinstance(singleton.data, list):
+                    result[section_key] = list(singleton.data)
+                else:
+                    result[section_key] = dict(singleton.data)
+
+        # Merge general_properties into "General", filtering out dormant
+        # view/display properties that cause "Change not allowed" errors.
+        if generic.general_properties:
+            properties = generic.general_properties
+            skip_keys = set(_SKIP_GENERAL_KEYS)
+            # Orcina, OrcaFlex online help (unversioned, accessed 2026-10-19),
+            # General data: Dynamics; General data: Implicit integration,
+            # "Use variable time step" and "Time step / maximum time step".
+            # https://www.orcina.com/webhelp/OrcaFlex/Content/html/Generaldata,Implicitintegration.htm
+            # The earlier GeneralBuilder include establishes fixed implicit
+            # mode when these source properties are absent.
+            method = properties.get("DynamicsSolutionMethod", "Implicit time domain")
+            variable = properties.get("ImplicitUseVariableTimeStep")
+            if "ImplicitUseVariableTimeStep" in properties and not (
+                isinstance(variable, bool)
+                or isinstance(variable, str) and variable in ("Yes", "No")
+            ):
+                raise ValueError(
+                    "ImplicitUseVariableTimeStep must be True, False, 'Yes' or 'No'"
+                )
+            if method in {"Explicit time domain", "Frequency domain"}:
+                skip_keys.update({
+                    "ImplicitUseVariableTimeStep", "ImplicitConstantTimeStep",
+                })
+            elif variable is True or variable == "Yes":
+                skip_keys.discard("ImplicitVariableMaxTimeStep")
+                skip_keys.add("ImplicitConstantTimeStep")
+            # YAML is applied sequentially: set method, then mode, then the
+            # active timestep. Do not mutate the source mapping or its values.
+            priority = ("DynamicsSolutionMethod", "ImplicitUseVariableTimeStep")
+            filtered = {
+                key: properties[key] for key in priority
+                if key in properties and key not in skip_keys
+            }
+            filtered.update({
+                key: value for key, value in properties.items()
+                if key not in skip_keys and key not in priority
+            })
+            if filtered:
+                result["General"] = filtered
+
+        return self._order_sections(result)
+
+    @staticmethod
+    def _order_sections(result: dict[str, Any]) -> dict[str, Any]:
+        """Re-order result dict to match OrcaFlex section dependency order.
+
+        Sections listed in ``_SECTION_ORDER`` are emitted first (in that
+        order).  Any unlisted sections are appended at the end.
+        """
+        ordered: dict[str, Any] = {}
+        for key in _SECTION_ORDER:
+            if key in result:
+                ordered[key] = result[key]
+        # Append any sections not in the canonical order
+        for key, val in result.items():
+            if key not in ordered:
+                ordered[key] = val
+        return ordered
+
+    @staticmethod
+    def _build_variable_data(
+        sources: list[GenericVariableData],
+    ) -> dict[str, list[dict[str, Any]]]:
+        """Build VariableData section grouped by data_type sub-category.
+
+        OrcaFlex expects VariableData as a nested dict where keys are
+        category names (e.g. "Dragcoefficient", "Linetypediameter") and
+        values are lists of named entries.
+
+        Hand-authored ``entries`` (data rows) are emitted under the
+        category's row-table key (``IndependentValue, DependentValue`` for
+        most data types, layer columns for coatings/linings — see
+        ``_VARIABLE_DATA_ROW_KEYS``).  Extractor round-trips instead carry
+        the rows inside ``properties`` under the native key; on conflict the
+        typed ``entries`` field wins (mirroring ``_merge_object``).
+
+        Args:
+            sources: Flat list of GenericVariableData with data_type fields.
+
+        Returns:
+            Nested dict: {"Dragcoefficient": [{Name: ..., ...}], ...}
+        """
+        categories: dict[str, list[dict[str, Any]]] = {}
+        for src in sources:
+            category = src.data_type or "Unknown"
+            entry: dict[str, Any] = dict(src.properties)
+            entry["Name"] = src.name
+            if src.entries is not None:
+                row_key = _VARIABLE_DATA_ROW_KEYS.get(
+                    (src.data_type or "").lower(), _DEFAULT_VARIABLE_DATA_ROW_KEY
+                )
+                if row_key in entry:
+                    logger.warning(
+                        "Variable data rows for '%s' set in both 'entries' and "
+                        "properties['%s']; 'entries' takes precedence",
+                        src.name,
+                        row_key,
+                    )
+                entry[row_key] = list(src.entries)
+            categories.setdefault(category, []).append(entry)
+        return categories
+
+    @staticmethod
+    def _merge_object(obj: GenericObject) -> dict[str, Any]:
+        """Merge typed fields and pass-through properties into a single dict.
+
+        Strategy:
+        1. Start from the properties dict (pass-through values).
+        2. Overlay typed fields using TYPED_FIELD_MAP for key translation.
+        3. Include typed fields that are non-None, or explicitly set to None
+           (via Pydantic ``model_fields_set``) to preserve monolithic parity.
+        4. Typed fields take priority over properties on key conflict.
+        5. Re-order so priority keys (Name, Category) appear first.
+
+        Args:
+            obj: A GenericObject (or subclass) instance.
+
+        Returns:
+            Flat dictionary suitable for OrcaFlex YAML output.
+        """
+        merged: dict[str, Any] = dict(obj.properties)
+        explicitly_set = getattr(obj, "model_fields_set", set())
+
+        for py_field, ofx_key in TYPED_FIELD_MAP.items():
+            value = getattr(obj, py_field, None)
+            if value is not None:
+                if ofx_key in merged:
+                    logger.warning(
+                        "Property '%s' set in both typed field and properties "
+                        "bag for %s; typed field takes precedence",
+                        ofx_key,
+                        obj.name,
+                    )
+                merged[ofx_key] = value
+            elif py_field in explicitly_set:
+                if ofx_key in merged:
+                    logger.warning(
+                        "Property '%s' set in both typed field (None) and "
+                        "properties bag for %s; typed field takes precedence",
+                        ofx_key,
+                        obj.name,
+                    )
+                merged[ofx_key] = value
+
+        # Strip dormant mode-dependent properties that cause
+        # "Change not allowed" errors across all object types.
+        for skip_key in _SKIP_OBJECT_KEYS:
+            merged.pop(skip_key, None)
+
+        # Ensure priority keys come first (e.g. Category before MaterialDensity)
+        ordered: dict[str, Any] = {}
+        for key in _PRIORITY_KEYS:
+            if key in merged:
+                ordered[key] = merged.pop(key)
+        ordered.update(merged)
+        return ordered

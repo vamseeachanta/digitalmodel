@@ -1,0 +1,23 @@
+id: pe-2026-04-03
+date: "2026-04-03"
+slug: pe-problem-of-the-day-4-3-2026
+source_url: https://app.collide.io/posts/pe-problem-of-the-day-4-3-2026
+title: "PE Problem of the Day 4/3/2026 — volatile distillate hydrocarbon"
+posted_by: Yogashri Pradhan
+tags: [upstream, chemicals, downstream]
+type: conceptual
+
+statement: >
+  What is a volatile liquid hydrocarbon obtained by distilling wood, coal tar, or petroleum, used in fuels and solvents and in chemical synthesis?
+
+find:
+  - "Name the product"
+
+solution:
+  method: "Petroleum-engineering concept recall (no calculation)."
+  answer: "Naphtha."
+  confidence: high
+  solved_by: "petroleum-engineering domain knowledge (Deckhand wells-subsurface pack / Claude API solver)"
+
+# Knowledge dot: the concept lives in llm-wiki (Deckhand wells-subsurface pack source).
+wiki_concept: n/a (downstream refining product - outside the current upstream-focused llm-wiki scope; kept as brief only)

@@ -1,0 +1,77 @@
+# Links Configuration
+# Generated from: F06 Spool piece manoeuvring.yml
+# Date: 2026-01-18 22:18:19
+Links:
+- Name: Upper sling1
+  LinkType: Tether
+  Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo:
+  - - Master link
+    - 0
+    - 0
+    - 0
+  - - Spreader bar
+    - -0.5000000000000003
+    - 0
+    - -5
+  ReleaseStage: ~
+  UnstretchedLength: 6
+  Stiffness: 200e3
+- Name: Upper sling2
+  LinkType: Tether
+  Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo:
+  - - Master link
+    - 0
+    - 0
+    - 0
+  - - Spreader bar
+    - -0.5000000000000014
+    - 0
+    - 5
+  ReleaseStage: ~
+  UnstretchedLength: 6
+  Stiffness: 200e3
+- Name: Lower sling1
+  LinkType: Tether
+  Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo:
+  - - Spreader bar
+    - 0.7000000000000004
+    - 0
+    - -10.200000000000003
+  - - Spool
+    - 4.26507625527263e-12
+    - 7.217760382277538e-11
+    - 2.37988
+    - End A
+  ReleaseStage: ~
+  UnstretchedLength: 2
+  Stiffness: 50e3
+- Name: Lower sling2
+  LinkType: Tether
+  Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo:
+  - - Spreader bar
+    - 0.6999999999999993
+    - 0
+    - -4.2862637970157317e-17
+  - - Spool
+    - 3.386957655550217e-11
+    - 5.732419023820224e-10
+    - 16.304221818181816
+    - End A
+  ReleaseStage: ~
+  UnstretchedLength: 6.5
+  Stiffness: 50e3
+- Name: Lower sling3
+  LinkType: Tether
+  Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo:
+  - - Spreader bar
+    - 0.7
+    - 0
+    - 10.2
+  - - Spool
+    - -4.963212647118965e-11
+    - -8.400149154882079e-10
+    - 31.145020000000038
+    - End A
+  ReleaseStage: ~
+  UnstretchedLength: 4.3
+  Stiffness: 50e3

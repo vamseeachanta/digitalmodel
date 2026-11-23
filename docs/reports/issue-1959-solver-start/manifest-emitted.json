@@ -1,0 +1,17 @@
+{
+  "0/U": "04e573a61d7246c39c1a15f72c8f1924b66cfd7c9553b1a91ffe91ace711773d",
+  "0/alpha.water": "70517ed97f8ed17a59884b8a5eaa93e566ad6d09b582d47fe4be659b5c0e6364",
+  "0/k": "c272929f1ed8207d8433b1cd48fce3770b80e5af65efaa435b330dc13eb4ba3b",
+  "0/nut": "1295613f5fa8c51b9a7fec3cd522abcfdb99c6a5b88a3ea9131fa718833ffe84",
+  "0/omega": "df6e4b4ad5dea0e75cda29e760639d526bfb0b4d54e2e5ff3d1652acdf570ddf",
+  "0/p_rgh": "8a2287053fb0882ccc5ee08d68124f1ea0774c70536ff0dffd36ea31ccfc7391",
+  "constant/g": "01fd84973d89e43e82eae389c58fff983a5ed3a18c91a953ca23477dee56ea44",
+  "constant/transportProperties": "ede7b0a176f3337bfb5af231627c94edfd78102633b592191fa673446e6a0ba8",
+  "constant/turbulenceProperties": "d84d20fb152f3aed3284734812bd3b14dd68116fca68da37f79e785635ced903",
+  "system/blockMeshDict": "d035b5cd2be9b92c7eb7ad93b0429d5948b3fcbb106de41273b3ae7b7ed66ebc",
+  "system/controlDict": "2883f986a84f4441aef934c96a2ca100202be13593e5429093b469c488e12db9",
+  "system/decomposeParDict": "a8c4d679dda156d39c447352ec9401155c5a9d10d05a4c96635864856750fa86",
+  "system/fvSchemes": "7a462c51ca57bd81be6b9adc6a3c0263f2a2fbcef35f10174220c090c5edf830",
+  "system/fvSolution": "131c2c54fcefe51feddaa123697ce7c44c002524f1353bd7302a98067aaf5930",
+  "system/setFieldsDict": "34da74d93b0736c2317005b16e377e9c76e62342a6fa67308652c6cb28196009"
+}

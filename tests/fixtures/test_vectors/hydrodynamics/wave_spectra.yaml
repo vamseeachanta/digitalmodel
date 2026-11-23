@@ -1,0 +1,115 @@
+source_type: standard
+source_description: "Wave spectrum models from DNV-RP-C205 — JONSWAP, Pierson-Moskowitz, Bretschneider"
+extracted_date: "2026-03-16"
+legal_scan_passed: true
+category: "hydrodynamics"
+subcategory: "wave_spectra"
+equations:
+  - name: "JONSWAP spectrum"
+    latex: "S(\\omega) = \\alpha \\frac{g^2}{\\omega^5} \\exp\\left[-1.25\\left(\\frac{\\omega_p}{\\omega}\\right)^4\\right] \\gamma^{\\exp\\left[-\\frac{(\\omega-\\omega_p)^2}{2\\sigma^2\\omega_p^2}\\right]}"
+    description: "Fetch-limited wave spectrum with peakedness enhancement"
+  - name: "Significant wave height from spectrum"
+    latex: "H_s = 4\\sqrt{m_0}"
+    description: "Hs derived from zeroth spectral moment"
+  - name: "Zero-crossing period from spectrum"
+    latex: "T_z = 2\\pi\\sqrt{\\frac{m_0}{m_2}}"
+    description: "Tz from zeroth and second spectral moments"
+  - name: "Peak frequency"
+    latex: "\\omega_p = \\frac{2\\pi}{T_p}"
+    description: "Angular peak frequency from peak period"
+  - name: "JONSWAP zero-crossing period approximation"
+    latex: "T_z \\approx 0.711 \\cdot T_p"
+    description: "Approximate relationship for JONSWAP spectrum"
+
+inputs:
+  - name: "Significant wave height"
+    symbol: "Hs"
+    unit: "m"
+    test_value: 3.5
+  - name: "Peak period"
+    symbol: "Tp"
+    unit: "s"
+    test_value: 10.0
+  - name: "JONSWAP peakedness parameter"
+    symbol: "gamma"
+    unit: "-"
+    test_value: 3.3
+
+outputs:
+  - name: "Peak frequency"
+    symbol: "omega_p"
+    unit: "rad/s"
+    test_expected: 0.6283185
+    tolerance: 1.0e-6
+  - name: "Zero-crossing period (JONSWAP approx)"
+    symbol: "Tz"
+    unit: "s"
+    test_expected: 7.11
+    tolerance: 0.1
+  - name: "Recovered Hs from JONSWAP spectrum"
+    symbol: "Hs_recovered"
+    unit: "m"
+    test_expected: 3.5
+    tolerance: 0.5
+
+worked_examples:
+  - description: "JONSWAP parameters — peak frequency from Tp=10s is 2*pi/10"
+    inputs:
+      Tp_s: 10.0
+    outputs:
+      omega_p_rad_s: 0.6283185
+    use_as_test: true
+
+  - description: "JONSWAP zero-crossing period approximation — Tz approx 0.711*Tp"
+    inputs:
+      Tp_s: 10.0
+    outputs:
+      Tz_s: 7.11
+    use_as_test: true
+
+  - description: "JONSWAP spectrum — recover Hs=3.0m from spectral moments"
+    inputs:
+      Hs_m: 3.0
+      Tp_s: 10.0
+      gamma: 3.3
+    outputs:
+      Hs_recovered_m: 3.0
+    use_as_test: true
+
+  - description: "JONSWAP spectrum statistics — Hs=3.5m, Tp=10.0s round-trip"
+    inputs:
+      Hs_m: 3.5
+      Tp_s: 10.0
+      gamma: 3.3
+    outputs:
+      Hs_recovered_m: 3.5
+      Tp_recovered_s: 10.0
+    use_as_test: true
+
+  - description: "Vessel length-to-beam ratio — FPSO L=300m, B=50m"
+    inputs:
+      length_overall_m: 300.0
+      beam_m: 50.0
+    outputs:
+      length_to_beam_ratio: 6.0
+    use_as_test: true
+
+  - description: "Vessel beam-to-draft ratio — FPSO B=50m, T=20m"
+    inputs:
+      beam_m: 50.0
+      draft_m: 20.0
+    outputs:
+      beam_to_draft_ratio: 2.5
+    use_as_test: true
+
+assumptions:
+  - "DNV-RP-C205 Section 3.5.2 formulation for JONSWAP"
+  - "Sigma = 0.07 for omega <= omega_p, 0.09 for omega > omega_p"
+  - "Alpha computed from Hs and omega_p per DNV formula"
+  - "Spectral integration via trapezoidal rule"
+  - "Hs recovery tolerance 0.5m due to spectral discretization"
+
+references:
+  - "DNV-RP-C205 Environmental Conditions and Environmental Loads, Section 3.5"
+  - "Pierson, W.J. and Moskowitz, L. (1964). A proposed spectral form for fully developed wind seas"
+  - "Hasselmann, K. et al. (1973). JONSWAP — Measurements of wind-wave growth and swell decay"

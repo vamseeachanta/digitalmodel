@@ -1,0 +1,162 @@
+{
+  "banks": [
+    {
+      "anode_requirements": {
+        "count_by_attenuation": 1,
+        "count_by_final_output": 1,
+        "count_by_initial_output": 1,
+        "count_by_mass": 1,
+        "installed_anode_count": 1,
+        "installed_mass_kg": 100.0,
+        "recommended_anode_count": 1,
+        "recommended_count_verification": {
+          "final_resistance_ohm": 0.17986314275531867,
+          "minimum_score": 1.9847767189737662
+        },
+        "required_mass_kg": 49.739053476657915,
+        "search_outcome": "pass"
+      },
+      "anode_resistance_ohm": {
+        "cable": 0.0,
+        "group_formula": "R_total = interaction_factor * R_parallel + R_cable",
+        "individual": {
+          "final": 0.17986314275531867,
+          "initial": 0.12489297283936161,
+          "mean": 0.12489297283936161
+        },
+        "interaction_factor": 1.0,
+        "parallel": {
+          "final": 0.17986314275531867,
+          "initial": 0.12489297283936161,
+          "mean": 0.12489297283936161
+        },
+        "total": {
+          "final": 0.17986314275531867,
+          "initial": 0.12489297283936161,
+          "mean": 0.12489297283936161
+        }
+      },
+      "bank_id": "terminal-a",
+      "check_scores": {
+        "attenuation:flowline-east": 1.9847767189737662,
+        "final_output": 1.9876470438070002,
+        "initial_output": 4.625637698980571,
+        "mass": 2.0104926211941105
+      },
+      "current_demand_A": {
+        "pipeline": {
+          "final": 0.33929200658769765,
+          "initial": 0.2827433388230814,
+          "mean": 0.31101767270538955
+        },
+        "structure": {
+          "final": 0.36,
+          "initial": 0.15000000000000002,
+          "mean": 0.2
+        },
+        "total": {
+          "final": 0.6992920065876976,
+          "initial": 0.4327433388230814,
+          "mean": 0.5110176727053896
+        }
+      },
+      "sides": [
+        {
+          "coating": {
+            "field_joint_final_factor": 0.0,
+            "field_joint_initial_factor": 0.0,
+            "field_joint_mean_factor": 0.0,
+            "field_joint_to_linepipe_ratio": 0.0,
+            "linepipe_final_factor": 0.036,
+            "linepipe_initial_factor": 0.03,
+            "linepipe_mean_factor": 0.033
+          },
+          "current_demand_A": {
+            "final": 0.33929200658769765,
+            "initial": 0.2827433388230814,
+            "mean": 0.31101767270538955
+          },
+          "effective_final_breakdown_factor": 0.036,
+          "extended_protected_length_m": 300.8593757570323,
+          "f103_eq20_protected_length_m": 204.20882834072896,
+          "far_potential_V": -0.9240412472546216,
+          "geometry_m": {
+            "field_joint_area": 0.0,
+            "length": 100.0,
+            "linepipe_area": 157.07963267948966,
+            "outer_diameter": 0.5,
+            "wall_thickness": 0.025
+          },
+          "longitudinal_resistance_ohm_m": 5.361008609411212e-06,
+          "potential_envelope": {
+            "distance_m": [
+              0.0,
+              25.0,
+              50.0,
+              75.0,
+              100.0
+            ],
+            "potential_V": [
+              -0.9242231419914637,
+              -0.9241776683072532,
+              -0.9241321946230426,
+              -0.9240867209388322,
+              -0.9240412472546216
+            ]
+          },
+          "protection_margin_V": 0.12404124725462151,
+          "protection_ok": true,
+          "side_id": "flowline-east"
+        }
+      ],
+      "status": {
+        "checks": {
+          "attenuation:flowline-east": true,
+          "final_output": true,
+          "initial_output": true,
+          "mass": true
+        },
+        "governing_case": "attenuation:flowline-east",
+        "reason": "minimum adequacy ratio 1.985",
+        "result": "PASS",
+        "use_status": null
+      }
+    }
+  ],
+  "citations": [
+    "dnv-rp-f103 2019-09 [6.7.11] (design protective potential)",
+    "dnv-rp-b401 2017-06 Table A-7",
+    "dnv-rp-f103 2019-09 Sec. 6.7 Eq. (9)-(16)",
+    "dnv-rp-f103 2019-09 Sec. 6.7 Eq. (18)/(20)",
+    "dnv-rp-f103 2019-09 Appendix D.8.5-D.8.10",
+    "dnv-rp-f103 2019-09 Table 6-3",
+    "dnv-rp-f103 2019-09 Table 6-2",
+    "dnv-rp-f103 2019-09 Table A-1"
+  ],
+  "design_life_years": 20.0,
+  "edition": "2019",
+  "formula_references": [
+    "F103 Sec. 6.7 Eq. (15), Eq. (16), Eq. (18), Eq. (20)",
+    "B401 Table A-7 individual resistance",
+    "ideal parallel circuit: 1/R_parallel = sum(1/R_a,j)"
+  ],
+  "model_limitations": [
+    "independent banks only; coupled asymmetric terminal sources are not solved",
+    "conservative Eq. (15) voltage-drop envelope; not a distributed-current profile",
+    "anode interaction represented only by the supplied interaction factor"
+  ],
+  "provenance": "verified-2019-tables",
+  "standard": "DNV-RP-F103",
+  "status": {
+    "checks": {
+      "bank:terminal-a/attenuation:flowline-east": true,
+      "bank:terminal-a/final_output": true,
+      "bank:terminal-a/initial_output": true,
+      "bank:terminal-a/mass": true
+    },
+    "governing_case": "bank:terminal-a/attenuation:flowline-east",
+    "reason": "minimum adequacy ratio 1.985",
+    "result": "PASS",
+    "use_status": "engineering-validation-required"
+  }
+}

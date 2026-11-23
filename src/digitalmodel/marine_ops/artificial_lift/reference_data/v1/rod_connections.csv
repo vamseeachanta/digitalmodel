@@ -1,0 +1,38 @@
+# provenance: previous project reference
+# extraction_date: 2026-07-29
+# schema: source_row,raw_rod_od,rod_od_in,raw_connection_size,connection_size_in,disposition
+# units: explicit in unit-suffixed fields; surface values unverified_source_unit
+source_row,raw_rod_od,rod_od_in,raw_connection_size,connection_size_in,disposition
+2,0.5,0.5,,,unmapped
+3,0.625,0.625,,,unmapped
+4,0.735,0.735,,,unmapped
+5,0.74,0.74,,,unmapped
+6,0.75,0.75,,,unmapped
+7,0.8125,0.8125,,,unmapped
+8,0.858,0.858,,,unmapped
+9,0.865,0.865,,,unmapped
+10,0.87,0.87,,,unmapped
+11,0.875,0.875,,,unmapped
+12,0.9375,0.9375,,,unmapped
+13,0.94,0.94,,,unmapped
+14,0.98,0.98,,,unmapped
+15,0.99,0.99,,,unmapped
+16,0.993,0.993,,,unmapped
+17,1,1,,,unmapped
+18,1.005,1.005,,,unmapped
+19,1.065,1.065,,,unmapped
+20,1.115,1.115,,,unmapped
+21,1.125,1.125,,,unmapped
+22,1.225,1.225,,,unmapped
+23,1.24,1.24,,,unmapped
+24,1.25,1.25,,,unmapped
+25,1.26,1.26,,,unmapped
+26,1.375,1.375,,,unmapped
+27,1.43,1.43,,,unmapped
+28,1.465,1.465,,,unmapped
+29,1.5,1.5,,,unmapped
+30,1.57,1.57,,,unmapped
+31,1.625,1.625,,,unmapped
+32,1.75,1.75,,,unmapped
+33,1.813,1.813,,,unmapped
+34,2,2,,,unmapped

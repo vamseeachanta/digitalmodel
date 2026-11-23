@@ -1,0 +1,1 @@
+recursive-include src/digitalmodel/data/marine_engineering/mooring_components *.csv *.json *.html *.txt

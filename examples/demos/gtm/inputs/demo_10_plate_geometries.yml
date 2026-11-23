@@ -1,0 +1,59 @@
+# Example input for GTM Demo 10 — CAD geometry-verification (plate buckling).
+#
+# This documents the parametric matrix the demo sweeps. The demo defines these
+# same axes in-script (GEOMETRIES_MM / THICKNESSES_MM / BOUNDARIES / MATERIALS);
+# this YAML is the committed, human-readable example input describing the
+# geometry set that feeds the buckling check (geometry -> check -> report).
+#
+# Buckling capacity (classical elastic / DNV-RP-C201 elastic reference stress):
+#   sigma_cr = k * pi^2 * E / (12 (1 - nu^2)) * (t/b)^2
+#   usage    = sigma_applied / sigma_cr     (PASS if usage <= 1.0)
+
+demo_id: demo_10
+standard: "DNV-RP-C201 (2010) / classical elastic plate buckling"
+backing_module: digitalmodel.infrastructure.calculations.plate_buckling
+
+# Rectangular plate panel footprints (a = length, b = loaded short edge) [mm].
+geometries:
+  - name: small panel
+    a_mm: 800.0
+    b_mm: 400.0
+  - name: deck panel
+    a_mm: 2400.0
+    b_mm: 1200.0
+  - name: bulkhead bay
+    a_mm: 3000.0
+    b_mm: 1000.0
+  - name: wide panel
+    a_mm: 2000.0
+    b_mm: 1600.0
+
+# Plate gauges [mm].
+thicknesses_mm: [8.0, 12.0, 18.0, 25.0]
+
+# Boundary conditions -> buckling coefficient k (uniaxial longitudinal compression).
+boundaries:
+  - name: simply-supported
+    k: 4.0
+  - name: clamped
+    k: 7.0
+
+# Materials: E [Pa], nu, yield [Pa], applied-stress design utilisation target of yield.
+materials:
+  - name: Steel S235
+    E: 2.10e11
+    nu: 0.30
+    fy: 235.0e6
+    design_target: 0.60
+  - name: Steel S355
+    E: 2.10e11
+    nu: 0.30
+    fy: 355.0e6
+    design_target: 0.60
+  - name: Al 5083-H116
+    E: 7.00e10
+    nu: 0.33
+    fy: 145.0e6
+    design_target: 0.50
+
+# 4 geometries x 4 thicknesses x 2 boundaries x 3 materials = 96 verification cases.

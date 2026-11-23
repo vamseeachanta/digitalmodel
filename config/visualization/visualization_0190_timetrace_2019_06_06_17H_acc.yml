@@ -1,0 +1,550 @@
+---
+parameters:
+  start_datetime: &start_datetime "2019-06-06 16:00:00"
+  end_datetime: &end_datetime "2019-06-06 19:00:00"
+  start_datetime_range1: &start_datetime_range1 "2019-06-06 17:37:05"
+  end_datetime_range1: &end_datetime_range1 "2019-06-06 17:37:20"
+  start_datetime_range2: &start_datetime_range2 "2019-06-06 17:15:05"
+  end_datetime_range2: &end_datetime_range2 "2019-06-06 17:15:20"
+  start_datetime_range3: &start_datetime_range3 "2019-06-06 16:15:05"
+  end_datetime_range3: &end_datetime_range3 "2019-06-06 16:15:20"
+  label_02: &label_02 label 2
+
+default:
+  log_level: DEBUG
+  config:
+    overwrite:
+      output: True
+  analysis:
+    db:
+      simple: False
+      table_statistics:
+        flag: False
+        statistics: [min, max, count, avg]
+        statistics_df_columns: [RiserId, SchemaName, TableName, ColumnName, ColumnDataType, StatisticsClassId, StartTime, EndTime, TableRows, Minimum, Maximum, Average, RMS, StandardDeviation]
+        schema: XOM
+#        tables: All
+        tables: [BD_TENSIONERS, BD_CALCULATEDDATAROOT, BD_RMSAS_VIVMONITOR, BD_RMSOUTPUT]
+      timeline_statistics:
+        flag: False
+        schema: XOM
+        time_interval_in_hours: 1
+        sets:
+          - table: YT_BOPYELLOWMRU_ACCMRU
+            time: TIMESTAMP
+            columns: [ACCMRU_FWD, ACCMRU_STBD]
+
+    run_example: False
+    statistics: True
+
+  input_data:
+    source: db
+    save_data_to_xlsx: False
+    sets:
+      -
+        label: acc_blue
+        schema: XOM
+        query:
+          filename: get_time_window_records_from_table.sql
+          arguments: [XOM.BD_BOPBLUEMRUACC, TIMESTAMP, *start_datetime, *end_datetime]
+      -
+        label: acc_yellow
+        schema: XOM
+        query:
+          filename: get_time_window_records_from_table.sql
+          arguments: [XOM.YT_BOPYELLOWMRU_ACCMRU, TIMESTAMP, *start_datetime, *end_datetime]
+
+  db:
+    dev:
+        server_type: mssql
+        server: guyanariser.database.windows.net
+        user: GuyanaRiserUser
+        password: M@ry12345
+        database: GuyanaRiser
+        pd_parse_dates_columns: [TIMESTAMP]
+
+plot_settings: []
+
+plot_multiple:
+
+  -
+    file_name_extension: BOP_acc
+    nrows: 2
+    ncols: 1
+    suptitle: *start_datetime
+    sets:
+
+    -
+      title: BOP Acceleration, Forward
+      xlabel: Date Time
+      ylabel: Acc. (ft/s2 - assumed)
+      xticklabels: NULL
+      autofmt:
+        xdate: True
+#      ylim: [0, 500]
+      grid: True
+      legend: True
+      legend_location: best
+      data:
+       -
+          df: input_data_acc_yellow
+          label: [Yellow MRU]
+          x: [TIMESTAMP]
+          y: [ACCMRU_FWD]
+          scale:
+            columns: [ACCMRU_FWD]
+            factors: [3.281]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_acc_blue
+          label: [Blue MRU]
+          x: [TIMESTAMP]
+          y: [ACCFWD]
+          scale:
+            columns: [ACCFWD]
+            factors: [3.281]
+          plt_kind: line
+          marker: NULL
+
+    -
+      title: BOP Acceleration, Starboard
+      xlabel: Date Time
+      ylabel: Acc. (ft/s2 - assumed)
+      xticklabels: NULL
+      autofmt:
+        xdate: True
+      grid: True
+      legend: True
+      legend_location: best
+      data:
+       -
+          df: input_data_acc_yellow
+          label: [Yellow MRU]
+          x: [TIMESTAMP]
+          y: [ACCMRU_STBD]
+          scale:
+            columns: [ACCMRU_STBD]
+            factors: [3.281]
+          plt_kind: line
+          marker: NULL
+       -
+          df: input_data_acc_blue
+          label: [Blue MRU]
+          x: [TIMESTAMP]
+          y: [ACCSTBD]
+          scale:
+            columns: [ACCSTBD]
+            factors: [3.281]
+          plt_kind: line
+          marker: NULL
+
+
+  -
+    file_name_extension: BOP_acc_range_1
+    nrows: 2
+    ncols: 1
+    suptitle: *start_datetime
+    sets:
+
+
+    -
+      title: BOP Acceleration, Forward, Range1
+      xlabel: Date Time
+      ylabel: Acc. (ft/s2 - assumed)
+      xticklabels: NULL
+      autofmt:
+        xdate: True
+      xlim: [*start_datetime_range1, *end_datetime_range1]
+      grid: True
+      legend: True
+      legend_location: best
+      data:
+       -
+          df: input_data_acc_yellow
+          label: [Yellow MRU]
+          x: [TIMESTAMP]
+          y: [ACCMRU_FWD]
+          scale:
+            columns: [ACCMRU_FWD]
+            factors: [3.281]
+          plt_kind: line
+          marker:
+            type: 'o'
+            size: 3
+            edge_color: None
+       -
+          df: input_data_acc_blue
+          label: [Blue MRU]
+          x: [TIMESTAMP]
+          y: [ACCFWD]
+          scale:
+            columns: [ACCFWD]
+            factors: [3.281]
+          plt_kind: line
+          marker:
+            type: 'o'
+            size: 3
+            edge_color: None
+
+    -
+      title: BOP Acceleration, Starboard, Range1
+      xlabel: Date Time
+      ylabel: Acc. (ft/s2 - assumed)
+      xticklabels: NULL
+      autofmt:
+        xdate: True
+      xlim: [*start_datetime_range1, *end_datetime_range1]
+      grid: True
+      legend: True
+      legend_location: best
+      data:
+       -
+          df: input_data_acc_yellow
+          label: [Yellow MRU]
+          x: [TIMESTAMP]
+          y: [ACCMRU_STBD]
+          scale:
+            columns: [ACCMRU_STBD]
+            factors: [3.281]
+          plt_kind: line
+          marker:
+            type: 'o'
+            size: 3
+            edge_color: None
+       -
+          df: input_data_acc_blue
+          label: [Blue MRU]
+          x: [TIMESTAMP]
+          y: [ACCSTBD]
+          scale:
+            columns: [ACCSTBD]
+            factors: [3.281]
+          plt_kind: line
+          marker:
+            type: 'o'
+            size: 3
+            edge_color: None
+
+  -
+    file_name_extension: BOP_acc_range_2
+    nrows: 2
+    ncols: 1
+    suptitle: *start_datetime
+    sets:
+
+
+    -
+      title: BOP Acceleration, Forward, Range2
+      xlabel: Date Time
+      ylabel: Acc. (ft/s2 - assumed)
+      xticklabels: NULL
+      autofmt:
+        xdate: True
+      xlim: [*start_datetime_range2, *end_datetime_range2]
+      ylim: [-1.5, 1.5]
+      grid: True
+      legend: True
+      legend_location: best
+      data:
+       -
+          df: input_data_acc_yellow
+          label: [Yellow MRU]
+          x: [TIMESTAMP]
+          y: [ACCMRU_FWD]
+          scale:
+            columns: [ACCMRU_FWD]
+            factors: [3.281]
+          plt_kind: line
+          marker:
+            type: 'o'
+            size: 3
+            edge_color: None
+       -
+          df: input_data_acc_blue
+          label: [Blue MRU]
+          x: [TIMESTAMP]
+          y: [ACCFWD]
+          scale:
+            columns: [ACCFWD]
+            factors: [3.281]
+          plt_kind: line
+          marker:
+            type: 'o'
+            size: 3
+            edge_color: None
+
+    -
+      title: BOP Acceleration, Starboard, Range2
+      xlabel: Date Time
+      ylabel: Acc. (ft/s2 - assumed)
+      xticklabels: NULL
+      autofmt:
+        xdate: True
+      xlim: [*start_datetime_range2, *end_datetime_range2]
+      ylim: [-1.5, 1.5]
+      grid: True
+      legend: True
+      legend_location: best
+      data:
+       -
+          df: input_data_acc_yellow
+          label: [Yellow MRU]
+          x: [TIMESTAMP]
+          y: [ACCMRU_STBD]
+          scale:
+            columns: [ACCMRU_STBD]
+            factors: [3.281]
+          plt_kind: line
+          marker:
+            type: 'o'
+            size: 3
+            edge_color: None
+       -
+          df: input_data_acc_blue
+          label: [Blue MRU]
+          x: [TIMESTAMP]
+          y: [ACCSTBD]
+          scale:
+            columns: [ACCSTBD]
+            factors: [3.281]
+          plt_kind: line
+          marker:
+            type: 'o'
+            size: 3
+            edge_color: None
+
+  -
+    file_name_extension: BOP_acc_range_3
+    nrows: 2
+    ncols: 1
+    suptitle: *start_datetime
+    sets:
+
+
+    -
+      title: BOP Acceleration, Forward, Range3
+      xlabel: Date Time
+      ylabel: Acc. (ft/s2 - assumed)
+      xticklabels: NULL
+      autofmt:
+        xdate: True
+      xlim: [*start_datetime_range3, *end_datetime_range3]
+      ylim: [-0.5, 0.5]
+      grid: True
+      legend: True
+      legend_location: best
+      data:
+       -
+          df: input_data_acc_yellow
+          label: [Yellow MRU]
+          x: [TIMESTAMP]
+          y: [ACCMRU_FWD]
+          scale:
+            columns: [ACCMRU_FWD]
+            factors: [3.281]
+          plt_kind: line
+          marker:
+            type: 'o'
+            size: 3
+            edge_color: None
+       -
+          df: input_data_acc_blue
+          label: [Blue MRU]
+          x: [TIMESTAMP]
+          y: [ACCFWD]
+          scale:
+            columns: [ACCFWD]
+            factors: [3.281]
+          plt_kind: line
+          marker:
+            type: 'o'
+            size: 3
+            edge_color: None
+
+    -
+      title: BOP Acceleration, Starboard, Range3
+      xlabel: Date Time
+      ylabel: Acc. (ft/s2 - assumed)
+      xticklabels: NULL
+      autofmt:
+        xdate: True
+      xlim: [*start_datetime_range3, *end_datetime_range3]
+      ylim: [-0.5, 0.5]
+      grid: True
+      legend: True
+      legend_location: best
+      data:
+       -
+          df: input_data_acc_yellow
+          label: [Yellow MRU]
+          x: [TIMESTAMP]
+          y: [ACCMRU_STBD]
+          scale:
+            columns: [ACCMRU_STBD]
+            factors: [3.281]
+          plt_kind: line
+          marker:
+            type: 'o'
+            size: 3
+            edge_color: None
+       -
+          df: input_data_acc_blue
+          label: [Blue MRU]
+          x: [TIMESTAMP]
+          y: [ACCSTBD]
+          scale:
+            columns: [ACCSTBD]
+            factors: [3.281]
+          plt_kind: line
+          marker:
+            type: 'o'
+            size: 3
+            edge_color: None
+
+#  -
+#    file_name_extension: pitch
+#    nrows: 1
+#    ncols: 1
+#    suptitle: *start_datetime
+#    sets:
+#
+#    -
+#      title: Pitch
+#      xlabel: Date Time
+#      ylabel: Angle (deg)
+#      xticklabels: NULL
+#      autofmt:
+#        xdate: True
+##      ylim: [0, 500]
+#      grid: True
+#      legend: True
+#      legend_location: best
+#      data:
+#       -
+#          df: input_data_angles_ufj
+#          label: [UFJ]
+#          x: [TIMESTAMP]
+#          y: [PITCH]
+#          scale:
+#            columns: [PITCH]
+#            factors: [57.3]
+#          plt_kind: line
+#          marker: NULL
+#       -
+#          df: input_data_angles_lrj_blue
+#          label: [LRJ-BlueMRU]
+#          x: [TIMESTAMP]
+#          y: [PITCH]
+#          scale:
+#            columns: [PITCH]
+#            factors: [57.3]
+#          plt_kind: line
+#          marker: NULL
+#
+#       -
+#          df: input_data_angles_lrj_yellow
+#          label: [LRJ-YellowMRU]
+#          x: [TIMESTAMP]
+#          y: [PITCH]
+#          scale:
+#            columns: [PITCH]
+#            factors: [57.3]
+#          plt_kind: line
+#          marker: NULL
+#
+#       -
+#          df: input_data_angles_bop_blue
+#          label: [BOP-BlueMRU]
+#          x: [TIMESTAMP]
+#          y: [PITCH]
+#          scale:
+#            columns: [PITCH]
+#            factors: [57.3]
+#          plt_kind: line
+#          marker: NULL
+#
+#       -
+#          df: input_data_angles_bop_yellow
+#          label: [BOP-YellowMRU]
+#          x: [TIMESTAMP]
+#          y: [PITCH]
+#          scale:
+#            columns: [PITCH]
+#            factors: [57.3]
+#          plt_kind: line
+#          marker: NULL
+#
+#  -
+#    file_name_extension: roll
+#    nrows: 1
+#    ncols: 1
+#    suptitle: *start_datetime
+#    sets:
+#
+#    -
+#      title: Pitch
+#      xlabel: Date Time
+#      ylabel: Angle (deg)
+#      xticklabels: NULL
+#      autofmt:
+#        xdate: True
+##      ylim: [0, 500]
+#      grid: True
+#      legend: True
+#      legend_location: best
+#      data:
+#       -
+#          df: input_data_angles_ufj
+#          label: [UFJ]
+#          x: [TIMESTAMP]
+#          y: [ROLL]
+#          scale:
+#            columns: [ROLL]
+#            factors: [57.3]
+#          plt_kind: line
+#          marker: NULL
+#       -
+#          df: input_data_angles_lrj_blue
+#          label: [LRJ-BlueMRU]
+#          x: [TIMESTAMP]
+#          y: [ROLL]
+#          scale:
+#            columns: [ROLL]
+#            factors: [57.3]
+#          plt_kind: line
+#          marker: NULL
+#
+#       -
+#          df: input_data_angles_lrj_yellow
+#          label: [LRJ-YellowMRU]
+#          x: [TIMESTAMP]
+#          y: [ROLL]
+#          scale:
+#            columns: [ROLL]
+#            factors: [57.3]
+#          plt_kind: line
+#          marker: NULL
+#
+#       -
+#          df: input_data_angles_bop_blue
+#          label: [BOP-BlueMRU]
+#          x: [TIMESTAMP]
+#          y: [ROLL]
+#          scale:
+#            columns: [ROLL]
+#            factors: [57.3]
+#          plt_kind: line
+#          marker: NULL
+#
+#       -
+#          df: input_data_angles_bop_yellow
+#          label: [BOP-YellowMRU]
+#          x: [TIMESTAMP]
+#          y: [ROLL]
+#          scale:
+#            columns: [ROLL]
+#            factors: [57.3]
+#          plt_kind: line
+#          marker: NULL
+#

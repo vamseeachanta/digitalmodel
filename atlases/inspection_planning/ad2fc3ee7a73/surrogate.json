@@ -1,0 +1,32 @@
+{
+  "basename": "inspection_planning",
+  "atlas_id": "ad2fc3ee7a73",
+  "physics": "linear",
+  "response": "remaining_life_years",
+  "axes": [
+    {
+      "name": "corrosion_rate_mm_yr",
+      "scale": "linear",
+      "grid": [
+        0.1,
+        0.15000000000000002,
+        0.2,
+        0.3,
+        0.5,
+        0.7,
+        0.9
+      ]
+    },
+    {
+      "name": "current_wall_thickness_mm",
+      "scale": "linear",
+      "grid": [
+        8.0,
+        10.0,
+        12.0,
+        14.0,
+        16.0
+      ]
+    }
+  ]
+}

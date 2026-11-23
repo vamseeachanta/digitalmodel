@@ -1,0 +1,461 @@
+#!/usr/bin/env python3
+"""
+Integrated Fatigue Analysis Processor with Proper Naming Convention
+
+This module integrates all fatigue analysis components with the agreed
+naming convention: {config}_FC{###}_Strut{#}_{type}.csv
+"""
+
+import numpy as np
+import pandas as pd
+import logging
+from pathlib import Path
+from typing import Dict, List, Tuple, Optional
+from dataclasses import dataclass
+
+from .strut_foundation_processor import ProductionDataHandler, LoadScaler, FatigueCondition, SeaState
+from .rainflow_counter import RainflowCounter
+from .fatigue_damage_calculator import FatigueDamageCalculator, SNCurveParameters
+from .file_namer import FatigueFileNamer, OverallFileNamer, create_output_structure
+
+logger = logging.getLogger(__name__)
+
+
+class IntegratedFatigueProcessorWithNaming:
+    """
+    Integrated fatigue analysis processor with proper file naming
+    """
+    
+    def __init__(self, data_handler: ProductionDataHandler, output_path: str = "output"):
+        self.data_handler = data_handler
+        self.load_scaler = LoadScaler(data_handler)
+        
+        # Initialize analysis components
+        self.rainflow_counter = RainflowCounter(gate_value=0.0001)
+        
+        # Create tension-to-stress converter
+        from .integrated_processor import TensionToStressConverter
+        stress_table_path = Path("input/tension_range_to_stress_range_function.csv")
+        if stress_table_path.exists():
+            self.stress_converter = TensionToStressConverter(str(stress_table_path))
+        else:
+            self.stress_converter = TensionToStressConverter()
+        
+        # Initialize fatigue calculator with ABS E in Air S-N curve
+        self.sn_curve = SNCurveParameters(
+            name="ABS E in Air",
+            log_a1=12.018,
+            m1=3.0,
+            log_a2=11.170,
+            m2=5.0,
+            threshold=1e6
+        )
+        
+        self.fatigue_calculator = FatigueDamageCalculator(
+            sn_curve=self.sn_curve,
+            scf=1.0,
+            design_life_years=20.0
+        )
+        
+        logger.info(f"Initialized fatigue calculator with {self.sn_curve.name} curve, SCF=1.0")
+        
+        # Load both fatigue conditions (legacy) and sea states (new)
+        self.fatigue_conditions = self.load_scaler.fatigue_conditions
+        self.sea_states = self.load_scaler.sea_states
+        
+        # Create file naming structure
+        configs = list(data_handler.configurations.keys())
+        self.namers = create_output_structure(output_path, configs)
+        self.output_path = Path(output_path)
+    
+    def process_single_condition(self, config_name: str, condition: FatigueCondition, 
+                                strut_num: int, save_intermediate: bool = True) -> dict:
+        """Process a single fatigue condition (legacy format)"""
+        return self._process_condition_base(config_name, condition, strut_num, save_intermediate, 'legacy')
+    
+    def process_single_sea_state(self, config_name: str, sea_state: SeaState, 
+                                strut_num: int, save_intermediate: bool = True) -> dict:
+        """Process a single sea state (new SS format)"""
+        return self._process_condition_base(config_name, sea_state, strut_num, save_intermediate, 'new')
+    
+    def _process_condition_base(self, config_name: str, condition, 
+                               strut_num: int, save_intermediate: bool = True, 
+                               format_type: str = 'legacy') -> dict:
+        """
+        Process a single condition (fatigue condition or sea state) with proper file naming
+        """
+        # Get file namer for this configuration
+        namer = self.namers[config_name]
+        
+        # Step 1: Get scaled tensions based on format type
+        if format_type == 'new':
+            effective_tension, metadata = self.load_scaler.process_sea_state(
+                config_name, condition, strut_num
+            )
+            condition_id = condition.id  # SS001, SS002, etc.
+            condition_name = condition.id
+        else:
+            effective_tension, metadata = self.load_scaler.process_fatigue_condition(
+                config_name, condition, strut_num
+            )
+            condition_id = condition.id  # 1, 2, 3, etc.
+            condition_name = f"FC{condition.id:03d}"
+        
+        if len(effective_tension) == 0:
+            logger.warning(f"No data for {config_name} {condition_name} Strut{strut_num}")
+            return None
+        
+        # Save combined tension if requested
+        if save_intermediate:
+            combined_file = namer.get_combined_filename(condition_id, strut_num)
+            df_combined = pd.DataFrame({
+                'Time': np.arange(len(effective_tension)) * 0.1,
+                'Effective_Tension_kN': effective_tension,
+                'Wind_Scale': metadata['wind_scale_factor'],
+                'Wave_Scale': metadata['wave_scale_factor']
+            })
+            df_combined.to_csv(combined_file, index=False)
+        
+        # Step 2: Rainflow counting
+        tension_ranges, cycle_counts = self.rainflow_counter.count_cycles(effective_tension)
+        
+        if save_intermediate and len(tension_ranges) > 0:
+            rainflow_file = namer.get_rainflow_filename(condition_id, strut_num)
+            df_rainflow = pd.DataFrame({
+                'Tension_Range_kN': tension_ranges,
+                'Cycle_Count': cycle_counts
+            })
+            df_rainflow.to_csv(rainflow_file, index=False)
+        
+        # Step 3: Convert tension to stress
+        stress_ranges = self.stress_converter.convert_to_stress(tension_ranges)
+        
+        # Step 4: Calculate damage
+        damage = self.fatigue_calculator.calculate_damage(stress_ranges, cycle_counts)
+        weighted_damage = damage * (condition.occurrence / 100.0)
+        
+        # Scale to annual damage
+        seconds_per_year = 365.25 * 24 * 3600
+        sample_seconds = len(effective_tension) * 0.1  # 0.1s timestep
+        annual_damage = weighted_damage * (seconds_per_year / sample_seconds)
+        fatigue_life = 1 / annual_damage if annual_damage > 0 else float('inf')
+        
+        # Save damage results if requested
+        if save_intermediate and len(stress_ranges) > 0:
+            damage_file = namer.get_damage_filename(condition_id, strut_num)
+            df_damage = pd.DataFrame({
+                'Stress_Range_MPa': stress_ranges,
+                'Cycle_Count': cycle_counts,
+                'Damage_Per_Cycle': damage / np.sum(cycle_counts) if np.sum(cycle_counts) > 0 else 0,
+                'Total_Damage': damage,
+                'Weighted_Damage': weighted_damage,
+                'Annual_Damage': annual_damage,
+                'Fatigue_Life_Years': fatigue_life
+            })
+            df_damage.to_csv(damage_file, index=False)
+        
+        return {
+            'config': config_name,
+            'condition_id': condition_id,
+            'condition_name': condition_name,
+            'strut': strut_num,
+            'tension_ranges': len(tension_ranges),
+            'max_tension': float(np.max(effective_tension)),
+            'min_tension': float(np.min(effective_tension)),
+            'mean_tension': float(np.mean(effective_tension)),
+            'max_stress_range': float(np.max(stress_ranges)) if len(stress_ranges) > 0 else 0,
+            'damage': damage,
+            'weighted_damage': weighted_damage,
+            'annual_damage': annual_damage,
+            'fatigue_life_years': fatigue_life,
+            'occurrence_pct': condition.occurrence,
+            'format_type': format_type
+        }
+    
+    def process_configuration(self, config_name: str, struts: List[int] = None,
+                            conditions: List[FatigueCondition] = None,
+                            save_intermediate: bool = True) -> Tuple[List[dict], dict]:
+        """
+        Process a complete configuration with proper file naming
+        """
+        if struts is None:
+            struts = list(range(1, 9))
+        
+        if conditions is None:
+            conditions = self.fatigue_conditions[:3]  # First 3 for testing
+        
+        logger.info(f"\nProcessing {config_name}")
+        config = self.data_handler.configurations[config_name]
+        logger.info(f"Description: {config.description}")
+        logger.info(f"Weight: {config.weight}%")
+        
+        # Get file namer
+        namer = self.namers[config_name]
+        
+        # Process all combinations
+        results = []
+        for condition in conditions:
+            for strut_num in struts:
+                logger.info(f"  Processing FC{condition.id:03d} - Strut{strut_num}")
+                result = self.process_single_condition(
+                    config_name, condition, strut_num, save_intermediate
+                )
+                if result:
+                    results.append(result)
+        
+        # Create configuration summary
+        if results:
+            df_results = pd.DataFrame(results)
+            
+            # Save configuration summary with proper naming
+            summary_file = namer.get_summary_filename()
+            
+            # Group by strut to find critical strut
+            strut_summary = df_results.groupby('strut').agg({
+                'annual_damage': 'sum',
+                'fatigue_life_years': 'min'
+            }).reset_index()
+            
+            # Find critical strut
+            critical_strut_idx = strut_summary['fatigue_life_years'].idxmin()
+            critical_strut = strut_summary.loc[critical_strut_idx, 'strut']
+            min_life = strut_summary.loc[critical_strut_idx, 'fatigue_life_years']
+            
+            # Save configuration summary
+            strut_summary.to_csv(summary_file, index=False)
+            
+            config_summary = {
+                'weight_pct': config.weight,
+                'critical_strut': f"Strut{critical_strut}",
+                'min_fatigue_life': min_life,
+                'strut_lives': {f"Strut{s}": life for s, life in 
+                              zip(strut_summary['strut'], strut_summary['fatigue_life_years'])}
+            }
+            
+            return results, config_summary
+        
+        return [], {}
+    
+    def process_configuration_with_sea_states(self, config_name: str, struts: List[int] = None,
+                                              sea_states: List[SeaState] = None,
+                                              save_intermediate: bool = True) -> Tuple[List[dict], dict]:
+        """
+        Process a complete configuration using new sea state naming convention
+        """
+        if struts is None:
+            struts = list(range(1, 9))
+        
+        if sea_states is None:
+            sea_states = self.sea_states[:4]  # First 4 sea states (SS001-SS004)
+        
+        logger.info(f"\nProcessing {config_name} with Sea States")
+        config = self.data_handler.configurations[config_name]
+        logger.info(f"Description: {config.description}")
+        logger.info(f"Weight: {config.weight}%")
+        
+        # Get file namer
+        namer = self.namers[config_name]
+        
+        # Process all combinations
+        results = []
+        for sea_state in sea_states:
+            for strut_num in struts:
+                logger.info(f"  Processing {sea_state.id} - Strut{strut_num}")
+                result = self.process_single_sea_state(
+                    config_name, sea_state, strut_num, save_intermediate
+                )
+                if result:
+                    results.append(result)
+        
+        # Create configuration summary
+        if results:
+            df_results = pd.DataFrame(results)
+            
+            # Save configuration summary with proper naming
+            summary_file = namer.get_summary_filename()
+            
+            # Group by strut to find critical strut
+            strut_summary = df_results.groupby('strut').agg({
+                'annual_damage': 'sum',
+                'fatigue_life_years': 'min'
+            }).reset_index()
+            
+            # Find critical strut
+            critical_strut_idx = strut_summary['fatigue_life_years'].idxmin()
+            critical_strut = strut_summary.loc[critical_strut_idx, 'strut']
+            min_life = strut_summary.loc[critical_strut_idx, 'fatigue_life_years']
+            
+            # Save configuration summary
+            strut_summary.to_csv(summary_file, index=False)
+            
+            config_summary = {
+                'weight_pct': config.weight,
+                'critical_strut': f"Strut{critical_strut}",
+                'min_fatigue_life': min_life,
+                'strut_lives': {f"Strut{s}": life for s, life in 
+                              zip(strut_summary['strut'], strut_summary['fatigue_life_years'])},
+                'naming_convention': 'new'
+            }
+            
+            return results, config_summary
+        
+        return [], {}
+    
+    def run_complete_analysis(self, struts: List[int] = None, 
+                            max_conditions: int = None,
+                            save_intermediate: bool = True,
+                            use_sea_states: bool = False) -> Tuple[pd.DataFrame, dict]:
+        """
+        Run complete fatigue analysis with proper file naming
+        
+        Args:
+            struts: List of strut numbers to process
+            max_conditions: Maximum number of conditions to process
+            save_intermediate: Whether to save intermediate files
+            use_sea_states: If True, use new SS naming convention; if False, use legacy FC naming
+        """
+        if struts is None:
+            struts = [1, 2]  # Default to first 2 struts for testing
+        
+        # Select conditions based on naming convention
+        if use_sea_states:
+            conditions = self.sea_states
+            if max_conditions:
+                conditions = conditions[:max_conditions]
+        else:
+            conditions = self.fatigue_conditions
+            if max_conditions:
+                conditions = conditions[:max_conditions]
+        
+        all_results = []
+        config_summaries = {}
+        
+        # Process each configuration
+        for config_name in self.data_handler.configurations:
+            config_path = self.data_handler.base_path / config_name
+            if not config_path.exists():
+                logger.warning(f"Skipping {config_name} - path does not exist")
+                continue
+            
+            if use_sea_states:
+                results, summary = self.process_configuration_with_sea_states(
+                    config_name, struts, conditions, save_intermediate
+                )
+            else:
+                results, summary = self.process_configuration(
+                    config_name, struts, conditions, save_intermediate
+                )
+            
+            if results:
+                all_results.extend(results)
+                config_summaries[config_name] = summary
+        
+        # Create overall summary
+        if all_results:
+            df_all = pd.DataFrame(all_results)
+            
+            # Save overall summary
+            overall_namer = self.namers['overall']
+            overall_file = overall_namer.get_overall_summary_filename()
+            
+            # Calculate weighted overall fatigue life
+            weighted_life = 0
+            for config_name, summary in config_summaries.items():
+                weight = summary['weight_pct'] / 100.0
+                min_life = summary['min_fatigue_life']
+                if min_life != float('inf'):
+                    weighted_life += weight / min_life
+            
+            overall_fatigue_life = 1 / weighted_life if weighted_life > 0 else float('inf')
+            
+            # Save overall summary
+            overall_summary = pd.DataFrame([{
+                'Overall_Fatigue_Life_Years': overall_fatigue_life,
+                'Total_Configurations': len(config_summaries),
+                'Total_Conditions': len(conditions),
+                'Total_Struts': len(struts)
+            }])
+            overall_summary.to_csv(overall_file, index=False)
+            
+            # Save configuration comparison
+            comparison_file = overall_namer.get_configuration_comparison_filename()
+            comparison_data = []
+            for config_name, summary in config_summaries.items():
+                comparison_data.append({
+                    'Configuration': config_name,
+                    'Weight_Pct': summary['weight_pct'],
+                    'Critical_Strut': summary['critical_strut'],
+                    'Min_Fatigue_Life_Years': summary['min_fatigue_life']
+                })
+            
+            df_comparison = pd.DataFrame(comparison_data)
+            df_comparison.to_csv(comparison_file, index=False)
+            
+            logger.info(f"\nOverall Weighted Fatigue Life: {overall_fatigue_life:.2f} years")
+            logger.info(f"Results saved with proper naming convention in {self.output_path}")
+            
+            return df_all, config_summaries
+        
+        return pd.DataFrame(), {}
+
+
+def main(data_path=None, use_sea_states=False):
+    """Main execution with proper naming convention
+    
+    Args:
+        data_path: Path to data directory
+        use_sea_states: If True, use new SS001-SS004 naming; if False, use legacy FC001-FC003
+    """
+    logger.info("=" * 60)
+    naming_type = "NEW SS NAMING CONVENTION" if use_sea_states else "LEGACY FC NAMING CONVENTION"
+    logger.info(f"FATIGUE ANALYSIS WITH {naming_type}")
+    logger.info("=" * 60)
+    
+    # Initialize handlers
+    data_handler = ProductionDataHandler(base_path=data_path, sample_timesteps=1000)
+    processor = IntegratedFatigueProcessorWithNaming(data_handler)
+    
+    # Run complete analysis
+    if use_sea_states:
+        max_conditions = 4  # Process SS001-SS004
+        logger.info("Using new SS naming convention (SS001-SS004)")
+    else:
+        max_conditions = 3  # Process first 3 FC conditions
+        logger.info("Using legacy FC naming convention (FC001-FC003)")
+    
+    df_results, config_summaries = processor.run_complete_analysis(
+        struts=[1, 2],  # Process first 2 struts
+        max_conditions=max_conditions,
+        save_intermediate=True,  # Save all intermediate files
+        use_sea_states=use_sea_states
+    )
+    
+    # Display summary
+    for config_name, summary in config_summaries.items():
+        logger.info(f"\n{config_name}:")
+        logger.info(f"  Critical Strut: {summary['critical_strut']}")
+        logger.info(f"  Min Fatigue Life: {summary['min_fatigue_life']:.2f} years")
+        naming_convention = summary.get('naming_convention', 'legacy')
+        logger.info(f"  Naming Convention: {naming_convention}")
+        for strut, life in summary['strut_lives'].items():
+            logger.info(f"    {strut}: {life:.2f} years")
+    
+    return df_results, config_summaries
+
+
+if __name__ == "__main__":
+    import sys
+    
+    logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
+    
+    # Check command line arguments for naming convention
+    use_new_naming = '--sea-states' in sys.argv or '--ss' in sys.argv
+    data_path = "sample_data"
+    
+    if len(sys.argv) > 1 and not sys.argv[1].startswith('--'):
+        data_path = sys.argv[1]
+    
+    logger.info(f"Data path: {data_path}")
+    logger.info(f"Using new naming convention: {use_new_naming}")
+    
+    results, summary = main(data_path, use_sea_states=use_new_naming)

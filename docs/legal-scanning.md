@@ -1,0 +1,138 @@
+# Legal Scanning — CP Stream Repos
+
+> **Retired as a repository gate on 2026-10-03.** Under the owner's decision in
+> [workspace-hub issue 3936](https://github.com/vamseeachanta/workspace-hub/issues/3936),
+> legal/identifier scans and the supporting census no longer run in pre-commit
+> or CI. The historical gate instructions below are superseded. Existing scanner
+> modules remain available to preserve sanitizer redaction consumers and tests;
+> they are not a required commit, ingestion, or release check.
+> Final-report review is manual and advisory, with unresolved findings disclosed.
+> Secret scanning, access controls, source rights, and security checks remain in
+> force. This retirement grants no new source rights or publication permissions.
+
+> WRK-278 | Updated: 2026-02-20
+
+## Deny List Files
+
+| Repo | File | Patterns |
+|------|------|----------|
+| `digitalmodel` | `digitalmodel/.legal-deny-list.yaml` | s7 OrcaFlex model sources + field C (<field-code>) + the project LNG (the project/350106/<job-code>) |
+| `a contractor` | `a contractor/.legal-deny-list.yaml` | field C/<field-code>/<field-code>, an operator, a contractor, an operator, a vessel |
+| `<project-archive>` | `<project-archive>/.legal-deny-list.yaml` | the project/the project/<job-code>, <field-code>/an operator, <field-code>, FST-1/FST-2, CB&I |
+
+All three lists extend the global `workspace-hub/.legal-deny-list.yaml`.
+
+## Running the Scan Manually
+
+```bash
+# From workspace-hub root
+bash scripts/legal/legal-sanity-scan.sh --repo=digitalmodel
+bash scripts/legal/legal-sanity-scan.sh --repo=a contractor
+bash scripts/legal/legal-sanity-scan.sh --repo=<project-archive>
+bash scripts/legal/legal-sanity-scan.sh --all
+```
+
+Exit codes: `0` = pass, `1` = block violations found.
+
+## Pre-Commit Hook (digitalmodel)
+
+`digitalmodel/.pre-commit-config.yaml` contains a `legal-sanity-scan` hook that runs
+`scripts/legal/legal-sanity-scan.sh --repo=digitalmodel` at the `pre-commit` stage.
+It does not receive filenames — it always scans the whole tree.
+
+Install: `pre-commit install` inside the `digitalmodel` submodule.
+
+## Manual Gate — a contractor and <project-archive>
+
+Neither `a contractor` nor `<project-archive>` has a `.pre-commit-config.yaml`.
+Run the scan manually before raising any PR from these repos:
+
+```bash
+bash scripts/legal/legal-sanity-scan.sh --repo=a contractor
+bash scripts/legal/legal-sanity-scan.sh --repo=<project-archive>
+```
+
+The scan must exit 0 before the PR can proceed (legal-compliance rule: block severity).
+
+## Pre-Existing Violations
+
+> **Superseded by owner decisions C13/C16 (2026-09-25).** The paragraph that
+> stood here excluded the de-identification script and a contractor
+> cathodic-protection comparison from the gate and said not to edit the
+> script. Now:
+>
+> - `scripts/sanitize_s7_models.py` carries no names. Its real-to-neutral map
+>   is a private JSON file read at run time from `DIGITALMODEL_S7_SANITIZE_MAP`
+>   or `~/.config/digitalmodel/s7-sanitize-map.json`; without it the script
+>   stops. The script has no exclusion.
+> - The cathodic-protection comparison document was removed from this public
+>   repository (a private copy is kept) and has no exclusion.
+> - `scripts/extract_s7_specs.py` is not in this repository.
+> - `docs/domains/cathodic_protection/standards-inventory.md` lists file paths
+>   only and is checked like any other file.
+
+---
+
+## Correction — what this document describes does not exist here (#1961, 2026-08-05)
+
+Everything above was written against a cross-repository arrangement. Measured
+against this repository's tracked tree, three of its claims do not hold:
+
+| Claim above | Measured state |
+|---|---|
+| `digitalmodel/.legal-deny-list.yaml` exists | **Absent.** `git ls-files` returns no deny-list file at any tracked path. |
+| `scripts/legal/legal-sanity-scan.sh` can be run for this repo | **Absent.** No `scripts/legal/legal-sanity-scan.sh` is tracked here. The pre-commit hook pointed at `../scripts/legal/legal-sanity-scan.sh`, i.e. outside the repository, which does not resolve from a worktree. |
+| The scan is a gate | **It was fail-open.** The `--repo=` form is under an open upstream defect: it was observed printing a passing result with exit code 0 over a worktree that contained a live leak, and the same form returned a pass both before and after a change that removed real identifiers. |
+
+That is the same defect class the scanner below replaces: a check that reports
+green while verifying nothing. The last two identifier leaks found in this
+repository were both found by manual sweep, not by any check.
+
+### What replaced it
+
+| Path | Role |
+|---|---|
+| `scripts/legal/check_protected_identifiers.py` | Fail-closed, byte-oriented scanner over the complete tracked tree, the staged index, a pinned historical tree, or a commit-message file. |
+| `scripts/legal/protected_surface_ownership.py` | Schema authority. A boundary rule and a whole-file exemption are both unrepresentable; every classification must carry a non-empty reason. |
+| `scripts/legal/protected-surface-v1.json` | Versioned scope manifest: rule identifiers, matcher contract, content-addressed field declarations, limits, pinned oracle. |
+| `scripts/legal/public_surface_snapshot.py` | Structural snapshot of the public Python surface, built from Git blobs. |
+| `scripts/legal/verify_public_surface.sh` | The three verifications that do not route through the test suite. |
+
+### Rule values are not stored in this repository
+
+The manifest declares rule **identifiers** and their matcher contract. It
+carries no rule **values**. Values are supplied at run time through `--rules`,
+from a file kept outside the repository:
+
+```bash
+export PROTECTED_RULES_FILE=/path/outside/this/repo/rules.json
+scripts/legal/verify_public_surface.sh --all
+```
+
+This is not decoration. The scanner enumerates its own tree, so a value
+committed anywhere here would make the tool fail on itself — which is exactly
+what the self-coverage case pins.
+
+Without that file the scanner reports its authority as `UNAUTHENTICATED`,
+returns a distinct exit code rather than a clean one, and asserts nothing about
+production-clean state.
+
+### Exit codes
+
+`0` clean · `1` findings · `2` manifest schema error · `3` rule authority
+unavailable · `4` fail-closed (unclassified path, oversize artifact, unreadable
+artifact).
+
+### Stage 2 is not built
+
+Authenticated current-snapshot validation, anti-rollback, real rule values, the
+protected maintainer workflow, fork-CI separation, and any production-clean
+assertion are all blocked on external provisioning that has not started. The CI
+job prints an `UNAUTHENTICATED` banner and is not a required status check —
+this repository defines none.
+
+### Known remaining gap
+
+The gitleaks hook in `.pre-commit-config.yaml` still passes
+`--config ../.gitleaks.toml`, which has the same unresolvable relative path as
+the hook removed in this pass. It is recorded here rather than changed silently.

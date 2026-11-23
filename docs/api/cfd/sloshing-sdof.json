@@ -1,0 +1,56 @@
+{
+  "meta": {
+    "generated_by": "scripts/cfd/reduce_sloshing_sdof.py",
+    "epic": "#1429",
+    "issue": "#1433",
+    "note": "SDOF reduction of the forced-roll CFD; zeta fitted from wall run-up; A44/B44 from SloshingCouplingModel.",
+    "roll_amplitude_deg": 4.0
+  },
+  "tank": {
+    "shape": "rectangular",
+    "breadth_m": 0.9
+  },
+  "sdof_by_fill": [
+    {
+      "h_over_L": 0.3,
+      "natural_period_s": 1.25147,
+      "omega_n_rad_s": 5.0206,
+      "equivalent_damping_ratio_zeta": 0.095,
+      "resonance_coefficients": {
+        "added_roll_inertia_A44": -0.0191,
+        "added_roll_damping_B44": 1.9971,
+        "added_roll_stiffness_K44": 0.4822
+      },
+      "peak_quad_coeff": 1.9971
+    },
+    {
+      "h_over_L": 0.5,
+      "natural_period_s": 1.12136,
+      "omega_n_rad_s": 5.6032,
+      "equivalent_damping_ratio_zeta": 0.18,
+      "resonance_coefficients": {
+        "added_roll_inertia_A44": -0.0105,
+        "added_roll_damping_B44": 1.7,
+        "added_roll_stiffness_K44": 0.3285
+      },
+      "peak_quad_coeff": 2.2785
+    },
+    {
+      "h_over_L": 0.7,
+      "natural_period_s": 1.0872,
+      "omega_n_rad_s": 5.7792,
+      "equivalent_damping_ratio_zeta": 0.305,
+      "resonance_coefficients": {
+        "added_roll_inertia_A44": 0.019,
+        "added_roll_damping_B44": 2.6687,
+        "added_roll_stiffness_K44": -0.6339
+      },
+      "peak_quad_coeff": 3.1386
+    }
+  ],
+  "tuning_basis": {
+    "relation": "omega1^2 = (pi*g/L)*tanh(pi*h/L)",
+    "g": 9.80665,
+    "note": "Interactive tuning: for tank length L and target roll period T_roll, the tuning fill is where f1(fill)=1/T_roll."
+  }
+}

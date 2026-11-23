@@ -1,0 +1,222 @@
+LineTypes:
+- Name: 10.75"Jumper_wCoat
+  Category: Homogeneous pipe
+  MaterialDensity: 7.85
+  E: 212000000.0
+  PoissonRatio: 0.293
+  CoatingThickness: 0.0762
+  CoatingMaterialDensity: 0.97873
+  LiningThickness: 0
+  Can: 1.0
+  Caz: 0
+  Cdn: 2.4
+  Cdz: 0.008
+  NormalDragLiftDiameter: 0.42545
+  RayleighDampingCoefficients: (no damping)
+  OD: 0.27305
+  ID: 0.182118
+- Name: 10.75"Jumper_wCoat_wStrake
+  Category: Homogeneous pipe
+  MaterialDensity: 7.85
+  E: 212000000.0
+  PoissonRatio: 0.293
+  CoatingThickness: 0.081432
+  CoatingMaterialDensity: 0.990381
+  LiningThickness: 0
+  Can: 1.0
+  Caz: 0
+  Cdn: 3.6
+  Cdz: 0.008
+  NormalDragLiftDiameter: 0.653
+  RayleighDampingCoefficients: (no damping)
+  OD: 0.27305
+  ID: 0.182118
+- Name: 10.75"Jumper_wCoat_wBuoy
+  Category: Homogeneous pipe
+  MaterialDensity: 7.85
+  E: 212000000.0
+  PoissonRatio: 0.293
+  CoatingThickness: 0.419059
+  CoatingMaterialDensity: 0.720401
+  LiningThickness: 0
+  Can: 1.0
+  Caz: 0
+  Cdn: 3.6
+  Cdz: 0.008
+  NormalDragLiftDiameter: 1.5403
+  RayleighDampingCoefficients: (no damping)
+  OD: 0.27305
+  ID: 0.182118
+- Name: OCS 200-V
+  Category: General
+  GJ: 80.0
+  PoissonRatio: 0.293
+  Ca:
+  - 1.0
+  - ~
+  - 0
+  Cd:
+  - 1.2
+  - ~
+  - 0.008
+  RayleighDampingCoefficients: (no damping)
+  OD: 1.8
+  ID: 1.5
+  MassPerUnitLength: 1.291154
+  EI:
+  - 100000.0
+  - ~
+  EA: 1000000.0
+Lines:
+- Name: jumper-b
+  IncludeTorsion: false
+  TopEnd: End A
+  LengthAndEndOrientations: Explicit
+  Representation: Finite element
+  DragFormulation: Standard
+  StaticsVIV: None
+  DynamicsVIV: None
+  WaveCalculationMethod: Specified by environment
+  ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination,
+    ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+  : - - Fixed
+      - 0.0
+      - 0.0
+      - -1395.0
+      - 0
+      - 0
+      - 0
+      - ~
+      - ~
+    - - Fixed
+      - 34.704
+      - 0.0
+      - -1399.3434
+      - 0
+      - 180
+      - 0
+      - ~
+      - ~
+  ConnectionxBendingStiffness, ConnectionyBendingStiffness:
+  - - Infinity
+    - ~
+  - - Infinity
+    - ~
+  LineType, Length, TargetSegmentLength:
+  - - OCS 200-V
+    - 1.3
+    - 0.5
+  - - 10.75"Jumper_wCoat
+    - 7.2644
+    - 0.5
+  - - 10.75"Jumper_wCoat
+    - 1.994911
+    - 0.5
+  - - 10.75"Jumper_wCoat
+    - 1.524
+    - 0.5
+  - - 10.75"Jumper_wCoat
+    - 1.994911
+    - 0.5
+  - - 10.75"Jumper_wCoat
+    - 1.041
+    - 0.5
+  - - 10.75"Jumper_wCoat_wStrake
+    - 2.159
+    - 0.5
+  - - 10.75"Jumper_wCoat
+    - 1.182
+    - 0.5
+  - - 10.75"Jumper_wCoat_wBuoy
+    - 2.032
+    - 0.5
+  - - 10.75"Jumper_wCoat
+    - 1.181
+    - 0.5
+  - - 10.75"Jumper_wCoat_wStrake
+    - 2.159
+    - 0.5
+  - - 10.75"Jumper_wCoat
+    - 1.041
+    - 0.5
+  - - 10.75"Jumper_wCoat
+    - 1.994911
+    - 0.5
+  - - 10.75"Jumper_wCoat
+    - 1.27401
+    - 0.5
+  - - 10.75"Jumper_wCoat_wBuoy
+    - 10.16
+    - 0.5
+  - - 10.75"Jumper_wCoat
+    - 1.168
+    - 0.5
+  - - 10.75"Jumper_wCoat_wBuoy
+    - 10.16
+    - 0.5
+  - - 10.75"Jumper_wCoat
+    - 1.27401
+    - 0.5
+  - - 10.75"Jumper_wCoat
+    - 1.994911
+    - 0.5
+  - - 10.75"Jumper_wCoat
+    - 2.413
+    - 0.5
+  - - 10.75"Jumper_wCoat_wBuoy
+    - 2.032
+    - 0.5
+  - - 10.75"Jumper_wCoat
+    - 2.413
+    - 0.5
+  - - 10.75"Jumper_wCoat
+    - 1.994911
+    - 0.5
+  - - 10.75"Jumper_wCoat
+    - 1.524
+    - 0.5
+  - - 10.75"Jumper_wCoat
+    - 1.994911
+    - 0.5
+  - - 10.75"Jumper_wCoat
+    - 7.6708
+    - 0.5
+  - - OCS 200-V
+    - 1.3
+    - 0.5
+  ContentsMethod: Uniform
+  IncludeAxialContentsInertia: true
+  ContentsDensity: 0.0
+  ContentsPressure: 0
+  ContentsFlowRate: 0
+  IncludedInStatics: true
+  StaticsStep1: Spline
+  StaticsStep2: Full statics
+  StaticsSeabedFrictionPolicy: None
+  AsLaidTension: 0
+  SplineOrder: 3
+  SplineControlPointX, SplineControlPointY, SplineControlPointZ:
+  - - 0.0
+    - 0.0
+    - -1395.0
+  - - 0.0
+    - 0.0
+    - -1385.1656
+  - - 4.064
+    - 0.0
+    - -1385.1656
+  - - 4.064
+    - 0.0
+    - -1398.5006
+  - - 30.64
+    - 0.0
+    - -1398.5006
+  - - 30.64
+    - 0.0
+    - -1389.1026
+  - - 34.704
+    - 0.0
+    - -1389.1026
+  - - 34.704
+    - 0.0
+    - -1399.3434

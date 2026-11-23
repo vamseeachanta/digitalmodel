@@ -1,0 +1,42 @@
+# tug_30m_1 Vessel Configuration
+# Specific configuration for tug_30m_1 diffraction analysis
+
+vessel:
+  name: "tug_30m_1"
+  type: "Tug"
+  length_overall: 30.0  # meters (approximate)
+  beam: 10.0           # meters (approximate)
+  draft: 3.5           # meters (approximate)
+  
+geometry:
+  primary_file: "tug_30m_1_0.25 Mesh_Binary.stl"
+  alternate_files:
+    - "tug_30m_1_0.25 Mesh_Ascii.stl"
+    - "tug_30m_1_0.25 Mesh_Binary.obj"
+  path: "specs/modules/orcawave/diffraction-analysis/inputs/geometry"
+  # Alternative absolute path (update as needed):
+  # path: "<private-data>\\geometry"
+  
+# Override base configuration values
+environment:
+  water_depth: 100.0  # Site-specific depth
+  
+mesh_settings:
+  panel_size: 0.25    # Matches provided mesh
+  
+frequency_range:
+  start: 0.01
+  end: 3.0
+  steps: 100
+  
+project:
+  name: "<job-code> tug_30m_1 Analysis"
+  client: "<client>"
+  reference: "<job-code>"
+  
+analysis_specifics:
+  purpose: "Hydrodynamic analysis for tug_30m_1 vessel"
+  applications:
+    - "OrcaFlex integration"
+    - "Motion response analysis"
+    - "Mooring system design"

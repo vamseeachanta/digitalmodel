@@ -1,0 +1,234 @@
+from __future__ import annotations
+
+from pathlib import Path
+from typing import Any
+
+from digitalmodel.hydrodynamics.diffraction.spec_converter import SpecConverter
+
+_SUPPORTED_OPERATIONS = ("convert_spec", "run_orcawave", "run_aqwa")
+
+# Solve operation -> (runner module, convenience fn, human label). Both runners
+# share the same signature and fail-closed contract, so the lane's fixed
+# ``python -m digitalmodel <input>`` command drives either solver (#900/#939).
+_SOLVERS = {
+    "run_orcawave": ("orcawave_runner", "run_orcawave", "OrcaWave"),
+    "run_aqwa": ("aqwa_runner", "run_aqwa", "AQWA"),
+}
+
+
+def _solver_provenance(operation: str) -> tuple[bool, str | None]:
+    """Positively record whether this host could have solved (#1631, D9).
+
+    OrcaWave is a Python API; AQWA is an executable (aqwa_runner falls back to
+    shutil.which("aqwa")). Both answer the same one-field question, so a
+    consumer never has to read a log to tell a licensed host from an
+    unlicensed one.
+    """
+    from digitalmodel import run_contract
+
+    if operation == "run_aqwa":
+        return run_contract.executable_provenance("aqwa")
+    return run_contract.solver_provenance("OrcFxAPI")
+
+
+class DiffractionWorkflow:
+    """Engine router for diffraction-domain workflows.
+
+    ``convert_spec`` (default, offline) converts a canonical spec into solver
+    input decks. ``run_orcawave`` / ``run_aqwa`` (require an OrcaWave / AQWA
+    license) convert and solve end-to-end from a single input file, so the
+    licensed-run lane's fixed ``python -m digitalmodel <input>`` command can
+    drive a solve (issues #900 / #939).
+    """
+
+    def router(self, cfg: dict[str, Any]) -> dict[str, Any]:
+        settings = cfg.setdefault("diffraction", {})
+        operation = settings.get("operation", "convert_spec")
+        if operation == "convert_spec":
+            return self._convert_spec(cfg, settings)
+        if operation in _SOLVERS:
+            return self._run_solver(cfg, settings, operation)
+        raise ValueError(
+            f"Unsupported diffraction operation: {operation!r}. "
+            f"Supported operations: {', '.join(_SUPPORTED_OPERATIONS)}"
+        )
+
+    def _convert_spec(
+        self, cfg: dict[str, Any], settings: dict[str, Any]
+    ) -> dict[str, Any]:
+        spec_path = self._resolve_spec_path(cfg, settings)
+        output_dir = self._resolve_output_dir(cfg, settings)
+        solver = settings.get("solver", "all").lower()
+        fmt = settings.get("format", "single").lower()
+
+        converter = SpecConverter(spec_path)
+        issues = converter.validate()
+        if issues:
+            joined = "; ".join(issues)
+            raise ValueError(f"Invalid diffraction spec: {joined}")
+
+        outputs = self._convert(converter, solver, fmt, output_dir)
+        settings["spec_path"] = str(spec_path)
+        settings["output_directory"] = str(output_dir)
+        settings["outputs"] = {
+            name: str(path) for name, path in sorted(outputs.items())
+        }
+        settings["validation_issues"] = issues
+        return cfg
+
+    def _run_solver(
+        self, cfg: dict[str, Any], settings: dict[str, Any], operation: str
+    ) -> dict[str, Any]:
+        import importlib
+
+        # Lazy import: only pull the OrcFxAPI/AQWA-adjacent runner on a solve request.
+        from digitalmodel.hydrodynamics.diffraction.input_schemas import DiffractionSpec
+
+        module_name, func_name, label = _SOLVERS[operation]
+        runner_module = importlib.import_module(
+            f"digitalmodel.hydrodynamics.diffraction.{module_name}"
+        )
+        run_solve = getattr(runner_module, func_name)  # patch-friendly at call time
+
+        spec_path = self._resolve_spec_path(cfg, settings)
+        output_dir = self._resolve_output_dir(cfg, settings)
+        requested_dry_run = bool(settings.get("dry_run", False))
+
+        solver_kwargs: dict[str, Any] = {}
+        if operation == "run_orcawave":
+            # dm#1555: one OrcaWave solve may use ~90% of host cores as
+            # OrcFxAPI threads (owner resource policy, dm#1553). An explicit
+            # diffraction.thread_count wins; None lets the runner resolve the
+            # host-aware default. AQWA keeps its own core handling (#546).
+            raw_threads = settings.get("thread_count")
+            solver_kwargs["thread_count"] = (
+                int(raw_threads) if raw_threads is not None else None
+            )
+
+        spec = DiffractionSpec.from_yaml(spec_path)
+        result = run_solve(
+            spec,
+            output_dir=output_dir,
+            dry_run=requested_dry_run,
+            timeout_seconds=int(settings.get("timeout_seconds", 7200)),
+            spec_path=spec_path,
+            **solver_kwargs,
+        )
+
+        status = str(getattr(result.status, "value", result.status)).lower()
+        effective_threads = getattr(result, "thread_count", None)
+        if effective_threads is not None:
+            settings["thread_count_effective"] = int(effective_threads)
+        settings["spec_path"] = str(spec_path)
+        settings["output_directory"] = str(getattr(result, "output_dir", output_dir))
+        settings["run_status"] = status
+        settings["outputs"] = {
+            "input_file": str(getattr(result, "input_file", "") or ""),
+            "modular_files": [
+                str(p) for p in getattr(result, "modular_files", []) or []
+            ],
+            "mesh_files": [str(p) for p in getattr(result, "mesh_files", []) or []],
+        }
+        if status == "failed":
+            raise RuntimeError(
+                f"{label} solve failed: "
+                f"{getattr(result, 'error_message', None) or 'unknown error'}"
+            )
+        # A silent dry-run fallback (no executable/license) must NOT read as success
+        # for a real solve request — the licensed-run lane would record a false finish.
+        if status == "dry_run" and not requested_dry_run:
+            raise RuntimeError(
+                f"{label} solver unavailable: run fell back to dry-run "
+                f"(no {label} executable/license found). Run on a licensed host."
+            )
+        if status == "completed":
+            exported = self._export_results_json(result, settings)
+            if exported is not None:
+                settings["outputs"]["diffraction_results_json"] = str(exported)
+        # #1631: RunResult.validation_verdict is already computed, already typed
+        # against the closed five-value contract, and already attached to the
+        # result -- and was read by nobody. That single omission is why twelve
+        # licensed runs drained with returncode 0 over two validator FAILs.
+        # Recording solver provenance alongside it lets a consumer tell a
+        # licensed host from an unlicensed one without parsing logs.
+        settings["validation_verdict"] = getattr(
+            result, "validation_verdict", "SKIPPED"
+        )
+        available, identity = _solver_provenance(operation)
+        settings["solver_available"] = available
+        settings["solver_identity"] = identity
+        return cfg
+
+    @staticmethod
+    def _export_results_json(result: Any, settings: dict[str, Any]) -> Path | None:
+        """Serialize ``DiffractionResults`` into the solve output directory.
+
+        ``diffraction_results.json`` is the bundle authority consumed by the
+        license-free side (``postprocess.load_results_bundle``,
+        ``DiffractionResults.from_dict``) and, being a small JSON in the
+        results tree, is picked up by the licensed-run queue's result-return
+        mechanism — so RAOs leave the licensed host without extra
+        infrastructure (#1537).
+        """
+        results_obj = getattr(result, "diffraction_results", None)
+        if results_obj is None:
+            return None
+        import json
+
+        out_dir = Path(
+            str(getattr(result, "output_dir", None) or settings["output_directory"])
+        )
+        out_dir.mkdir(parents=True, exist_ok=True)
+        path = out_dir / "diffraction_results.json"
+        path.write_text(
+            json.dumps(
+                results_obj.to_dict(),
+                indent=2,
+                # numpy scalars/arrays from the extraction layer
+                default=lambda o: (
+                    o.item()
+                    if hasattr(o, "item")
+                    else (o.tolist() if hasattr(o, "tolist") else str(o))
+                ),
+            )
+        )
+        return path
+
+    @staticmethod
+    def _resolve_spec_path(cfg: dict[str, Any], settings: dict[str, Any]) -> Path:
+        spec = settings.get("spec")
+        if spec is None:
+            raise ValueError("diffraction.spec is required")
+
+        spec_path = Path(spec)
+        if spec_path.is_absolute():
+            return spec_path
+
+        config_dir = cfg.get("_config_dir_path")
+        if config_dir:
+            return (Path(config_dir) / spec_path).resolve()
+        return spec_path.resolve()
+
+    @staticmethod
+    def _resolve_output_dir(cfg: dict[str, Any], settings: dict[str, Any]) -> Path:
+        result_folder = cfg.get("Analysis", {}).get("result_folder")
+        base_dir = Path(result_folder) if result_folder else Path.cwd()
+
+        output = settings.get("output_directory")
+        if output is None:
+            return base_dir.resolve()
+
+        output_dir = Path(output)
+        if output_dir.is_absolute():
+            return output_dir
+        return (base_dir / output_dir).resolve()
+
+    @staticmethod
+    def _convert(
+        converter: SpecConverter, solver: str, fmt: str, output_dir: Path
+    ) -> dict[str, Path]:
+        if solver == "all":
+            return converter.convert_all(format=fmt, output_dir=output_dir)
+
+        path = converter.convert(solver=solver, format=fmt, output_dir=output_dir)
+        return {solver: path}

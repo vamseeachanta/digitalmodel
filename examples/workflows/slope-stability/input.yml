@@ -1,0 +1,34 @@
+# Public README workbook converted to SI using Pint.
+# Source: https://github.com/njones61/xslope/blob/main/README.md
+# Retrieved 2026-10-14; geometry and strengths use the public fixture.
+basename: slope_stability
+default:
+  log_level: INFO
+  config:
+    generate_plots: false
+    overwrite:
+      output: true
+slope_stability:
+  profile:
+    units: SI
+    water_unit_weight_kn_m3: 9.81
+    ground_surface_m:
+      - - 0.0
+        - 0.0
+      - - 6.095999999999999
+        - 6.095999999999999
+      - - 30.479999999999997
+        - 6.095999999999999
+    bottom_elevation_m: 0.0
+    layers:
+      - unit_weight_kn_m3: 19.635932980780783
+        c_kpa: 23.940129490167926
+        phi_deg: 0.0
+    circles:
+      - x_m: 3.0479999999999996
+        y_m: 12.191999999999998
+        radius_m: 12.191999999999998
+  num_slices: 20
+  outputs:
+    directory: results/slope_stability
+    summary_json: slope_stability_summary.json

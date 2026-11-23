@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Diffraction Domain Architecture — Output-Driven Analysis Contract</title>
+<style>
+  :root{--bg:#0f1419;--panel:#1a2129;--ink:#e6edf3;--muted:#9aa7b4;--line:#2a3540;
+    --accent:#4f9cf9;--good:#3fb950;--warn:#d29922;--bad:#f85149;--violet:#a371f7;}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:15px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
+  .wrap{max-width:1140px;margin:0 auto;padding:34px 24px 90px}
+  h1{font-size:27px;margin:0 0 4px}
+  h2{font-size:20px;margin:42px 0 12px;padding-bottom:6px;border-bottom:1px solid var(--line)}
+  h3{font-size:16px;margin:26px 0 6px;color:var(--accent)}
+  .sub{color:var(--muted);margin:0 0 4px}
+  code{background:#0b0f14;border:1px solid var(--line);border-radius:4px;padding:1px 5px;font-size:12.5px;color:#cdd9e5}
+  a{color:var(--accent);text-decoration:none} a:hover{text-decoration:underline}
+  table{width:100%;border-collapse:collapse;margin:10px 0 6px;font-size:13.5px}
+  th,td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--muted);font-weight:600;background:var(--panel)}
+  tr:hover td{background:#161d25}
+  .meta{display:flex;flex-wrap:wrap;gap:18px;color:var(--muted);font-size:13px;margin:10px 0 22px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:14px 18px;margin:14px 0}
+  .key{background:#0d1f17;border:1px solid #1c5b3a;border-left:4px solid var(--good);border-radius:6px;padding:12px 16px;margin:14px 0}
+  .note{background:#1d1607;border:1px solid #6b5114;border-radius:6px;padding:10px 14px;margin:10px 0;font-size:13.5px}
+  .done{color:var(--good)} .part{color:var(--warn)} .miss{color:var(--bad)}
+  pre.diag{background:#0b0f14;border:1px solid var(--line);border-radius:8px;padding:16px;overflow:auto;
+    font:12.5px/1.5 "SFMono-Regular",Consolas,monospace;color:#cdd9e5}
+  .pill{display:inline-block;padding:1px 8px;border-radius:10px;font-size:11.5px;font-weight:600;border:1px solid var(--line)}
+  .pa{color:var(--violet);border-color:#3d2a63} .pb{color:var(--accent);border-color:#1c3a5b} .pc{color:var(--good);border-color:#1c5b3a}
+  ul{margin:6px 0;padding-left:20px} li{margin:3px 0}
+  .legend{font-size:12.5px;color:var(--muted);margin-top:8px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Diffraction Domain Architecture</h1>
+<p class="sub">Output-driven analysis contract · OrcaWave (pilot) + AQWA · <code>digitalmodel</code></p>
+<div class="meta">
+  <span><strong>Date:</strong> 2026-05-27</span>
+  <span><strong>Status:</strong> design / proposal</span>
+  <span><strong>Scope:</strong> <code>src/digitalmodel/hydrodynamics/diffraction/</code></span>
+  <span><strong>Companion:</strong> output-driven reframe of <code>DIFFRACTION_CAPABILITIES_EXPANSION_PLAN.md</code></span>
+</div>
+
+<div class="card">
+  <strong>Domain objective (all analysis domains, all analysis repos).</strong>
+  Given <strong>(1)</strong> a <em>defined output/outcome</em> and <strong>(2)</strong> raw data — which may be
+  <em>barebones or fully detailed</em> — the domain module shall:
+  <ul>
+    <li><span class="pill pa">a</span> <strong>Q&amp;A + assume missing data</strong> — detect what the requested outcome needs, ask the user, and where unanswered supply suitable assumed values drawn from maintained reference data.</li>
+    <li><span class="pill pb">b</span> <strong>prepare input data</strong> — assemble the solver-ready input package from the now-complete dataset.</li>
+    <li><span class="pill pc">c</span> <strong>provide output with sanity checks</strong> — run, then return results gated by physical / range / coverage validation.</li>
+  </ul>
+  This is an <strong>output-driven (inverse)</strong> contract — outcome defined first, inputs inferred — not the usual
+  input-driven <code>spec&nbsp;→&nbsp;run&nbsp;→&nbsp;results</code> flow.
+</div>
+
+<div class="key">
+  <strong>★ The load-bearing requirement.</strong> The module must work whether the user supplies almost nothing or a
+  complete dataset. The non-negotiable is that <strong>every value the module assumed (rather than received) is highlighted
+  in the output report and brought to the user's attention</strong>, with its source and engineering basis. The report is
+  the place where assumptions become visible and reviewable — silent assumptions are forbidden.
+</div>
+
+<!-- ============ DATA SPECTRUM ============ -->
+<h2>1 · The data spectrum</h2>
+<p class="sub">The same entry point accepts any point on this spectrum; the assumption engine fills the delta.</p>
+<table>
+  <thead><tr><th style="width:22%">Input richness</th><th>What the user provides</th><th>What the module fills (→ flagged in report)</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Barebones</strong></td><td>Outcome (e.g. "ship RAOs"), a mesh or principal dimensions, water depth</td><td>Mass, CoG, radii of gyration, frequency grid, heading grid, QTF/irregular-freq settings, damping — all assumed</td></tr>
+    <tr><td><strong>Partial</strong></td><td>Above + mass &amp; CoG</td><td>Radii of gyration, grids, solver options — assumed</td></tr>
+    <tr><td><strong>Detailed</strong></td><td>A complete <code>DiffractionSpec</code></td><td>Nothing assumed; module validates &amp; runs (report shows an empty assumption ledger)</td></tr>
+  </tbody>
+</table>
+
+<!-- ============ ARCHITECTURE ============ -->
+<h2>2 · Architecture — the canonical spec as solver-agnostic hub</h2>
+<p class="sub">Confirmed: <code>SpecConverter.backends = {"aqwa": AQWABackend, "orcawave": OrcaWaveBackend}</code>
+  (<code>spec_converter.py:46</code>). The intelligence layers attach to <code>DiffractionSpec</code>, so they serve
+  <strong>both diffraction solvers at once</strong> — this is why OrcaWave-first / AQWA-next is nearly free.</p>
+
+<pre class="diag">
+  outcome + raw data (barebones … detailed)
+            │
+            ▼
+  ┌───────────────────────────────────────────────┐
+  │  (a) RESOLVER  — Q&A + assumption engine        │  ← maintained reference DBs
+  │      detect-missing → ask → assume → LEDGER     │     (hull catalog, RAO db,
+  └───────────────────────────────────────────────┘      examples L00–L06, WAMIT ref)
+            │  complete DiffractionSpec + AssumptionLedger
+            ▼
+  ┌───────────────────────────────────────────────┐
+  │            DiffractionSpec  (canonical hub)     │   ← solver-agnostic
+  └───────────────────────────────────────────────┘
+            │
+   ┌────────┴────────┐
+   ▼                 ▼
+ (b) OrcaWaveBackend   (b) AQWABackend        ← + MeshPipeline, GeometryQualityChecker
+   │  + Runner            │  + Runner
+   ▼                 ▼
+  ┌───────────────────────────────────────────────┐
+  │  (c) OutputValidator → sanity-checked results   │
+  │      physical / range / coverage / symmetry     │
+  └───────────────────────────────────────────────┘
+            │
+            ▼
+   OUTPUT REPORT  =  results  +  ASSUMPTION LEDGER  +  sanity verdict
+</pre>
+
+<!-- ============ PILLARS ============ -->
+<h2>3 · The three pillars — component inventory</h2>
+<p class="sub">Most capability already exists as code; the gap is integration into one output-driven orchestrator. Status as of <code>main@998abd24</code>.</p>
+
+<h3><span class="pill pa">a</span> Q&amp;A + assume missing data</h3>
+<table>
+  <thead><tr><th>Component (exists)</th><th>Role</th><th>Status</th></tr></thead>
+  <tbody>
+    <tr><td><code>parametric_spec_generator.estimate_mass / estimate_cog / estimate_radii_of_gyration</code></td><td>Engineering estimators with <code>X_override or estimate_X(...)</code> pattern</td><td class="part">Exists, but tied to <code>HullProfile</code>; silent; no ledger</td></tr>
+    <tr><td><code>hull_library</code> (catalog, profile_schema), <code>rao_database.py</code></td><td>Maintained reference data to look up assumptions</td><td class="part">Exist; not consulted by a resolver</td></tr>
+    <tr><td>Interactive Q&amp;A / detect-missing layer</td><td>Ask user for outcome-critical gaps before assuming</td><td class="miss">Missing</td></tr>
+    <tr><td><strong>AssumptionLedger</strong></td><td>Record value + source + basis per field; surface in report</td><td class="miss">Missing — the key new component</td></tr>
+  </tbody>
+</table>
+
+<h3><span class="pill pb">b</span> Prepare input data</h3>
+<table>
+  <thead><tr><th>Component (exists)</th><th>Role</th><th>Status</th></tr></thead>
+  <tbody>
+    <tr><td><code>SpecConverter</code> + <code>OrcaWaveBackend</code> / <code>AQWABackend</code></td><td>Spec → solver input files</td><td class="part">Works; not self-contained packaging (#605)</td></tr>
+    <tr><td><code>OrcaWaveRunner._copy_mesh_files</code></td><td>Co-locate mesh + aux files</td><td class="done">Done (#500 runner half)</td></tr>
+    <tr><td><code>MeshPipeline.prepare_for_solver</code></td><td>Convert/normalize arbitrary mesh → solver-ready</td><td class="miss">Unwired — 0 call sites (#606)</td></tr>
+    <tr><td><code>GeometryQualityChecker</code></td><td>Pre-solve mesh QA gate</td><td class="miss">Unwired (#608)</td></tr>
+  </tbody>
+</table>
+
+<h3><span class="pill pc">c</span> Output with sanity checks</h3>
+<table>
+  <thead><tr><th>Component (exists)</th><th>Role</th><th>Status</th></tr></thead>
+  <tbody>
+    <tr><td><code>output_validator.py</code> (<code>OutputValidator</code>)</td><td>Physical validity, ranges, freq/heading coverage, symmetry, resonance → PASS/WARN</td><td class="part">Real &amp; complete; <strong>not auto-invoked</strong> after a run</td></tr>
+    <tr><td><code>report_generator.py</code> + <code>report_builders_*</code></td><td>Standardized HTML report (per-DOF, hydrostatics, roll damping)</td><td class="done">Strong (#282 ≈80%)</td></tr>
+    <tr><td><code>RunResult</code> structured result paths</td><td>Expose <code>.owr</code>/<code>.xlsx</code>/report paths</td><td class="miss"><code>.owr</code> overloaded into <code>log_file</code> (#611)</td></tr>
+    <tr><td><code>orcawave_batch_runner</code> / convergence study</td><td>Cross-variant sanity (mesh / grid convergence)</td><td class="miss">No convergence schema (#612)</td></tr>
+  </tbody>
+</table>
+
+<!-- ============ ASSUMPTION LEDGER ============ -->
+<h2>4 · Assumption ledger — the heart of pillar (a)</h2>
+<p class="sub">Every resolved field carries provenance. This is what makes assumptions visible in the report.</p>
+<pre class="diag">
+AssumptionRecord:
+  field:        "bodies[0].inertia.radii_of_gyration"
+  value:        [12.4, 31.8, 33.1]   # m
+  source:       user_supplied | assumed_default | estimated_from_data | database_lookup
+  basis:        "estimate_radii_of_gyration(profile) — empirical k=0.34·B, 0.30·L"
+  reference:    "hull_catalog: barge-class / parametric_spec_generator.py:173"
+  confidence:   high | medium | low
+</pre>
+<div class="note">
+  <strong>Reconciliation with #525.</strong> Issue #525 removed <em>silent</em> defaults from the OrcaWave parser (it now
+  raises on missing data). That is fully compatible with this contract: assumed values are permitted <strong>only when
+  recorded in the ledger and surfaced</strong>. "No silent defaults" and "fill missing data" are the same rule viewed from
+  two sides — the ledger is the bridge.
+</div>
+<p>The output report gains a mandatory <strong>Assumptions</strong> section listing every record where
+  <code>source ≠ user_supplied</code>, sorted by impact/confidence, so the engineer reviews exactly what the module decided
+  on their behalf before trusting the results.</p>
+
+<!-- ============ DATABASES ============ -->
+<h2>5 · Maintained reference data feeds pillar (a)</h2>
+<p class="sub">Per direction: assumption quality improves over time as example/analysis databases are maintained and grow.</p>
+<ul>
+  <li><strong>Hull library</strong> (<code>hydrodynamics/hull_library/</code>) — catalog + parametric profiles → mass/CoG/gyradii lookups.</li>
+  <li><strong>RAO database</strong> (<code>rao_database.py</code>) — prior-analysis RAOs indexed by hull parameters → first-guess responses &amp; cross-checks.</li>
+  <li><strong>Example sets</strong> (<code>docs/domains/orcawave/L00–L06</code>, AQWA benchmark) — canonical worked cases → templates for grids &amp; solver options.</li>
+  <li><strong>WAMIT / analytical reference</strong> (<code>wamit_reference_loader.py</code>, <code>L00_validation_wamit</code>) → validation baselines for pillar (c).</li>
+</ul>
+<p>The resolver consults these in priority order (exact match → parametric estimate → conservative default), tagging each
+  result's <code>source</code>/<code>confidence</code> accordingly.</p>
+
+<!-- ============ GAPS ============ -->
+<h2>6 · The three integration gaps (tracked in epic <a href="https://github.com/vamseeachanta/digitalmodel/issues/622">#622</a>)</h2>
+<table>
+  <thead><tr><th style="width:30%">Missing piece</th><th>Why it's the high-leverage gap</th></tr></thead>
+  <tbody>
+    <tr><td><span class="pill pa">a</span> <strong>Inverse entry point + resolver</strong> · <a href="https://github.com/vamseeachanta/digitalmodel/issues/623">#623</a></td><td>No "define outcome + barebones data → resolve" front door. #607 (given-mesh) is mesh-driven, not outcome-driven; estimators are siloed in the hull library.</td></tr>
+    <tr><td><span class="pill pa">a</span> <strong>AssumptionLedger</strong> · <a href="https://github.com/vamseeachanta/digitalmodel/issues/624">#624</a></td><td>The component that records &amp; surfaces every assumed value. Without it the contract's core promise (highlight assumptions) cannot be met.</td></tr>
+    <tr><td><span class="pill pc">c</span> <strong>Auto-wire <code>OutputValidator</code></strong> · <a href="https://github.com/vamseeachanta/digitalmodel/issues/625">#625</a></td><td>Sanity checks exist but are opt-in; the contract requires every run to return a validation verdict automatically.</td></tr>
+  </tbody>
+</table>
+
+<!-- ============ ROLLOUT ============ -->
+<h2>7 · Rollout sequence</h2>
+<table>
+  <thead><tr><th>Phase</th><th>Solver</th><th>Cost</th><th>Notes</th></tr></thead>
+  <tbody>
+    <tr><td>1 — pilot</td><td><strong>OrcaWave</strong></td><td>full build</td><td>Resolver + ledger + auto-validation prove out on the OrcaWave backend.</td></tr>
+    <tr><td>2 — near-free</td><td><strong>AQWA</strong></td><td>low</td><td>Same diffraction domain; resolver/ledger/validator attach to the shared <code>DiffractionSpec</code> hub — only AQWA-specific input prep differs.</td></tr>
+    <tr><td>3 — adapt</td><td>OrcaFlex &amp; others</td><td>medium</td><td>Different paradigm (time-domain). The a/b/c contract carries over; the spec/assumption/validation layers are re-implemented per domain.</td></tr>
+  </tbody>
+</table>
+
+<!-- ============ ISSUE MAP ============ -->
+<h2>8 · Existing issue map</h2>
+<table>
+  <thead><tr><th>Pillar</th><th>Issues already open</th></tr></thead>
+  <tbody>
+    <tr><td><span class="pill pa">a</span></td><td><a href="https://github.com/vamseeachanta/digitalmodel/issues/607">#607</a> (front-door, mesh-driven), <a href="https://github.com/vamseeachanta/digitalmodel/issues/501">#501</a> (options/defaults) — <em>+ 2 new pieces needed</em></td></tr>
+    <tr><td><span class="pill pb">b</span></td><td><a href="https://github.com/vamseeachanta/digitalmodel/issues/500">#500</a> <a href="https://github.com/vamseeachanta/digitalmodel/issues/605">#605</a> <a href="https://github.com/vamseeachanta/digitalmodel/issues/606">#606</a> <a href="https://github.com/vamseeachanta/digitalmodel/issues/608">#608</a> <a href="https://github.com/vamseeachanta/digitalmodel/issues/609">#609</a> <a href="https://github.com/vamseeachanta/digitalmodel/issues/614">#614</a></td></tr>
+    <tr><td><span class="pill pc">c</span></td><td><a href="https://github.com/vamseeachanta/digitalmodel/issues/611">#611</a> <a href="https://github.com/vamseeachanta/digitalmodel/issues/610">#610</a> <a href="https://github.com/vamseeachanta/digitalmodel/issues/612">#612</a> <a href="https://github.com/vamseeachanta/digitalmodel/issues/282">#282</a> <em>+ auto-wire OutputValidator</em></td></tr>
+  </tbody>
+</table>
+
+<p class="legend">
+  <span class="pill pa">a</span> resolve / assume &nbsp; <span class="pill pb">b</span> prepare input &nbsp; <span class="pill pc">c</span> validated output.
+  Status badges reflect implementation coverage at <code>main@998abd24</code>; re-audit after any landing PR.
+</p>
+
+</div>
+</body>
+</html>

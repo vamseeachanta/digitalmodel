@@ -1,0 +1,23 @@
+FoamFile { version 2.0; format ascii; class dictionary; object blockMeshDict; }
+
+// Overset component block around the floating box (rigid motion, no
+// morphing). The body hole is carved by topoSet + subsetMesh.
+scale 1;
+vertices
+(
+    (12.5 0 0.2) (13.5 0 0.2) (13.5 0.04 0.2) (12.5 0.04 0.2)
+    (12.5 0 0.62) (13.5 0 0.62) (13.5 0.04 0.62) (12.5 0.04 0.62)
+);
+blocks ( hex (0 1 2 3 4 5 6 7) (50 1 42) simpleGrading (1 1 1) );
+edges ();
+boundary
+(
+    oversetBoundary
+    {
+        type overset;
+        faces ( (0 4 7 3) (1 5 6 2) (0 1 2 3) (4 5 6 7) );
+    }
+    bodyFrontBack { type empty; faces ( (0 1 5 4) (3 2 6 7) ); }
+    floatingObject { type wall; faces (); }
+);
+mergePatchPairs ();

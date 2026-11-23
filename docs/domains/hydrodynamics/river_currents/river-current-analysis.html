@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>River current analysis</title>
+<style>body{max-width:900px;margin:2em auto;font-family:sans-serif;line-height:1.5}
+table{border-collapse:collapse}th,td{border:1px solid #aaa;padding:0.4em}svg{max-width:500px;width:100%}</style>
+</head><body><h1>River current analysis</h1><p>Revision 2</p>
+<h2>Summary</h2><p>Synthetic inputs; assumed, based on previous experience. No measured river record or hull calibration is claimed. The towing case gives NO-GO:
+required nominal pull 903.2 kN against
+150.0 kN available. This compares steady force and yaw capacities only.
+The verdict depends on the unvalidated full-width slot multiplier of 9.0;
+without it, required nominal pull is 100.4 kN,
+below the available pull, so the verdict reverses under that hypothesis.</p>
+<h2>Revision history</h2><table><tr><th>Revision</th><th>Date</th><th>What changed and why</th></tr><tr><td>1</td><td>2026-10-14</td><td>Initial synthetic river current analysis; expose flow and towing screening assumptions.</td></tr><tr><td>2</td><td>2026-10-15</td><td>Expose the towing verdict reversal without the slot multiplier in the summary and results.</td></tr></table>
+<h2>Bank effects and extremes</h2><p>The synthetic channel is 100.0 m wide and
+5.0 m deep, with a 20.0 m beam and
+2.5 m draft obstruction. The lateral quadratic has unit mean;
+the confinement factor is A/(A-A_v). The assumed outer-bank bias is independent of
+the constant-speed superelevation u²/g * ln((R+W/2)/(R-W/2)).</p>
+<table><tr><th>Quantity</th><th>Value</th><th>Unit</th></tr><tr><td>centre factor</td><td>1.5</td><td>dimensionless</td></tr><tr><td>quarter width factor</td><td>1.1</td><td>dimensionless</td></tr><tr><td>confinement factor</td><td>1.1</td><td>dimensionless</td></tr><tr><td>outer bank bias factor</td><td>1.2</td><td>dimensionless</td></tr><tr><td>superelevation m</td><td>0.2</td><td>m</td></tr><tr><td>weibull 10 year m s</td><td>3.0</td><td>m/s</td></tr><tr><td>gumbel 10 year m s</td><td>4.1</td><td>m/s</td></tr></table>
+<p>Ten synthetic quantiles reproduce a Weibull with shape 2.0,
+scale 2.0 m/s and an annual-maxima Gumbel with location
+3.0 m/s, scale 0.5 m/s.
+Uncorrected synthetic section-reference speeds; corrections are not fitted again. These are distribution checks, not measured extremes.</p>
+<table><tr><th>Season</th><th>Count</th><th>Mean (m/s)</th><th>Maximum (m/s)</th></tr><tr><td>dry</td><td>2</td><td>1.5</td><td>2.0</td></tr><tr><td>flood</td><td>2</td><td>3.5</td><td>4.0</td></tr></table>
+<h2>River towing</h2><p>A 100.0 m wide, 3.0 m deep section with
+600.0 m³/s discharge loads a generic rectangular barge:
+length 40.0 m, beam 10.0 m, draft 2.0 m.
+Section mean is Q/(WH); surface speed is mean*(m+1)/m, then multiplied by the
+mid-channel and section blockage factors. The current is from the bow; vessel speed is zero.</p>
+<p>Signed quadratic velocity is integrated over height H-T to H by midpoint slices.
+The slot multiplier is [H/(H-T)]². Existing approximate load coefficients are reused.
+Nominal pull demand is hypot(Fx,Fy)*reserve/efficiency, with reserve 1.2
+and efficiency 0.8. Yaw demand is compared separately with the stated
+0.0 N m capacity. More nominal pull or reduced current is needed
+for the force criterion; actual towing requires a calibrated resistance and thrust assessment.</p>
+<table><tr><th>Quantity</th><th>Value</th><th>Unit</th></tr><tr><td>Section mean</td><td>2.0</td><td>m/s</td></tr><tr><td>Corrected surface speed</td><td>3.8</td><td>m/s</td></tr><tr><td>Slot drag multiplier</td><td>9.0</td><td>dimensionless</td></tr><tr><td>Integrated surge</td><td>602.1</td><td>kN</td></tr><tr><td>Uniform surface surge</td><td>696.1</td><td>kN</td></tr><tr><td>Integrated sway</td><td>0.0</td><td>kN</td></tr><tr><td>Integrated yaw</td><td>0.0</td><td>kN m</td></tr><tr><td>Surge reduction</td><td>13.5</td><td>%</td></tr><tr><td>Required nominal pull</td><td>903.2</td><td>kN</td></tr><tr><td>Available nominal pull</td><td>150.0</td><td>kN</td></tr></table>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 350" role="img" aria-label="Synthetic river vertical power-law velocity profile"><title>River velocity versus height above bed</title><path d="M60 50 V300 H420" fill="none" stroke="black"/><polyline points="60.0,300.0 264.2,291.7 289.2,283.3 305.3,275.0 317.3,266.7 327.1,258.3 335.3,250.0 342.5,241.7 348.8,233.3 354.5,225.0 359.8,216.7 364.6,208.3 369.0,200.0 373.2,191.7 377.1,183.3 380.7,175.0 384.2,166.7 387.5,158.3 390.6,150.0 393.6,141.7 396.5,133.3 399.2,125.0 401.9,116.7 404.4,108.3 406.9,100.0 409.2,91.7 411.5,83.3 413.7,75.0 415.9,66.7 418.0,58.3 420.0,50.0" fill="none" stroke="blue" stroke-width="2"/><text x="130" y="340">Velocity (m/s)</text><text x="70" y="30">height above bed (m)</text><text x="30" y="300">0</text><text x="20" y="55">3.0</text><text x="410" y="320">3.8</text></svg>
+<h2>Assumptions and limits</h2><ul><li>The lateral factor 1-r+6*r*x*(1-x) has unit section average; bank retardation r is an assumed shape parameter, not a calibration.</li><li>The bend bias 1+a*(2*x-1) is a separate assumed outer-bank increase. Superelevation follows constant-speed radial equilibrium; it does not determine the velocity bias.</li><li>Channel blockage uses continuity with area width*depth minus beam*draft; rectangular section and cross-section are assumed.</li><li>The shallow drag multiplier (depth/(depth-draft)) squared is a full-width under-keel slot screening bound derived from continuity and quadratic drag, not a validated barge coefficient. Side bypass is ignored. Do not also use this slot model as a channel blockage correction.</li><li>The finite-width channel correction accounts for section-average acceleration; the slot multiplier is a separate local under-keel hypothesis. Their combined use in towing is an explicit stress scenario, not an empirical joint calibration.</li><li>Return levels use least-squares probability plots at (rank-0.5)/count; Weibull samples must be positive and independent, with the sampling rate specified. Gumbel input is one maximum per year.</li><li>Only steady current loading is considered. Tug self-resistance, wind, waves, debris, interaction forces, towline geometry and propulsion loss at speed are excluded; no operational approval follows from the synthetic decision.</li></ul>
+<p>Tidal reversal, unsteady river hydraulics and calibrated operational acceptance remain outside this analysis (#2000, #2002).</p>
+<h2>Sources</h2><ul><li><a href="https://www.grc.nasa.gov/www/k-12/airplane/mass.html">NASA Glenn: Conservation of Mass</a>; opened 2026-10-14.</li><li><a href="https://www.itl.nist.gov/div898/handbook/eda/section3/eda3668.htm">NIST: Weibull Distribution</a>; opened 2026-10-14.</li><li><a href="https://www.itl.nist.gov/div898/handbook/eda/section3/eda366g.htm">NIST: Extreme Value Type I Distribution</a>; opened 2026-10-14.</li><li><a href="https://openstax.org/books/university-physics-volume-1/pages/6-3-centripetal-force">OpenStax University Physics: Centripetal Force</a>; opened 2026-10-14.</li></ul><p>The basis file also identifies the reused repository modules.</p>
+</body></html>

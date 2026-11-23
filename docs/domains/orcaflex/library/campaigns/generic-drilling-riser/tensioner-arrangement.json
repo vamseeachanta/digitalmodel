@@ -1,0 +1,7 @@
+{
+  "n_units": 4,
+  "n_fail": 1,
+  "fwt": 1.05,
+  "spring_table_factor": 1.215,
+  "source": "Recorded four-link arrangement; ABS 2017 Section 3/3 iii); common factor per PR 2684 review decision, 2026-10-17; native statics decide"
+}

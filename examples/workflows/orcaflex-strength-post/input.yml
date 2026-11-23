@@ -1,0 +1,51 @@
+# OrcaFlex strength post-processing — REQUIRES-LICENSE workflow.
+#
+# This workflow post-processes an OrcaFlex .sim (effective/wall tension, bend
+# moment, curvature range graphs + summary statistics) and therefore needs a
+# licensed OrcaFlex install (OrcFxAPI) plus the referenced .sim file. It is
+# registered with `runtime: requires-license` and is SKIPPED by the offline
+# durable-workflows test (which only executes `runtime: offline` rows). It is
+# intended to run where OrcaFlex is licensed (e.g. a dedicated licensed-run
+# channel), not in offline CI.
+basename: orcaflex_post_process
+
+orcaflex_post_process: {}
+
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: True
+
+orcaflex:
+  postprocess:
+    visualization:
+      flag: False
+    summary:
+      flag: True
+      statistics:
+        Minimum: True
+        Maximum: True
+        Mean: True
+        StdDev: True
+      min: True
+      max: True
+      mean: True
+    RangeGraph:
+      flag: True
+    time_series:
+      flag: False
+
+parameters:
+  VarNames:
+    Line: [Effective tension, Wall tension, Bend moment, Curvature, Bend radius]
+
+file_management:
+  flag: True
+  files:
+    files_in_current_directory:
+      flag: False
+      directory: data
+    data_source: yml
+    data:
+      - Name: data/strength_loadcase.sim

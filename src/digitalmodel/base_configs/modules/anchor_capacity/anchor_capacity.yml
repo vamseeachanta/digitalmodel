@@ -1,0 +1,10 @@
+basename: anchor_capacity
+
+default:
+  log_level: INFO
+  config:
+    generate_plots: false
+    overwrite:
+      output: true
+
+anchor_capacity: {}

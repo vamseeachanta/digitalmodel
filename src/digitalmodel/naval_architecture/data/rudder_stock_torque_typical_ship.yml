@@ -1,0 +1,63 @@
+# Typical single-screw ship rudder stock torque sweep input for issue #2565.
+# Preliminary calculation only: hydrodynamic torque = scalar rudder normal force * perpendicular stock arm.
+case:
+  id: typical_single_screw_ship_rudder_stock_torque
+  description: >-
+    Typical ship preliminary rudder-stock torque and steering-gear holding
+    torque sweep using a constant user-supplied perpendicular stock-to-center
+    of pressure arm.
+
+vessel:
+  type: typical_single_screw_ship
+  length_between_perpendiculars_m: 120.0
+  beam_m: 20.0
+  draft_m: 7.0
+  design_speed_kn: 12.0
+
+rudder:
+  area_m2: 20.0
+  span_m: 5.0
+  behind_hull: true
+
+stock:
+  stock_to_center_of_pressure_arm_m: 0.75
+  arm_definition: >-
+    Perpendicular force-line moment arm from rudder stock axis to resultant
+    rudder normal-force line of action. This is a user-supplied constant arm,
+    not a standards-derived coefficient.
+
+sign_convention:
+  positive_hydrodynamic_torque: >-
+    Right-hand-rule torque about the +z/up rudder stock axis; counterclockwise
+    viewed from above for positive signed scalar normal force and positive stock
+    arm. Required steering-gear holding torque is equal and opposite.
+
+environment:
+  rho_kg_m3: 1025.0
+
+sweep:
+  speeds:
+    units: kn
+    values: [0.0, 2.5, 5.0, 7.5, 10.0]
+  rudder_angles_deg: [-30.0, -20.0, -10.0, 0.0, 10.0, 20.0, 30.0]
+
+outputs:
+  directory: results/rudder_stock_torque
+  tables: [csv, json]
+  sidecars:
+    provenance: rudder_stock_torque_provenance.json
+    artifact_manifest: artifact_manifest.json
+  charts:
+    enabled: true
+    formats: [png, html]
+    required:
+      - rudder_stock_torque_vs_rudder_angle_by_speed
+      - rudder_stock_torque_vs_speed_by_rudder_angle
+      - scalar_normal_force_vs_rudder_angle_by_speed
+      - rudder_stock_torque_speed_angle_heatmap
+
+warnings:
+  scope_limitations:
+    - Preliminary constant-arm rudder-stock torque sweep only.
+    - Not steering gear machinery sizing, actuator sizing, rudder stock scantling, or class/SOLAS compliance proof.
+    - Does not model hull-propeller-rudder interaction beyond the existing rudder normal-force helper.

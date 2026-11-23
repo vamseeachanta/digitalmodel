@@ -1,0 +1,37 @@
+{
+  "basename": "drilling_riser_drift_off",
+  "atlas_id": "d53bddd904d1",
+  "physics": "linear",
+  "response": "drift_amp",
+  "axes": [
+    {
+      "name": "mode",
+      "values": [
+        "drilling",
+        "connected",
+        "hang_off"
+      ]
+    },
+    {
+      "name": "current_speed_mps",
+      "scale": "linear",
+      "grid": [
+        0.0,
+        0.5,
+        1.0,
+        1.5,
+        2.0
+      ]
+    },
+    {
+      "name": "hs_m",
+      "scale": "linear",
+      "grid": [
+        1.0,
+        3.0,
+        5.0,
+        7.0
+      ]
+    }
+  ]
+}

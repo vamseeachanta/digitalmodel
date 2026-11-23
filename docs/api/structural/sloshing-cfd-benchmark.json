@@ -1,0 +1,140 @@
+{
+  "meta": {
+    "generated_by": "scripts/cfd/run_sloshing_benchmark.py",
+    "solver": "interFoam (VOF), OpenFOAM ESI v2312",
+    "epic": "#1429",
+    "g": 9.80665,
+    "analytical_relation": "omega1 = sqrt(pi*tanh(pi*h/L))"
+  },
+  "free_decay": {
+    "shape": "rectangular",
+    "breadth_m": 1.0,
+    "tank_height_m": 1.0,
+    "tolerance": 0.05,
+    "n_points": 4,
+    "points": [
+      {
+        "h_over_L": 0.15,
+        "fill_depth_m": 0.15,
+        "case": "freedecay_hl15",
+        "mesh": [
+          100,
+          100,
+          1
+        ],
+        "solver_status": "completed",
+        "runtime_s": 654.9,
+        "freq_meas_hz": 0.587077,
+        "freq_analytical_hz": 0.585445,
+        "omega1_meas": 1.17792,
+        "omega1_analytical": 1.17464,
+        "rel_error": 0.00279,
+        "within_tolerance": true
+      },
+      {
+        "h_over_L": 0.3,
+        "fill_depth_m": 0.3,
+        "case": "freedecay_hl30",
+        "mesh": [
+          100,
+          100,
+          1
+        ],
+        "solver_status": "completed",
+        "runtime_s": 544.8,
+        "freq_meas_hz": 0.755797,
+        "freq_analytical_hz": 0.758054,
+        "omega1_meas": 1.51644,
+        "omega1_analytical": 1.52097,
+        "rel_error": 0.00298,
+        "within_tolerance": true
+      },
+      {
+        "h_over_L": 0.5,
+        "fill_depth_m": 0.5,
+        "case": "freedecay_hl50",
+        "mesh": [
+          100,
+          100,
+          1
+        ],
+        "solver_status": "completed",
+        "runtime_s": 530.9,
+        "freq_meas_hz": 0.846012,
+        "freq_analytical_hz": 0.846011,
+        "omega1_meas": 1.69745,
+        "omega1_analytical": 1.69744,
+        "rel_error": 0.0,
+        "within_tolerance": true
+      },
+      {
+        "h_over_L": 0.7,
+        "fill_depth_m": 0.7,
+        "case": "freedecay_hl70",
+        "mesh": [
+          100,
+          100,
+          1
+        ],
+        "solver_status": "completed",
+        "runtime_s": 522.4,
+        "freq_meas_hz": 0.87258,
+        "freq_analytical_hz": 0.872597,
+        "omega1_meas": 1.75075,
+        "omega1_analytical": 1.75079,
+        "rel_error": 2e-05,
+        "within_tolerance": true
+      }
+    ]
+  },
+  "forced_roll": {
+    "shape": "rectangular",
+    "breadth_m": 0.9,
+    "tank_height_m": 0.508,
+    "fill_depth_m": 0.315,
+    "h_over_L": 0.35,
+    "roll_amplitude_deg": 4.0,
+    "first_mode_period_s": 1.20041,
+    "resonant_period_s": 1.20041,
+    "n_points": 3,
+    "points": [
+      {
+        "period_ratio": 0.85,
+        "drive_period_s": 1.02035,
+        "drive_freq_hz": 0.98006,
+        "case": "forcedroll_r085",
+        "solver_status": "completed",
+        "runtime_s": 391.5,
+        "response_amp_m": 0.01843,
+        "moment_amplitude_nm": 0.2097,
+        "in_phase_coeff": 0.08532,
+        "quad_coeff": 0.19156
+      },
+      {
+        "period_ratio": 1.0,
+        "drive_period_s": 1.20041,
+        "drive_freq_hz": 0.83305,
+        "case": "forcedroll_r100",
+        "solver_status": "completed",
+        "runtime_s": 492.2,
+        "response_amp_m": 0.05432,
+        "moment_amplitude_nm": 1.88003,
+        "in_phase_coeff": -0.09183,
+        "quad_coeff": 1.87778
+      },
+      {
+        "period_ratio": 1.15,
+        "drive_period_s": 1.38047,
+        "drive_freq_hz": 0.72439,
+        "case": "forcedroll_r115",
+        "solver_status": "completed",
+        "runtime_s": 579.8,
+        "response_amp_m": 0.05023,
+        "moment_amplitude_nm": 2.58226,
+        "in_phase_coeff": -2.34422,
+        "quad_coeff": 1.08291
+      }
+    ],
+    "resonance_metric": "free-surface response amplitude (response_amp_m)"
+  }
+}

@@ -1,0 +1,80 @@
+# Links Configuration
+# Generated from: J01 Deployment with sub.yml
+# Date: 2026-01-18 22:18:22
+Links:
+- Name: D_A1
+  LinkType: Tether
+  Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo:
+  - - Deployer
+    - -5.892693017567341e-15
+    - 3.1915793971456194e-15
+    - 1.868570980321244
+  - - Anchor1
+    - 0
+    - 0
+    - 0.9999999999999999
+  ReleaseStage: 1
+  UnstretchedLength: 0.9999999999999999
+  Stiffness: 10
+  Pen:
+  - 1
+  - Solid
+  - $C0FF00
+  ShadedDrawingDiameter: 0.02
+- Name: A1_F1
+  LinkType: Tether
+  Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo:
+  - - Anchor1
+    - -0.1010307704399338
+    - 6.186146170616839e-18
+    - 1.0229365507044577
+  - - Float 1
+    - 0
+    - 0
+    - 0
+  ReleaseStage: 2
+  UnstretchedLength: 0.9999999999999999
+  Stiffness: 10
+  Pen:
+  - 1
+  - Solid
+  - $C0FF00
+  ShadedDrawingDiameter: 0.02
+- Name: A2_F2
+  LinkType: Tether
+  Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo:
+  - - Anchor2
+    - -0.12967581798459094
+    - -1.409581879909055e-16
+    - 0.9996645287674113
+  - - Float2
+    - 0.09070148416766698
+    - -2.1271405955728585e-15
+    - 0.030632272895104503
+  ReleaseStage: 4
+  UnstretchedLength: 0.9999999999999999
+  Stiffness: 10
+  Pen:
+  - 1
+  - Solid
+  - $C0FF00
+  ShadedDrawingDiameter: 0.02
+- Name: D_A2
+  LinkType: Tether
+  Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo:
+  - - Deployer
+    - -0.024299709145381494
+    - 3.461844663556382e-15
+    - -1.0429071648251893
+  - - Anchor2
+    - 0.03279100700719084
+    - 3.681599081130377e-16
+    - 1.0202006307166227
+  ReleaseStage: 3
+  UnstretchedLength: 0.9999999999999999
+  Stiffness: 10
+  Pen:
+  - 1
+  - Solid
+  - $C0FF00
+  ShadedDrawingDiameter: 0.02

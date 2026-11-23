@@ -1,0 +1,18 @@
+# Input Parameters for Parametric Analysis
+# Source: J01 Deployment with sub.yml
+# Generated: 2026-01-18 22:18:22
+
+water_depth: 250
+current_speed: 0.1
+wind_speed: 0
+water_density: 1.025
+stage_durations:
+- 10
+- 5
+- 30
+- 5
+- 60
+hs: 0
+tp: 8
+wave_direction: 180
+

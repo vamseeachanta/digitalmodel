@@ -1,0 +1,86 @@
+# ABOUTME: Checkpoint retention and cleanup policies configuration
+# Controls how workflow checkpoints are managed, stored, and cleaned up
+
+# Retention policies
+retention:
+  # Time-based retention: Keep checkpoints from last N days
+  time_based_days: 7
+
+  # Count-based retention: Keep last N checkpoints per workflow
+  count_based: 10
+
+  # Keep tagged checkpoints forever (overrides time/count limits)
+  keep_tagged_forever: true
+
+# Compression settings
+compression:
+  # Enable/disable compression
+  enabled: true
+
+  # Compress files larger than this threshold (MB)
+  threshold_mb: 1
+
+# Incremental snapshot settings
+incremental:
+  # Enable incremental snapshots (only changed files)
+  enabled: true
+
+# Automatic cleanup settings
+automatic_cleanup:
+  # Enable automatic cleanup
+  enabled: true
+
+  # Run cleanup on session end
+  on_session_end: true
+
+  # Run cleanup on checkpoint creation (cleanup before creating new)
+  on_checkpoint_create: false
+
+# SPARC phase checkpoint triggers
+phase_triggers:
+  # Automatically checkpoint before these phases
+  enabled_phases:
+    - specification
+    - pseudocode
+    - architecture
+    - refinement
+    - completion
+
+  # Also checkpoint before pre-task hooks
+  pre_task_enabled: true
+
+# Storage settings
+storage:
+  # Base directory for checkpoints (relative to repo root)
+  base_dir: ".claude-flow/checkpoints"
+
+  # Directory structure: workflow_id/timestamp/
+  structure: "workflow_timestamp"
+
+  # Maximum total checkpoint storage (MB, 0 = unlimited)
+  max_total_size_mb: 0
+
+# Notification settings
+notifications:
+  # Log checkpoint creation
+  log_creation: true
+
+  # Log checkpoint restoration
+  log_restoration: true
+
+  # Log cleanup operations
+  log_cleanup: true
+
+  # Verbose logging
+  verbose: false
+
+# Safety settings
+safety:
+  # Always create backup before restoration
+  backup_before_restore: true
+
+  # Require confirmation for restoration (CLI --force flag)
+  require_force_flag: true
+
+  # Prevent restoration if working directory is dirty
+  check_dirty_before_restore: false

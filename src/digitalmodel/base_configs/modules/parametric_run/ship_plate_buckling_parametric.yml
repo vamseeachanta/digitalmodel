@@ -1,0 +1,55 @@
+# Ship-plate buckling parametric sweep — AH36 hull panel
+#
+# Sweeps plate thickness x applied longitudinal stress for a marine grade AH36
+# ship hull plate to map buckling utilisation across the design space.
+#
+# Uses the canonical parametric_run engine
+# (src/digitalmodel/workflows/parametric_run.py): it loads base_input, deep-copies
+# it per case, overrides target_basename, applies each variant value to the
+# dotted mapping path, writes one rendered yml per case, runs the digitalmodel
+# python engine on it (plate_buckling solver), and collects a CSV manifest.
+#
+# Variants source = factorial -> full cross-product:
+#   7 thicknesses x 4 longitudinal stresses = 28 cases.
+#
+# Dotted mapping paths target the first plate in the base config's groups list:
+#   groups.0.thickness          -> groups[0]["thickness"]
+#   groups.0.longtudinal_stress -> groups[0]["longtudinal_stress"]
+#   (note "longtudinal" spelling is intentional — matches the solver source)
+#
+# HOW TO RUN — invoke the digitalmodel engine with THIS file as the input config:
+#   cd <repo root>
+#   .venv/bin/python -m digitalmodel \
+#     src/digitalmodel/base_configs/modules/parametric_run/ship_plate_buckling_parametric.yml
+# Rendered case configs + manifest land under results/ship_plate_buckling_parametric/.
+
+basename: parametric_run
+
+parametric_run:
+  # Base config (resolves from repo root) — single AH36 plate worked example
+  base_input: src/digitalmodel/base_configs/modules/plate_buckling/plate_buckling.yml
+  target_basename: plate_buckling
+  variants:
+    source: factorial
+    parameters:
+      - name: thickness
+        values: [0.008, 0.010, 0.012, 0.014, 0.016, 0.018, 0.020]  # metres
+      - name: longtudinal_stress
+        values: [80, 120, 160, 200]  # MPa
+    mapping:
+      thickness: "groups.0.thickness"
+      longtudinal_stress: "groups.0.longtudinal_stress"
+  render:
+    output_dir: results/ship_plate_buckling_parametric
+    output_pattern: case_{index}
+  run:
+    engine: python
+    mode: serial
+  collect:
+    manifest: results/ship_plate_buckling_parametric/cases.csv
+
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: true

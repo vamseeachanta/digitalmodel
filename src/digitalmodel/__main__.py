@@ -1,0 +1,144 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
+"""Python package for digital model.
+
+Usage:
+------
+
+Run an analysis from an input file (the engine contract)::
+
+    python -m digitalmodel <input.yml>
+
+or invoke any of the package's console-script CLIs through the module
+entry point (#713)::
+
+    python -m digitalmodel diffraction run-orcawave spec.yml --dry-run
+    python -m digitalmodel aqwa --help
+
+Contact:
+--------
+
+More information is available at:
+
+- https://pypi.org/project/digitalmodel/
+- https://github.com/vamseeachanta/digitalmodel
+
+
+Version:
+--------
+
+- digitalmodel v{version}
+"""
+
+import sys
+from importlib import metadata
+from pathlib import Path
+
+from digitalmodel import __version__
+
+# Entry points that would re-enter this module rather than dispatch to a CLI.
+_SELF_NAMES = {"digital_model", "digitalmodel"}
+
+
+def engine():
+    """Load analysis dependencies only when an analysis is requested."""
+    from digitalmodel.engine import engine as run_engine
+
+    return run_engine()
+
+
+def _resolve_cli(name: str):
+    """Return this distribution's console-script entry point called ``name``.
+
+    Looks up ``[project.scripts]`` via package metadata so the routing table
+    cannot drift from pyproject.toml. Returns None for unknown names, for
+    this module's own entry point, or when distribution metadata is
+    unavailable — callers then fall through to the engine contract.
+    """
+    if name in _SELF_NAMES:
+        return None
+    try:
+        entry_points = metadata.distribution("digitalmodel").entry_points
+    except metadata.PackageNotFoundError:
+        return None
+    for entry_point in entry_points:
+        if entry_point.group == "console_scripts" and entry_point.name == name:
+            return entry_point
+    return None
+
+
+def _run_configuration_screen() -> bool:
+    """Dispatch the static screen before loading solver-dependent contracts."""
+    if len(sys.argv) != 2 or not Path(sys.argv[1]).is_file():
+        return False
+    import yaml
+
+    try:
+        with Path(sys.argv[1]).open(encoding="utf-8") as stream:
+            cfg = yaml.safe_load(stream)
+    except (yaml.YAMLError, OSError, UnicodeDecodeError):
+        return False
+    if not isinstance(cfg, dict) or cfg.get("basename") != "riser_configuration_screen":
+        return False
+    from digitalmodel.riser_configuration_screen.workflow import router
+
+    router(cfg)
+    return True
+
+
+def main():
+    """Dispatch console commands and configuration workflows."""
+    # -h/--help prints usage and exits 0. Without this, engine() treats
+    # "--help" as an input filename and raises. Help must exit 0 before
+    # analysis dependencies load. Bare invocation still goes to engine() (#713
+    # contract); the engine contract `python -m digitalmodel <input.yml>` is
+    # unaffected: a real file still takes the path below.
+    argv = sys.argv[1:]
+    if argv and argv[0] == "--version":
+        print(f"digitalmodel {__version__}")
+        return 0
+    if argv and argv[0] in ("-h", "--help"):
+        print(__doc__.format(version=__version__))
+        return 0
+    # An existing file always wins: `python -m digitalmodel <input.yml>` is
+    # the engine contract and must stay unchanged (durable-workflow callers).
+    if len(sys.argv) > 1 and not Path(sys.argv[1]).exists():
+        entry_point = _resolve_cli(sys.argv[1])
+        if entry_point is not None:
+            sys.argv = sys.argv[1:]
+            sys.exit(entry_point.load()())
+    # #1631: the engine contract had no failure exit path. engine() returns
+    # cfg_base and its value was discarded here, so this command exited 0
+    # whatever the run concluded -- on any host, licensed or not. A caller that runs
+    # this command as a subprocess sees only this status as its success signal.
+    if _run_configuration_screen():
+        return 0
+    from digitalmodel import run_contract
+
+    cfg = engine()
+    verdict = run_contract.from_cfg(cfg)
+    if verdict is None:
+        # An un-migrated workflow declares no verdict and keeps exiting 0.
+        return 0
+    output_dir = verdict.output_dir or _fallback_output_dir(cfg)
+    if output_dir:
+        run_contract.write_run_verdict(verdict, output_dir)
+    sys.exit(run_contract.exit_status_for(verdict))
+
+
+def _fallback_output_dir(cfg) -> str | None:
+    """Where to drop the sidecar when the workflow named no output directory."""
+    if not isinstance(cfg, dict):
+        return None
+    analysis = cfg.get("Analysis")
+    if isinstance(analysis, dict):
+        for key in ("analysis_root_folder", "result_folder"):
+            value = analysis.get(key)
+            if value:
+                return str(value)
+    return None
+
+
+if __name__ == "__main__":
+    main()

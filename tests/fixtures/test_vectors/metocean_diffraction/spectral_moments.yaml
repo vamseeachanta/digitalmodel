@@ -1,0 +1,109 @@
+source_type: python
+source_description: "Spectral moment calculation tests from test_wave_spectra.py and test_wave_spectra_extended.py — numerical integration of wave spectra"
+extracted_date: "2026-03-16"
+legal_scan_passed: true
+category: "metocean_diffraction"
+subcategory: "spectral_moments"
+equations:
+  - name: "N-th spectral moment"
+    latex: "m_n = \\int_0^\\infty \\omega^n S(\\omega) \\, d\\omega"
+    description: "N-th spectral moment computed by trapezoidal integration"
+  - name: "Significant wave height from m0"
+    latex: "H_s = 4 \\sqrt{m_0}"
+    description: "Significant wave height from zeroth moment"
+  - name: "Zero-crossing period from moments"
+    latex: "T_z = 2\\pi \\sqrt{m_0 / m_2}"
+    description: "Zero-crossing period from zeroth and second moments"
+  - name: "Spectral width parameter"
+    latex: "\\epsilon = \\sqrt{1 - m_2^2 / (m_0 \\cdot m_4)}"
+    description: "Spectral bandwidth parameter between 0 and 1"
+inputs:
+  - name: "Significant wave height"
+    symbol: "Hs"
+    unit: "m"
+    test_value: 4.0
+  - name: "Peak period"
+    symbol: "Tp"
+    unit: "s"
+    test_value: 10.0
+  - name: "Peak enhancement factor"
+    symbol: "gamma"
+    unit: "dimensionless"
+    test_value: 3.3
+outputs:
+  - name: "Zeroth moment (theoretical)"
+    symbol: "m0"
+    unit: "m^2"
+    test_expected: 1.0
+    tolerance: 0.02
+  - name: "Recovered Hs"
+    symbol: "Hs"
+    unit: "m"
+    test_expected: 4.0
+    tolerance: 0.08
+worked_examples:
+  - description: "m0 for JONSWAP Hs=4m should equal Hs^2/16 = 1.0 within 2%"
+    inputs:
+      hs: 4.0
+      tp: 10.0
+      gamma: 3.3
+    outputs:
+      m0_theoretical: 1.0
+    use_as_test: true
+  - description: "m0 scales with Hs^2: doubling Hs quadruples m0"
+    inputs:
+      hs_small: 2.0
+      hs_large: 4.0
+      tp: 10.0
+    outputs:
+      m0_ratio: 4.0
+    use_as_test: true
+  - description: "Zero spectrum gives m0 = 0.0"
+    inputs:
+      spectrum_type: "zeros"
+      n_points: 50
+    outputs:
+      m0: 0.0
+    use_as_test: true
+  - description: "Spectral width epsilon in [0.2, 0.8] for JONSWAP gamma=3.3"
+    inputs:
+      hs: 4.0
+      tp: 10.0
+      gamma: 3.3
+    outputs:
+      epsilon_min: 0.2
+      epsilon_max: 0.8
+    use_as_test: true
+  - description: "Spectrum statistics dict has required keys: m0, m1, m2, m4, Hs_m, Tz_s, Tp_s, omega_p_rad_s, spectral_width"
+    inputs:
+      hs: 4.0
+      tp: 12.0
+    outputs:
+      key_count_minimum: 9
+    use_as_test: true
+  - description: "Tz < Tp for unimodal JONSWAP spectrum (Tp=12s)"
+    inputs:
+      hs: 4.0
+      tp: 12.0
+    outputs:
+      tz_less_than_tp: true
+    use_as_test: true
+  - description: "Integration accuracy: m0 at 100 vs 10000 points differs by <1%"
+    inputs:
+      hs: 4.0
+      tp: 10.0
+      gamma: 3.3
+      n_coarse: 100
+      n_fine: 10000
+    outputs:
+      m0_relative_error_max: 0.01
+    use_as_test: true
+assumptions:
+  - "Integration uses numpy trapezoid (or trapz) for numerical quadrature"
+  - "Higher moments m2, m4 are all positive for physical spectra"
+  - "Spectral width epsilon is bounded [0, 1] by definition"
+  - "JONSWAP is moderately narrow-banded: epsilon typically 0.2-0.8"
+references:
+  - "digitalmodel/tests/marine_ops/marine_engineering/test_wave_spectra.py"
+  - "digitalmodel/tests/unit/hydrodynamics/test_wave_spectra_extended.py"
+  - "digitalmodel/src/digitalmodel/hydrodynamics/wave_spectra.py"
