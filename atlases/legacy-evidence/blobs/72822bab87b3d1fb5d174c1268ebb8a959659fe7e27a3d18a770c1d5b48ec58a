@@ -1,0 +1,166 @@
+"""Atlas refresh automation (#799, epic #794).
+
+An atlas is a cache of a workflow's response surface. It becomes *stale* when
+the basis it was built from changes: the parametric spec, the input template,
+the response-relevant source code, or a cited standard edition. This module
+fingerprints that basis so staleness is detectable (the query path escalates a
+stale atlas) and regenerable (a CI / drift-sentinel job runs ``--check`` and,
+on drift, ``--apply``).
+
+The fingerprint deliberately excludes the repo git sha: an atlas is not stale
+just because an unrelated commit landed — only when its own basis moves.
+"""
+
+from __future__ import annotations
+
+import hashlib
+import json
+import subprocess
+import sys
+from pathlib import Path
+from typing import Any
+
+import yaml
+
+REPO_ROOT = Path(__file__).resolve().parents[3]
+REGISTRY = REPO_ROOT / "docs" / "registry" / "workflows.yaml"
+DEFAULT_ATLAS_ROOT = REPO_ROOT / "atlases"
+
+# Cited standard editions per basename — the documentary source of the curves
+# / formulae an atlas encodes. Bumping an edition invalidates the atlas.
+STANDARDS: dict[str, list[dict[str, str]]] = {
+    "mooring_fatigue": [{"id": "DNV-RP-C203", "edition": "2021-09"}],
+    "code_check": [{"id": "API-RP-2RD", "edition": "2013"}],
+    "rao_tabulation": [],
+}
+
+# Response-relevant source files per basename: the code whose change would
+# alter the computed response (NOT the whole package — excludes generate.py so
+# adding an unrelated workflow doesn't invalidate every atlas).
+SOURCE_FILES: dict[str, list[str]] = {
+    "mooring_fatigue": [
+        "src/digitalmodel/fatigue/sn_curves.py",
+        "src/digitalmodel/fatigue/damage.py",
+    ],
+    "code_check": [
+        "src/digitalmodel/orcaflex/code_check_engine.py",
+    ],
+    "rao_tabulation": [
+        "src/digitalmodel/hydrodynamics/interpolator.py",
+        "src/digitalmodel/hydrodynamics/models.py",
+    ],
+}
+
+
+def _registry_rows() -> list[dict[str, Any]]:
+    return yaml.safe_load(REGISTRY.read_text())["workflows"]
+
+
+def _row(workflow_id: str) -> dict[str, Any]:
+    for row in _registry_rows():
+        if row["id"] == workflow_id:
+            return row
+    raise KeyError(f"workflow id not in registry: {workflow_id}")
+
+
+def parametric_workflow_ids() -> list[str]:
+    """Registry ids that declare a parametric: block (i.e. own an atlas)."""
+    return [row["id"] for row in _registry_rows() if row.get("parametric")]
+
+
+def _sha_files(paths: list[str], repo_root: Path) -> str:
+    h = hashlib.sha256()
+    for rel in paths:
+        h.update(rel.encode())
+        h.update((repo_root / rel).read_bytes())
+    return h.hexdigest()
+
+
+def content_fingerprint(workflow_id: str, repo_root: Path = REPO_ROOT) -> str:
+    """Hash of everything an atlas's correctness depends on. Stable across
+    unrelated commits; changes iff spec / template / source / standard move."""
+    row = _row(workflow_id)
+    block = row["parametric"]
+    basename = row["basename"]
+    basis = {
+        "spec": {
+            "physics": block["physics"],
+            "response": block["response"],
+            "axes": block["axes"],
+        },
+        "response_kwargs": block.get("response_kwargs", {}),
+        "standards": STANDARDS.get(basename, []),
+        "input_sha256": hashlib.sha256(
+            (repo_root / row["input"]).read_bytes()
+        ).hexdigest(),
+        "source_sha256": _sha_files(SOURCE_FILES.get(basename, []), repo_root),
+    }
+    return hashlib.sha256(json.dumps(basis, sort_keys=True).encode()).hexdigest()
+
+
+def refresh_status(
+    workflow_id: str, atlas_root: Path = DEFAULT_ATLAS_ROOT
+) -> dict[str, Any]:
+    """Compare the live atlas's stored fingerprint with the current basis."""
+    from digitalmodel.parametric.atlas import Atlas
+
+    row = _row(workflow_id)
+    basename = row["basename"]
+    current = content_fingerprint(workflow_id)
+    try:
+        atlas = Atlas.load(atlas_root, basename)
+    except FileNotFoundError:
+        return {"workflow_id": workflow_id, "stale": True, "reason": "no atlas built",
+                "current": current, "stored": None}
+    stored = atlas.provenance.get("content_fingerprint")
+    stale = stored != current
+    return {
+        "workflow_id": workflow_id,
+        "basename": basename,
+        "stale": stale,
+        "reason": "basis changed since build" if stale else "current",
+        "current": current,
+        "stored": stored,
+        "atlas_id": atlas.atlas_id,
+    }
+
+
+def _git_sha(repo_root: Path) -> str:
+    try:
+        return subprocess.check_output(
+            ["git", "-C", str(repo_root), "rev-parse", "--short", "HEAD"], text=True
+        ).strip()
+    except Exception:  # pragma: no cover
+        return "unknown"
+
+
+def main(argv: list[str]) -> int:
+    apply = "--apply" in argv
+    ids = parametric_workflow_ids()
+    stale_ids = []
+    for wid in ids:
+        status = refresh_status(wid)
+        flag = "STALE" if status["stale"] else "ok"
+        print(f"[{flag:5}] {wid}  ({status['reason']})")
+        if status["stale"]:
+            stale_ids.append(wid)
+
+    if not stale_ids:
+        print("all atlases current")
+        return 0
+    if not apply:
+        print(f"\n{len(stale_ids)} stale atlas(es); run with --apply to regenerate")
+        return 1
+
+    from digitalmodel.parametric.build import build_atlas_from_registry
+
+    for wid in stale_ids:
+        print(f"refreshing {wid} ...")
+        atlas = build_atlas_from_registry(wid)
+        if not atlas.validation["passes"]:
+            print(f"  WARNING: {wid} regenerated but failed validation gate")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main(sys.argv[1:]))

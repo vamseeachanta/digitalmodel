@@ -8,11 +8,9 @@ import base64
 import hashlib
 import importlib.util
 import json
-import os
 from pathlib import Path
 import pickle
 import platform
-import subprocess
 import sys
 import tempfile
 
@@ -26,8 +24,10 @@ HULL_SHA256 = "d0ab75f251489f0e4052d84d30d2c7de7252d23c498c31b85aef1735614f7044"
 PYTHON_VERSION = "3.11.14"
 
 
-def _read_pinned_source(root, env, path, digest):
-    source = subprocess.check_output(["git", "show", f"{BASELINE}:{path}"], cwd=root, env=env)
+def _read_pinned_source(root, path, digest):
+    from digitalmodel.legacy_evidence import read_evidence
+
+    source = read_evidence(root, BASELINE, path)
     if hashlib.sha256(source).hexdigest() != digest:
         raise ValueError(f"baseline source digest mismatch: {path}")
     return source
@@ -45,10 +45,8 @@ def _load_module(name, path, source):
 def main():
     sys.dont_write_bytecode = True
     root = Path(__file__).resolve().parents[2]
-    env = {k: v for k, v in os.environ.items()
-           if k not in ("GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR", "GIT_INDEX_FILE")}
-    source = _read_pinned_source(root, env, SOURCE, SOURCE_SHA256)
-    hull = _read_pinned_source(root, env, HULL_SOURCE, HULL_SHA256)
+    source = _read_pinned_source(root, SOURCE, SOURCE_SHA256)
+    hull = _read_pinned_source(root, HULL_SOURCE, HULL_SHA256)
     if np.__version__ != "2.4.4":
         raise ValueError("fixture reproduction requires NumPy 2.4.4")
     if platform.python_version() != PYTHON_VERSION:

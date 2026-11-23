@@ -26,6 +26,8 @@ from urllib.parse import urlsplit
 
 import yaml
 
+from digitalmodel import legacy_evidence
+
 ROOT = Path(__file__).resolve().parents[3]
 REGISTRY = "docs/registry/workflows.yaml"
 REFRESH = "src/digitalmodel/parametric/refresh.py"
@@ -85,6 +87,9 @@ def _git(root: Path, *args: str, input_bytes: bytes | None = None) -> bytes:
            if key not in {"GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR", "GIT_INDEX_FILE",
                           "GIT_OBJECT_DIRECTORY", "GIT_ALTERNATE_OBJECT_DIRECTORIES"}}
     env["GIT_NO_REPLACE_OBJECTS"] = "1"
+    # A missing legacy commit in a partial clone is resolved locally, offline.
+    env["GIT_NO_LAZY_FETCH"] = "1"
+    env["GIT_ALLOW_PROTOCOL"] = ""
     try:
         return subprocess.check_output(
             ["git", "-C", str(root), *args], input=input_bytes, stderr=subprocess.DEVNULL,
@@ -94,15 +99,37 @@ def _git(root: Path, *args: str, input_bytes: bytes | None = None) -> bytes:
         raise EvidenceError("Unavailable Git evidence or retained history") from None
 
 
-def git_reader(root: Path, revision: str) -> Reader:
-    """Read blobs only; no checkout, imports, subprocess code or solver runs."""
+def _uses_legacy_snapshot(root: Path, revision: str) -> bool:
+    """Use archived main's proof for frozen sources, even in a mixed-history checkout."""
     # Full SHA-1 object names match this repository's retained Git object format.
     if not re.fullmatch(r"[0-9a-f]{40}", revision):
         raise EvidenceError("Source revision must be a full Git object ID")
-    _git(root, "cat-file", "-e", f"{revision}^{{commit}}")
+    try:
+        files = legacy_evidence.legacy_files(root, revision)
+    except ValueError as error:
+        raise EvidenceError(str(error)) from error
+    if files:
+        if not any(entry["rule"] == "main-ancestry" for entry in files.values()):
+            raise EvidenceError("Source revision lacks archived main ancestry")
+        return True
+    if not _git(root, "rev-parse", f"--disambiguate={revision}").strip():
+        raise EvidenceError("Unavailable Git evidence or retained history")
+    if _git(root, "cat-file", "-t", revision).strip() != b"commit":
+        raise EvidenceError("Source revision must identify a Git commit")
+    return False
+
+
+def git_reader(root: Path, revision: str) -> Reader:
+    """Read native or frozen migration blobs without executing historical code."""
+    legacy = _uses_legacy_snapshot(root, revision)
 
     def read(name: str) -> bytes:
         name = _relative(name)
+        if legacy:
+            try:
+                return legacy_evidence.read_legacy(root, revision, name, require_main=True)
+            except ValueError as error:
+                raise EvidenceError(str(error)) from error
         # git show on a symlink returns the target text, not source bytes.
         entry = _git(root, "ls-tree", revision, "--", name)
         if not entry.startswith(b"100644 ") and not entry.startswith(b"100755 "):
@@ -395,7 +422,8 @@ def _verify_retention(record: dict, root: Path, retained_ref: str,
                       revision: str, pr_head: str | None) -> None:
     retained, head = _retention_context(root, retained_ref, revision, pr_head)
     source = record["source_revision"]
-    on_default = _ancestor(root, source, retained)
+    migrated = _uses_legacy_snapshot(root, source)
+    on_default = migrated or _ancestor(root, source, retained)
     retained_label = "CI destination base" if head and os.environ.get("GITHUB_EVENT_PATH") else retained_ref
     remedy = "refresh trusted destination event evidence." if retained_label != retained_ref else (
         "or the retained ref is stale; fetch it.")
@@ -426,7 +454,7 @@ def _verify_retention(record: dict, root: Path, retained_ref: str,
     if changed:
         if current != record:
             raise EvidenceError("Entry does not match the committed inventory at the pull request head")
-        if not _ancestor(root, source, head):
+        if not migrated and not _ancestor(root, source, head):
             raise EvidenceError("Changed entry source revision is not contained in the pull request head")
         if not on_default:
             policy = _integration_policy(root, retained_ref)
@@ -443,21 +471,34 @@ def _verify_retention(record: dict, root: Path, retained_ref: str,
                             + retention_hint)
 
 
-def _regeneration_revision(record: dict, root: Path) -> str:
+def _regeneration_revision(record: dict, root: Path, retained: str = "origin/main") -> str:
     """Find the first reachable publication matching every recorded byte.
 
     Regenerations cannot pin their own commit ID inside that commit. Bind the
-    artifact and source digests instead, and resolve only committed candidates
-    in HEAD ancestry. Existing full-revision historical records remain pinned.
+    artifact and source digests instead. New publications must be reachable
+    from HEAD and retained main. Migrated ones use their exact archived commit.
     """
     if "source_revision" in record:
         raise EvidenceError("Ambiguous source publication")
     if record["source_publication"] != "first-matching-artifact-publication":
         raise EvidenceError("Unsupported source publication selection")
     manifest = _relative(record["manifest"])
-    paths = [manifest, *(_relative(name) for name in record["sources"])]
-    candidates = _git(root, "log", "--reverse", "--format=%H", "HEAD", "--", *paths)
-    for revision in candidates.decode("ascii").splitlines():
+    try:
+        published = legacy_evidence.publication_revision(root, record)
+    except ValueError as error:
+        raise EvidenceError(str(error)) from error
+    if published:
+        if not _uses_legacy_snapshot(root, published) and not (
+            _ancestor(root, published, retained) and _ancestor(root, published, "HEAD")
+        ):
+            raise EvidenceError("Recorded publication is outside retained history")
+        candidates = [published]
+    else:
+        paths = [manifest, *(_relative(name) for name in record["sources"])]
+        commits = _git(root, "log", "--reverse", "--format=%H", "HEAD", "--", *paths)
+        candidates = (sha for sha in commits.decode("ascii").splitlines()
+                      if _ancestor(root, sha, retained))
+    for revision in candidates:
         try:
             verify_artifacts(record, root, revision=revision)
             verify_sources(record, git_reader(root, revision))
@@ -478,7 +519,8 @@ def verify_git(record: dict, root: Path = ROOT, *, retained_ref: str = "origin/m
     regeneration = "source_publication" in record
     revision = _git(root, "rev-parse", "HEAD").decode("ascii").strip()
     if regeneration:
-        source_revision = _regeneration_revision(record, root)
+        retained, _ = _retention_context(root, retained_ref, revision, pr_head)
+        source_revision = _regeneration_revision(record, root, retained)
     else:
         source_revision = record["source_revision"]
         _verify_retention(record, root, retained_ref, revision, pr_head)

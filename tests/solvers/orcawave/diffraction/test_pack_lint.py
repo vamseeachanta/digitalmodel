@@ -10,6 +10,8 @@ from pathlib import Path
 
 import pytest
 
+from digitalmodel.legacy_evidence import read_evidence
+
 ROOT = Path(__file__).resolve().parents[4]
 DOCS = ROOT / "src/digitalmodel/solvers/orcawave/docs"
 PACK = DOCS / "agent-pack.md"
@@ -19,17 +21,13 @@ CITATION = re.compile(r"\[([^\]\n]+):L(\d+)-L(\d+)\]")
 @lru_cache(maxsize=None)
 def source_at(revision, path):
     try:
-        source = subprocess.check_output(
-            ["git", "show", f"{revision}:{path}"], cwd=ROOT, text=True,
-            stderr=subprocess.PIPE, encoding="utf-8",
-        )
-        assert isinstance(source, str), "Citation source must be text"
-        return source
-    except (subprocess.CalledProcessError, FileNotFoundError):
+        source = read_evidence(ROOT, revision, path)
+        assert isinstance(source, bytes), "Citation source must be bytes"
+        return source.decode("utf-8")
+    except (ValueError, FileNotFoundError) as error:
         pytest.fail(
-            f"Citation source unavailable: {path} at {revision}. "
-            "Fetch the pinned Git history before running citation checks; "
-            "source archives require a Git checkout with that history.",
+            f"Citation source unavailable: {path} at {revision} ({error}). "
+            "Verification requires main ancestry or an exact frozen legacy claim.",
             pytrace=False,
         )
 
@@ -195,7 +193,7 @@ def test_citation_checks_fetch_pinned_history(workflow, job):
 
 def test_missing_citation_history_reports_recovery(tmp_path, monkeypatch):
     monkeypatch.setattr(sys.modules[__name__], "ROOT", tmp_path)
-    with pytest.raises(pytest.fail.Exception, match="Fetch.*history.*source archives"):
+    with pytest.raises(pytest.fail.Exception, match="main ancestry or an exact frozen legacy claim"):
         source_at("0" * 40, "pyproject.toml")
 
 
@@ -204,15 +202,13 @@ def test_citation_source_uses_utf8_under_other_locales(monkeypatch, locale_encod
     pack = PACK.read_text(encoding="utf-8")
     pin = re.search(r"^\| Code revision \| `([0-9a-f]{40})`", pack, re.MULTILINE)[1]
     path = "docs/domains/orcawave/L01_aqwa_benchmark/SESSION_SUMMARY.md"
-    expected = subprocess.check_output(
-        ["git", "show", f"{pin}:{path}"], cwd=ROOT,
-    ).decode("utf-8")
+    expected = read_evidence(ROOT, pin, path).decode("utf-8")
     assert not expected.isascii(), "regression needs non-ASCII citation evidence"
     monkeypatch.setattr(subprocess, "_text_encoding", lambda: locale_encoding)
     assert source_at.__wrapped__(pin, path) == expected
 
 
 def test_citation_source_rejects_non_text_output(monkeypatch):
-    monkeypatch.setattr(subprocess, "check_output", lambda *args, **kwargs: None)
-    with pytest.raises(AssertionError, match="Citation source must be text"):
+    monkeypatch.setattr(sys.modules[__name__], "read_evidence", lambda *args: None)
+    with pytest.raises(AssertionError, match="Citation source must be bytes"):
         source_at.__wrapped__("unused", "example.py")

@@ -11,11 +11,12 @@ import ast
 import hashlib
 import json
 import re
-import subprocess
 from decimal import Decimal
 from pathlib import Path
 
 import pytest
+
+from digitalmodel.legacy_evidence import git_output, legacy_files, read_evidence
 
 ROOT = Path(__file__).resolve().parents[2]
 REGISTER = ROOT / "docs/domains/risers/global-model-evidence-register.json"
@@ -31,7 +32,7 @@ def blob(revision, path):
     """Read only repository-relative paths at a full retained commit digest."""
     assert re.fullmatch(r"[0-9a-f]{40}", revision)
     assert not Path(path).is_absolute() and ".." not in Path(path).parts
-    return subprocess.check_output(["git", "show", f"{revision}:{path}"], cwd=ROOT)
+    return read_evidence(ROOT, revision, path)
 
 
 def test_no_missing_evidence_is_promoted_to_qualified_pass():
@@ -99,19 +100,13 @@ def test_all_source_fingerprints_match_the_retained_revision():
 
 def test_inventory_covers_every_retained_test_file_without_importing_it():
     data = record()
-    paths = subprocess.check_output(
-        [
-            "git",
-            "ls-tree",
-            "-r",
-            "--name-only",
-            data["snapshot_revision"],
-            "--",
-            TEST_ROOT,
-        ],
-        cwd=ROOT,
-        text=True,
-    ).splitlines()
+    revision = data["snapshot_revision"]
+    known = legacy_files(ROOT, revision)
+    if known:
+        paths = [name for name in known if name.startswith(TEST_ROOT)]
+    else:
+        paths = git_output(["-C", str(ROOT)], "ls-tree", "-r", "--name-only",
+                           revision, "--", TEST_ROOT).decode().splitlines()
     expected = {
         p for p in paths if Path(p).name.startswith("test_") and p.endswith(".py")
     }

@@ -1,0 +1,748 @@
+schema_version: 1
+invocation: "uv run python -m digitalmodel {input}"
+workflows:
+  - id: cathodic-protection
+    basename: cathodic_protection
+    title: Sacrificial anode demand for a coated offshore structure
+    input: examples/workflows/cathodic-protection/input.yml
+    outputs:
+      - examples/workflows/cathodic-protection/results/input.yml
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[cathodic-protection]
+    runtime: offline
+  - id: cathodic-protection-jacket
+    basename: cathodic_protection
+    title: Sacrificial-anode CP for a fixed steel jacket (DNV-RP-B401)
+    input: examples/workflows/cathodic-protection-jacket/input.yml
+    outputs:
+      - examples/workflows/cathodic-protection-jacket/results/input.yml
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[cathodic-protection-jacket]
+    runtime: offline
+  - id: cathodic-protection-pipeline
+    basename: cathodic_protection
+    title: Sacrificial-anode CP for a subsea pipeline (DNV-RP-F103)
+    input: examples/workflows/cathodic-protection-pipeline/input.yml
+    outputs:
+      - examples/workflows/cathodic-protection-pipeline/results/input.yml
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[cathodic-protection-pipeline]
+    runtime: offline
+  - id: cathodic-protection-manifold
+    basename: cathodic_protection
+    title: Sacrificial-anode CP for a subsea manifold (DNV-RP-B401)
+    input: examples/workflows/cathodic-protection-manifold/input.yml
+    outputs:
+      - examples/workflows/cathodic-protection-manifold/results/input.yml
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[cathodic-protection-manifold]
+    runtime: offline
+  - id: cathodic-protection-monopile
+    basename: cathodic_protection
+    title: Sacrificial-anode CP for an offshore-wind monopile (DNV-RP-B401)
+    input: examples/workflows/cathodic-protection-monopile/input.yml
+    outputs:
+      - examples/workflows/cathodic-protection-monopile/results/input.yml
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[cathodic-protection-monopile]
+    runtime: offline
+  - id: cathodic-protection-fpso
+    basename: cathodic_protection
+    title: Sacrificial-anode CP for an FPSO hull (ABS Offshore 2018)
+    input: examples/workflows/cathodic-protection-fpso/input.yml
+    outputs:
+      - examples/workflows/cathodic-protection-fpso/results/input.yml
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[cathodic-protection-fpso]
+    runtime: offline
+  - id: catenary
+    basename: catenary
+    title: Angle-based catenary geometry
+    input: examples/workflows/catenary/input.yml
+    outputs:
+      - examples/workflows/catenary/results/input_equation.yml
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[catenary]
+    runtime: offline
+  - id: pipe-capacity
+    basename: pipe_capacity
+    title: API STD 2RD internal-pressure capacity for an X65 pipeline
+    input: examples/workflows/pipe-capacity/input.yml
+    outputs:
+      - examples/workflows/pipe-capacity/results/input.yml
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[pipe-capacity]
+    runtime: offline
+  - id: fatigue-analysis
+    basename: fatigue_analysis
+    title: Miner fatigue damage from direct S-N cycle bins
+    input: examples/workflows/fatigue-analysis/input.yml
+    outputs:
+      - examples/workflows/fatigue-analysis/results/input.yml
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[fatigue-analysis]
+    runtime: offline
+  - id: jumper-installation
+    basename: jumper_installation
+    title: Deepwater rigid-jumper installation screening over a small Hs sweep
+    input: examples/workflows/jumper-installation/input.yml
+    outputs:
+      - examples/workflows/jumper-installation/results/input.yml
+      - examples/workflows/jumper-installation/results/input_jumper_installation_summary.json
+      - examples/workflows/jumper-installation/results/input_jumper_installation_cases.csv
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[jumper-installation]
+    runtime: offline
+  - id: mooring-fatigue
+    basename: mooring_fatigue
+    title: Metallic mooring-line fatigue damage from tension-range bins
+    input: examples/workflows/mooring-fatigue/input.yml
+    outputs:
+      - examples/workflows/mooring-fatigue/results/input.yml
+      - examples/workflows/mooring-fatigue/results/input_mooring_fatigue.csv
+      - examples/workflows/mooring-fatigue/results/input_mooring_fatigue_summary.csv
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[mooring-fatigue]
+    runtime: offline
+    parametric:
+      physics: log_log
+      response: damage
+      response_kwargs: {environment: seawater_cp}
+      tolerance: {metric: max_rel_error, threshold: 0.10}
+      axes:
+        - {name: tension_range_kN, scale: log, grid: [100, 125, 150, 175, 200, 225, 250, 275, 300, 325, 350, 375, 400, 425, 450]}
+        - {name: n_cycles, scale: log, grid: [10000, 100000, 1000000]}
+        - {name: area_mm2, scale: log, grid: [3000, 3500, 4000, 4500, 5000, 5500, 6000, 6500, 7000, 7500, 8000, 8500, 9000]}
+        - {name: sn_curve, values: [B1, B2, C, C1, C2, D, E, F]}
+      atlas: atlases/mooring_fatigue
+  - id: mooring-fatigue-atlas-query
+    basename: parametric_query
+    title: Instant interpolated mooring fatigue life from the pre-computed atlas
+    input: examples/workflows/mooring-fatigue-atlas-query/input.yml
+    outputs:
+      - examples/workflows/mooring-fatigue-atlas-query/results/input_result.yml
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[mooring-fatigue-atlas-query]
+    runtime: offline
+  - id: synthetic-rope-mooring-fatigue
+    basename: synthetic_rope_mooring_fatigue
+    title: Synthetic fibre-rope mooring service life (T-T fatigue + creep + min-tension)
+    input: examples/workflows/synthetic-rope-mooring-fatigue/input.yml
+    outputs:
+      - examples/workflows/synthetic-rope-mooring-fatigue/results/input.yml
+      - examples/workflows/synthetic-rope-mooring-fatigue/results/input_synthetic_rope_mooring_fatigue.csv
+      - examples/workflows/synthetic-rope-mooring-fatigue/results/input_synthetic_rope_mooring_fatigue_summary.csv
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[synthetic-rope-mooring-fatigue]
+    runtime: offline
+  - id: spectral-fatigue
+    basename: spectral_fatigue
+    title: Frequency-domain (spectral) fatigue from a stress PSD (Dirlik / DNV-RP-C203)
+    input: examples/workflows/spectral-fatigue/input.yml
+    outputs:
+      - examples/workflows/spectral-fatigue/results/input.yml
+      - examples/workflows/spectral-fatigue/results/input_spectral_fatigue.csv
+      - examples/workflows/spectral-fatigue/results/input_spectral_fatigue_summary.csv
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[spectral-fatigue]
+    runtime: offline
+  - id: time-series
+    basename: time_series
+    title: FFT spectrum from a deterministic synthetic signal
+    input: examples/workflows/time-series/input.yml
+    outputs:
+      - examples/workflows/time-series/results/input.yml
+      - examples/workflows/time-series/results/input_signal_fft.csv
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[time-series]
+    runtime: offline
+  - id: viv-analysis
+    basename: viv_analysis
+    title: Tubular member VIV screening for a single free span
+    input: examples/workflows/viv-analysis/input.yml
+    outputs:
+      - examples/workflows/viv-analysis/results/input.yml
+      - examples/workflows/viv-analysis/results/input_natural_frequencies.csv
+      - examples/workflows/viv-analysis/results/input_vs_frequencies.csv
+      - examples/workflows/viv-analysis/results/input_safety_factors.csv
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[viv-analysis]
+    runtime: offline
+  - id: viv-parametric
+    basename: parametric_run
+    title: Six-case VIV parametric sweep over span length and wall thickness
+    input: examples/workflows/viv-parametric/input.yml
+    outputs:
+      - examples/workflows/viv-parametric/results/cases.csv
+      - examples/workflows/viv-parametric/results/case_0.yml
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[viv-parametric]
+    runtime: offline
+  - id: stress-strain
+    basename: stress_strain
+    title: Ramberg-Osgood stress-strain curve for API 5L X65 steel
+    input: examples/workflows/stress-strain/input.yml
+    outputs:
+      - examples/workflows/stress-strain/results/input_stress_strain.csv
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[stress-strain]
+    runtime: offline
+  - id: compare-tool
+    basename: compare_tool
+    title: Offline overlay comparison for two tabular result sets
+    input: examples/workflows/compare-tool/input.yml
+    outputs:
+      - examples/workflows/compare-tool/results/input_comparison.csv
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[compare-tool]
+    runtime: offline
+  - id: api-rp-2rd-riser
+    basename: code_check
+    title: API RP 2RD riser combined tension and bending utilisation check
+    input: examples/workflows/api-rp-2rd-riser/input.yml
+    outputs:
+      - examples/workflows/api-rp-2rd-riser/results/input_code_check.csv
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[api-rp-2rd-riser]
+    runtime: offline
+    parametric:
+      physics: utilization_threshold
+      response: utilisation
+      response_kwargs: {design_factor: 0.67, smts_ratio: 1.185}
+      tolerance: {metric: max_rel_error, threshold: 0.10}
+      axes:
+        - {name: outer_diameter, scale: linear, grid: [0.20, 0.24, 0.28, 0.32, 0.36]}
+        - {name: wall_thickness, scale: linear, grid: [0.015, 0.020, 0.025, 0.030, 0.035]}
+        - {name: effective_tension_kN, scale: linear, grid: [0, 400, 800, 1200, 1600, 2000]}
+        - {name: bending_moment_kNm, scale: linear, grid: [0, 80, 160, 240, 320, 400]}
+        - {name: smys, values: [359000000.0, 448000000.0, 552000000.0]}
+      atlas: atlases/code_check
+  - id: code-check-atlas-query
+    basename: parametric_query
+    title: Instant interpolated API RP 2RD utilisation from the pre-computed atlas
+    input: examples/workflows/code-check-atlas-query/input.yml
+    outputs:
+      - examples/workflows/code-check-atlas-query/results/input_result.yml
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[code-check-atlas-query]
+    runtime: offline
+  - id: dnv-os-f201-riser
+    basename: code_check
+    title: DNV-OS-F201 riser LRFD combined loading utilisation check
+    input: examples/workflows/dnv-os-f201-riser/input.yml
+    outputs:
+      - examples/workflows/dnv-os-f201-riser/results/input_code_check.csv
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[dnv-os-f201-riser]
+    runtime: offline
+  - id: api-2sk-mooring
+    basename: code_check
+    title: API RP 2SK mooring line tension utilisation check
+    input: examples/workflows/api-2sk-mooring/input.yml
+    outputs:
+      - examples/workflows/api-2sk-mooring/results/input_code_check.csv
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[api-2sk-mooring]
+    runtime: offline
+  - id: pipe-ovality
+    basename: pipe_ovality
+    title: DNV-OS-F101 pipe out-of-roundness geometry check
+    input: examples/workflows/pipe-ovality/input.yml
+    outputs:
+      - examples/workflows/pipe-ovality/results/input_ovality.csv
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[pipe-ovality]
+    runtime: offline
+  - id: wave-spectrum
+    basename: wave_spectrum
+    title: Offline JONSWAP and Pierson-Moskowitz wave energy spectrum
+    input: examples/workflows/wave-spectrum/input.yml
+    outputs:
+      - examples/workflows/wave-spectrum/results/input_spectrum.csv
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[wave-spectrum]
+    runtime: offline
+  - id: rao-tabulation
+    basename: rao_tabulation
+    title: Offline 6-DOF vessel RAO amplitude and phase tabulation
+    input: examples/workflows/rao-tabulation/input.yml
+    outputs:
+      - examples/workflows/rao-tabulation/results/input_rao.csv
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[rao-tabulation]
+    runtime: offline
+    parametric:
+      physics: linear
+      response: heave_m
+      response_kwargs: {database_path: examples/workflows/rao-tabulation/input.yml}
+      tolerance: {metric: max_rel_error, threshold: 0.05}
+      axes:
+        - {name: frequency_rad_s, scale: linear, grid: [0.349066, 0.448799, 0.628319, 1.047198]}
+        - {name: heading_deg, scale: linear, grid: [0.0, 90.0]}
+      atlas: atlases/rao_tabulation
+  - id: rao-atlas-query
+    basename: parametric_query
+    title: Instant interpolated heave RAO amplitude from the pre-computed atlas
+    input: examples/workflows/rao-atlas-query/input.yml
+    outputs:
+      - examples/workflows/rao-atlas-query/results/input_result.yml
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[rao-atlas-query]
+    runtime: offline
+  - id: von-mises
+    basename: von_mises
+    title: Two-element cantilever beam Von Mises stress check
+    input: examples/workflows/von-mises/input.yml
+    outputs:
+      - examples/workflows/von-mises/results/input_von_mises.csv
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[von-mises]
+    runtime: offline
+  - id: elastic-buckling
+    basename: elastic_buckling
+    title: Pinned-pinned Euler column elastic buckling check
+    input: examples/workflows/elastic-buckling/input.yml
+    outputs:
+      - examples/workflows/elastic-buckling/results/input_elastic_buckling.csv
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[elastic-buckling]
+    runtime: offline
+  - id: orcaflex-strength-post
+    basename: orcaflex_post_process
+    title: OrcaFlex strength post-processing (tension/moment/curvature) — needs OrcaFlex license
+    input: examples/workflows/orcaflex-strength-post/input.yml
+    outputs:
+      - examples/workflows/orcaflex-strength-post/results/strength_loadcase_summary.csv
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[orcaflex-strength-post]
+    runtime: requires-license
+  - id: stress-strain-parametric
+    basename: parametric_run
+    title: Ramberg-Osgood material grade sweep for offshore pipeline steels
+    input: examples/workflows/stress-strain-parametric/input.yml
+    outputs:
+      - examples/workflows/stress-strain-parametric/results/cases.csv
+      - examples/workflows/stress-strain-parametric/results/case_0.yml
+      - examples/workflows/stress-strain-parametric/results/results/case_0_stress_strain.csv
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[stress-strain-parametric]
+    runtime: offline
+  - id: riser-stackup
+    basename: riser_stackup
+    title: Deepwater drilling riser stack-up tension and wall check
+    input: examples/workflows/riser-stackup/input.yml
+    outputs:
+      - examples/workflows/riser-stackup/results/input_riser_stackup.csv
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[riser-stackup]
+    runtime: offline
+  - id: tsj-sizing
+    basename: tsj_sizing
+    title: API RP 2RD taper stress joint membrane sizing
+    input: examples/workflows/tsj-sizing/input.yml
+    outputs:
+      - examples/workflows/tsj-sizing/results/input_tsj.csv
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[tsj-sizing]
+    runtime: offline
+  - id: riser-stackup-parametric
+    basename: parametric_run
+    title: Legacy-derived drilling riser stack-up parametric sweep
+    input: examples/workflows/riser-stackup-parametric/input.yml
+    outputs:
+      - examples/workflows/riser-stackup-parametric/results/cases.csv
+      - examples/workflows/riser-stackup-parametric/results/case_0.yml
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[riser-stackup-parametric]
+    runtime: offline
+  - id: sn-curve
+    basename: sn_curve
+    title: DNV-RP-C203 S-N endurance curve grid
+    input: examples/workflows/sn-curve/input.yml
+    outputs:
+      - examples/workflows/sn-curve/results/input_sn_curve.csv
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[sn-curve]
+    runtime: offline
+  - id: sn-curve-comparison
+    basename: sn_curve
+    title: DNV-RP-C203 S-N curve comparison over a common stress grid
+    input: examples/workflows/sn-curve-comparison/input.yml
+    outputs:
+      - examples/workflows/sn-curve-comparison/results/input_sn_curve.csv
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[sn-curve-comparison]
+    runtime: offline
+  - id: plate-buckling
+    basename: plate_buckling
+    title: DNV-RP-C201 plate buckling usage check
+    input: examples/workflows/plate-buckling/input.yml
+    outputs:
+      - examples/workflows/plate-buckling/results/input.yml
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[plate-buckling]
+    runtime: offline
+  - id: on-bottom-stability-f109
+    basename: on_bottom_stability
+    title: DNV-RP-F109 on-bottom stability for a concrete-coated GOM pipeline
+    input: examples/workflows/on-bottom-stability-f109/input.yml
+    outputs:
+      - examples/workflows/on-bottom-stability-f109/results/input.yml
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[on-bottom-stability-f109]
+    runtime: offline
+  - id: free-span-f105
+    basename: free_span
+    title: DNV-RP-F105 VIV onset screening for a 10.75 inch free span
+    input: examples/workflows/free-span-f105/input.yml
+    outputs:
+      - examples/workflows/free-span-f105/results/input.yml
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[free-span-f105]
+    runtime: offline
+  - id: pipeline-lateral-buckling
+    basename: lateral_buckling
+    title: HP/HT subsea pipeline lateral buckling screening
+    input: examples/workflows/pipeline-lateral-buckling/input.yml
+    outputs:
+      - examples/workflows/pipeline-lateral-buckling/results/input.yml
+      - examples/workflows/pipeline-lateral-buckling/results/input_lateral_buckling.csv
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[pipeline-lateral-buckling]
+    runtime: offline
+  - id: pipeline-upheaval-buckling
+    basename: upheaval_buckling
+    title: Buried subsea pipeline upheaval buckling screening
+    input: examples/workflows/pipeline-upheaval-buckling/input.yml
+    outputs:
+      - examples/workflows/pipeline-upheaval-buckling/results/input.yml
+      - examples/workflows/pipeline-upheaval-buckling/results/input_upheaval_buckling.csv
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[pipeline-upheaval-buckling]
+    runtime: offline
+  - id: orcawave-input-prep
+    basename: diffraction
+    title: OrcaWave diffraction input YAML preparation from a canonical spec
+    input: examples/workflows/orcawave-input-prep/input.yml
+    outputs:
+      - examples/workflows/orcawave-input-prep/results/input.yml
+      - examples/workflows/orcawave-input-prep/results/prepared/RegistryShip.yml
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[orcawave-input-prep]
+    runtime: offline
+  - id: aqwa-diffraction-deck-prep
+    basename: diffraction
+    title: AQWA diffraction deck preparation from a canonical spec
+    input: examples/workflows/aqwa-diffraction-deck-prep/input.yml
+    outputs:
+      - examples/workflows/aqwa-diffraction-deck-prep/results/input.yml
+      - examples/workflows/aqwa-diffraction-deck-prep/results/prepared/registry_ship_diffraction.dat
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[aqwa-diffraction-deck-prep]
+    runtime: offline
+  - id: dynacard-diagnostics
+    basename: artificial_lift
+    title: Synthetic sucker-rod pump dynacard diagnostic with HTML report
+    input: examples/workflows/dynacard-diagnostics/input.yml
+    outputs:
+      - examples/workflows/dynacard-diagnostics/results/input.yml
+      - examples/workflows/dynacard-diagnostics/results/input_diagnostic_report.html
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[dynacard-diagnostics]
+    runtime: offline
+  - id: artificial-lift-field-health
+    basename: artificial_lift_field_health
+    title: Field-wide artificial-lift dynacard health rollup
+    input: examples/workflows/artificial-lift-field-health/input.yml
+    outputs:
+      - examples/workflows/artificial-lift-field-health/results/input.yml
+      - examples/workflows/artificial-lift-field-health/results/input_field_health_summary.json
+      - examples/workflows/artificial-lift-field-health/results/input_field_health_wells.csv
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[artificial-lift-field-health]
+    runtime: offline
+  - id: orcaflex-6dbuoy-dnvrph103
+    basename: code_dnvrph103
+    title: DNV-RP-H103 6D buoy OrcaFlex YAML model preparation
+    input: examples/workflows/orcaflex-6dbuoy-dnvrph103/input.yml
+    outputs:
+      - examples/workflows/orcaflex-6dbuoy-dnvrph103/results/input.yml
+      - examples/workflows/orcaflex-6dbuoy-dnvrph103/results/dnvrph103_demo_6dbuoy_deep.yml
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[orcaflex-6dbuoy-dnvrph103]
+    runtime: offline
+  - id: fpso-spread-mooring
+    basename: fpso_mooring
+    title: FPSO eight-line spread-mooring safety-factor screening
+    input: examples/workflows/fpso-spread-mooring/input.yml
+    outputs:
+      - examples/workflows/fpso-spread-mooring/results/input.yml
+      - examples/workflows/fpso-spread-mooring/results/fpso_spread_mooring_summary.json
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[fpso-spread-mooring]
+    runtime: offline
+  - id: fpso-mooring-full
+    basename: fpso_mooring_full
+    title: FPSO spread-mooring environmental load and static equilibrium workflow
+    input: examples/workflows/fpso-mooring-full/input.yml
+    outputs:
+      - examples/workflows/fpso-mooring-full/results/input.yml
+      - examples/workflows/fpso-mooring-full/results/fpso_mooring_full_summary.json
+      - examples/workflows/fpso-mooring-full/results/fpso_mooring_full_line_tensions.csv
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[fpso-mooring-full]
+    runtime: offline
+  - id: wall-thickness-quickcheck
+    basename: wall_thickness
+    title: DNV/API wall-thickness quickcheck cached deckhand report
+    input: examples/workflows/wall-thickness-quickcheck/input.yml
+    outputs:
+      - examples/workflows/wall-thickness-quickcheck/results/input.yml
+      - examples/workflows/wall-thickness-quickcheck/results/wall_thickness_quickcheck.html
+      - examples/workflows/wall-thickness-quickcheck/results/wall_thickness_quickcheck.json
+      - examples/workflows/wall-thickness-quickcheck/results/wall_thickness_quickcheck.csv
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[wall-thickness-quickcheck]
+    runtime: offline
+  - id: api579-pipe-ffs-b314
+    basename: API579
+    title: API 579 FFS for a 12.75 inch B31.4 oil pipe
+    input: examples/workflows/api579-pipe-ffs-b314/input.yml
+    outputs:
+      - examples/workflows/api579-pipe-ffs-b314/results/input.yml
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[api579-pipe-ffs-b314]
+    runtime: offline
+  - id: api579-pipe-ffs-b318
+    basename: API579
+    title: API 579 FFS for a 16 inch B31.8 gas pipe
+    input: examples/workflows/api579-pipe-ffs-b318/input.yml
+    outputs:
+      - examples/workflows/api579-pipe-ffs-b318/results/input.yml
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[api579-pipe-ffs-b318]
+    runtime: offline
+  - id: jacket-member-joint-checks
+    basename: jacket_checks
+    title: API RP 2A-WSD tubular member and joint unity checks
+    input: examples/workflows/jacket-member-joint-checks/input.yml
+    outputs:
+      - examples/workflows/jacket-member-joint-checks/results/input.yml
+      - examples/workflows/jacket-member-joint-checks/results/jacket_checks_summary.json
+      - examples/workflows/jacket-member-joint-checks/results/jacket_member_unity_checks.csv
+      - examples/workflows/jacket-member-joint-checks/results/jacket_joint_unity_checks.csv
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[jacket-member-joint-checks]
+    runtime: offline
+  - id: ocimf-tanker-loads
+    basename: ocimf
+    title: OCIMF tanker wind and current environmental loads
+    input: examples/workflows/ocimf-tanker-loads/input.yml
+    outputs:
+      - examples/workflows/ocimf-tanker-loads/results/input.yml
+      - examples/workflows/ocimf-tanker-loads/results/ocimf_tanker_loads.json
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[ocimf-tanker-loads]
+    runtime: offline
+  - id: naval-arch-yaw-moment
+    basename: naval_arch
+    title: Preliminary rudder-induced yaw moment screen
+    input: examples/workflows/naval-arch-yaw-moment/input.yml
+    outputs:
+      - examples/workflows/naval-arch-yaw-moment/results/input.yml
+      - examples/workflows/naval-arch-yaw-moment/results/naval_arch_yaw_moment/yaw_moment_sweep.csv
+      - examples/workflows/naval-arch-yaw-moment/results/naval_arch_yaw_moment/yaw_moment_sweep.json
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[naval-arch-yaw-moment]
+    runtime: offline
+  - id: rudder-stock-torque
+    basename: naval_arch
+    title: Preliminary rudder-stock torque and steering-gear holding-torque screen
+    input: examples/workflows/rudder-stock-torque/input.yml
+    outputs:
+      - examples/workflows/rudder-stock-torque/results/input.yml
+      - examples/workflows/rudder-stock-torque/results/rudder_stock_torque/rudder_stock_torque_sweep.csv
+      - examples/workflows/rudder-stock-torque/results/rudder_stock_torque/rudder_stock_torque_sweep.json
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[rudder-stock-torque]
+    runtime: offline
+  - id: pile-axial-capacity
+    basename: geotechnical
+    title: API RP 2GEO alpha-method axial pile capacity in clay
+    input: examples/workflows/pile-axial-capacity/input.yml
+    outputs:
+      - examples/workflows/pile-axial-capacity/results/input.yml
+      - examples/workflows/pile-axial-capacity/results/pile_axial_capacity/pile_axial_capacity_summary.json
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[pile-axial-capacity]
+    runtime: offline
+  - id: drag-anchor-holding
+    basename: geotechnical
+    title: DNV-RP-E302 / API RP 2SK empirical drag-anchor holding capacity
+    input: examples/workflows/drag-anchor-holding/input.yml
+    outputs:
+      - examples/workflows/drag-anchor-holding/results/input.yml
+      - examples/workflows/drag-anchor-holding/results/drag_anchor_holding/drag_anchor_holding_summary.json
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[drag-anchor-holding]
+    runtime: offline
+  - id: nodal-analysis-ipr-vlp
+    basename: production
+    title: Well operating point from Vogel IPR / Hagedorn-Brown VLP intersection
+    input: examples/workflows/nodal-analysis-ipr-vlp/input.yml
+    outputs:
+      - examples/workflows/nodal-analysis-ipr-vlp/results/input.yml
+      - examples/workflows/nodal-analysis-ipr-vlp/results/nodal_analysis/nodal_analysis_summary.json
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[nodal-analysis-ipr-vlp]
+    runtime: offline
+  - id: anchor-capacity
+    basename: anchor_capacity
+    title: Anchor drag + suction holding capacity screen (DNV-RP-E302 / E303)
+    input: examples/workflows/anchor-capacity/input.yml
+    outputs:
+      - examples/workflows/anchor-capacity/results/input.yml
+      - examples/workflows/anchor-capacity/results/anchor_capacity/anchor_capacity_summary.json
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[anchor-capacity]
+    runtime: offline
+  - id: pile-capacity
+    basename: pile_capacity
+    title: API RP 2GEO alpha-method pile capacity in firm clay
+    input: examples/workflows/pile-capacity/input.yml
+    outputs:
+      - examples/workflows/pile-capacity/results/input.yml
+      - examples/workflows/pile-capacity/results/pile_capacity/pile_capacity_summary.json
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[pile-capacity]
+    runtime: offline
+  - id: scour-assessment
+    basename: scour
+    title: DNV-RP-F107 pipeline, monopile, and rock armour scour assessment
+    input: examples/workflows/scour-assessment/input.yml
+    outputs:
+      - examples/workflows/scour-assessment/results/input.yml
+      - examples/workflows/scour-assessment/results/scour/scour_summary.json
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[scour-assessment]
+    runtime: offline
+  - id: well-bore-design
+    basename: well_bore_design
+    title: Standard offshore wellbore casing/cost/risk screen
+    input: examples/workflows/well-bore-design/input.yml
+    outputs:
+      - examples/workflows/well-bore-design/results/input.yml
+      - examples/workflows/well-bore-design/results/well_bore_design/well_bore_design_summary.json
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[well-bore-design]
+    runtime: offline
+  - id: well-hydraulics
+    basename: well_hydraulics
+    title: 8.5 inch hole annular hydraulics ECD and cleaning screen
+    input: examples/workflows/well-hydraulics/input.yml
+    outputs:
+      - examples/workflows/well-hydraulics/results/input.yml
+      - examples/workflows/well-hydraulics/results/well_hydraulics/well_hydraulics_summary.json
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[well-hydraulics]
+    runtime: offline
+  - id: wellpath
+    basename: wellpath
+    title: Minimum-curvature directional survey interpolation
+    input: examples/workflows/wellpath/input.yml
+    outputs:
+      - examples/workflows/wellpath/results/input_wellpath.csv
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[wellpath]
+    runtime: offline
+  - id: rop-analysis
+    basename: rop_analysis
+    title: Bourgoyne-Young and Warren ROP model comparison
+    input: examples/workflows/rop-analysis/input.yml
+    outputs:
+      - examples/workflows/rop-analysis/results/input.yml
+      - examples/workflows/rop-analysis/results/rop_analysis/rop_analysis_summary.json
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[rop-analysis]
+    runtime: offline
+  - id: tubular-design-envelope
+    basename: tubular_design
+    title: 7 inch L80 casing API/VME tubular design envelope
+    input: examples/workflows/tubular-design-envelope/input.yml
+    outputs:
+      - examples/workflows/tubular-design-envelope/results/input.yml
+      - examples/workflows/tubular-design-envelope/results/tubular_design/tubular_design_summary.json
+      - examples/workflows/tubular-design-envelope/results/tubular_design/tubular_design_envelope.csv
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[tubular-design-envelope]
+    runtime: offline
+  - id: capex-estimate
+    basename: capex_estimate
+    title: Mars-style TLP CAPEX estimate from GoM benchmarks
+    input: examples/workflows/capex-estimate/input.yml
+    outputs:
+      - examples/workflows/capex-estimate/results/input.yml
+      - examples/workflows/capex-estimate/results/capex_estimate/capex_estimate_summary.json
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[capex-estimate]
+    runtime: offline
+  - id: opex-estimate
+    basename: opex_estimate
+    title: Semi-submersible annual OPEX estimate from GoM benchmarks
+    input: examples/workflows/opex-estimate/input.yml
+    outputs:
+      - examples/workflows/opex-estimate/results/input.yml
+      - examples/workflows/opex-estimate/results/opex_estimate/opex_estimate_summary.json
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[opex-estimate]
+    runtime: offline
+  - id: concept-selection
+    basename: concept_selection
+    title: Mars analogue host concept ranking
+    input: examples/workflows/concept-selection/input.yml
+    outputs:
+      - examples/workflows/concept-selection/results/input.yml
+      - examples/workflows/concept-selection/results/concept_selection/concept_selection_summary.json
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[concept-selection]
+    runtime: offline
+  - id: nodal-analysis
+    basename: nodal_analysis
+    title: Well operating point from Vogel IPR / Hagedorn-Brown VLP intersection
+    input: examples/workflows/nodal-analysis/input.yml
+    outputs:
+      - examples/workflows/nodal-analysis/results/input.yml
+      - examples/workflows/nodal-analysis/results/nodal_analysis/nodal_analysis_summary.json
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[nodal-analysis]
+    runtime: offline
+  - id: vlp-correlations
+    basename: vlp_correlations
+    title: Hagedorn-Brown VLP curve for a vertical oil well
+    input: examples/workflows/vlp-correlations/input.yml
+    outputs:
+      - examples/workflows/vlp-correlations/results/input.yml
+      - examples/workflows/vlp-correlations/results/vlp_correlations/vlp_correlations_summary.json
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[vlp-correlations]
+    runtime: offline
+  - id: damage-stability
+    basename: naval_arch
+    title: IMO intact and damage-stability screen from a tabulated GZ curve
+    input: examples/workflows/damage-stability/input.yml
+    outputs:
+      - examples/workflows/damage-stability/results/input.yml
+      - examples/workflows/damage-stability/results/damage_stability/damage_stability_summary.json
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[damage-stability]
+    runtime: offline
+  - id: platform-stability
+    basename: naval_arch
+    title: FPSO intact stability and wind-heel screen
+    input: examples/workflows/platform-stability/input.yml
+    outputs:
+      - examples/workflows/platform-stability/results/input.yml
+      - examples/workflows/platform-stability/results/platform_stability/platform_stability_summary.json
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[platform-stability]
+    runtime: offline
+  - id: hull-resistance
+    basename: naval_arch
+    title: Series 60 hull-form coefficients and Holtrop-Mennen resistance screen
+    input: examples/workflows/hull-resistance/input.yml
+    outputs:
+      - examples/workflows/hull-resistance/results/input.yml
+      - examples/workflows/hull-resistance/results/hull_resistance/hull_resistance_summary.json
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[hull-resistance]
+    runtime: offline
+  - id: hull-seakeeping
+    basename: naval_arch
+    title: Hull natural-period and simple seakeeping response screen
+    input: examples/workflows/hull-seakeeping/input.yml
+    outputs:
+      - examples/workflows/hull-seakeeping/results/input.yml
+      - examples/workflows/hull-seakeeping/results/hull_seakeeping/hull_seakeeping_summary.json
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[hull-seakeeping]
+    runtime: offline
+  - id: hydro-coefficients
+    basename: hydro_coefficients
+    title: Frequency-dependent added-mass and damping coefficient interpolation
+    input: examples/workflows/hydro-coefficients/input.yml
+    outputs:
+      - examples/workflows/hydro-coefficients/results/input.yml
+      - examples/workflows/hydro-coefficients/results/input_hydro_coefficients.csv
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[hydro-coefficients]
+    runtime: offline
+  - id: wave-spectra
+    basename: wave_spectra
+    title: Pierson-Moskowitz spectrum moments from significant height and peak period
+    input: examples/workflows/wave-spectra/input.yml
+    outputs:
+      - examples/workflows/wave-spectra/results/input.yml
+      - examples/workflows/wave-spectra/results/input_spectrum.csv
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[wave-spectra]
+    runtime: offline
+  - id: passing-ship
+    basename: passing_ship
+    title: Wang passing-ship surge, sway, and yaw interaction forces
+    input: examples/workflows/passing-ship/input.yml
+    outputs:
+      - examples/workflows/passing-ship/results/input.yml
+      - examples/workflows/passing-ship/results/input_passing_ship.csv
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[passing-ship]
+    runtime: offline
+  - id: propeller-rudder-interaction
+    basename: propeller_rudder
+    title: Soding/Brix propeller-rudder interaction force sweep over rudder deflection
+    input: examples/workflows/propeller-rudder-interaction/input.yml
+    outputs:
+      - examples/workflows/propeller-rudder-interaction/results/input.yml
+      - examples/workflows/propeller-rudder-interaction/results/propeller_rudder/propeller_rudder_sweep.csv
+      - examples/workflows/propeller-rudder-interaction/results/propeller_rudder/propeller_rudder_sweep.json
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[propeller-rudder-interaction]
+    runtime: offline
+  - id: ct-hydraulics
+    basename: ct_hydraulics
+    title: Steady-state coiled-tubing pressure-loss, pump pressure, and ECD screen
+    input: examples/workflows/ct-hydraulics/input.yml
+    outputs:
+      - examples/workflows/ct-hydraulics/results/input.yml
+      - examples/workflows/ct-hydraulics/results/ct_hydraulics/ct_hydraulics_summary.json
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[ct-hydraulics]
+    runtime: offline
+  - id: rigging
+    basename: rigging
+    title: Resolve rigging-group elements to vendor catalog entries (WLL, geometry, weight)
+    input: examples/workflows/rigging/input.yml
+    outputs:
+      - examples/workflows/rigging/results/input.yml
+      - examples/workflows/rigging/results/rigging/rigging_summary.json
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[rigging]
+    runtime: offline
