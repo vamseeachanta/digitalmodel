@@ -1,0 +1,3 @@
+section,diameter_in,grade,top_ft,bottom_ft,length_ft,weight_lb_ft,area_in2,modulus_psi,minimum_tensile_psi,weight_in_air_lb,static_stretch_in,peak_stress_top_psi,min_stress_top_psi,goodman_loading_top_pct
+1,0.875,D,0.0,1400.0,1400.0,2.224,0.6013,30500000.0,115000,3113.6,3.0323,20355.2026,12133.2973,35.0739
+2,0.75,D,1400.0,4750.0,3350.0,1.634,0.4418,30500000.0,115000,5473.9,9.8762,21573.7921,10453.4714,45.9962
