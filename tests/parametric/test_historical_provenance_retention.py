@@ -677,3 +677,12 @@ def test_regeneration_selection_cannot_bypass_pinned_retention(repository):
     row["source_publication"] = "first-matching-artifact-publication"
     with pytest.raises(history.EvidenceError, match="Ambiguous source publication"):
         history.verify_git(row, case["root"])
+
+
+def test_publication_search_rejects_source_only_on_feature_branch(repository):
+    case = repository()
+    row = case["row"]
+    del row["source_revision"]
+    row["source_publication"] = "first-matching-artifact-publication"
+    with pytest.raises(history.EvidenceError, match="No committed publication matches"):
+        history.verify_git(row, case["root"])

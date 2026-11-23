@@ -59,10 +59,10 @@ def squash_capture(tmp_path):
     squash, _ = _commit(repo, CAPTURED_SOURCE, "Squashed producer", base)
     head, _ = _commit(repo, CHANGED_SOURCE, "Refactor producer", squash)
     _git(repo, "update-ref", "refs/heads/feature", capture)
-    _git(repo, "update-ref", "refs/heads/squashed", head)
-    _git(repo, "symbolic-ref", "HEAD", "refs/heads/squashed")
+    _git(repo, "update-ref", "refs/heads/main", head)
+    _git(repo, "symbolic-ref", "HEAD", "refs/heads/main")
     fixture = {
-        "source_commit_sha": capture,
+        "source_commit_sha": squash,
         "build_script_path": "producer.py",
         "build_script_function": "make_polar_overlay",
         "build_script_blob_sha": blob,
@@ -71,17 +71,22 @@ def squash_capture(tmp_path):
 
 
 @pytest.mark.parametrize("revision", ["feature", "squash"])
-def test_identical_capture_survives_squash_history(squash_capture, revision):
+def test_capture_requires_retained_revision_even_for_identical_blobs(squash_capture, revision):
     repo, fixture, squash, _ = squash_capture
+    feature = _git(repo, "rev-parse", "refs/heads/feature")
     ancestor = subprocess.run(
-        ["git", "merge-base", "--is-ancestor", fixture["source_commit_sha"], "HEAD"],
+        ["git", "merge-base", "--is-ancestor", feature, "HEAD"],
         cwd=repo, env=traces._git_environment(), capture_output=True,
     )
     assert ancestor.returncode == 1  # git-merge-base: false ancestry, not an error.
     assert _git(repo, "rev-parse", "HEAD:producer.py") != fixture["build_script_blob_sha"]
-    if revision == "squash":
-        fixture["source_commit_sha"] = squash
-    traces._assert_capture_source_identity(repo, fixture)
+    if revision == "feature":
+        fixture["source_commit_sha"] = feature
+        with pytest.raises(AssertionError, match="historical generating source is unavailable"):
+            traces._assert_capture_source_identity(repo, fixture)
+    else:
+        assert fixture["source_commit_sha"] == squash
+        traces._assert_capture_source_identity(repo, fixture)
 
 
 def test_changed_generating_content_is_rejected(squash_capture):
@@ -221,6 +226,6 @@ def test_repository_discovery_ignores_bound_caller(tmp_path, monkeypatch, bindin
 def test_ancestry_probe_ignores_bound_caller(squash_capture, tmp_path, monkeypatch, binding):
     caller, before = _bind_caller(tmp_path, monkeypatch, binding)
     try:
-        test_identical_capture_survives_squash_history(squash_capture, "feature")
+        test_capture_requires_retained_revision_even_for_identical_blobs(squash_capture, "feature")
     finally:
         assert _snapshot(caller) == before, "ancestry probe changed caller files or Git metadata"

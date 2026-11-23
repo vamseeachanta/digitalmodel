@@ -273,9 +273,24 @@ OFFLINE = ["issue-001-hull-roll-screening", "issue-001-sloshing-frequency"]
 
 @pytest.mark.parametrize("folder", OFFLINE)
 @pytest.mark.parametrize("revision", ["candidate", "pinned"])
-def test_offline_eval_passes(folder, revision):
+def test_offline_eval_passes(folder, revision, tmp_path):
     """Candidate regression (this checkout) and historical reproduction (code.commit) both pass."""
-    out = _run(folder, "--revision", revision)
+    if revision == "pinned":
+        record = tmp_path / "replayed.json"
+        out = subprocess.run(
+            [sys.executable, str(EVALS / "replay_pinned.py"), folder, "--out", str(record)],
+            capture_output=True, text=True, timeout=600,
+        )
+        assert out.returncode == 0, out.stdout + out.stderr
+        replayed = json.loads(record.read_bytes())
+        original = json.loads((EVALS / folder / "last-run-pinned.json").read_bytes())
+        assert replayed["pinned_commit"] == original["pinned_commit"]
+        assert replayed["artifacts"] == original["artifacts"]
+        assert replayed["context"]["sha256"] == original["context"]["sha256"]
+        adapter_digest = _kit().sha256_text(EVALS / "replay_pinned.py")
+        assert replayed["context"]["replay_adapter_sha256"] == adapter_digest
+    else:
+        out = _run(folder, "--revision", revision)
     assert out.returncode == 0 and "GRADE: PASS" in out.stdout, out.stdout + out.stderr
 
 

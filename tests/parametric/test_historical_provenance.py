@@ -5,6 +5,7 @@ from __future__ import annotations
 import copy
 import hashlib
 import json
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -129,23 +130,23 @@ def test_git_rejects_unretained_revision(retained_record):
 
 
 @pytest.fixture
-def regeneration_record(retained_record):
-    import yaml
-
-    row = retained_record
-    read = history.git_reader(ROOT, row.pop("source_revision"))
-    row["artifacts"] = {name: history.sha256(read(name)) for name in row["artifacts"]}
-    row["recorded_code_version"] = yaml.safe_load(read(row["manifest"]))["provenance"]["code_version"]
-    row["source_publication"] = "first-matching-artifact-publication"
-    return row
+def regeneration_record(inventory):
+    manifest = "atlases/rao_tabulation/f3acf821a481/manifest.yaml"
+    return copy.deepcopy(next(row for row in inventory["atlases"] if row["manifest"] == manifest))
 
 
 def test_regeneration_resolves_matching_committed_publication(regeneration_record):
     row = regeneration_record
     revision = history._regeneration_revision(row, ROOT)
-    assert len(revision) == 40
+    assert revision == "2fa4537222d3fb374f5b36e9dd3165fe239d51bc"
     history.verify_artifacts(row, ROOT, revision=revision)
     assert history.verify_sources(row, history.git_reader(ROOT, revision)) == row["content_fingerprint"]
+
+
+def test_new_publication_at_legacy_path_requires_its_own_search(regeneration_record):
+    row = regeneration_record
+    row["sources"][history.WRAPPER] = "0" * 64
+    assert history.legacy_evidence.publication_revision(ROOT, row) is None
 
 
 @pytest.mark.parametrize("field", ["sources", "artifacts", "content_fingerprint"])
@@ -275,6 +276,10 @@ def artifact_checkout(inventory, tmp_path, monkeypatch, request):
         ["git", "-C", str(ROOT), "rev-parse", "--absolute-git-dir"], text=True,
     ).strip()
     (tmp_path / ".git").write_text(f"gitdir: {git_dir}\n", encoding="utf-8")
+    evidence = history.legacy_evidence.MANIFEST
+    needed = {evidence.name, "blobs", *row["sources"].values(), *row["artifacts"].values()}
+    shutil.copytree(ROOT / evidence.parent, tmp_path / evidence.parent,
+                    ignore=lambda _directory, names: set(names) - needed)
     for name in row["artifacts"]:
         path = tmp_path / name
         path.parent.mkdir(parents=True, exist_ok=True)

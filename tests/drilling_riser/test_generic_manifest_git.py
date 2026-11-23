@@ -29,7 +29,7 @@ def git(root, *args):
 def repository(tmp_path):
     root = tmp_path / 'repo'
     root.mkdir()
-    git(root, 'init', '-q')
+    git(root, 'init', '-q', '-b', 'main')
     git(root, 'config', 'core.autocrlf', 'false')
     git(root, 'config', 'user.name', 'Test Maintainer')
     git(root, 'config', 'user.email', 'maintainer@example.invalid')
@@ -169,6 +169,9 @@ def test_shallow_clone_requires_fetching_pin(repository, tmp_path, monkeypatch):
     with pytest.raises(AssertionError, match=f'Pinned commit unavailable in shallow clone: {data["ref"]}'):
         run_contract(shallow, data, monkeypatch)
     git(shallow, 'fetch', '--quiet', '--depth=1', 'origin', data['ref'])
+    with pytest.raises(AssertionError, match='main'):
+        run_contract(shallow, data, monkeypatch)
+    git(shallow, 'fetch', '--quiet', '--unshallow', 'origin')
     run_contract(shallow, data, monkeypatch)
     data['env']['SOURCE_SHA256'] = current_digest(shallow)
     with pytest.raises(AssertionError, match='SOURCE_SHA256'):

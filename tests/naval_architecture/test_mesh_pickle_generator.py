@@ -5,11 +5,14 @@ import json
 import os
 import platform
 from pathlib import Path
+import shutil
 import subprocess
 import sys
 
 import numpy as np
 import pytest
+
+from digitalmodel.legacy_evidence import read_evidence
 
 ROOT = Path(__file__).resolve().parents[2]
 SCRIPT = ROOT / "scripts/validation/generate_mesh_legacy_pickles.py"
@@ -36,14 +39,16 @@ def prepare_probe(tmp_path):
     target, decoy = tmp_path / "target", tmp_path / "decoy"
     for repo in (target, decoy):
         repo.mkdir()
-        git(repo, "init", "-q")
+        git(repo, "init", "-q", "-b", "main")
         git(repo, "config", "user.name", "Fixture test")
         git(repo, "config", "user.email", "fixture@example.invalid")
         (repo / "sentinel.txt").write_text("repository-specific data: " + repo.name)
     for path in (SOURCE, HULL):
         destination = target / path
         destination.parent.mkdir(parents=True, exist_ok=True)
-        destination.write_text(git(ROOT, "show", f"{generator.BASELINE}:{path}") + "\n")
+        destination.write_bytes(read_evidence(ROOT, generator.BASELINE, path))
+    helper = Path("src/digitalmodel/legacy_evidence.py")
+    shutil.copyfile(ROOT / helper, target / helper)
     for package in ("digitalmodel", "digitalmodel/naval_architecture"):
         (target / "src" / package / "__init__.py").write_text("")
     for repo in (target, decoy):

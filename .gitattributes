@@ -167,3 +167,7 @@ tests/marine_ops/marine_engineering/catenary/test_simplified.py text eol=lf
 tests/orcaflex/test_mooring_design.py text eol=lf
 # GEBCO 2025 subset fixture: subset.asc bytes are bound by SHA-256 in provenance.json.
 tests/data_systems/fixtures/gebco_2025/* text eol=lf
+
+# Preserve the frozen migration manifest and raw historical evidence bytes.
+atlases/legacy-evidence/manifest.json text eol=lf
+atlases/legacy-evidence/blobs/* binary

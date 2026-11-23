@@ -15,6 +15,8 @@ import sys
 import pandas as pd
 import pytest
 
+from digitalmodel.legacy_evidence import read_evidence
+
 
 FIXTURE_DIR = pathlib.Path(__file__).parent / "fixtures"
 TRACE_SIG_FIXTURE = FIXTURE_DIR / "ocimf_explorer_pre_refactor_trace_signature.json"
@@ -49,26 +51,17 @@ def _repo_root() -> pathlib.Path:
 
 
 def _assert_capture_source_identity(repo_root: pathlib.Path, fixture: dict) -> None:
-    """Resolve the recorded producer and check its content, regardless of history.
-
-    The expected blob is taken from the original source commit's tree, rather
-    than from the refactored working file. Git hashes the complete source bytes;
-    parsing also confirms the recorded function exists without executing it.
-    """
-    source_spec = (
-        f"{fixture['source_commit_sha']}^{{commit}}:{fixture['build_script_path']}"
-    )
-    source = subprocess.run(
-        ["git", "cat-file", "blob", source_spec],
-        cwd=repo_root, env=_git_environment(), capture_output=True,
-    )
-    assert source.returncode == 0, (
-        "historical generating source is unavailable; "
-        f"provide the recorded commit and path: {source_spec}"
-    )
+    """Check the retained producer blob and function without executing it."""
+    revision = fixture["source_commit_sha"]
+    path = fixture["build_script_path"]
+    source_spec = f"{revision}:{path}"
+    try:
+        source = read_evidence(repo_root, revision, path)
+    except ValueError as error:
+        raise AssertionError(f"historical generating source is unavailable: {source_spec}: {error}") from error
     actual_blob = subprocess.check_output(
         ["git", "hash-object", "--stdin"],
-        cwd=repo_root, env=_git_environment(), input=source.stdout,
+        cwd=repo_root, env=_git_environment(), input=source,
     ).decode("utf-8").strip()
     assert actual_blob == fixture["build_script_blob_sha"], (
         f"generating source blob differs for {source_spec}: "
@@ -77,7 +70,7 @@ def _assert_capture_source_identity(repo_root: pathlib.Path, fixture: dict) -> N
     assert any(
         isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
         and node.name == fixture["build_script_function"]
-        for node in ast.parse(source.stdout).body
+        for node in ast.parse(source).body
     ), f"generating function is absent: {fixture['build_script_function']}"
 
 

@@ -15,6 +15,8 @@ from types import SimpleNamespace
 
 import pytest
 
+from digitalmodel.legacy_evidence import RESET_ROOT, legacy_files, read_evidence
+
 
 ROOT = Path(__file__).resolve().parents[2]
 SPEC = importlib.util.spec_from_file_location(
@@ -373,7 +375,17 @@ def test_failed_comparison_remains_failed(monkeypatch):
 def test_committed_metadata_matches_generator(replay):
     public = regression.metadata(replay)
     rebuild = "Rebuild: uv run --no-project python scripts/risers/analytical_riser_regression.py --root . --metadata-only --out-dir docs/audits"
-    assert json.loads((ROOT / "docs/audits/analytical-riser-regression.json").read_text(encoding="utf-8")) == public, rebuild
+    saved = json.loads((ROOT / "docs/audits/analytical-riser-regression.json").read_text(encoding="utf-8"))
+    revision = saved["source_revision"]
+    if revision != public["source_revision"]:
+        # Only the reset root can replace the last change to this set of inputs.
+        assert public["source_revision"] == RESET_ROOT
+        assert {pin["path"] for pin in regression.PINS.values()} <= legacy_files(ROOT, revision).keys()
+    for pin in regression.PINS.values():
+        source = read_evidence(ROOT, revision, pin["path"])
+        assert hashlib.sha256(source).hexdigest() == pin["sha256"]
+    public["source_revision"] = revision
+    assert saved == public, rebuild
     assert (ROOT / "docs/audits/analytical-riser-regression.html").read_text(encoding="utf-8") == regression.render_html(public), rebuild
 
 
