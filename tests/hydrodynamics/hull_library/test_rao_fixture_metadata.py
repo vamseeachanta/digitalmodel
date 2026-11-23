@@ -11,6 +11,7 @@ import numpy as np
 
 import pytest
 
+from digitalmodel.legacy_evidence import RESET_ROOT, legacy_files, read_evidence
 from digitalmodel.hydrodynamics.hull_library.rao_database import RAODatabase
 from digitalmodel.hydrodynamics.hull_library.rao_fixture_population import (
     populate_fixture_database,
@@ -186,7 +187,15 @@ def test_committed_source_revisions_match_history(repository_pair):
         pytest.skip("Only source revision equality is skipped: shallow history cannot resolve fixture last commits")
     for entry in committed.query({}):
         sources = fresh.get_by_id(entry.variation_id).metadata["sources"]
-        assert [s["revision"] for s in entry.metadata["sources"]] == [s["revision"] for s in sources]
+        for original, rebuilt in zip(entry.metadata["sources"], sources, strict=True):
+            assert original["path"] == rebuilt["path"]
+            if original["revision"] != rebuilt["revision"]:
+                # The reset root inherited the workbook. Any later edit must
+                # again agree with the recorded last-modified revision.
+                assert rebuilt["revision"] == RESET_ROOT
+                assert original["path"] in legacy_files(ROOT, original["revision"])
+            raw = read_evidence(ROOT, original["revision"], original["path"])
+            assert hashlib.sha256(raw).hexdigest() == original["sha256"] == rebuilt["sha256"]
 
 
 def test_metadata_refresh_refuses_divergent_existing_arrays(tmp_path, qualified_database):

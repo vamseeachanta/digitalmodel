@@ -4,7 +4,7 @@ Each public AceEngineer report whose code or data lives in a public repository h
 - digitalmodel and worldenergydata: `examples/report-evals/<report-id>/`
 - aceengineer-website: `assets/data/report-evals/<report-id>/`, also served under https://www.aceengineer.com/assets/data/report-evals/
 
-This README, `evalkit.py` and `results.schema.json` are the same, byte for byte, in all three repositories.
+The shared `evalkit.py` and `results.schema.json` are the same, byte for byte, in all three repositories.
 
 ## Files of a report
 
@@ -28,6 +28,8 @@ This README, `evalkit.py` and `results.schema.json` are the same, byte for byte,
 | Jack-up site-specific analysis (newsletter issue 2) | aceengineer-website | `issue-002-jackup-site-assessment` |
 
 ## Run
+
+After the 2026-11-23 digitalmodel history reset, use `python examples/report-evals/replay_pinned.py <report-id>` for a historical rebuild in this checkout. It verifies the retained source files and runs the evaluator bound to the original record. The CP report still requires its pinned package and external inputs.
 
 ```text
 python <folder>/eval.py                          # rebuild from this checkout and compare

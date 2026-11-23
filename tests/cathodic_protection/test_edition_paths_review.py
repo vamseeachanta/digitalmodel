@@ -7,12 +7,12 @@ from __future__ import annotations
 import ast
 from functools import lru_cache
 import json
-import os
 from pathlib import Path, PurePosixPath
 import re
-import subprocess
 
 import pytest
+
+from digitalmodel.legacy_evidence import git_output, read_evidence
 
 ROOT = Path(__file__).resolve().parents[2]
 REVIEW = ROOT / "docs/domains/cathodic_protection/reviews/edition-paths-review.json"
@@ -21,12 +21,9 @@ REVIEW = ROOT / "docs/domains/cathodic_protection/reviews/edition-paths-review.j
 @lru_cache
 def git_text(revision: str, path: str) -> str:
     """Read repository bytes without inherited repository bindings."""
-    env = {key: value for key, value in os.environ.items()
-           if key not in {"GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR", "GIT_INDEX_FILE"}}
-    return subprocess.run(
-        ["git", "-C", str(ROOT), "show", f"{revision}:{path}"],
-        check=True, capture_output=True, text=True, encoding="utf-8", env=env,
-    ).stdout
+    if revision == "HEAD":
+        return git_output(["-C", str(ROOT)], "show", f"HEAD:{path}").decode("utf-8")
+    return read_evidence(ROOT, revision, path).decode("utf-8")
 
 
 def no_duplicate_keys(pairs):

@@ -7,6 +7,7 @@ from unittest.mock import Mock
 
 import pytest
 
+from digitalmodel import legacy_evidence
 from digitalmodel.materials import grades
 from digitalmodel.materials import database as database_module
 from digitalmodel.materials.database import MaterialDatabase, load_database
@@ -87,7 +88,7 @@ def test_provenance_pins_the_repository_source(database):
 
 
 def test_source_revision_is_assigned_and_reachable_from_main(database):
-    """Issue #2778: the merged source revision must be a main ancestor.
+    """Issue #2778: the source revision must belong to current or archived main.
 
     Expected identity is the merge commit recorded for PR #2741, independently
     inspected with Git; the separate digest test checks its source bytes.
@@ -95,12 +96,11 @@ def test_source_revision_is_assigned_and_reachable_from_main(database):
     revision = "b4c10284fa7d28398e6fa02c262c219c0fec8fef"
     assert all(record.provenance.repository_revision == revision
                for record in database.values())
-    subprocess.run(
-        ["git", "merge-base", "--is-ancestor", revision, "origin/main"],
-        cwd=Path(__file__).resolve().parents[2],
-        check=True,
-        capture_output=True,
+    provenance = database.lookup("X52").provenance
+    source = legacy_evidence.read_evidence(
+        Path(__file__).resolve().parents[2], revision, provenance.repository_path,
     )
+    assert database_module.normalised_source_digest(source) == provenance.sha256
 
 
 def test_digest_only_provenance_needs_no_git_history(monkeypatch):
@@ -121,12 +121,10 @@ def test_pinned_revision_matches_source_digest(database):
     if provenance.repository_revision is None:
         source = Path(grades.__file__).read_bytes()
     else:
-        source = subprocess.run(
-            ["git", "show", f"{provenance.repository_revision}:{provenance.repository_path}"],
-            cwd=Path(__file__).resolve().parents[2],
-            check=True,
-            capture_output=True,
-        ).stdout
+        source = legacy_evidence.read_evidence(
+            Path(__file__).resolve().parents[2],
+            provenance.repository_revision, provenance.repository_path,
+        )
     assert database_module.normalised_source_digest(source) == provenance.sha256
 
 
@@ -138,12 +136,9 @@ def configured_revision_database(monkeypatch):
     return database
 
 
-def assert_configured_git_show(run):
-    run.assert_called_once_with(
-        ["git", "show", f"{'a' * 40}:src/digitalmodel/materials/grades.py"],
-        cwd=Path(__file__).resolve().parents[2],
-        check=True,
-        capture_output=True,
+def assert_configured_evidence_read(read):
+    read.assert_called_once_with(
+        Path(__file__).resolve().parents[2], "a" * 40, "src/digitalmodel/materials/grades.py",
     )
 
 
@@ -153,33 +148,33 @@ def test_configured_revision_accepts_matching_source(
 ):
     source = Path(grades.__file__).read_text(encoding="utf-8")
     source = source.replace("\n", line_ending).encode("utf-8")
-    run = Mock(return_value=subprocess.CompletedProcess([], 0, stdout=source))
-    monkeypatch.setattr(subprocess, "run", run)
+    read = Mock(return_value=source)
+    monkeypatch.setattr(legacy_evidence, "read_evidence", read)
     test_pinned_revision_matches_source_digest(configured_revision_database)
-    assert_configured_git_show(run)
+    assert_configured_evidence_read(read)
 
 
 def test_configured_revision_rejects_altered_source(
     monkeypatch, configured_revision_database,
 ):
     source = Path(grades.__file__).read_bytes() + b"\n# altered source\n"
-    run = Mock(return_value=subprocess.CompletedProcess([], 0, stdout=source))
-    monkeypatch.setattr(subprocess, "run", run)
+    read = Mock(return_value=source)
+    monkeypatch.setattr(legacy_evidence, "read_evidence", read)
     with pytest.raises(AssertionError):
         test_pinned_revision_matches_source_digest(configured_revision_database)
-    assert_configured_git_show(run)
+    assert_configured_evidence_read(read)
 
 
 def test_configured_revision_missing_history_fails(
     monkeypatch, configured_revision_database,
 ):
-    error = subprocess.CalledProcessError(128, ["git", "show"])
-    run = Mock(side_effect=error)
-    monkeypatch.setattr(subprocess, "run", run)
-    with pytest.raises(subprocess.CalledProcessError) as caught:
+    error = ValueError("Historical source is unavailable")
+    read = Mock(side_effect=error)
+    monkeypatch.setattr(legacy_evidence, "read_evidence", read)
+    with pytest.raises(ValueError) as caught:
         test_pinned_revision_matches_source_digest(configured_revision_database)
     assert caught.value is error
-    assert_configured_git_show(run)
+    assert_configured_evidence_read(read)
 
 
 @pytest.mark.parametrize("path", [
@@ -378,10 +373,9 @@ def test_pack_line_citations_resolve_at_assigned_revision(database):
     sources = {}
     for path, first, last in citations:
         if path not in sources:
-            sources[path] = subprocess.run(
-                ["git", "show", f"{revision}:{path}"],
-                cwd=root, check=True, capture_output=True,
-            ).stdout.decode("utf-8").splitlines()
+            sources[path] = legacy_evidence.read_evidence(
+                root, revision, path,
+            ).decode("utf-8").splitlines()
         # One-based, inclusive source locators, as specified in the pack header.
         assert 1 <= int(first) <= int(last) <= len(sources[path]), path
         assert any(line.strip() for line in sources[path][int(first) - 1:int(last)])

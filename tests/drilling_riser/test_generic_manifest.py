@@ -11,6 +11,8 @@ import subprocess
 import unittest
 import warnings
 
+from digitalmodel.legacy_evidence import legacy_files, read_evidence
+
 ROOT = Path(__file__).resolve().parents[2]
 BASE = ROOT / 'docs/domains/orcaflex/library/campaigns/generic-drilling-riser'
 SPEC_PATH = 'docs/domains/orcaflex/library/templates/drilling_riser/spec.yml'
@@ -29,6 +31,8 @@ def pinned_source_sha256(root: Path, ref: str) -> str:
     env = {key: value for key, value in os.environ.items()
            if key not in {'GIT_DIR', 'GIT_WORK_TREE', 'GIT_COMMON_DIR'}}
 
+    env.update(GIT_NO_LAZY_FETCH="1", GIT_ALLOW_PROTOCOL="")
+
     def git(*args):
         try:
             return subprocess.run(['git', '-C', str(root), *args], env=env,
@@ -38,16 +42,20 @@ def pinned_source_sha256(root: Path, ref: str) -> str:
 
     commit = git('cat-file', '-e', f'{ref}^{{commit}}')
     if commit.returncode != 0:
+        if SPEC_PATH in legacy_files(root, ref):
+            return hashlib.sha256(read_evidence(root, ref, SPEC_PATH)).hexdigest()
         shallow = git('rev-parse', '--is-shallow-repository')
         if (shallow.returncode == 0 and shallow.stdout.strip() == b'true'
                 and git('cat-file', '-e', ref).returncode != 0):
             raise AssertionError(
                 f'Pinned commit unavailable in shallow clone: {ref}; '
-                'fetch the pinned commit or full history before running this check')
+                'fetch full main history before running this check')
     assert commit.returncode == 0, f'Pinned ref does not resolve to a commit: {ref}'
-    blob = git('cat-file', 'blob', f'{ref}:{SPEC_PATH}')
-    assert blob.returncode == 0, f'Pinned specification blob unavailable at commit {ref}'
-    return hashlib.sha256(blob.stdout).hexdigest()
+    try:
+        blob = read_evidence(root, ref, SPEC_PATH)
+    except ValueError as error:
+        raise AssertionError(f'Pinned specification blob unavailable at commit {ref}: {error}') from error
+    return hashlib.sha256(blob).hexdigest()
 
 
 class ManifestTests(unittest.TestCase):
