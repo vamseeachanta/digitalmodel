@@ -486,8 +486,9 @@ pre = false
 [tool.uv.sources]
 # Public pin: PyPI assetutilities 0.1.0 lacks workflow_api, so assetutilities
 # comes from its GitHub repository, pinned to a release tag (fleet-ops#577).
-# Tag v0.2.0 resolves to assetutilities commit 49072a4.
-assetutilities = { git = "https://github.com/vamseeachanta/assetutilities.git", tag = "v0.2.0" }
+# Tag v0.2.1 resolves to assetutilities commit dcae00f: the same tree as v0.2.0 (49072a4),
+# re-cut as a parentless commit after the 23 Nov lean reset (fleet-ops#577).
+assetutilities = { git = "https://github.com/vamseeachanta/assetutilities.git", tag = "v0.2.1" }
 
 [tool.uv.workspace]
 members = []
