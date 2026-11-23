@@ -78,8 +78,8 @@ so outside those two the divergence is confined to the ranges assigned.
 Fatigue damage under a Miner summation with an S-N slope of 3 scales as range
 cubed. A maximum range understated by 29 % (`sigproc_astm`, broadband)
 understates that cycle's damage contribution by a factor of 2.8; understated by
-40 % (`calm_buoy`, broadband) by a factor of 4.6. The direction is
-non-conservative in every failing case.
+40 % (`calm_buoy`, broadband) by a factor of 4.6. In every failing case,
+the counter understates either the peak-to-valley span or the count of non-zero-range cycles.
 
 **Standards-evidence limitation.** The contract is scoped to this project's
 declared convention, not to a standard. ASTM E1049-85(2023) is paywalled and was
@@ -108,7 +108,7 @@ Consumer inventory is call-graph derived, not import-scan derived: an import
 scan over `src/` alone misses documentation examples, standalone scripts, and
 modules reachable only through a public entry point.
 
-### 3.1 `sigproc_astm` — NON-CONSERVATIVE
+### 3.1 `sigproc_astm` — misses the full span or undercounts non-zero-range cycles
 
 `src/digitalmodel/signal_processing/signal_analysis/core/rainflow.py:16`
 `RainflowCounter.count_cycles`
@@ -176,7 +176,7 @@ consumes none of the seven paths. The blast radius asserted in the first
 comment on #3839 was published from imports without tracing reachability and
 was corrected; that correction is the reason this record is call-graph derived.
 
-### 3.2 `calm_buoy` — NON-CONSERVATIVE
+### 3.2 `calm_buoy` — maximum range falls below the span on all four signals
 
 `src/digitalmodel/marine_ops/marine_engineering/calm_buoy_fatigue.py:196`
 `RainflowFatigue.count_cycles`
@@ -229,7 +229,7 @@ No consumer exists outside this module: the class is not exported from any
 are damage-producing but consume pre-counted arrays and are not counter-bound;
 they remain callable.
 
-### 3.3 `fapps_counting` — NON-CONSERVATIVE
+### 3.3 `fapps_counting` — misses the full span on broadband and residual-dominated signals
 
 `src/digitalmodel/structural/fatigue_apps/rainflow_counting.py:39`
 `RainflowCounter.process_time_series`
@@ -265,7 +265,7 @@ step whose CSV output feeds the Module 3 damage calculator.
 `process_time_series` and `rainflow_counting_astm` remain callable, so the
 diagnostic use of the counter is preserved.
 
-### 3.4 `struct_fatigue` — NON-CONSERVATIVE
+### 3.4 `struct_fatigue` — misses the full span on broadband and residual-dominated signals
 
 `src/digitalmodel/structural/fatigue/rainflow.py:210` `RainflowCounter.count_cycles`
 
@@ -401,9 +401,9 @@ It is, however, a **damage entry point that the refusal mechanism cannot
 protect**, and this is a limitation of the control rather than an omission from
 it. The refusals in section 3 guard entry points that call a failing counter
 **in process**. This one receives stress ranges and cycle counts as data — by
-CSV, by spreadsheet, or by hand — so a range produced by one of the four
-non-conservative paths can reach Miner summation here without any counter being
-called, and no in-process guard can observe it.
+CSV, by spreadsheet, or by hand — so a maximum range below the peak-to-valley span
+from any of the four paths can reach Miner summation here without any counter
+being called, and no in-process guard can observe it.
 
 The risk is **latent rather than live**: the module has no production caller.
 A repository-wide search for `fatigue_postprocessor`, `FatiguePostprocessor` and
