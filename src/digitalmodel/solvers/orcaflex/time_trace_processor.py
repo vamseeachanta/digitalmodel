@@ -256,11 +256,8 @@ class OrcaFlexTimeTraceProcessor:
             Dictionary with fatigue analysis results
 
         Raises:
-            NonConservativeCountingError: always, pending issue #3839. This
-                route counts cycles with `signal_analysis.core.rainflow`
-                (`sigproc_astm`), which extracts a maximum stress range below
-                the signal's peak-to-valley span. Counting is left callable for
-                diagnostics; damage is not.
+            NonConservativeCountingError: design-life duration scaling on this
+                route still requires verification.
         """
         from digitalmodel.fatigue.counting_contract import refuse_damage_calculation
 
@@ -455,7 +452,7 @@ class OrcaFlexTimeTraceProcessor:
         Raises:
             NonConservativeCountingError: always, pending issue #3839 — see
                 `_perform_fatigue_analysis`. This is the parallel twin of that
-                route and counts through the same non-conservative path.
+                route and uses the same design-life duration scaling.
         """
         from digitalmodel.fatigue.counting_contract import refuse_damage_calculation
 

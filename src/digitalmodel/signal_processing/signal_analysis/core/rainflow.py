@@ -7,8 +7,10 @@ This implementation does not depend on external rainflow packages.
 
 import numpy as np
 import pandas as pd
-from typing import Union, Tuple, Optional, List
+from typing import Union, Optional
 import logging
+
+from digitalmodel.structural.rainflow_cycles import count_cycles as count_astm_cycles
 
 logger = logging.getLogger(__name__)
 
@@ -46,193 +48,43 @@ class RainflowCounter:
         signal : array-like
             Input signal for cycle counting
         extract_info : bool, default=True
-            Whether to extract cycle start/end indices
+            Include the original sample indices of the reversal pair. Grouped
+            rows retain the first pair. In half_cycle mode each row has weight
+            0.5, and the two halves of a closed cycle share its indices.
             
         Returns
         -------
         pd.DataFrame
             DataFrame with columns: range, mean, count, i_start, i_end
         """
-        # Convert to numpy array
-        signal = np.asarray(signal)
-        
-        # Find peaks and valleys
-        peaks, valleys = self._find_peaks_valleys(signal)
-        
-        # Combine and sort by index
-        extrema = []
-        for idx, val in peaks:
-            extrema.append((idx, val, 'peak'))
-        for idx, val in valleys:
-            extrema.append((idx, val, 'valley'))
-        extrema.sort(key=lambda x: x[0])
-        
-        # Extract cycles using rainflow algorithm
-        cycles = self._rainflow_algorithm(extrema, extract_info)
-        
-        # Convert to DataFrame
+        columns = ['range', 'mean', 'count']
         if extract_info:
-            columns = ['range', 'mean', 'count', 'i_start', 'i_end']
-        else:
-            columns = ['range', 'mean', 'count']
-            
-        self.cycles = pd.DataFrame(cycles, columns=columns)
-        
-        logger.info(f"Extracted {len(self.cycles)} cycles from signal")
-        
-        return self.cycles
-    
-    def _find_peaks_valleys(self, signal: np.ndarray) -> Tuple[List, List]:
-        """
-        Find peaks and valleys in signal
-        
-        Parameters
-        ----------
-        signal : np.ndarray
-            Input signal
-            
-        Returns
-        -------
-        peaks : list
-            List of (index, value) tuples for peaks
-        valleys : list
-            List of (index, value) tuples for valleys
-        """
-        peaks = []
-        valleys = []
-        
-        # Ensure we have at least 3 points
-        if len(signal) < 3:
-            return peaks, valleys
-        
-        # Find local extrema
-        for i in range(1, len(signal) - 1):
-            if signal[i] > signal[i-1] and signal[i] > signal[i+1]:
-                peaks.append((i, signal[i]))
-            elif signal[i] < signal[i-1] and signal[i] < signal[i+1]:
-                valleys.append((i, signal[i]))
-        
-        # Check endpoints
-        if signal[0] > signal[1]:
-            peaks.insert(0, (0, signal[0]))
-        elif signal[0] < signal[1]:
-            valleys.insert(0, (0, signal[0]))
-            
-        if signal[-1] > signal[-2]:
-            peaks.append((len(signal)-1, signal[-1]))
-        elif signal[-1] < signal[-2]:
-            valleys.append((len(signal)-1, signal[-1]))
-        
-        return peaks, valleys
-    
-    def _rainflow_algorithm(self, extrema: List, extract_info: bool) -> List:
-        """
-        Core rainflow counting algorithm (ASTM E1049-85)
-        
-        Parameters
-        ----------
-        extrema : list
-            List of (index, value, type) tuples
-        extract_info : bool
-            Whether to extract cycle indices
-            
-        Returns
-        -------
-        cycles : list
-            List of extracted cycles
-        """
-        cycles = []
-        stack = []
-        
-        for idx, val, ext_type in extrema:
-            stack.append((idx, val))
-            
-            # Check for cycle extraction
-            while len(stack) >= 3:
-                # Get last three points
-                X = stack[-3][1]
-                Y = stack[-2][1]
-                Z = stack[-1][1]
-                
-                # Calculate ranges
-                range_XY = abs(X - Y)
-                range_YZ = abs(Y - Z)
-                
-                # Check rainflow conditions
-                if range_XY >= range_YZ:
-                    # Extract cycle Y-Z
-                    cycle_range = range_YZ
-                    cycle_mean = (Y + Z) / 2
-                    
-                    if extract_info:
-                        cycle = [cycle_range, cycle_mean, 0.5, 
-                                stack[-2][0], stack[-1][0]]
-                    else:
-                        cycle = [cycle_range, cycle_mean, 0.5]
-                    
-                    cycles.append(cycle)
-                    
-                    # Remove Y from stack
-                    stack.pop(-2)
-                else:
-                    break
-        
-        # Process remaining stack (residual)
-        while len(stack) >= 2:
-            X = stack[0][1]
-            Y = stack[1][1]
-            
-            cycle_range = abs(X - Y)
-            cycle_mean = (X + Y) / 2
-            
+            columns += ['i_start', 'i_end']
+
+        rows = []
+        grouped = {}
+        for cycle in count_astm_cycles(signal):
+            key = (cycle.range_value, cycle.mean_value)
+            if self.method != 'half_cycle' and key in grouped:
+                grouped[key][2] += cycle.count
+                continue
+
+            row = [cycle.range_value, cycle.mean_value, cycle.count]
             if extract_info:
-                cycle = [cycle_range, cycle_mean, 0.5,
-                        stack[0][0], stack[1][0]]
+                row.extend([cycle.start_index, cycle.end_index])
+            rows.append(row)
+            if self.method == 'half_cycle':
+                if cycle.count == 1.0:
+                    # Both half cycles refer to the same closed reversal pair.
+                    row[2] = 0.5
+                    rows.append(row.copy())
             else:
-                cycle = [cycle_range, cycle_mean, 0.5]
-            
-            cycles.append(cycle)
-            stack.pop(0)
-        
-        # Combine half cycles into full cycles
-        cycles = self._combine_half_cycles(cycles)
-        
-        return cycles
-    
-    def _combine_half_cycles(self, half_cycles: List) -> List:
-        """
-        Combine half cycles into full cycles where possible
-        
-        Parameters
-        ----------
-        half_cycles : list
-            List of half cycles
-            
-        Returns
-        -------
-        cycles : list
-            Combined cycles
-        """
-        if self.method == 'half_cycle':
-            return half_cycles
-        
-        # Group by range and mean
-        cycle_dict = {}
-        
-        for cycle in half_cycles:
-            key = (round(cycle[0], 6), round(cycle[1], 6))  # range, mean
-            
-            if key in cycle_dict:
-                # Combine counts
-                cycle_dict[key][2] += cycle[2]
-            else:
-                cycle_dict[key] = cycle.copy()
-        
-        # Convert back to list
-        combined_cycles = list(cycle_dict.values())
-        
-        return combined_cycles
-    
+                grouped[key] = row
+
+        self.cycles = pd.DataFrame(rows, columns=columns)
+        logger.info(f"Extracted {len(self.cycles)} cycles from signal")
+        return self.cycles
+
     def get_histogram(self, cycles_df: Optional[pd.DataFrame] = None, 
                      bins: Optional[int] = None) -> pd.DataFrame:
         """

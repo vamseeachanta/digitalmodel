@@ -13,6 +13,11 @@ produced.
 
 ---
 
+**2026-11-23 counter update.** The tables below describe the September revision.
+After delegation to the shared structural kernel, `sigproc_astm` satisfies the
+counting contract on all four histories. The OrcaFlex design-life routes retain
+their separate hold pending verification of duration scaling.
+
 ## 1. Measured behaviour
 
 Each path was invoked through its public entry point on four deterministic

@@ -3,9 +3,9 @@
 Issue: https://github.com/vamseeachanta/workspace-hub/issues/3839
 Plan:  workspace-hub ``docs/plans/2026-09-11-issue-3839-rainflow-divergence.md``
 
-Seven cycle-counting implementations exist in this repository. Four of them
+Seven cycle-counting implementations exist in this repository. Three of them
 extract a maximum stress range **below** the signal's peak-to-valley span.
-Fatigue damage scales as range cubed, so those four understate damage — the
+Fatigue damage scales as range cubed, so those three understate damage — the
 non-conservative direction.
 
 This module supplies three things:
@@ -391,16 +391,19 @@ def assert_exact_distribution(
 
 
 def refuse_damage_calculation(path_key: str, entry_point: str) -> NoReturn:
-    """Refuse to compute fatigue damage through a non-conservative counter.
+    """Refuse fatigue damage on a route with an outstanding qualification hold.
 
-    Called from the damage entry points bound to a path whose recorded verdict
-    is ``non-conservative``. Cycle counting itself is left callable: it has
-    legitimate diagnostic uses (statistics, histograms, exported cycle tables).
-    What is refused is turning those cycles into a damage or fatigue-life
-    number, because the ranges are understated and damage scales as range
-    cubed.
+    Counting remains available for diagnostics. The OrcaFlex design-life routes
+    require a separate duration-scaling check. The other held routes understate
+    stress ranges and therefore fatigue damage.
     """
     path = COUNTING_PATHS.get(path_key)
+    if path_key == "sigproc_astm":
+        raise NonConservativeCountingError(
+            f"{entry_point} refuses to compute fatigue damage. The {path_key} "
+            f"counter conforms, but design-life duration scaling on this route "
+            f"still requires verification. Issue #{ISSUE_NUMBER}: {ISSUE_URL}"
+        )
     shortfall = path.note if path is not None else ""
     raise NonConservativeCountingError(
         f"{entry_point} refuses to compute fatigue damage.\n"
@@ -528,8 +531,7 @@ class CountingPath:
         the known packages without being registered.
     damage_entry_points
         Callables that turn this path's cycles into a damage or fatigue-life
-        number. Empty for a conforming path; each one refuses for a
-        non-conservative path.
+        number and currently refuse calculation.
     """
 
     key: str
@@ -576,15 +578,11 @@ _PATHS: tuple[CountingPath, ...] = (
         module="digitalmodel.signal_processing.signal_analysis.core.rainflow",
         entry_point="RainflowCounter.count_cycles",
         residual_policy=ResidualPolicy.RETAIN,
-        contract_status="non-conservative",
+        contract_status="conforming",
         adapter=_adapt_sigproc_astm,
         implementations=(
             "digitalmodel.signal_processing.signal_analysis.core.rainflow:"
             "RainflowCounter.count_cycles",
-            "digitalmodel.signal_processing.signal_analysis.core.rainflow:"
-            "RainflowCounter._rainflow_algorithm",
-            "digitalmodel.signal_processing.signal_analysis.core.rainflow:"
-            "RainflowCounter._combine_half_cycles",
             "digitalmodel.signal_processing.signal_analysis.adapters:"
             "TimeSeriesComponentsAdapter.get_rainflow_count_from_time_series",
             "digitalmodel.signal_processing.signal_analysis.adapters:"
@@ -600,17 +598,7 @@ _PATHS: tuple[CountingPath, ...] = (
             "digitalmodel.solvers.orcaflex.time_trace_processor:"
             "OrcaFlexTimeTraceProcessor._analyze_single_trace",
         ),
-        note=(
-            "Mechanism, read from source at core/rainflow.py:162-164: "
-            "`if range_XY >= range_YZ: cycle_range = range_YZ` inverts both halves of "
-            "ASTM 5.4.4 — the rule fires when the NEWER range is larger and extracts "
-            "the OLDER (inner) pair. It also emits 0.5 for every extraction and always "
-            "discards stack[-2], so the full-cycle rule is never applied. Correcting "
-            "the inversion alone does not restore the span (controlled pair: 7.0 of "
-            "9.0), so the defect is structural; the exact arithmetic behind 6.0 and "
-            "125.2664 is not established. Measured shortfall: 6.0 of 9.0 (ASTM "
-            "fixture), 125.2664 of 177.1224 (broadband)."
-        ),
+        note="Uses the shared structural rainflow kernel and retains residual half cycles.",
     ),
     CountingPath(
         key="calm_buoy",
