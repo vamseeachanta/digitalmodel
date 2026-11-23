@@ -1,6 +1,6 @@
 # Reusable prompts
 
-Article: "Fitness for service of corroded pipelines: strength and remaining useful life (RUL)", The Deckhand Chronicles, revision 6 of 20 Nov 2026. This page holds in full what Appendix B of the article summarises.
+Article: "Fitness for service of corroded pipelines: strength and remaining useful life (RUL)", The Deckhand Chronicles, revision 14 of 23 Nov 2026. This page holds in full what Appendix B of the article summarises.
 
 The first prompt reruns the measured-scan assessment from its pinned data set, and checks its pressures and life projections against the published values. The second does the same for the synthetic grid, Section A, the comparison case. The third adapts the assessment to your own readings.
 
@@ -17,9 +17,9 @@ Give this prompt to your assistant:
 
 ```text
 Use https://github.com/vamseeachanta/digitalmodel at the full pinned commit
-05612b6cb9ceeeb642c41511446e98455bc2c90d. Use Python 3.11 and uv.
+193bfe3086f67a49ce163fa05324308a35f0cff0. Use Python 3.11 and uv.
 1. Install as in step 1 of the synthetic-grid prompt below, but check out
-   05612b6cb9ceeeb642c41511446e98455bc2c90d.
+   193bfe3086f67a49ce163fa05324308a35f0cff0.
 2. The exact entry point is scripts/ffs/c3_measured_grid_assessment.py. It
    reads the anonymized scan
    tests/asset_integrity/test_data/real_inspection/ut_grid_scan-a_window_fullres.csv
@@ -64,12 +64,12 @@ Give this prompt to your assistant:
 ```text
 Use https://vamseeachanta.github.io/digitalmodel/ffs/pipeline-ffs-assessment.html
 and https://github.com/vamseeachanta/digitalmodel at the full pinned commit
-09089a121a16069c4b657d1a320a630a23ab1dd5. Use Python 3.11 and uv.
+193bfe3086f67a49ce163fa05324308a35f0cff0. Use Python 3.11 and uv.
 1. In an empty folder with a short path (on Windows, also run
    git config --global core.longpaths true), install with Python 3.11:
      git clone --filter=blob:none https://github.com/vamseeachanta/digitalmodel
      cd digitalmodel
-     git checkout 09089a121a16069c4b657d1a320a630a23ab1dd5
+     git checkout 193bfe3086f67a49ce163fa05324308a35f0cff0
      uv venv --python 3.11
      uv pip install --no-sources --no-deps -e .
      uv pip install "numpy<2" "pandas>=2,<3" pyyaml pint jinja2 pydantic plotly==5.17.0 scipy
@@ -132,6 +132,6 @@ Where a step needs a paid standard I do not hold, cite the standard and
 Part from the article and mark it "to be checked".
 ```
 
-Public data set, measured scan: anonymized riser ultrasonic scan in digitalmodel, published by AceEngineer, MIT licence, measured readings, retrieved 20 Nov 2026 at commit 05612b6cb9ceeeb642c41511446e98455bc2c90d. <https://github.com/vamseeachanta/digitalmodel/tree/05612b6cb9ceeeb642c41511446e98455bc2c90d/tests/asset_integrity/test_data/real_inspection>
+Public data set, measured scan: anonymized riser ultrasonic scan in digitalmodel, published by AceEngineer, MIT licence, measured readings, retrieved 20 Nov 2026, repinned 23 Nov 2026 to commit 193bfe3086f67a49ce163fa05324308a35f0cff0. <https://github.com/vamseeachanta/digitalmodel/tree/193bfe3086f67a49ce163fa05324308a35f0cff0/tests/asset_integrity/test_data/real_inspection>
 
-Public data set, synthetic grid: the AceEngineer corroded-pipeline worked example in digitalmodel, published by AceEngineer, MIT licence, worked-example readings, retrieved 12 Nov 2026 at commit 09089a121a16069c4b657d1a320a630a23ab1dd5. <https://github.com/vamseeachanta/digitalmodel/tree/09089a121a16069c4b657d1a320a630a23ab1dd5/examples/workflows/pipeline-ffs-assessment>
+Public data set, synthetic grid: the AceEngineer corroded-pipeline worked example in digitalmodel, published by AceEngineer, MIT licence, worked-example readings, retrieved 12 Nov 2026, repinned 23 Nov 2026 to commit 193bfe3086f67a49ce163fa05324308a35f0cff0. <https://github.com/vamseeachanta/digitalmodel/tree/193bfe3086f67a49ce163fa05324308a35f0cff0/examples/workflows/pipeline-ffs-assessment>
