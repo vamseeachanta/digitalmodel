@@ -1,6 +1,6 @@
 # Method and data
 
-Article: "Fitness for service of corroded pipelines: strength and remaining useful life (RUL)", The Deckhand Chronicles, revision 6 of 20 Nov 2026. This page holds in full what Appendix A of the article summarises.
+Article: "Fitness for service of corroded pipelines: strength and remaining useful life (RUL)", The Deckhand Chronicles, revision 14 of 23 Nov 2026. This page holds in full what Appendix A of the article summarises.
 
 ## Measured scan, the main example
 
@@ -35,11 +35,11 @@ The editions are those the library cites; the linked publisher pages may show la
 
 ## Data sets and code
 
-Public data set, measured scan: anonymized riser ultrasonic scan in digitalmodel, published by AceEngineer, MIT licence, measured readings, retrieved 20 Nov 2026 at commit 05612b6cb9ceeeb642c41511446e98455bc2c90d. <https://github.com/vamseeachanta/digitalmodel/tree/05612b6cb9ceeeb642c41511446e98455bc2c90d/tests/asset_integrity/test_data/real_inspection>
+Public data set, measured scan: anonymized riser ultrasonic scan in digitalmodel, published by AceEngineer, MIT licence, measured readings, retrieved 20 Nov 2026, repinned 23 Nov 2026 to commit 193bfe3086f67a49ce163fa05324308a35f0cff0. <https://github.com/vamseeachanta/digitalmodel/tree/193bfe3086f67a49ce163fa05324308a35f0cff0/tests/asset_integrity/test_data/real_inspection>
 
-Public data set, synthetic grid: the AceEngineer corroded-pipeline worked example in digitalmodel, published by AceEngineer, MIT licence, worked-example readings, retrieved 12 Nov 2026 at commit 09089a121a16069c4b657d1a320a630a23ab1dd5. <https://github.com/vamseeachanta/digitalmodel/tree/09089a121a16069c4b657d1a320a630a23ab1dd5/examples/workflows/pipeline-ffs-assessment>
+Public data set, synthetic grid: the AceEngineer corroded-pipeline worked example in digitalmodel, published by AceEngineer, MIT licence, worked-example readings, retrieved 12 Nov 2026, repinned 23 Nov 2026 to commit 193bfe3086f67a49ce163fa05324308a35f0cff0. <https://github.com/vamseeachanta/digitalmodel/tree/193bfe3086f67a49ce163fa05324308a35f0cff0/examples/workflows/pipeline-ffs-assessment>
 
-Code: the AceEngineer public code repository, <https://github.com/vamseeachanta/digitalmodel> (MIT licence), at commit 05612b6cb9ceeeb642c41511446e98455bc2c90d for the measured scan.
+Code: the AceEngineer public code repository, <https://github.com/vamseeachanta/digitalmodel> (MIT licence), at commit 193bfe3086f67a49ce163fa05324308a35f0cff0 for the measured scan.
 
 ## References
 
@@ -51,4 +51,4 @@ Code: the AceEngineer public code repository, <https://github.com/vamseeachanta/
 6. API 579-1/ASME FFS-1, *Fitness-For-Service*, 2021; Part 2, *Fitness-For-Service Engineering Assessment Procedure*; Part 5, *Assessment of Local Metal Loss*. The local-loss relation is simplified. 2021 is the current edition. <https://www.asme.org/codes-standards/find-codes-standards/fitness-for-service>
 7. ASME B31.8, *Gas Transmission and Distribution Piping Systems*, 2022 as implemented, 841, *Steel Pipe*; current edition 2025. <https://www.asme.org/codes-standards/find-codes-standards/b31-8-gas-transmission-distribution-piping-systems>
 8. AceEngineer, pipeline fitness-for-service assessment, study page, October 2026. <https://vamseeachanta.github.io/digitalmodel/ffs/pipeline-ffs-assessment.html>
-9. AceEngineer, anonymized riser ultrasonic scans and inspection records, digitalmodel test data. <https://github.com/vamseeachanta/digitalmodel/tree/05612b6cb9ceeeb642c41511446e98455bc2c90d/tests/asset_integrity/test_data/real_inspection>
+9. AceEngineer, anonymized riser ultrasonic scans and inspection records, digitalmodel test data. <https://github.com/vamseeachanta/digitalmodel/tree/193bfe3086f67a49ce163fa05324308a35f0cff0/tests/asset_integrity/test_data/real_inspection>
