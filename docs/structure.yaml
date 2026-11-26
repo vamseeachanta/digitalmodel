@@ -1,0 +1,2376 @@
+version: 1
+depth: 3
+ignore: [.git, .venv, node_modules, __pycache__, .pytest_cache]
+entries:
+  - path: .claude/
+    purpose: Collects repository guidance, skills, hooks and configuration for Claude-assisted development.
+  - path: .claude/cli/
+    purpose: Implements interactive commands and progress reporting for the agent CLI.
+  - path: .claude/context/
+    purpose: Defines project patterns and team conventions used as agent context.
+  - path: .claude/helpers/
+    purpose: Provides setup and checkpoint scripts for local agent workflows.
+  - path: .claude/hooks/
+    purpose: Runs pre-task preparation and captures corrections during agent sessions.
+  - path: .claude/instructions/
+    purpose: Describes how to analyze the product, plan work and execute tasks.
+  - path: .claude/integration/
+    purpose: Provides Python helpers for assembling context, updating prompts and refreshing workflows.
+  - path: .claude/knowledge/
+    purpose: Collects reusable observations drawn from repository changes.
+  - path: .claude/knowledge/patterns/
+    purpose: Records the development patterns identified in a reviewed commit.
+  - path: .claude/learning/
+    purpose: Configures how agent learnings are captured and reported.
+  - path: .claude/memory/
+    purpose: Retains repository-specific context for use in later sessions.
+  - path: .claude/product/
+    purpose: Describes the product mission, architecture, technology stack and roadmap.
+  - path: .claude/progress/
+    purpose: Provides the template for recording work progress.
+  - path: .claude/requirements/
+    purpose: Documents the requirements process and user-story format.
+  - path: .claude/resources/
+    purpose: Catalogs agent definitions and templates available for reuse.
+  - path: .claude/rules/
+    purpose: Defines repository rules for engineering prose, formatting, geometry validation and package releases.
+  - path: .claude/skills/
+    purpose: Indexes repository skills and provides workflow and engineering instructions.
+  - path: .claude/skills/converted-agents/
+    purpose: Stores skill definitions converted from existing agent descriptions.
+  - path: .claude/skills/engineering/
+    purpose: Provides engineering skills for solver modeling, CAD, meshing and cathodic protection.
+  - path: .claude/specs/
+    purpose: Directs readers to the central location for repository specifications.
+  - path: .claude/standards/
+    purpose: Defines conventions for code, data files, tests and repository maintenance.
+  - path: .claude/sub-agents/
+    purpose: Defines the development subagent role.
+  - path: .claude/work-queue/
+    purpose: Retains review evidence for queued work.
+  - path: .claude/work-queue/assets/
+    purpose: Stores a work item's review iteration record.
+  - path: .claude/workflows/
+    purpose: Describes development workflows and how to document their execution.
+  - path: .claude/workflows/implementation/
+    purpose: Provides planning, change documentation and implementation tracking templates.
+  - path: .codex/
+    purpose: Records the repository's pointer to shared skills for Codex.
+  - path: .gemini/
+    purpose: Records the repository's pointer to shared skills for Gemini.
+  - path: .githooks/
+    purpose: Stores the repository's pre-commit hook.
+  - path: .github/
+    purpose: Configures dependency updates, code scanning and GitHub Actions workflows.
+  - path: .github/ci/
+    purpose: Tracks flaky checks for continuous integration.
+  - path: .github/codeql/
+    purpose: Configures the scope of CodeQL analysis.
+  - path: .github/workflows/
+    purpose: Defines automation for tests, documentation, releases and repository checks.
+  - path: .planning/
+    purpose: Collects issue implementation plans and supporting review evidence.
+  - path: .planning/plan-approved/
+    purpose: Retains issue plans filed under the plan-approved workflow stage.
+  - path: .planning/quick/
+    purpose: Preserves focused review notes and test output for individual changes.
+  - path: assets/
+    purpose: Supplies vessel specification files, project logos and static resources for web pages.
+  - path: assets/data/
+    purpose: Stores heavy-lift and pipelay vessel specifications with schemas and provenance.
+  - path: assets/logo/
+    purpose: Supplies the project logo in vector and raster formats.
+  - path: assets/static/
+    purpose: Provides shared stylesheets and scripts for web pages.
+  - path: assets/static/css/
+    purpose: Styles navigation, charts and page layouts.
+  - path: assets/static/js/
+    purpose: Supplies browser libraries and helpers for charts and page interactions.
+  - path: atlases/
+    purpose: The atlas collection stores versioned engineering response grids, interpolation models and validation records.
+  - path: atlases/anchor_capacity/
+    purpose: This family groups lookup tables for anchor holding capacity.
+  - path: atlases/anchor_capacity/597341b1f32b/
+    purpose: The grid and surrogate tabulate anchor holding capacity for code revision 2a9f5e4a9 alongside the validation record.
+  - path: atlases/anchor_capacity/c8f67ad7b69c/
+    purpose: The grid and surrogate tabulate anchor holding capacity for code revision a3a67b4b alongside the validation record.
+  - path: atlases/code_check/
+    purpose: This family groups lookup tables for riser code-check utilisation.
+  - path: atlases/code_check/23c33b5a2782/
+    purpose: The grid and surrogate tabulate riser code-check utilisation for code revision a3a67b4b alongside the validation record.
+  - path: atlases/code_check/4b48e8c976cd/
+    purpose: The grid and surrogate tabulate riser code-check utilisation for code revision 415b13d0 alongside the validation record.
+  - path: atlases/diffraction_library/
+    purpose: This library holds a synthetic placeholder for heave response amplitude operators.
+  - path: atlases/diffraction_library/e70b23544de6/
+    purpose: The synthetic grid illustrates lookup of heave response amplitude operators pending a licensed solver run.
+  - path: atlases/drilling_riser_drift_off/
+    purpose: This library holds a synthetic placeholder for drilling riser drift-off amplification.
+  - path: atlases/drilling_riser_drift_off/d53bddd904d1/
+    purpose: The synthetic grid illustrates lookup of drilling riser drift-off amplification pending a licensed solver run.
+  - path: atlases/drilling_riser_envelope/
+    purpose: This library holds a synthetic placeholder for dynamic amplification of drilling riser equivalent stress.
+  - path: atlases/drilling_riser_envelope/7ca25705d065/
+    purpose: The synthetic grid illustrates lookup of dynamic amplification of drilling riser equivalent stress pending a licensed solver run.
+  - path: atlases/drilling_riser_operability/
+    purpose: This family groups lookup tables for governing drilling riser utilisation.
+  - path: atlases/drilling_riser_operability/229487678a1a/
+    purpose: The grid screens static drilling riser utilisation using the 2025 edition of API Standard 2RD.
+  - path: atlases/drilling_riser_operability/bcc370f46b9c/
+    purpose: The grid screens static drilling riser utilisation using the 2013 edition of API Standard 2RD.
+  - path: atlases/esp_pump_hydraulics/
+    purpose: This family groups lookup tables for governing hydraulic utilisation of an electric submersible pump.
+  - path: atlases/esp_pump_hydraulics/c00e2cfda4f9/
+    purpose: The grid and surrogate tabulate governing hydraulic utilisation of an electric submersible pump for code revision 385e674f alongside the validation record.
+  - path: atlases/fowt_mooring/
+    purpose: This family groups lookup tables for minimum bend radius utilisation for floating wind turbine moorings.
+  - path: atlases/fowt_mooring/0af02c3aaf14/
+    purpose: The grid and surrogate tabulate minimum bend radius utilisation for floating wind turbine moorings for code revision 79f28b96 alongside the validation record.
+  - path: atlases/fowt_mooring/15372d97a52f/
+    purpose: The grid and surrogate tabulate minimum bend radius utilisation for floating wind turbine moorings for code revision a9f09147 alongside the validation record.
+  - path: atlases/fowt_mooring/1f1871cd817d/
+    purpose: The grid and surrogate tabulate minimum bend radius utilisation for floating wind turbine moorings for code revision a1fed2cf0 alongside the validation record.
+  - path: atlases/fowt_mooring/7ac02c8bc7f0/
+    purpose: The grid and surrogate tabulate minimum bend radius utilisation for floating wind turbine moorings for code revision 0fb9dfcc alongside the validation record.
+  - path: atlases/fowt_mooring/b4046a89d219/
+    purpose: The grid and surrogate tabulate minimum bend radius utilisation for floating wind turbine moorings for code revision 493e73176 alongside the validation record.
+  - path: atlases/fpso_mooring_full/
+    purpose: This family groups lookup tables for maximum mooring line tension on a floating production vessel.
+  - path: atlases/fpso_mooring_full/879f4f041243/
+    purpose: The grid and surrogate tabulate maximum mooring line tension on a floating production vessel for code revision a3a67b4b alongside the validation record.
+  - path: atlases/fpso_mooring_full/a4f8b8069228/
+    purpose: The grid and surrogate tabulate maximum mooring line tension on a floating production vessel for code revision 8d09f5c73 alongside the validation record.
+  - path: atlases/free_span/
+    purpose: This family groups lookup tables for pipeline free-span utilisation.
+  - path: atlases/free_span/2ca6361f3b7a/
+    purpose: The grid and surrogate tabulate pipeline free-span utilisation for code revision 52eeecd1 alongside the validation record.
+  - path: atlases/free_span/749c598d4e23/
+    purpose: The grid and surrogate tabulate pipeline free-span utilisation for code revision 09148c1c1 alongside the validation record.
+  - path: atlases/free_span/914ec0881a84/
+    purpose: The grid and surrogate tabulate pipeline free-span utilisation for code revision 571ecdcb alongside the validation record.
+  - path: atlases/free_span/eac25055a83d/
+    purpose: The grid and surrogate tabulate pipeline free-span utilisation for code revision a3a67b4b alongside the validation record.
+  - path: atlases/inspection_planning/
+    purpose: This family groups lookup tables for remaining life for inspection planning.
+  - path: atlases/inspection_planning/ad2fc3ee7a73/
+    purpose: The grid and surrogate tabulate remaining life for inspection planning for code revision 0cefe0c8 alongside the validation record.
+  - path: atlases/legacy-evidence/
+    purpose: The manifest maps historical evidence references to their archived contents.
+  - path: atlases/legacy-evidence/blobs/
+    purpose: The files preserve historical evidence under content digests used by the archive manifest.
+  - path: atlases/lifting_lug/
+    purpose: This family groups lookup tables for governing lifting lug utilisation.
+  - path: atlases/lifting_lug/060345160406/
+    purpose: The grid and surrogate tabulate governing lifting lug utilisation for code revision 2441037b alongside the validation record.
+  - path: atlases/lifting_lug/90e306065a25/
+    purpose: The grid and surrogate tabulate governing lifting lug utilisation for code revision 3554b14fd alongside the validation record.
+  - path: atlases/lifting_lug/d807d703f351/
+    purpose: The grid and surrogate tabulate governing lifting lug utilisation for code revision 92fe68d7 alongside the validation record.
+  - path: atlases/mooring_fatigue/
+    purpose: This family groups lookup tables for mooring line fatigue damage.
+  - path: atlases/mooring_fatigue/0692c1977b15/
+    purpose: The grid and surrogate tabulate mooring line fatigue damage for code revision 27a3cdb16 alongside the validation record.
+  - path: atlases/mooring_fatigue/3ef6e08f35be/
+    purpose: The grid and surrogate tabulate mooring line fatigue damage for code revision a3a67b4b alongside the validation record.
+  - path: atlases/mooring_fatigue/6663b59124c0/
+    purpose: The grid and surrogate tabulate mooring line fatigue damage for code revision 35ad550cf alongside the validation record.
+  - path: atlases/mooring_fatigue/74927e2a997f/
+    purpose: The grid and surrogate tabulate mooring line fatigue damage for code revision 8650964b alongside the validation record.
+  - path: atlases/mooring_fatigue/b79abc111c1a/
+    purpose: The grid and surrogate tabulate mooring line fatigue damage for code revision 9230b1e24 alongside the validation record.
+  - path: atlases/mooring_fatigue/f8b3c0dea8de/
+    purpose: The grid and surrogate tabulate mooring line fatigue damage for code revision 415b13d0 alongside the validation record.
+  - path: atlases/mudmat_bearing_capacity/
+    purpose: This family groups lookup tables for mudmat bearing capacity utilisation.
+  - path: atlases/mudmat_bearing_capacity/3e49b0580be0/
+    purpose: The grid and surrogate tabulate mudmat bearing capacity utilisation for code revision 36e21ae6e alongside the validation record.
+  - path: atlases/mudmat_bearing_capacity/4ab9337f5f3b/
+    purpose: The grid and surrogate tabulate mudmat bearing capacity utilisation for code revision 0cefe0c8 alongside the validation record.
+  - path: atlases/mudmat_bearing_capacity/857c35d04107/
+    purpose: The grid and surrogate tabulate mudmat bearing capacity utilisation for code revision 7207ec61 alongside the validation record.
+  - path: atlases/orcaflex_library/
+    purpose: This library holds a synthetic placeholder for maximum effective line tension.
+  - path: atlases/orcaflex_library/c198e029c428/
+    purpose: The synthetic grid illustrates lookup of maximum effective line tension pending a licensed solver run.
+  - path: atlases/pile_capacity/
+    purpose: This family groups lookup tables for pile capacity.
+  - path: atlases/pile_capacity/ff5a09087842/
+    purpose: The grid and surrogate tabulate pile capacity for code revision a3a67b4b alongside the validation record.
+  - path: atlases/rao_tabulation/
+    purpose: This family groups lookup tables for heave response.
+  - path: atlases/rao_tabulation/6b27320669f6/
+    purpose: The grid and surrogate tabulate heave response for code revision a3a67b4b alongside the validation record.
+  - path: atlases/rao_tabulation/f3acf821a481/
+    purpose: The grid and surrogate tabulate heave response for code revision e402864ea alongside the validation record.
+  - path: atlases/riser_fatigue/
+    purpose: This family groups lookup tables for annual riser fatigue damage.
+  - path: atlases/riser_fatigue/2629bee51367/
+    purpose: The grid and surrogate tabulate annual riser fatigue damage for code revision 27a3cdb16 alongside the validation record.
+  - path: atlases/riser_fatigue/51b7f03704cf/
+    purpose: The grid and surrogate tabulate annual riser fatigue damage for code revision 21c33ba8 alongside the validation record.
+  - path: atlases/riser_fatigue/9f7d389eed07/
+    purpose: The grid and surrogate tabulate annual riser fatigue damage for code revision f8552087 alongside the validation record.
+  - path: atlases/riser_fatigue/b53753cd275a/
+    purpose: The grid and surrogate tabulate annual riser fatigue damage for code revision 9230b1e24 alongside the validation record.
+  - path: atlases/riser_fatigue/c77df5a05685/
+    purpose: The grid and surrogate tabulate annual riser fatigue damage for code revision 35ad550cf alongside the validation record.
+  - path: atlases/riser_fatigue/f272ab682259/
+    purpose: The grid and surrogate tabulate annual riser fatigue damage for code revision 8650964b alongside the validation record.
+  - path: atlases/riser_fatigue/f2ca1d87007d/
+    purpose: The grid and surrogate tabulate annual riser fatigue damage for code revision 3abf0236 alongside the validation record.
+  - path: atlases/span_rectification/
+    purpose: This family groups lookup tables for governing utilisation following free-span rectification.
+  - path: atlases/span_rectification/50a333f44a01/
+    purpose: The grid and surrogate tabulate governing utilisation following free-span rectification for code revision 0cefe0c8 alongside the validation record.
+  - path: atlases/span_rectification/5727560821e4/
+    purpose: The grid and surrogate tabulate governing utilisation following free-span rectification for code revision 09148c1c1 alongside the validation record.
+  - path: atlases/spectral_fatigue/
+    purpose: This family groups lookup tables for annual damage from spectral fatigue calculations.
+  - path: atlases/spectral_fatigue/6840fbb96cb7/
+    purpose: The grid and surrogate tabulate annual damage from spectral fatigue calculations for code revision 578268eb0 alongside the validation record.
+  - path: atlases/spectral_fatigue/767cc51c006a/
+    purpose: The grid and surrogate tabulate annual damage from spectral fatigue calculations for code revision e402864ea alongside the validation record.
+  - path: atlases/spectral_fatigue/8e9bbf404b2e/
+    purpose: The grid and surrogate tabulate annual damage from spectral fatigue calculations for code revision 34c4a25c3 alongside the validation record.
+  - path: atlases/spectral_fatigue/9006c0eaccb3/
+    purpose: The grid and surrogate tabulate annual damage from spectral fatigue calculations for code revision 701ab147b alongside the validation record.
+  - path: atlases/spectral_fatigue/9e446976dffc/
+    purpose: The grid and surrogate tabulate annual damage from spectral fatigue calculations for code revision e7c94f0c alongside the validation record.
+  - path: atlases/spectral_fatigue/c48149ab7f9e/
+    purpose: The grid and surrogate tabulate annual damage from spectral fatigue calculations for code revision a3a67b4b alongside the validation record.
+  - path: atlases/synthetic_rope_mooring_fatigue/
+    purpose: This family groups lookup tables for synthetic mooring rope fatigue damage.
+  - path: atlases/synthetic_rope_mooring_fatigue/cfc09a9f7593/
+    purpose: The grid and surrogate tabulate synthetic mooring rope fatigue damage for code revision 2f9ac35d9 alongside the validation record.
+  - path: atlases/synthetic_rope_mooring_fatigue/f2348d61dea8/
+    purpose: The grid and surrogate tabulate synthetic mooring rope fatigue damage for code revision a3a67b4b alongside the validation record.
+  - path: atlases/viv_analysis/
+    purpose: This family groups lookup tables for the inline vortex-induced vibration safety factor.
+  - path: atlases/viv_analysis/862a28080fc9/
+    purpose: The grid and surrogate tabulate the inline vortex-induced vibration safety factor for code revision a3a67b4b alongside the validation record.
+  - path: atlases/viv_analysis/909b1cf34ed0/
+    purpose: The grid and surrogate tabulate the inline vortex-induced vibration safety factor for code revision a8fe5369a alongside the validation record.
+  - path: atlases/weather_window/
+    purpose: This family groups lookup tables for weather window operability.
+  - path: atlases/weather_window/382bac9f91be/
+    purpose: The grid and surrogate tabulate weather window operability for code revision 66a5c8da4 alongside the validation record.
+  - path: atlases/weather_window/d5afba812fb2/
+    purpose: The grid and surrogate tabulate weather window operability for code revision 0cefe0c8 alongside the validation record.
+  - path: benchmarks/
+    purpose: Holds reproducible solver comparisons with inputs, reference values and recorded outputs.
+  - path: benchmarks/fe10_nafems_le1/
+    purpose: Compares finite-element stresses for the NAFEMS LE1 elliptic membrane and a constant-stress patch case.
+  - path: benchmarks/fe10_nafems_le1/console/
+    purpose: Records the commands and console output for deck preparation, solver execution and result comparison.
+  - path: benchmarks/fe10_nafems_le1/inputs/
+    purpose: Supplies finite-element input decks for three membrane meshes and a patch case.
+  - path: benchmarks/fe10_nafems_le1/native/
+    purpose: Retains native solver listings and error logs for the benchmark meshes.
+  - path: benchmarks/fe10_nafems_le1/preflight/
+    purpose: Records readiness checks and their results before benchmark execution.
+  - path: benchmarks/fe10_nafems_le1/run-requests/
+    purpose: Stores the machine-readable request to run the membrane benchmark.
+  - path: benchmarks/fe10_nafems_le1/sources/
+    purpose: Retains the reference code excerpt used to construct the benchmark.
+  - path: benchmarks/fe10_nafems_le1/tools/
+    purpose: Provides scripts to build and validate decks, extract stresses and check expected results.
+  - path: config/
+    purpose: Configures engineering analyses, data workflows, reporting and repository automation.
+  - path: config/ai-tools/
+    purpose: Records the latest tracked agent quota snapshot.
+  - path: config/api579/
+    purpose: Supplies API 579 fitness-for-service input cases for pipe and riser components.
+  - path: config/cfd/
+    purpose: Defines calm-water CFD study inputs, workflow stages and mesh checks.
+  - path: config/compare_tool/
+    purpose: Configures comparisons of result files, tables and engineering response series.
+  - path: config/data_models/
+    purpose: Maps public offshore data tables and defines how to refresh them.
+  - path: config/etl/
+    purpose: Specifies transformations for current profiles, fatigue models and wave histograms.
+  - path: config/fatigue_analysis/
+    purpose: Configures wave-fatigue and combined-damage calculations.
+  - path: config/fracture_mechanics/
+    purpose: Defines fracture mechanics cases for riser components and crack-growth assessments.
+  - path: config/gis/
+    purpose: Supplies ArcGIS configuration files.
+  - path: config/input/
+    purpose: Provides sample coating conditions for cathodic protection and inputs for pipeline pressure containment.
+  - path: config/pipe/
+    purpose: Defines pipe design cases for pressure, geometry, water depth and code comparisons.
+  - path: config/publication/
+    purpose: Defines the data, metrics and reports selected for publication from the vibration screening study.
+  - path: config/templates/
+    purpose: Collects reusable engineering project configuration templates.
+  - path: config/templates/mooring/
+    purpose: Provides a project template for a catenary anchor leg mooring buoy.
+  - path: config/validation/
+    purpose: Provides a template for checking required fields, data types and uniqueness.
+  - path: config/visualization/
+    purpose: Defines plots for environmental conditions, vessel response and riser loads.
+  - path: config/visualization/results/
+    purpose: Retains footprint plots produced from visualization configurations.
+  - path: config/viv_analysis/
+    purpose: Defines vortex-induced vibration cases for currents, shielding, modal response and fatigue.
+  - path: data/
+    purpose: Collects engineering reference tables, model inputs and dataset inventories.
+  - path: data/bha_database/
+    purpose: Indexes bottom-hole assembly examples and records their dataset manifest.
+  - path: data/bha_standards/
+    purpose: Supplies standard drill collar dimensions for bottom-hole assembly modeling.
+  - path: data/cfd/
+    purpose: Collects CFD study measurements and run records.
+  - path: data/cfd/calm_water_study/
+    purpose: Retains resistance coefficients, mesh diagnostics and provenance for a calm-water CFD study.
+  - path: data/cross_sections/
+    purpose: Catalogs power cable cross-section source data and defines its schema.
+  - path: data/doc-intelligence/
+    purpose: Collects engineering curves extracted from documents for reuse in validation.
+  - path: data/doc-intelligence/digitized-curves/
+    purpose: Stores heel angles and corresponding righting arms for digitized vessel stability curves.
+  - path: data/drilling_rigs/
+    purpose: Catalogs externally sourced ultra-deepwater drilling rig records and their coverage.
+  - path: data/fatigue/
+    purpose: Stores stress-life curves for fatigue calculations.
+  - path: data/fender_design/
+    purpose: Indexes fender catalog sizes, design methods, governing bodies and illustrative response curves.
+  - path: data/flexible_pipe/
+    purpose: Catalogs flexible pipe properties with a schema and source records.
+  - path: data/geotechnical/
+    purpose: Stores the geotechnical reference database.
+  - path: data/hull_library/
+    purpose: Registers hull geometries and pairs panel meshes with profile definitions.
+  - path: data/hull_library/panels/
+    purpose: Supplies panel meshes for generic hulls and hydrodynamic test bodies.
+  - path: data/hull_library/profiles/
+    purpose: Describes the hull profiles corresponding to the panel meshes.
+  - path: data/line_pipe/
+    purpose: Catalogs line pipe records with their schema and sources.
+  - path: data/riser_buoyancy/
+    purpose: Catalogs riser buoyancy records with their schema and sources.
+  - path: data/riser_capability/
+    purpose: Defines riser types used for capability screening.
+  - path: data/riser_database/
+    purpose: Catalogs riser configurations, stackups, interfaces and fatigue design inputs.
+  - path: data/riser_database/structure_properties/
+    purpose: Stores structural property records for riser components with their schema and sources.
+  - path: data/riser_tensioners/
+    purpose: Catalogs riser tensioner records with their schema and sources.
+  - path: data/roll_damping/
+    purpose: Collects roll damping benchmarks, calculation methods, sources and acceptance criteria.
+  - path: data/ship_structure_reference/
+    purpose: Stores elastic reference inputs, research schemas and source metadata for ship structures.
+  - path: data/soil_stiffness/
+    purpose: Catalogs soil stiffness records with their units, schema and sources.
+  - path: data/vessels/
+    purpose: Supplies response data, engineering inputs and source records that supplement the vessel fleet catalog.
+    rules:
+      - Cite measured values, label estimates with their basis and mark missing values as gaps.
+  - path: data/vessels/processed/
+    purpose: Supplies normalized vessel particulars, response dataset indexes, crane summaries and metocean criteria.
+  - path: data/vessels/raw/
+    purpose: Retains vessel-class records of particulars, response data and operating criteria before consolidation.
+  - path: data/vessels/sources/
+    purpose: Indexes source records by vessel class.
+  - path: docs/
+    purpose: The documentation index routes readers to engineering methods, examples, reports and module registries.
+  - path: docs/adapters/
+    purpose: The adapter catalog describes how to parse and reuse existing CalculiX ASCII results.
+  - path: docs/api/
+    purpose: The reference pages present engineering calculations, interactive examples and guidance for contributors.
+  - path: docs/api/_assets/
+    purpose: The stylesheet and layout guide define the presentation of the API pages.
+  - path: docs/api/artificial-lift/
+    purpose: The troubleshooting page and its data help readers interpret dynamometer cards for rod pumps.
+  - path: docs/api/buckling/
+    purpose: The worked pages describe buckling checks for ship plates and stiffened panels.
+  - path: docs/api/capabilities/
+    purpose: The index presents the software's engineering capabilities.
+  - path: docs/api/cfd/
+    purpose: Case files and analysis scripts document computational fluid dynamics benchmarks.
+  - path: docs/api/contributing/
+    purpose: The contributor notes describe import safety and release procedures.
+  - path: docs/api/corrosion/
+    purpose: An interactive explorer and its data illustrate galvanic compatibility.
+  - path: docs/api/drilling/
+    purpose: Interactive reports show how drilling riser utilisation affects operability.
+  - path: docs/api/ffs/
+    purpose: Assessment examples and readiness reports document fitness-for-service calculations.
+  - path: docs/api/hydro/
+    purpose: Interactive pages compare hydrodynamic coefficients, vessel responses and manoeuvring benchmarks.
+  - path: docs/api/installation/
+    purpose: The explorers show installation forecasts and heading effects with manifests for the underlying data.
+  - path: docs/api/orcaflex/
+    purpose: Reports present riser validation and mesh sensitivity results from OrcaFlex.
+  - path: docs/api/production/
+    purpose: The explorer shows scale saturation indices for production fluids.
+  - path: docs/api/structural/
+    purpose: Interactive reports illustrate engineering checks including anchor capacity and cathodic protection.
+  - path: docs/api/subsea/
+    purpose: The report describes offshore cross sections.
+  - path: docs/api/well/
+    purpose: The explorer and its data illustrate well casing design checks.
+  - path: docs/apps/
+    purpose: The application guides describe how to use the repository's browser tools.
+  - path: docs/apps/dynacard/
+    purpose: The application guide explains how a surface dynamometer card is converted to a pump card in the browser.
+  - path: docs/architecture/
+    purpose: Design records explain field scene data contracts, catenary workflows and runtime evidence requirements.
+  - path: docs/archive/
+    purpose: Manifests and review records document the selection and verification of archived material.
+  - path: docs/articles/
+    purpose: Companion materials provide data, methods and prompts for technical articles.
+  - path: docs/articles/fitness-for-service-corroded-pipelines/
+    purpose: The article companion supplies the measurement window, calculated results and method for assessing corroded pipelines.
+  - path: docs/articles/training-an-ai-assistant/
+    purpose: The companion notes document the methods and reusable prompts behind the engineering assistant article.
+  - path: docs/audits/
+    purpose: Audit reports record the findings of capability inventories, knowledge checks and calculation regressions.
+  - path: docs/benchmarks/
+    purpose: Reference cases, qualification criteria and comparisons document selected solver benchmarks.
+  - path: docs/benchmarks/catenary_closed_form/
+    purpose: Plain and elastic catenary cases supply hand calculations and solver inputs for static equilibrium comparisons.
+  - path: docs/benchmarks/mooring_buoy/
+    purpose: The qualification file defines expected solver settings and mooring properties for the buoy case.
+  - path: docs/benchmarks/near-wall-acceptance/
+    purpose: The report explains near-wall mesh acceptance criteria and illustrates the coverage calculation.
+  - path: docs/benchmarks/unit_box/
+    purpose: The benchmark compares solver predictions of response amplitude and phase for a unit box.
+  - path: docs/cad-inventory/
+    purpose: The inventory documents CAD and CAM files and the tools used to inspect them.
+  - path: docs/cad-inventory/adapters/
+    purpose: Scripts and evaluation notes describe how to extract, convert and deduplicate CAD inventory records.
+  - path: docs/cad-reader/
+    purpose: The reader guide and revision record explain the CAD reading workflow.
+  - path: docs/capability-map/
+    purpose: Capability inventories, cards and grouping rules supply the engineering capability map.
+  - path: docs/ci/
+    purpose: The CI guides define coverage checks, test selection and rerun procedures and record known test-suite issues.
+  - path: docs/collide_pe/
+    purpose: The petroleum engineering problem collection pairs challenge statements with worked solutions and brief-generation tools.
+  - path: docs/collide_pe/briefs/
+    purpose: The rendered briefs present worked solutions to individual petroleum engineering challenges.
+  - path: docs/collide_pe/dynacard-undulations/
+    purpose: Analysis scripts, reports and a data request investigate undulations in rod-pump dynamometer cards.
+  - path: docs/collide_pe/problems/
+    purpose: The structured problem files record each challenge's statement, given quantities and solution.
+  - path: docs/collide_pe/templates/
+    purpose: The letterhead template defines the layout of the generated petroleum engineering briefs.
+  - path: docs/data/
+    purpose: The guides describe dataset coverage, catalog freshness and the mooring coefficient corpus.
+  - path: docs/demos/
+    purpose: Readiness assessments identify engineering examples available for demonstrations.
+  - path: docs/demos/2026-06-05-*/
+    purpose: The assessment records offshore and subsea example readiness for the June 2026 demonstration.
+  - path: docs/development/
+    purpose: The development guides cover example testing, dependency contracts and report qualification.
+  - path: docs/domains/
+    purpose: The domain index organises engineering references, software guides and analysis examples by subject.
+  - path: docs/domains/BEMRosetta/
+    purpose: The reference points readers to the BEMRosetta hydrodynamic data tool.
+  - path: docs/domains/agent-os/
+    purpose: The guides cover setup, use, migration and troubleshooting for the specification-writing workflow.
+  - path: docs/domains/agents/
+    purpose: The design notes document agent registration, orchestration and integration.
+  - path: docs/domains/ai/
+    purpose: The notes discuss AI strategy and the use of physics in machine learning.
+  - path: docs/domains/ansys/
+    purpose: The reference materials describe engineering analysis workflows using Ansys tools.
+  - path: docs/domains/aqwa/
+    purpose: The AQWA guides cover hydrodynamic analysis, output parsing and testing.
+  - path: docs/domains/articles/
+    purpose: The article collection covers engineering topics and software development practices.
+  - path: docs/domains/artificial_lift/
+    purpose: The diagnostic comparisons, worked examples and numerical methods explain rod-pump card analysis.
+  - path: docs/domains/asset-integrity/
+    purpose: Method and validation reports document integrity assessments for corrosion, cracks, dents and other defects.
+  - path: docs/domains/assets/
+    purpose: The illustration depicts a catenary curve.
+  - path: docs/domains/autocad/
+    purpose: Macros, AutoLISP routines and notes provide examples of drawing automation in AutoCAD.
+  - path: docs/domains/automation/
+    purpose: Implementation notes document automated quality checks, agent selection and subprocess review.
+  - path: docs/domains/biomedical/
+    purpose: UNKNOWN - The only tracked item is an AlphaFold2 image with no accompanying explanation.
+  - path: docs/domains/blender/
+    purpose: The Blender guides cover automation, extensions and handling of drawing files.
+  - path: docs/domains/catenary/
+    purpose: The records trace the consolidation, integration and migration of catenary analysis tools.
+  - path: docs/domains/cathodic_protection/
+    purpose: Design notes and benchmark reports cover coatings, anode materials and cathodic protection calculations.
+  - path: docs/domains/charts/
+    purpose: Animations and plots visualise hydrodynamic added mass and coupling across frequencies.
+  - path: docs/domains/coiled-tubing/
+    purpose: Hydraulics theory, equipment data and reference materials support coiled tubing analysis.
+  - path: docs/domains/connections/
+    purpose: The notes and diagram explain flange classes.
+  - path: docs/domains/core/
+    purpose: The guides describe the provenance system and its implementation.
+  - path: docs/domains/cranes/
+    purpose: The notes and illustration provide references on crane equipment.
+  - path: docs/domains/data/
+    purpose: The guides describe engineering data architecture, procurement and catalog use.
+  - path: docs/domains/data_systems/
+    purpose: Architecture diagrams and component guides explain data collection and management.
+  - path: docs/domains/dave/
+    purpose: The reference points readers to the Open Ocean site.
+  - path: docs/domains/davelab/
+    purpose: The introductory page links to the DAVE Lab website and company profile.
+  - path: docs/domains/design/
+    purpose: Drawing conventions, editing notes and sample geometry document the mechanical design workflow.
+  - path: docs/domains/design-tools/
+    purpose: Conversion guides explain how to produce CAD drawings from PDFs and panel geometry from STL meshes.
+  - path: docs/domains/development/
+    purpose: Checklists and handover records describe testing, navigation and web resource management.
+  - path: docs/domains/diagrams/
+    purpose: Source diagrams and rendered figures illustrate software architecture and engineering workflows.
+  - path: docs/domains/diffraction/
+    purpose: The guides document conversion, validation and comparison of wave diffraction solver outputs.
+  - path: docs/domains/digitalmarketing/
+    purpose: Guides and diagrams document search engine optimisation and web analytics.
+  - path: docs/domains/digitaltwin/
+    purpose: The reference notes introduce digital twin concepts.
+  - path: docs/domains/dom_poc_1/
+    purpose: The example pairs a pipeline lateral buckling configuration with its test and saved result.
+  - path: docs/domains/drilling/
+    purpose: The notes and illustrations cover casing design, directional drilling and rig equipment.
+  - path: docs/domains/drilling_riser/
+    purpose: The methods page explains hand checks for drilling risers.
+  - path: docs/domains/ecosystem/
+    purpose: The guides document project commands and conventions for invoking them.
+  - path: docs/domains/electrical/
+    purpose: The lighting index and illustration cover illumination calculations.
+  - path: docs/domains/engineering/
+    purpose: A diagram and its editable source illustrate workplace etiquette.
+  - path: docs/domains/examples/
+    purpose: Runnable examples and configuration samples demonstrate signal analysis, parallel processing and OrcaFlex automation.
+  - path: docs/domains/fatigue/
+    purpose: The reference materials cover cycle counting, spectral fatigue and allowable stress ranges.
+  - path: docs/domains/fem/
+    purpose: The reference points readers to Nastran finite element analysis material.
+  - path: docs/domains/fire_safety/
+    purpose: The guides describe foam system sizing and technical fire safety screening.
+  - path: docs/domains/freecad/
+    purpose: The notes and examples cover design, assemblies and drawing automation in FreeCAD.
+  - path: docs/domains/geotechnical/
+    purpose: Methods and evidence notes document soil interpretation, slope stability and jack-up foundation behaviour.
+  - path: docs/domains/ghs/
+    purpose: The guides and examples document GHS hydrostatics workflows and API setup.
+  - path: docs/domains/gmsh/
+    purpose: The Gmsh examples demonstrate meshing operations through geometry files and API programs.
+  - path: docs/domains/guides/
+    purpose: The index organises legacy engineering guides and their supporting worked files.
+  - path: docs/domains/hull_library/
+    purpose: Reports and catalogs record hull geometry diagnostics, curvature signatures and generated-form checks.
+  - path: docs/domains/hydrodynamics/
+    purpose: The references cover hydrodynamic loads, vessel resistance and solver comparisons.
+  - path: docs/domains/infrastructure/
+    purpose: Implementation and usage guides describe the configuration registry, quality checks and parallel processing.
+  - path: docs/domains/installation/
+    purpose: The notes and illustrations describe offshore installation equipment and operational roles.
+  - path: docs/domains/integration/
+    purpose: The integration guide explains how the project's core components work together.
+  - path: docs/domains/interventions/
+    purpose: The illustrated notes cover well intervention equipment and riserless operations.
+  - path: docs/domains/legacy/
+    purpose: The collection preserves earlier calculation configurations, figures and worked engineering examples.
+  - path: docs/domains/lifting/
+    purpose: The worked report documents the design of a welded padeye.
+  - path: docs/domains/lighting/
+    purpose: The illustration records an illumination calculation.
+  - path: docs/domains/lng/
+    purpose: The note and illustration cover stratification in liquefied natural gas.
+  - path: docs/domains/marine-engineering/
+    purpose: Module guides and verification reports document marine analysis and extraction of vessel response operators.
+  - path: docs/domains/marine_ops/
+    purpose: The collection links operational references for marine analysis and coiled tubing hydraulics.
+  - path: docs/domains/materials/
+    purpose: Validation notes identify material database gaps and document line-pipe grade checks.
+  - path: docs/domains/mathcad/
+    purpose: The design note outlines conversion of Mathcad calculations to testable Python code.
+  - path: docs/domains/metocean/
+    purpose: The references document marine weather data sources, measurement and hurricane conditions.
+  - path: docs/domains/migration/
+    purpose: The migration records cover OrcaFlex workflows and signal analysis.
+  - path: docs/domains/mooring/
+    purpose: Guides and examples document mooring line selection, buoy systems and analysis workflows.
+  - path: docs/domains/naval-architecture/
+    purpose: The audit and worked example document generated vessel geometry and tank gauging.
+  - path: docs/domains/naval_architecture/
+    purpose: Qualification records document the evidence for vessel resistance and naval architecture acceptance checks.
+  - path: docs/domains/naviworks/
+    purpose: The note links to a script-based method for creating animations from saved images.
+  - path: docs/domains/offshore-engineering/
+    purpose: The method notes explain riser fatigue and the use of stress concentration factors in fatigue calculations.
+  - path: docs/domains/offshore_installation/
+    purpose: The illustrated references cover installation vessels, cranes, tow heads and lifting factors.
+  - path: docs/domains/openfoam/
+    purpose: Case studies, benchmark metrics and setup notes document OpenFOAM marine simulations.
+  - path: docs/domains/openscad/
+    purpose: The sample OpenSCAD models define simple solids and assemblies for geometry examples.
+  - path: docs/domains/orcaflex/
+    purpose: The documentation covers OrcaFlex model building, data handling, libraries and dynamic analysis.
+  - path: docs/domains/orcawave/
+    purpose: The guides, model files and validation studies document panel-method wave diffraction analysis in OrcaWave.
+  - path: docs/domains/orcfxapi/
+    purpose: The reference explains how to create model objects and set their data through the OrcaFlex Python API.
+  - path: docs/domains/osi-pi/
+    purpose: The notes explain how to access and verify PI System data through the Asset Framework SDK.
+  - path: docs/domains/passing_ship/
+    purpose: Campaign records define benchmark candidates, criteria and force samples for passing-ship analysis.
+  - path: docs/domains/pipe/
+    purpose: Illustrated references cover pipe manufacturing, induction bending and stress.
+  - path: docs/domains/pipecapacity/
+    purpose: Equations, figures and calculation notes describe pipe wall thickness and capacity checks.
+  - path: docs/domains/pipeline-installation/
+    purpose: The coverage report and case records document pipeline installation and shore pull-in analysis.
+  - path: docs/domains/pipelines/
+    purpose: The reference collection covers subsea pipeline design, pressure definitions, buckling and repair.
+  - path: docs/domains/plate-buckling/
+    purpose: Studies and coefficient tables document plate and stiffener buckling methods and validation.
+  - path: docs/domains/platecapacity/
+    purpose: The archived calculation environment and supporting files document stiffened plate capacity calculations.
+  - path: docs/domains/probabilisticrisk/
+    purpose: The reference introduces probabilistic risk assessment and defines risk significance and importance.
+  - path: docs/domains/process-engineering/
+    purpose: The introductory note points readers to a resource on reading piping and instrumentation diagrams.
+  - path: docs/domains/process-piping/
+    purpose: The guides explain how pressure affects process piping size selection.
+  - path: docs/domains/production/
+    purpose: The notes and illustrations document production analysis, decline curves and method selection.
+  - path: docs/domains/project-docs/
+    purpose: The project records describe repository organisation, dependencies and earlier restructuring.
+  - path: docs/domains/project-management/
+    purpose: The introductory note identifies tools and protocols for managing projects as the subject.
+  - path: docs/domains/pyintegrity/
+    purpose: Method diagrams and task notes document fitness-for-service assessments of metal loss.
+  - path: docs/domains/qgis/
+    purpose: The illustrated guides describe importing drawings and working with data layers in QGIS.
+  - path: docs/domains/rao_analysis/
+    purpose: The note and figure introduce vessel response amplitude operators.
+  - path: docs/domains/references/
+    purpose: The index collects external technical resources on engineering data, drawings and analysis tools.
+  - path: docs/domains/reporting/
+    purpose: The guides describe calculation report layouts, evidence checks and report assembly.
+  - path: docs/domains/reservoir/
+    purpose: The notes and figures cover well-test derivatives, stratigraphy and petroleum economics.
+  - path: docs/domains/rigging/
+    purpose: Illustrations and checklists document sling selection, rigging arrangements and lift points.
+  - path: docs/domains/riser_analysis/
+    purpose: The index and schematic illustrate a riser stack-up.
+  - path: docs/domains/risers/
+    purpose: The references document riser installation, damping, component costing and global model evidence.
+  - path: docs/domains/risk/
+    purpose: The reference and illustration present an aviation safety timeline.
+  - path: docs/domains/ship-design/
+    purpose: The design references cover ship structures, tank arrangements, fuel sizing and vessel incidents.
+  - path: docs/domains/signal_processing/
+    purpose: The guides cover time-series analysis, signal processing methods and checks using synthetic values.
+  - path: docs/domains/solidworks/
+    purpose: The illustrated notes document mesh and assembly export from SolidWorks.
+  - path: docs/domains/solvers/
+    purpose: The component guides cover modelling, meshing and post-processing with engineering solvers.
+  - path: docs/domains/specialized/
+    purpose: The component guides describe specialised tools for analysis, GIS, finance and project management.
+  - path: docs/domains/spm/
+    purpose: The illustration provides a schematic of a single-point mooring.
+  - path: docs/domains/standards/
+    purpose: The index and reference material document engineering standards, data conventions and their use.
+  - path: docs/domains/storage-tanks/
+    purpose: The worked examples document tank shell sizing, seismic checks and pressure vessel calculations.
+  - path: docs/domains/structural/
+    purpose: Implementation notes and worked materials explain structural solvers, beam checks and code-based analysis.
+  - path: docs/domains/submarine-cables/
+    purpose: The technical note discusses cable compression at the touchdown point.
+  - path: docs/domains/subsea/
+    purpose: The component notes and figures cover subsea connectors, seals, debris caps and risers.
+  - path: docs/domains/test_automation/
+    purpose: The guides explain test-suite automation and mocking patterns for engineering analysis modules.
+  - path: docs/domains/testing/
+    purpose: The documentation describes test infrastructure, command-line testing and cross-repository test practices.
+  - path: docs/domains/umbilical/
+    purpose: The image collection illustrates umbilical installation equipment and buoyancy modules.
+  - path: docs/domains/unit-conversion/
+    purpose: The survey lists candidate libraries for engineering unit conversion.
+  - path: docs/domains/vibrations/
+    purpose: The reference list points to course material on forced vibration and dynamics.
+  - path: docs/domains/visualization/
+    purpose: The guides describe engineering visualisation with CAD tools and the agent dashboard.
+  - path: docs/domains/viv/
+    purpose: The technical notes and mode-finding report cover vortex-induced vibration of tubular members.
+  - path: docs/domains/wamit/
+    purpose: The reference list points to WAMIT documentation and guidance on using its hydrodynamic outputs.
+  - path: docs/domains/web/
+    purpose: The guide explains how web examples compare credentials and test authentication outcomes.
+  - path: docs/domains/wec/
+    purpose: The introductory reference directs readers to example wave energy converter simulations.
+  - path: docs/domains/welding/
+    purpose: The photographic and reference material covers thick-plate welding and pipe joining.
+  - path: docs/domains/well/
+    purpose: The worked cases and screening report cover well intervention and pump-down transients.
+  - path: docs/domains/wind/
+    purpose: The reference materials cover offshore wind installation vessels, floating turbines and turbine mapping.
+  - path: docs/domains/workflows/
+    purpose: The guides describe automated workflows, engineering parameter sweeps and supporting tools.
+  - path: docs/domains/zoo/
+    purpose: The note introduces text-driven generation of CAD geometry.
+  - path: docs/examples/
+    purpose: Worked calculations illustrate inputs, assumptions and results across engineering modules.
+  - path: docs/field-development/
+    purpose: The coverage map relates subsea production systems and installation operations to their software implementations.
+  - path: docs/hydrodynamics/
+    purpose: The documentation defines the evidence required to diagnose wave diffraction results.
+  - path: docs/hydrodynamics/diffraction/
+    purpose: The contract specifies diagnostic evidence for diffraction calculations.
+  - path: docs/integrations/
+    purpose: Evaluation notes and examples document how external engineering libraries fit the analysis workflows.
+  - path: docs/maintenance/
+    purpose: The maintenance notes describe demonstration pack retirement and test collection for reporting.
+  - path: docs/maps/
+    purpose: The operator map routes work to the appropriate repository modules and documentation.
+  - path: docs/migration/
+    purpose: The guides map legacy engineering calculations and batch workflows to their newer implementations.
+  - path: docs/naval_architecture/
+    purpose: The method note explains the idealised geometry used to calculate tension-leg platform set-down.
+  - path: docs/notebooks/
+    purpose: Executable notebooks demonstrate fatigue curve lookup and free-span vibration analysis.
+  - path: docs/operations/
+    purpose: The deployment guide explains how to record and assess parity between deployments.
+  - path: docs/plans/
+    purpose: The issue index and individual plans describe proposed repository changes.
+  - path: docs/plans/assets/
+    purpose: The decision pages record the scope and approval questions for the fitness-for-service program.
+  - path: docs/plans/evidence/
+    purpose: Test failure records, triage notes and review findings support individual implementation plans.
+  - path: docs/plans/parametric-refresh/
+    purpose: The authoring guides specify parametric atlases, historical provenance and handling of licensed solver libraries.
+  - path: docs/plans/reviews/
+    purpose: Issue-specific review and verification records document findings on plans and implementations.
+  - path: docs/postprocess/
+    purpose: The guide explains how to build a multi-tab workbook from workflow results.
+  - path: docs/registry/
+    purpose: Routing registries map engineering capabilities to implementation families and supporting evidence.
+  - path: docs/registry/agent-pack-audit/
+    purpose: The audit files record function and citation checks for production engineering and nondestructive examination.
+  - path: docs/reports/
+    purpose: Engineering reports present analysis results with their supporting figures, manifests and solver records.
+  - path: docs/reports/2026-10-09-compute-program/
+    purpose: Case reports and scripts record the initial compute program results for marine simulations.
+  - path: docs/reports/abstracted-hulls/
+    purpose: Schema, provenance and verification records document the preparation of abstracted hull geometries.
+  - path: docs/reports/assets/
+    purpose: The mesh figure illustrates the padeye pressure analysis.
+  - path: docs/reports/dwg-conversion/
+    purpose: The conversion plan, source manifest and probe results document the investigation of DWG drawings.
+  - path: docs/reports/issue-1173-kcs-paused-runs/
+    purpose: The checkpoint records mesh logs and resumption details for two paused hull-resistance simulations.
+  - path: docs/reports/issue-1528-outlet-vent/
+    purpose: The measured runs compare outlet and vent placement against tank liquid-volume balance.
+  - path: docs/reports/issue-1959-solver-start/
+    purpose: Mesh and solver logs with file manifests document the investigation of OpenFOAM startup.
+  - path: docs/reports/modules/
+    purpose: Module-specific reports pair worked engineering cases with figures, data and report builders.
+  - path: docs/reports/viv-parametric-screening/
+    purpose: The report describes parametric screening for vortex-induced vibration.
+  - path: docs/research/
+    purpose: Research notes and source registers document the basis and gaps for fitness-for-service screening.
+  - path: docs/reviews/
+    purpose: Review reports and dispositions record findings and verification evidence for repository changes.
+  - path: docs/roadmaps/
+    purpose: The capability note records the scope and test coverage of the parachute drag example.
+  - path: docs/runbooks/
+    purpose: Operational procedures explain automated command input, process discovery and detached remote execution.
+  - path: docs/session-handoffs/
+    purpose: Handover notes record results, outstanding issues and resumption points for engineering work.
+  - path: docs/sessions/
+    purpose: The session record preserves subprocess review findings collected for an implementation issue.
+  - path: docs/skills/
+    purpose: Setup instructions and engineering skill definitions describe how to use the repository's analysis workflows.
+  - path: docs/skills/fatigue-assessment/
+    purpose: The skill and input schema define a workflow for estimating fatigue damage and life from load blocks.
+  - path: docs/small_operator/
+    purpose: The field notes and worked problems address production questions raised by small oilfield operators.
+  - path: docs/small_operator/examples/
+    purpose: The Python examples calculate rod loading, neutral point and pump-off indicators for rod-pumped wells.
+  - path: docs/small_operator/pdf/
+    purpose: The printable field note presents production engineering guidance for small operators.
+  - path: docs/solvers/
+    purpose: The contract describes how workflows request and track hosted solver execution.
+  - path: docs/spikes/
+    purpose: Exploratory prototypes and results investigate specific plotting and hull analysis techniques.
+  - path: docs/spikes/2026-05-20-plotly-polar-arrow-technique/
+    purpose: The prototype and rendered example demonstrate arrows on Plotly polar charts.
+  - path: docs/spikes/2026-09-25-hullprod-curvature-screening/
+    purpose: The experiment compares hull mesh curvature signatures and checks their convergence.
+  - path: docs/standards/
+    purpose: Engineering workflow specifications define evidence, acceptance criteria and reference-data verification procedures.
+  - path: docs/subsea/
+    purpose: Method notes and reports document tubular checks and flexible pipe cross-section mechanics.
+  - path: docs/subsea/cross_sections/
+    purpose: The method note and worked report describe offshore cross sections and the axial stiffness of bonded layers.
+  - path: docs/superpowers/
+    purpose: The specification collection documents engineering workflow designs.
+  - path: docs/superpowers/specs/
+    purpose: The design specification links riser host motion, diffraction, operating envelopes and monitoring.
+  - path: docs/validation/
+    purpose: Validation reports compare engineering calculations and model transfers with their stated criteria.
+  - path: docs/validation/gmsh-tank/
+    purpose: Manifests, force output and mesh checks support the synthetic tank model transfer acceptance report.
+  - path: docs/verification/
+    purpose: The verification records cover cathodic protection calculations and quadratic transfer function variance.
+  - path: docs/verification/cp-api651/
+    purpose: The verification record documents the API 651 cathodic protection implementation.
+  - path: docs/vision/
+    purpose: The strategy document sets out the intended role of engineering calculations in the software ecosystem.
+  - path: docs/workflows/
+    purpose: The campaign contract explains how analysis inputs, execution records and results are linked.
+  - path: examples/
+    purpose: These examples pair engineering inputs with scripts, notebooks, or reports that illustrate use of the package.
+  - path: examples/ansys/
+    purpose: These cases illustrate preparation, execution diagnostics, and result checks for ANSYS structural models.
+  - path: examples/ansys/analysis-evidence/
+    purpose: These manifests and response tables preserve diagnostic evidence from pressure-vessel, padeye, and mudmat cases.
+  - path: examples/ansys/cylinder-benchmark/
+    purpose: These cylinder decks, analytical references, and checker records document a pressure benchmark.
+  - path: examples/ansys/mudmat/
+    purpose: This example builds a mudmat screening deck and retains reference responses for comparison.
+  - path: examples/ansys/padeye/
+    purpose: This example builds a padeye screening deck and supports a mesh study.
+  - path: examples/ansys/pressure-transfer/
+    purpose: A synthetic pressure field illustrates checking transferred forces and moments on planar patches.
+  - path: examples/ansys/pressure-vessel/
+    purpose: This example builds a pressure-vessel screening deck and retains reference responses for comparison.
+  - path: examples/aqg/
+    purpose: A synthetic diffraction example exercises displacement and mesh-quality criteria in the analysis qualification gate.
+  - path: examples/asset_integrity/
+    purpose: These examples illustrate fitness-for-service assessments for metal loss, inspection data, and pipe capacity.
+  - path: examples/blender/
+    purpose: This collection documents a headless Blender rendering check.
+  - path: examples/blender/cube-render/
+    purpose: The instructions describe rendering a cube to check a headless Blender installation.
+  - path: examples/calculix/
+    purpose: These scripts illustrate shell-patch calculations and the interpretation of synthetic CalculiX text results.
+  - path: examples/cathodic_protection/
+    purpose: These examples cover pipeline and tank cathodic protection design, edition comparisons, and external corrosion assessment inputs.
+  - path: examples/cfd/
+    purpose: This collection supplies an illustrative tank configuration for computational fluid dynamics.
+  - path: examples/cfd/synthetic_l_tank/
+    purpose: This synthetic tank input defines geometry and coordinate axes for a CFD methodology check.
+  - path: examples/code_checks/
+    purpose: These examples exercise floating-roof tank calculations and shell-thickness reporting.
+  - path: examples/complete_workflow/
+    purpose: A sample request, hull dataset, and configuration illustrate the development workflow for marine structural analysis.
+  - path: examples/data/
+    purpose: These datasets supply example inputs and reference outputs for jack-up screening and soil studies.
+  - path: examples/data/jackup_failure_sequence/
+    purpose: Assumed jack-up inputs, a summary, and a utilization plot support the failure-sequence example.
+  - path: examples/data/jackup_layered_penetration/
+    purpose: These illustrative soil profiles supply contrasting layered-ground cases for spudcan penetration calculations.
+  - path: examples/data/jackup_screening/
+    purpose: The example bundles environmental assumptions, inputs, and source records for a jack-up screening case.
+  - path: examples/data/jackup_soil_sensitivity/
+    purpose: These cases and reference results capture how variations in soil properties affect jack-up screening.
+  - path: examples/data_systems/
+    purpose: These examples and placeholders cover data handling and pipeline integrity assessment.
+  - path: examples/data_systems/data/
+    purpose: This placeholder reserves a usage example for the digitalmodel.data_systems.data module.
+  - path: examples/data_systems/data_manager/
+    purpose: This placeholder reserves a usage example for the digitalmodel.data_systems.data_manager module.
+  - path: examples/data_systems/data_procurement/
+    purpose: This placeholder reserves a usage example for the digitalmodel.data_systems.data_procurement module.
+  - path: examples/data_systems/data_scraping/
+    purpose: This placeholder reserves a usage example for the digitalmodel.data_systems.data_scraping module.
+  - path: examples/data_systems/pyintegrity/
+    purpose: A worked example demonstrates an API 579 general metal loss assessment for a gas pipeline.
+  - path: examples/demos/
+    purpose: These demonstrations combine engineering calculations with dashboards, reports, and example outputs.
+  - path: examples/demos/asset_integrity/
+    purpose: These scripts and case tables illustrate fitness-for-service screening in a field dashboard.
+  - path: examples/demos/diffraction/
+    purpose: These examples build diffraction decks and mass properties from vessel particulars and hull meshes.
+  - path: examples/demos/gtm/
+    purpose: These internal demonstrations turn parametric marine installation studies into screening reports.
+  - path: examples/demos/installation/
+    purpose: These demonstrations screen lift feasibility against crane capacity curves and produce installation suitability reports.
+  - path: examples/demos/structural/
+    purpose: These structural examples generate standalone ship-plate buckling reports from tabulated panel cases.
+  - path: examples/domains/
+    purpose: These discipline-specific examples illustrate engineering analyses and the supporting data and plotting workflows.
+  - path: examples/domains/_shared/
+    purpose: These reusable input templates describe individual plates, groups of plates, and batch cases.
+  - path: examples/domains/api_standards/
+    purpose: A worked pipeline example demonstrates stress and pressure checks under API STD 2RD.
+  - path: examples/domains/artificial_lift/
+    purpose: These scripts and reports illustrate rod-pump diagnostics from dynamometer cards and field measurements.
+  - path: examples/domains/calm_buoy/
+    purpose: These configuration examples describe a catenary anchor leg mooring buoy and its mooring lines.
+  - path: examples/domains/core/
+    purpose: These scripts illustrate agent selection, caching, fault handling, scheduling, and provenance tracking.
+  - path: examples/domains/data_systems/
+    purpose: This example demonstrates a round trip for solver reference data.
+  - path: examples/domains/diffraction/
+    purpose: An example batch configuration illustrates conversion of AQWA and OrcaWave diffraction data for multiple vessels.
+  - path: examples/domains/fatigue/
+    purpose: These examples demonstrate fatigue analysis and plotting of stress-life curves.
+  - path: examples/domains/fea/
+    purpose: Reference images illustrate catenary and lazy-wave riser profiles used in finite element examples.
+  - path: examples/domains/fpso/
+    purpose: A script and notebook illustrate mooring analysis for a floating production vessel.
+  - path: examples/domains/geotechnical/
+    purpose: These examples screen jack-up foundation behavior, including layered penetration and sensitivity to soil assumptions.
+  - path: examples/domains/hydrodynamics/
+    purpose: Scripts and notebooks illustrate vessel force balance, hydrodynamic coefficients, and wave response.
+  - path: examples/domains/input_files/
+    purpose: These sample configurations and datasets supply inputs to the discipline examples.
+  - path: examples/domains/installation/
+    purpose: A worked shore-approach example illustrates pipeline pull-in calculations.
+  - path: examples/domains/metocean/
+    purpose: This script demonstrates streaming meteorological and oceanographic data.
+  - path: examples/domains/mooring/
+    purpose: These examples illustrate berth mooring, line geometry, and mooring system configuration.
+  - path: examples/domains/ocimf/
+    purpose: A script and notebook illustrate tanker mooring calculations and equipment selection using OCIMF guidance.
+  - path: examples/domains/orcaflex/
+    purpose: These scripts demonstrate an OrcaFlex modeling workflow, a riser case, and reference-data lookup.
+  - path: examples/domains/reservoir/
+    purpose: These examples illustrate reservoir analysis and production forecasting.
+  - path: examples/domains/stress/
+    purpose: These examples demonstrate plate capacity and structural stress calculations.
+  - path: examples/domains/structural/
+    purpose: A pipeline wall-thickness example produces reports for design phases and parameter sweeps.
+  - path: examples/domains/structural_analysis/
+    purpose: A legacy demonstration generates a fitness-for-service dashboard.
+  - path: examples/domains/subsea/
+    purpose: These examples calculate layered flexible-pipe geometry and illustrate subsea tool selection.
+  - path: examples/domains/tutorials/
+    purpose: These notebooks introduce marine engineering calculations and work through catenary analysis.
+  - path: examples/domains/utilities/
+    purpose: Plotting helpers provide consistent figures for the marine engineering tutorials.
+  - path: examples/domains/validation/
+    purpose: These examples demonstrate data-validation checks, integration, and reporting.
+  - path: examples/domains/vessel/
+    purpose: This script illustrates retrieval and in-memory processing of vessel response data.
+  - path: examples/domains/workflows/
+    purpose: These scripts work through marine engineering scenarios including spread mooring, pipeline installation, and jack-up installation.
+  - path: examples/field_development/
+    purpose: A synthetic planar manifold example illustrates subsea architecture calculations.
+  - path: examples/freecad/
+    purpose: This collection documents a parametric FreeCAD geometry example for a flanged spool.
+  - path: examples/freecad/flanged_spool/
+    purpose: This worked example defines synthetic flanged-spool geometry and its analytical comparator.
+  - path: examples/geotechnical/
+    purpose: A worked example calculates the response of a pipe pile in soft clay.
+  - path: examples/gis/
+    purpose: This collection records an example of producing a time series from historical map imagery.
+  - path: examples/gis/imagery-timelapse-2538/
+    purpose: These inputs and batch records document a worked historical-imagery timelapse.
+  - path: examples/hydrodynamics/
+    purpose: These examples cover diffraction inputs, vessel response, damping, currents, and berthing fenders.
+  - path: examples/hydrodynamics/aqwa/
+    purpose: This placeholder reserves a usage example for the digitalmodel.hydrodynamics.aqwa module.
+  - path: examples/hydrodynamics/bemrosetta/
+    purpose: This placeholder reserves a usage example for the digitalmodel.hydrodynamics.bemrosetta module.
+  - path: examples/hydrodynamics/diffraction/
+    purpose: These examples prepare diffraction inputs for a unit box and illustrate external matrices and abscissa conventions.
+  - path: examples/hydrodynamics/fender_design/
+    purpose: These tools turn berthing cases and a fender catalogue into comparison charts and a design workbook.
+  - path: examples/hydrodynamics/hydrodynamics/
+    purpose: This placeholder reserves a usage example for the digitalmodel.hydrodynamics module.
+  - path: examples/hydrodynamics/oc4-semisub/
+    purpose: This example generates and checks a diffraction mesh for the OC4 semisubmersible.
+  - path: examples/hydrodynamics/parametric_rao/
+    purpose: These inputs and a driver define a pilot parameter study of vessel response amplitude operators.
+  - path: examples/hydrodynamics/rao_analysis/
+    purpose: An analytical oscillator example illustrates plotting a frequency response against its static reference.
+  - path: examples/hydrodynamics/river_currents/
+    purpose: A versioned example records the assumptions behind river-flow and towing screens.
+  - path: examples/hydrodynamics/roll_damping/
+    purpose: This script reproduces benchmark and sensitivity calculations for a generic viscous roll-damping study.
+  - path: examples/infrastructure/
+    purpose: These placeholders reserve usage examples for the infrastructure packages.
+  - path: examples/infrastructure/base_configs/
+    purpose: This placeholder reserves a usage example for the digitalmodel.infrastructure.base_configs module.
+  - path: examples/infrastructure/base_solvers/
+    purpose: This placeholder reserves a usage example for the digitalmodel.infrastructure.base_solvers module.
+  - path: examples/infrastructure/calculations/
+    purpose: This placeholder reserves a usage example for the digitalmodel.infrastructure.calculations module.
+  - path: examples/infrastructure/common/
+    purpose: This placeholder reserves a usage example for the digitalmodel.infrastructure.common module.
+  - path: examples/infrastructure/config/
+    purpose: This placeholder reserves a usage example for the digitalmodel.infrastructure.config module.
+  - path: examples/infrastructure/core/
+    purpose: This placeholder reserves a usage example for the digitalmodel.infrastructure.core module.
+  - path: examples/infrastructure/domains/
+    purpose: This placeholder reserves a usage example for the digitalmodel.infrastructure.domains module.
+  - path: examples/infrastructure/services/
+    purpose: This placeholder reserves a usage example for the digitalmodel.infrastructure.services module.
+  - path: examples/infrastructure/templates/
+    purpose: This placeholder reserves a usage example for the digitalmodel.infrastructure.templates module.
+  - path: examples/infrastructure/transformation/
+    purpose: This placeholder reserves a usage example for the digitalmodel.infrastructure.transformation module.
+  - path: examples/infrastructure/validation/
+    purpose: This placeholder reserves a usage example for the digitalmodel.infrastructure.validation module.
+  - path: examples/infrastructure/validators/
+    purpose: This placeholder reserves a usage example for the digitalmodel.infrastructure.validation module.
+  - path: examples/lifting_lug/
+    purpose: A synthetic welded lifting-lug study demonstrates how to specify geometry and load and generate study outputs.
+  - path: examples/manufacturing/
+    purpose: An input file and sample results illustrate a weld-fatigue calculation from stress-cycle data.
+  - path: examples/marine_ops/
+    purpose: These examples cover allowable sea states and spread-mooring resilience alongside marine operations module placeholders.
+  - path: examples/marine_ops/artificial_lift/
+    purpose: This placeholder reserves a usage example for the digitalmodel.marine_ops.artificial_lift module.
+  - path: examples/marine_ops/ct_hydraulics/
+    purpose: This placeholder reserves a usage example for the digitalmodel.marine_ops.ct_hydraulics module.
+  - path: examples/marine_ops/marine_analysis/
+    purpose: This placeholder reserves a usage example for the digitalmodel.marine_ops.marine_analysis module.
+  - path: examples/marine_ops/marine_engineering/
+    purpose: This placeholder reserves a usage example for the digitalmodel.marine_ops.marine_engineering module.
+  - path: examples/marine_ops/mooring_resilience/
+    purpose: These calculations and plots screen a spread mooring against line tension, anchor capacity, and chain fatigue.
+  - path: examples/marine_ops/reservoir/
+    purpose: This placeholder reserves a usage example for the digitalmodel.marine_ops.reservoir module.
+  - path: examples/mining_lift_riser/
+    purpose: A synthetic lift-riser input and analysis script illustrate a mining riser calculation.
+  - path: examples/naval_architecture/
+    purpose: These examples cover hull resistance, effective power, and tension-leg platform setdown.
+  - path: examples/openfoam/
+    purpose: These examples document an OpenFOAM cavity check and illustrate the preparation of resistance, wake, and wave studies.
+  - path: examples/openfoam/cavity-v2312/
+    purpose: The instructions describe how to reproduce the cavity smoke check with OpenFOAM v2312.
+  - path: examples/orcaflex/
+    purpose: These examples cover installation simulation diagnostics, worker configuration, and conversion of model data back into specifications.
+  - path: examples/orcaflex/reverse_extraction/
+    purpose: This example extracts supported model fields from OrcaFlex YAML and writes a specification and conversion report.
+  - path: examples/parametrics/
+    purpose: These scripts illustrate building and querying engineering response atlases from parameter sweeps.
+  - path: examples/process_diagrams/
+    purpose: A script generates a legend and symbol sheet for piping and instrumentation diagrams.
+  - path: examples/production_engineering/
+    purpose: A worked oil-well example illustrates selecting an inflow performance model from reservoir conditions.
+  - path: examples/prototypes/
+    purpose: This collection holds an experimental template-based OrcaFlex input generator.
+  - path: examples/prototypes/orcaflex-agent/
+    purpose: This prototype generates sections of an OrcaFlex model from templates and retains sample output.
+  - path: examples/report-evals/
+    purpose: These checks reproduce numerical claims in published engineering reports and record comparisons with the reported values.
+  - path: examples/report-evals/issue-001-hull-roll-screening/
+    purpose: This check reproduces reported peak roll reduction for a hull fitted with a U-tube anti-roll tank.
+  - path: examples/report-evals/issue-001-sloshing-frequency/
+    purpose: This check compares the first tank sloshing frequency from CFD with linear theory.
+  - path: examples/report-evals/issue-002-cp-anode-editions/
+    purpose: This check reproduces reported sacrificial-anode results across editions of two DNV practices.
+  - path: examples/reporting/
+    purpose: These examples pair calculation-report inputs with rendered reports and supporting figures or data.
+  - path: examples/reporting/assets/
+    purpose: These figures illustrate model setup, deflection, and equivalent stress in the beam validation report.
+  - path: examples/reporting/envelope_dashboard/
+    purpose: A synthetic utilization table supplies example data for the envelope dashboard.
+  - path: examples/riser_bom/
+    purpose: A synthetic cost basis and worked example illustrate how to construct a riser bill of materials.
+  - path: examples/riser_bom/wikis/
+    purpose: This example wiki supplies a reference for the synthetic riser bill of materials.
+  - path: examples/riser_fatigue/
+    purpose: A synthetic lazy-wave riser example ranks buoyancy configurations by excursion.
+  - path: examples/riser_input/
+    purpose: These YAML examples illustrate the common input schema for drilling, flexible, catenary, lazy-wave, and top-tensioned risers.
+  - path: examples/signal_processing/
+    purpose: These placeholders reserve examples for signal and time-series analysis.
+  - path: examples/signal_processing/signal_analysis/
+    purpose: This placeholder reserves a usage example for the digitalmodel.signal_processing.signal_analysis module.
+  - path: examples/signal_processing/time_series/
+    purpose: This placeholder reserves a usage example for the digitalmodel.signal_processing.time_series module.
+  - path: examples/solver_smoke/
+    purpose: A synthetic finite-response record illustrates the readback expected from a solver smoke check.
+  - path: examples/solvers/
+    purpose: These folders collect solver-interface example placeholders and worked OrcaFlex reporting and operability examples.
+  - path: examples/solvers/blender_automation/
+    purpose: This placeholder reserves a usage example for the digitalmodel.solvers.blender_automation module.
+  - path: examples/solvers/fea_model/
+    purpose: This placeholder reserves a usage example for the digitalmodel.solvers.fea_model module.
+  - path: examples/solvers/gmsh_meshing/
+    purpose: This placeholder reserves a usage example for the digitalmodel.solvers.gmsh_meshing module.
+  - path: examples/solvers/orcaflex/
+    purpose: These examples illustrate OrcaFlex result reporting and wave-only operability screening.
+  - path: examples/solvers/orcaflex_browser/
+    purpose: This placeholder reserves a usage example for the digitalmodel.solvers.orcaflex.browser module.
+  - path: examples/solvers/orcaflex_post_process/
+    purpose: This placeholder reserves a usage example for the digitalmodel.solvers.orcaflex.post_process module.
+  - path: examples/solvers/orcawave/
+    purpose: This placeholder reserves a usage example for the digitalmodel.solvers.orcawave module.
+  - path: examples/specialized/
+    purpose: These placeholders reserve examples for specialized analysis, command-line, geographic, and rigging modules.
+  - path: examples/specialized/api_analysis/
+    purpose: This placeholder reserves a usage example for the digitalmodel.specialized.api_analysis module.
+  - path: examples/specialized/cli/
+    purpose: This placeholder reserves a usage example for the digitalmodel.specialized.cli module.
+  - path: examples/specialized/custom/
+    purpose: This placeholder reserves a usage example for the digitalmodel.specialized.custom module.
+  - path: examples/specialized/digitalmarketing/
+    purpose: This placeholder reserves a usage example for the digitalmodel.specialized.digitalmarketing module.
+  - path: examples/specialized/gis/
+    purpose: This placeholder reserves a usage example for the digitalmodel.specialized.gis module.
+  - path: examples/specialized/rigging/
+    purpose: This placeholder reserves a usage example for the digitalmodel.specialized.rigging module.
+  - path: examples/structural/
+    purpose: These examples cover structural result comparison, wall thickness checks, and offshore container utilization.
+  - path: examples/structural/analysis/
+    purpose: This placeholder reserves a usage example for the digitalmodel.structural.structural_analysis module.
+  - path: examples/structural/fatigue/
+    purpose: This placeholder reserves a usage example for the digitalmodel.structural.fatigue module.
+  - path: examples/structural/fatigue_analysis/
+    purpose: This placeholder reserves a usage example for the digitalmodel.structural.fatigue_apps module.
+  - path: examples/structural/offshore_container_utilization/
+    purpose: These examples plot offshore container utilization against geometry and rating for a lift load case.
+  - path: examples/structural/pipe_capacity/
+    purpose: This placeholder reserves a usage example for the digitalmodel.structural.pipe_capacity module.
+  - path: examples/structural/pipe_cross_section/
+    purpose: This placeholder reserves a usage example for the digitalmodel.structural.pipe_cross_section module.
+  - path: examples/structural/stress/
+    purpose: This placeholder reserves a usage example for the digitalmodel.structural.stress module.
+  - path: examples/structural/structural_analysis/
+    purpose: This placeholder reserves a usage example for the digitalmodel.structural.structural_analysis module.
+  - path: examples/structural/wall_thickness_quickcheck/
+    purpose: A cached pipeline case illustrates a wall-thickness sweep and report across two design codes.
+  - path: examples/subsea/
+    purpose: These examples illustrate subsea pipelines, risers, jumpers, moorings, umbilicals, and control systems.
+  - path: examples/subsea/catenary/
+    purpose: This placeholder reserves a usage example for the digitalmodel.subsea.catenary_riser module.
+  - path: examples/subsea/catenary_riser/
+    purpose: This placeholder reserves a usage example for the digitalmodel.subsea.catenary_riser module.
+  - path: examples/subsea/cross_sections/
+    purpose: A synthetic bonded annulus illustrates how layer geometry and moduli determine axial stiffness.
+  - path: examples/subsea/jumper_tools/
+    purpose: A synthetic jumper example checks section properties, catenary geometry, and mesh generation against hand calculations.
+  - path: examples/subsea/mooring_analysis/
+    purpose: These examples illustrate single-line mooring and pinned catenary calculations.
+  - path: examples/subsea/pipeline/
+    purpose: This placeholder reserves a usage example for the digitalmodel.subsea.pipeline module.
+  - path: examples/subsea/vertical_riser/
+    purpose: This placeholder reserves a usage example for the digitalmodel.subsea.vertical_riser module.
+  - path: examples/subsea/viv_analysis/
+    purpose: This placeholder reserves a usage example for the digitalmodel.subsea.viv_analysis module.
+  - path: examples/visualization/
+    purpose: These placeholders reserve usage examples for visualization, reporting, and design tools.
+  - path: examples/visualization/design_tools/
+    purpose: This placeholder reserves a usage example for the digitalmodel.visualization.design_tools module.
+  - path: examples/visualization/reporting/
+    purpose: This placeholder reserves a usage example for the digitalmodel.visualization.reporting module.
+  - path: examples/visualization/visualization/
+    purpose: This placeholder reserves a usage example for the digitalmodel.visualization module.
+  - path: examples/viv/
+    purpose: These example cases supply inputs for vortex-induced vibration mode identification.
+  - path: examples/viv/shear7_mode_finder/
+    purpose: Two synthetic text fixtures demonstrate extraction of modal data from SHEAR7-style output.
+  - path: examples/well/
+    purpose: A synthetic well-barrier example illustrates screening permanent barriers and comparing anomaly risk.
+  - path: examples/workflows/
+    purpose: These inputs and scripts illustrate how to invoke individual engineering workflows and inspect their outputs.
+  - path: examples/workflows/agents/
+    purpose: This placeholder reserves a usage example for the digitalmodel.workflows.agents module.
+  - path: examples/workflows/ai_workflows/
+    purpose: This placeholder reserves a usage example for the digitalmodel.workflows.ai_workflows module.
+  - path: examples/workflows/alt-fuel-report-pack/
+    purpose: This example turns alternative-fuel ship sizing results into a trade-study report.
+  - path: examples/workflows/anchor-capacity/
+    purpose: This example screens drag-anchor and suction-caisson capacity for specified soil and loads.
+  - path: examples/workflows/anchor-capacity-atlas-query/
+    purpose: This example queries tabulated anchor capacity for specified dimensions, soil strength, and demand.
+  - path: examples/workflows/api-2sk-mooring/
+    purpose: This example checks extreme mooring line tension against breaking load under API RP 2SK.
+  - path: examples/workflows/api-rp-2rd-riser/
+    purpose: This example supplies pipe dimensions and material strengths for an API RP 2RD riser check.
+  - path: examples/workflows/api579-coverage-screen/
+    purpose: Synthetic evidence records illustrate how to check the scope of API 579 assessment requests.
+  - path: examples/workflows/api579-dent-screen/
+    purpose: A synthetic pipe dent illustrates how to specify dent geometry and weld location for screening.
+  - path: examples/workflows/api579-part9-crack-fad/
+    purpose: Synthetic inspection data illustrate an API 579 Part 9 crack assessment using a failure assessment diagram.
+  - path: examples/workflows/api579-pipe-ffs-b314/
+    purpose: This example uses wall measurements to assess general and local metal loss in a liquid pipeline.
+  - path: examples/workflows/api579-pipe-ffs-b318/
+    purpose: This example uses wall measurements to assess general and local metal loss in a gas pipeline.
+  - path: examples/workflows/api579-pitting-screen/
+    purpose: A synthetic pit grid illustrates how to specify geometry for an API 579 pitting screen.
+  - path: examples/workflows/api653-tank-settlement-screen/
+    purpose: This example reduces a tank shell-elevation survey and reports the status of settlement checks.
+  - path: examples/workflows/aqwa-diffraction-deck-prep/
+    purpose: This example converts a diffraction specification into an AQWA input deck.
+  - path: examples/workflows/artificial-lift-field-health/
+    purpose: This example screens a small set of synthetic dynamometer cards for rod-pump operating problems.
+  - path: examples/workflows/automation/
+    purpose: This placeholder reserves a usage example for the digitalmodel.workflows.automation module.
+  - path: examples/workflows/buckling-parametric/
+    purpose: This example varies plate grade and thickness to compare buckling under specified loads.
+  - path: examples/workflows/capex-estimate/
+    purpose: This example uses offshore benchmarks to estimate capital cost for a tension-leg platform.
+  - path: examples/workflows/casing-design/
+    purpose: This example illustrates casing design checks using well depths, pressures, and fluid weights.
+  - path: examples/workflows/catenary/
+    purpose: This example calculates a flexible line profile from vertical separation and hang-off angle.
+  - path: examples/workflows/code-check-atlas-query/
+    purpose: This example queries precomputed code checks for a pipe section under tension and bending.
+  - path: examples/workflows/compare-tool/
+    purpose: This example aligns two tabulated runs by a common key and compares their values.
+  - path: examples/workflows/concept-screening/
+    purpose: This example supplies a deepwater prospect for field development concept screening.
+  - path: examples/workflows/concept-selection/
+    purpose: This example ranks host concepts for an offshore reservoir using reservoir size, depth, and infrastructure distance.
+  - path: examples/workflows/cpt-interpretation/
+    purpose: This script interprets a synthetic cone penetration test profile through clay and sand.
+  - path: examples/workflows/ct-hydraulics/
+    purpose: This example screens steady-state coiled-tubing hydraulics for a well cleanout.
+  - path: examples/workflows/damage-stability/
+    purpose: This example specifies intact and damaged vessel conditions for a stability screen.
+  - path: examples/workflows/diffraction-library-query/
+    purpose: This example retrieves a diffraction response by vessel case, wave frequency, and heading.
+  - path: examples/workflows/dnv-os-f201-riser/
+    purpose: This example supplies tubular properties and safety factors for a DNV-OS-F201 riser check.
+  - path: examples/workflows/drag-anchor-holding/
+    purpose: This example estimates the holding capacity of a drag anchor in soft soil.
+  - path: examples/workflows/drilling-riser-envelope-library-query/
+    purpose: This example queries the drilling-riser envelope for a specified offset, current, and sea state.
+  - path: examples/workflows/drilling-riser-operability-query/
+    purpose: This example looks up drilling-riser operability by vessel offset and current speed.
+  - path: examples/workflows/dual-gradient/
+    purpose: This example screens a dual-gradient drilling configuration for a deepwater well with a narrow pressure window.
+  - path: examples/workflows/dynacard-diagnostics/
+    purpose: This example builds synthetic pump cards and demonstrates surface-to-downhole diagnosis.
+  - path: examples/workflows/elastic-buckling/
+    purpose: This example defines a finite element model for an elastic buckling calculation.
+  - path: examples/workflows/esp-pump-atlas-query/
+    purpose: This example looks up electric submersible pump utilization by flow rate and dynamic fluid level.
+  - path: examples/workflows/esp-pump-hydraulics/
+    purpose: This example sizes an electric submersible pump from head requirements and stage performance.
+  - path: examples/workflows/extreme-value-post/
+    purpose: This example fits extreme-value distributions to block maxima and estimates return-period extremes.
+  - path: examples/workflows/fatigue-analysis/
+    purpose: This example accumulates fatigue damage from stress-cycle bins and a seawater stress-life curve.
+  - path: examples/workflows/ffs-metal-loss/
+    purpose: This example screens a pipeline with metal loss using design pressure and measured wall dimensions.
+  - path: examples/workflows/flange-analysis/
+    purpose: This example screens an integral flange for bolt demand, stresses, and rigidity under ASME Appendix 2.
+  - path: examples/workflows/floating-wind-chain/
+    purpose: This example transfers the mass and center of gravity of a synthetic floating wind platform into diffraction and coupled-model specifications.
+  - path: examples/workflows/floating-wind-economics/
+    purpose: This example estimates floating wind energy and lifetime project costs and varies selected cost drivers.
+  - path: examples/workflows/floating-wind-sizing/
+    purpose: This example compares floating wind platform variants across site load cases.
+  - path: examples/workflows/foam-system-report-pack/
+    purpose: This example builds a screening report from tanker deck foam-system sizing results.
+  - path: examples/workflows/four-point-skew/
+    purpose: This example screens unequal load distribution in a four-leg lift with a single hook.
+  - path: examples/workflows/fowt-mooring/
+    purpose: This example checks floating wind turbine excursion against the minimum bend radius of a dynamic export cable.
+  - path: examples/workflows/fowt-mooring-atlas-query/
+    purpose: This example looks up floating wind mooring results by excursion radius and minimum cable bend radius.
+  - path: examples/workflows/fowt-volturnus-mooring/
+    purpose: This example defines environmental headings for a semisubmersible floating wind turbine mooring study.
+  - path: examples/workflows/fpso-mooring-atlas-query/
+    purpose: This example queries spread-mooring response by wave height, wave period, and water depth.
+  - path: examples/workflows/fpso-mooring-full/
+    purpose: This example combines environmental loading and mooring response for a spread-moored floating production vessel.
+  - path: examples/workflows/fpso-spread-mooring/
+    purpose: This example supplies vessel particulars and mooring geometry for a floating production vessel.
+  - path: examples/workflows/free-span-atlas-query/
+    purpose: This example queries pipeline free-span screening results by span, section dimensions, and current speed.
+  - path: examples/workflows/free-span-f105/
+    purpose: This example screens a pipeline free span for vortex-induced vibration under DNV-RP-F105.
+  - path: examples/workflows/hull-girder-report-pack/
+    purpose: This report example separates calculated still-water hull-girder demand from unresolved strength inputs.
+  - path: examples/workflows/hull-resistance/
+    purpose: This example estimates vessel resistance from hull geometry.
+  - path: examples/workflows/hull-seakeeping/
+    purpose: This example screens natural periods and wave response from vessel particulars.
+  - path: examples/workflows/hull-wastage-screen/
+    purpose: This example supplies representative hull thickness measurements for a wastage screen.
+  - path: examples/workflows/hydro-coefficients/
+    purpose: This example queries hydrodynamic coefficients by wave frequency and degrees of freedom.
+  - path: examples/workflows/inspection-planning/
+    purpose: This example estimates remaining life and inspection intervals from thickness and corrosion rate.
+  - path: examples/workflows/inspection-planning-atlas-query/
+    purpose: This example looks up remaining service life from wall thickness and corrosion rate.
+  - path: examples/workflows/jacket-damaged-member-screen/
+    purpose: Synthetic damage cases illustrate dent, bow, stress, and severed-member diagnostics for an offshore jacket.
+  - path: examples/workflows/jacket-member-joint-checks/
+    purpose: This example defines tubular jacket members and joints for structural checks.
+  - path: examples/workflows/jlay-pipelay/
+    purpose: This example screens sagbend response for J-lay installation of a deepwater rigid pipeline.
+  - path: examples/workflows/jumper-installation/
+    purpose: This example screens a deepwater rigid-jumper installation using vessel and jumper catalogue data.
+  - path: examples/workflows/lifting-lug-atlas-query/
+    purpose: This example looks up lifting-lug utilization by static load and plate thickness.
+  - path: examples/workflows/lifting-lug-design/
+    purpose: This example checks a padeye under sling load for competing strength limits.
+  - path: examples/workflows/liquefaction/
+    purpose: This example screens layers of saturated soil for earthquake-induced liquefaction.
+  - path: examples/workflows/loading-computer/
+    purpose: This example evaluates a loaded box barge for equilibrium, stability, and hull-girder loads.
+  - path: examples/workflows/mcp_server/
+    purpose: This placeholder reserves a usage example for the digitalmodel.workflows.mcp_server module.
+  - path: examples/workflows/mooring-chain-degradation-screen/
+    purpose: This synthetic example screens dimensional degradation in a mooring chain and records the resulting escalation.
+  - path: examples/workflows/mooring-design-mbl/
+    purpose: This example determines the minimum breaking load for a mooring design case.
+  - path: examples/workflows/mooring-fatigue/
+    purpose: This example estimates metallic mooring line fatigue from tension-range bins.
+  - path: examples/workflows/mooring-fatigue-atlas-query/
+    purpose: This example queries precomputed mooring fatigue results for a line section and tension-cycle history.
+  - path: examples/workflows/mooring-fatigue-v2/
+    purpose: This example repeats a mooring line fatigue assessment with a free-corrosion stress-life curve.
+  - path: examples/workflows/mudmat-bearing-atlas-query/
+    purpose: This example queries mudmat bearing utilization by vertical load and undrained shear strength.
+  - path: examples/workflows/mudmat-bearing-capacity/
+    purpose: This example checks a subsea mudmat for vertical bearing and sliding.
+  - path: examples/workflows/naval-arch-maneuvering-envelope/
+    purpose: This example screens a vessel's low-speed maneuvering and station-keeping envelope.
+  - path: examples/workflows/naval-arch-yaw-moment/
+    purpose: This example estimates vessel yaw moment from a defined hull and loading case.
+  - path: examples/workflows/nodal-analysis/
+    purpose: This example finds a well operating point at the intersection of inflow and vertical-lift performance curves.
+  - path: examples/workflows/nodal-analysis-ipr-vlp/
+    purpose: This example invokes the production workflow to match well inflow and vertical-lift performance.
+  - path: examples/workflows/ocimf-tanker-loads/
+    purpose: This example calculates tanker environmental loads from vessel geometry and tabulated OCIMF coefficients.
+  - path: examples/workflows/on-bottom-stability-e305/
+    purpose: This example exercises a simplified pipeline on-bottom stability calculation with an incomplete comparison basis.
+  - path: examples/workflows/on-bottom-stability-f109/
+    purpose: This example evaluates lateral on-bottom stability for a concrete-coated pipeline using DNV-RP-F109.
+  - path: examples/workflows/openfoam-run-batch/
+    purpose: This example specifies a matrix of OpenFOAM cases for parallel execution.
+  - path: examples/workflows/opex-estimate/
+    purpose: This example estimates annual operating cost for a semisubmersible production facility.
+  - path: examples/workflows/orcaflex-6dbuoy-dnvrph103/
+    purpose: This example specifies buoy mass and shape for a simplified DNV-RP-H103 calculation.
+  - path: examples/workflows/orcaflex-library-query/
+    purpose: This example queries precomputed OrcaFlex results by case and heading.
+  - path: examples/workflows/orcaflex-run-batch/
+    purpose: This example sets up concurrent OrcaFlex simulations from a base model and a factorial matrix of variants.
+  - path: examples/workflows/orcaflex-spec-authoring-llm/
+    purpose: This example illustrates turning a project description and natural-language request into an OrcaFlex analysis specification.
+  - path: examples/workflows/orcaflex-strength-post/
+    purpose: This example extracts tension, bending, and curvature statistics from OrcaFlex simulation results.
+  - path: examples/workflows/orcawave-control-surface/
+    purpose: This example prepares an OrcaWave diffraction case with a control surface.
+  - path: examples/workflows/orcawave-diffraction-solve/
+    purpose: This example configures a licensed OrcaWave diffraction solve from a model specification.
+  - path: examples/workflows/orcawave-field-points/
+    purpose: This example prepares synthetic OrcaWave field-point inputs for an air-gap and splash request.
+  - path: examples/workflows/orcawave-input-prep/
+    purpose: This example converts a diffraction specification into an OrcaWave input model.
+  - path: examples/workflows/orcawave-mean-drift/
+    purpose: This example prepares an OrcaWave diffraction case for mean drift calculations.
+  - path: examples/workflows/passing-ship/
+    purpose: This example defines moored and passing vessels for a ship-interaction load calculation.
+  - path: examples/workflows/perry-robertson/
+    purpose: This example tabulates column buckling strength as a function of slenderness.
+  - path: examples/workflows/pile-axial-capacity/
+    purpose: This example screens axial capacity for an open-ended pile using the API RP 2GEO alpha method.
+  - path: examples/workflows/pile-capacity/
+    purpose: This example supplies embedded pile dimensions and clay properties for an axial capacity calculation.
+  - path: examples/workflows/pile-capacity-atlas-query/
+    purpose: This example queries pile capacity for specified pile dimensions, soil properties, and demand.
+  - path: examples/workflows/pipe-capacity/
+    purpose: This example checks the internal pressure capacity of an export pipeline under API STD 2RD.
+  - path: examples/workflows/pipe-ovality/
+    purpose: This example compares measured diameter variation with an allowable pipe ovality.
+  - path: examples/workflows/pipelay-screening/
+    purpose: This synthetic case illustrates installation screening for subsea pipelay.
+  - path: examples/workflows/pipeline-corroded-defect-screen/
+    purpose: This example screens a corroded pipeline defect using supplied geometry and operating conditions.
+  - path: examples/workflows/pipeline-ffs-assessment/
+    purpose: This synthetic example shows how pipeline integrity inputs produce a fitness-for-service assessment report.
+  - path: examples/workflows/pipeline-lateral-buckling/
+    purpose: This example screens lateral buckling of a high-pressure, high-temperature subsea pipeline.
+  - path: examples/workflows/pipeline-upheaval-buckling/
+    purpose: This example screens buried-pipeline upheaval and the cover required to restrain it.
+  - path: examples/workflows/plate-buckling/
+    purpose: This example checks a stiffened deck plate under combined longitudinal, transverse, and shear stresses.
+  - path: examples/workflows/platform-stability/
+    purpose: This example screens intact stability and wind heel for a floating production platform.
+  - path: examples/workflows/pore-pressure/
+    purpose: This example estimates pore pressure and drilling-window uncertainty using offset-well calibration.
+  - path: examples/workflows/pressure-vessel-metal-loss/
+    purpose: This example calculates the effect of progressive uniform wall loss on a cylindrical pressure shell.
+  - path: examples/workflows/process-piping/
+    purpose: This example supplies a synthetic flanged joint and water line for process piping calculations.
+  - path: examples/workflows/propeller-rudder-interaction/
+    purpose: This example estimates propeller-rudder interaction from propulsion and vessel inputs.
+  - path: examples/workflows/rao-atlas-query/
+    purpose: This example retrieves tabulated vessel response by wave period and heading.
+  - path: examples/workflows/rao-spectral-fatigue/
+    purpose: This example estimates fatigue from a stress response amplitude operator and a wave spectrum.
+  - path: examples/workflows/rao-tabulation/
+    purpose: This example tabulates vessel response amplitudes at specified wave periods and headings.
+  - path: examples/workflows/reel-lay-pipelay/
+    purpose: This example screens installation strain and residual curvature from reeling a rigid pipeline.
+  - path: examples/workflows/report-pack/
+    purpose: This example renders a marine engineering report from a synthetic spectral fatigue case.
+  - path: examples/workflows/response-spectrum/
+    purpose: This example generates a response spectrum from a ground acceleration record.
+  - path: examples/workflows/rig-capability-assessment/
+    purpose: This example screens and ranks onshore drilling rigs against well program requirements.
+  - path: examples/workflows/rigging/
+    purpose: This example resolves rigging components against catalogue entries and summarizes their ratings and geometry.
+  - path: examples/workflows/riser-configuration-screen/
+    purpose: These synthetic inputs illustrate numerical screening of riser configurations.
+  - path: examples/workflows/riser-fatigue/
+    purpose: This example combines wave and vortex-induced fatigue damage for segments of a steel catenary riser.
+  - path: examples/workflows/riser-fatigue-atlas-query/
+    purpose: This example queries riser fatigue results by stress concentration, vibration stress scale, and design life.
+  - path: examples/workflows/riser-joint-ffs/
+    purpose: This example supplies a riser joint for a fitness-for-service assessment.
+  - path: examples/workflows/riser-screening/
+    purpose: This example screens a deepwater production riser for pressure and combined loading under API STD 2RD.
+  - path: examples/workflows/riser-screening-f201/
+    purpose: This example screens a deepwater production riser for pressure and combined loading under DNV-ST-F201.
+  - path: examples/workflows/riser-stackup/
+    purpose: This example supplies submerged weight, buoyancy, and design pressure for riser stack-up calculations.
+  - path: examples/workflows/riser-stackup-drawing/
+    purpose: This example renders a synthetic riser stack-up drawing and reconciles it with its source data.
+  - path: examples/workflows/riser-stackup-parametric/
+    purpose: This example runs a matrix of riser stack-up configurations from tabulated inputs.
+  - path: examples/workflows/riser-stackup-registry-batch/
+    purpose: This example selects planned riser stack-ups from the registry for a batch assessment.
+  - path: examples/workflows/riser-viv-screening/
+    purpose: This example checks a synthetic pinned riser span for cross-flow and in-line vortex-induced vibration.
+  - path: examples/workflows/riser-worked-configurations/
+    purpose: These worked configurations illustrate different riser arrangements using generic pipe properties.
+  - path: examples/workflows/rop-analysis/
+    purpose: This example compares drilling rate-of-penetration models on the same inputs.
+  - path: examples/workflows/rudder-stock-torque/
+    purpose: This example estimates preliminary rudder-stock torque from a vessel and rudder case.
+  - path: examples/workflows/scour-assessment/
+    purpose: This example checks sediment motion and an armour criterion around a pipeline.
+  - path: examples/workflows/skills/
+    purpose: This placeholder reserves a usage example for the digitalmodel.workflows.skills module.
+  - path: examples/workflows/slope-stability/
+    purpose: This example defines soil layers, ground geometry, and water properties for a slope stability calculation.
+  - path: examples/workflows/sn-curve/
+    purpose: This example evaluates a selected fatigue stress-life curve at specified stress ranges.
+  - path: examples/workflows/sn-curve-comparison/
+    purpose: This example compares several fatigue stress-life curves across the same stress range.
+  - path: examples/workflows/span-rectification/
+    purpose: This example designs intermediate support spacing for a pipeline free span that exceeds its allowable length.
+  - path: examples/workflows/span-rectification-atlas-query/
+    purpose: This example queries free-span utilization by surveyed span length and current speed.
+  - path: examples/workflows/spec-authoring-llm/
+    purpose: This example illustrates producing an analysis specification from project data and a natural-language request.
+  - path: examples/workflows/spectral-fatigue/
+    purpose: This example estimates fatigue damage and life from a stress response power spectrum.
+  - path: examples/workflows/spectral-fatigue-atlas-query/
+    purpose: This example queries precomputed spectral fatigue results by sea state and design life.
+  - path: examples/workflows/stress-strain/
+    purpose: This example generates a nonlinear stress-strain curve for a pipeline steel.
+  - path: examples/workflows/stress-strain-parametric/
+    purpose: This example sweeps pipeline steel yield strengths to compare nonlinear stress-strain responses.
+  - path: examples/workflows/subsea-lowering/
+    purpose: This example prepares sea-state cases and screens imported phase extrema for a subsea lowering operation.
+  - path: examples/workflows/swab-surge/
+    purpose: This example estimates pressure changes as pipe moves into or out of a well.
+  - path: examples/workflows/synthetic-rope-atlas-query/
+    purpose: This example queries synthetic-rope mooring fatigue results by breaking load and cyclic tension history.
+  - path: examples/workflows/synthetic-rope-mooring-fatigue/
+    purpose: This example screens a synthetic mooring rope for tension fatigue, creep rupture, and minimum-tension limits.
+  - path: examples/workflows/time-series/
+    purpose: This example calculates a frequency spectrum from a synthetic periodic signal.
+  - path: examples/workflows/tsj-sizing/
+    purpose: This example supplies taper geometry, tension, and pressure for sizing a tapered stress joint.
+  - path: examples/workflows/tubular-design-envelope/
+    purpose: This example evaluates the load envelope for a casing section from its dimensions and material strength.
+  - path: examples/workflows/vessel-seakeeping/
+    purpose: This example screens seakeeping operability from vessel motion responses and sea-state frequencies.
+  - path: examples/workflows/viv-analysis/
+    purpose: This example screens a free-spanning tubular member using natural frequency and vortex-shedding frequency.
+  - path: examples/workflows/viv-atlas-query/
+    purpose: This example looks up vortex-induced vibration results by span length and current speed.
+  - path: examples/workflows/viv-parametric/
+    purpose: This example varies tubular span and loading inputs for a vortex-induced vibration study.
+  - path: examples/workflows/viv-parametric-screening/
+    purpose: This example evaluates reduced velocity and lock-in for a synthetic tubular member across vibration modes.
+  - path: examples/workflows/vlp-correlations/
+    purpose: This example calculates a vertical-lift performance curve for an oil well.
+  - path: examples/workflows/von-mises/
+    purpose: This example supplies a mesh and loads for calculating equivalent stress.
+  - path: examples/workflows/wall-thickness-compare/
+    purpose: This example compares pipeline wall thickness requirements across several design codes.
+  - path: examples/workflows/wall-thickness-quickcheck/
+    purpose: This example runs a cached pipeline thickness check and produces an HTML report and tabulated results.
+  - path: examples/workflows/wave-spectra/
+    purpose: This example calculates a fully developed sea spectrum on a specified frequency grid.
+  - path: examples/workflows/wave-spectrum/
+    purpose: This example calculates a peaked JONSWAP sea spectrum from wave height and peak period.
+  - path: examples/workflows/weather-window/
+    purpose: This example screens a wave-height record for uninterrupted operating windows of a required duration.
+  - path: examples/workflows/weather-window-atlas-query/
+    purpose: This example queries operating-window estimates by limiting wave height and required duration.
+  - path: examples/workflows/well-access/
+    purpose: This example compares dry-tree and subsea access over the life of a deepwater well program.
+  - path: examples/workflows/well-bore-design/
+    purpose: This example compares offshore wellbore designs against a specified well objective.
+  - path: examples/workflows/well-hydraulics/
+    purpose: This example screens well hydraulics for a defined pipe and hole section.
+  - path: examples/workflows/well-intervention-screening/
+    purpose: This script illustrates well-intervention screening using public production records.
+  - path: examples/workflows/wellbore-stability/
+    purpose: This example specifies an offline wellbore stability screen and records sources for its inputs.
+  - path: examples/workflows/wellpath/
+    purpose: This example reconstructs a well trajectory from measured depths, inclinations, and azimuths.
+  - path: examples/workflows/workflow_automation/
+    purpose: This placeholder reserves a usage example for the digitalmodel.workflows.workflow_automation module.
+  - path: knowledge/
+    purpose: Collects engineering reference notes organized as wikis.
+  - path: knowledge/wikis/
+    purpose: Houses the repository's engineering standards wiki.
+  - path: knowledge/wikis/engineering-standards/
+    purpose: Summarizes individual engineering standards for reference.
+  - path: notebooks/
+    purpose: Collects interactive engineering examples, including geospatial coordinate conversion.
+  - path: notebooks/gis/
+    purpose: Demonstrates conversion of geospatial coordinates in a notebook.
+  - path: references/
+    purpose: Collects reference material for vessel operability research.
+  - path: references/vessel-suitability/
+    purpose: Preserves research references on offshore vessel access and the limits on their use.
+    rules:
+      - Limit use to internal research and methodology development.
+  - path: references/vessel-suitability/data/
+    purpose: Retains the digitized reference values and metadata for a crew-transfer vessel operability study.
+    rules:
+      - Use digitized values for internal reference only.
+  - path: scripts/
+    purpose: Provides command-line tools for preparing inputs, running studies, checking results and maintaining the repository.
+  - path: scripts/ansys/
+    purpose: Runs pressure and zero-load control diagnostics in ANSYS.
+  - path: scripts/artificial_lift/
+    purpose: Extracts artificial-lift reference catalogs and builds evidence for solver checks.
+  - path: scripts/automation/
+    purpose: Coordinates agent tasks, subprocess reviews and workflow checks.
+  - path: scripts/bash/
+    purpose: Collects Bash utilities for local development and testing.
+  - path: scripts/bash/digitalmodel/
+    purpose: Provides shell setup, repository maintenance and test runner scripts.
+  - path: scripts/benchmark/
+    purpose: Builds benchmark inputs, extracts reference data and compares hydrodynamic solver results.
+  - path: scripts/bha_database/
+    purpose: Builds the manifest for the bottom-hole assembly database.
+  - path: scripts/capabilities/
+    purpose: Generates the engineering capability inventory, interactive explorers and summary pages.
+  - path: scripts/capabilities/installation_heading/
+    purpose: Supplies limits, revision records and a page template for the installation heading explorer.
+  - path: scripts/cathodic_protection/
+    purpose: Generates cathodic protection potential as a function of distance.
+  - path: scripts/cfd/
+    purpose: Prepares, runs and monitors ship hydrodynamics CFD cases and checks the output.
+  - path: scripts/cfd/lib/
+    purpose: Provides configuration, worker routines and benchmark metrics shared by the CFD scripts.
+  - path: scripts/cfd/status/
+    purpose: Collects and displays CFD execution status.
+  - path: scripts/ci/
+    purpose: Checks CI inputs, selects test groups and measures coverage and execution time.
+  - path: scripts/context/
+    purpose: Automates checks and updates for development session context.
+  - path: scripts/conversion/
+    purpose: Converts YAML model definitions into include files.
+  - path: scripts/corrosion/
+    purpose: Builds the galvanic corrosion explorer.
+  - path: scripts/data/
+    purpose: Fetches engineering data, checks registry freshness and generates mooring component records.
+  - path: scripts/dev/
+    purpose: Checks development dependencies in linked worktrees.
+  - path: scripts/docs/
+    purpose: Checks agent documentation packs and resolves source references.
+  - path: scripts/drilling_riser/
+    purpose: Builds the drilling riser operability explorer and monitoring view.
+  - path: scripts/enforcement/
+    purpose: Checks repository text, report provenance and file contents against project conventions.
+  - path: scripts/examples/
+    purpose: Provides a worked evaluation of three-dimensional visualization with PyVista.
+  - path: scripts/fender_design/
+    purpose: Imports fender catalog tables and compares workbook cell values.
+  - path: scripts/ffs/
+    purpose: Builds fitness-for-service readiness and riser joint views and assesses a measured thickness grid.
+  - path: scripts/field_development/
+    purpose: Produces example field layouts, flythroughs and a field development API demonstration.
+  - path: scripts/fowt/
+    purpose: Prepares reference floating wind turbine cases, extracts model data and runs checks.
+  - path: scripts/geotechnical/
+    purpose: Checks tabulated scour data against its recorded values.
+  - path: scripts/git/
+    purpose: Provides Python utilities for Git operations and related command shortcuts.
+  - path: scripts/hf/
+    purpose: Builds engineering capability datasets and prepares atlas explorers for publication.
+  - path: scripts/hooks/
+    purpose: Provides a Git hook check for machine-specific paths.
+  - path: scripts/hull_library/
+    purpose: Screens hull geometry inventories and investigates profile conversion and CAD geometry quality.
+  - path: scripts/integrations/
+    purpose: Evaluates third-party engineering libraries through examples, comparisons and benchmarks.
+  - path: scripts/integrations/output/
+    purpose: Retains mesh images and numerical results from composite section property evaluations.
+  - path: scripts/inventory/
+    purpose: Builds an inventory of legacy OrcaFlex models.
+  - path: scripts/legal/
+    purpose: Contains checks and rules for reviewing material intended for public release.
+  - path: scripts/maintenance/
+    purpose: Audits repository structure, archive candidates, generated files and issue records.
+  - path: scripts/metocean/
+    purpose: Extracts, ranks and standardizes metocean reference tables.
+  - path: scripts/monitoring/
+    purpose: Checks agent usage and suggests a model for the available capacity.
+  - path: scripts/orcaflex/
+    purpose: Prepares OrcaFlex model libraries and campaigns and checks generic riser cases.
+  - path: scripts/parametric/
+    purpose: Builds parametric result atlases and queryable model libraries.
+  - path: scripts/pilots/
+    purpose: Runs the vortex-induced vibration pilot and prepares its results for publication.
+  - path: scripts/pipelay/
+    purpose: Generates the evidence note for pipelay analysis.
+  - path: scripts/process/
+    purpose: Finds running script processes.
+  - path: scripts/production_chemistry/
+    purpose: Builds an explorer for production chemistry scale saturation indices.
+  - path: scripts/python/
+    purpose: Collects Python utilities for engineering analysis and data management.
+  - path: scripts/python/digitalmodel/
+    purpose: Provides engineering analysis scripts alongside asset and standards index builders.
+  - path: scripts/reporting/
+    purpose: Builds engineering assessment reports and checks their provenance and coverage.
+  - path: scripts/reports/
+    purpose: Builds the vessel seakeeping module report.
+  - path: scripts/review/
+    purpose: Collects issue review records and supporting evidence.
+  - path: scripts/review/results/
+    purpose: Retains reviewer findings, syntheses and baseline test output for individual issues.
+  - path: scripts/riser_capability/
+    purpose: Builds riser inventory and capability registers and reports worked configurations.
+  - path: scripts/riser_database/
+    purpose: Builds riser database tables from the listed sources.
+  - path: scripts/riser_study/
+    purpose: Records and derives wall thickness inputs for the riser study.
+  - path: scripts/risers/
+    purpose: Replays analytical riser cases and compares them with closed-form results.
+  - path: scripts/roll_damping/
+    purpose: Builds the roll damping database manifest.
+  - path: scripts/setup/
+    purpose: Provisions and verifies CFD execution environments and transfers study data.
+  - path: scripts/studies/
+    purpose: Generates structural stability studies and prepares, processes and reports surface-crack analyses.
+  - path: scripts/subsea/
+    purpose: Converts the on-bottom stability reference workbook.
+  - path: scripts/testing/
+    purpose: Exercises model generators, converters and their end-to-end workflow.
+  - path: scripts/tools/
+    purpose: Builds the LibreDWG conversion utility.
+  - path: scripts/validation/
+    purpose: Checks solver input sections, hull meshes and engineering model assumptions.
+  - path: scripts/verification/
+    purpose: Verifies OrcaFlex campaign outputs.
+  - path: scripts/web/
+    purpose: Demonstrates authentication behavior with Unicode inputs.
+  - path: src/
+    purpose: Houses the installable Python source tree.
+    rules:
+      - Keep tests in the repository test tree.
+  - path: src/digitalmodel/
+    purpose: Provides the engineering package, its workflow entry points and domain calculations.
+  - path: src/digitalmodel/alt_fuel_ship_sizing/
+    purpose: Compares ship sizing and fuel-chain requirements for alternative fuels.
+  - path: src/digitalmodel/ansys/
+    purpose: Builds, records and reads back ANSYS analyses and their supporting evidence.
+  - path: src/digitalmodel/aqg/
+    purpose: Evaluates diffraction analysis quality from offline evidence.
+  - path: src/digitalmodel/asset_integrity/
+    purpose: Implements fitness-for-service assessments and integrity screening for equipment and structures.
+  - path: src/digitalmodel/base_configs/
+    purpose: Supplies packaged YAML defaults for engineering workflows and exposes configuration helpers.
+  - path: src/digitalmodel/benchmarks/
+    purpose: Inventories example models and computes benchmark metrics.
+  - path: src/digitalmodel/bha_database/
+    purpose: Loads drilling bottom-hole assembly records and checks their dimensions and properties.
+  - path: src/digitalmodel/cad/
+    purpose: Reads and converts CAD geometry with explicit coordinates and units.
+  - path: src/digitalmodel/cathodic_protection/
+    purpose: Calculates cathodic protection demand, anode sizing and related design outputs.
+  - path: src/digitalmodel/citations/
+    purpose: Resolves and validates citations for standards-derived calculation inputs.
+  - path: src/digitalmodel/code_checks/
+    purpose: Applies engineering code checks to pipes and storage tanks.
+  - path: src/digitalmodel/common/
+    purpose: Supplies shared unit, hydraulic, assumption-tracking and specification helpers.
+  - path: src/digitalmodel/compare_tool/
+    purpose: Compares tabular inputs in an offline workflow.
+  - path: src/digitalmodel/contract_validation/
+    purpose: Checks riser configuration, length and manifest data against their declared contracts.
+  - path: src/digitalmodel/corrosion/
+    purpose: Screens galvanic corrosion for material combinations.
+  - path: src/digitalmodel/data/
+    purpose: Packages equipment specifications and engineering reference tables for use by the library.
+  - path: src/digitalmodel/data_models/
+    purpose: Defines data structures for digitized curves and interpolation.
+  - path: src/digitalmodel/data_systems/
+    purpose: Acquires, catalogs, validates and migrates engineering data.
+  - path: src/digitalmodel/drilling_riser/
+    purpose: Models drilling-riser assemblies, static loads, dynamic response and operability.
+  - path: src/digitalmodel/dynmoor_mooring/
+    purpose: Routes mooring analysis inputs through the DYNMOOR workflow.
+  - path: src/digitalmodel/economics/
+    purpose: Estimates pipeline costs from supplied prices.
+  - path: src/digitalmodel/fatg_spectral_fatigue/
+    purpose: Runs the legacy closed-form FATG spectral fatigue calculation.
+  - path: src/digitalmodel/fatigue/
+    purpose: Calculates fatigue damage from stress ranges, design curves and spectral inputs.
+  - path: src/digitalmodel/field_development/
+    purpose: Compares field development concepts using layouts, cost estimates and economic models.
+  - path: src/digitalmodel/floating_wind/
+    purpose: Models floating wind concepts and screens their technical and economic characteristics.
+  - path: src/digitalmodel/foam_system/
+    purpose: Sizes firefighting foam systems against a library of design criteria.
+  - path: src/digitalmodel/geotechnical/
+    purpose: Evaluates soil data, foundation response, anchor capacity and slope stability.
+  - path: src/digitalmodel/gis/
+    purpose: Transforms coordinates and supports spatial queries and geographic data exchange.
+  - path: src/digitalmodel/hull_girder_screening/
+    purpose: Screens the longitudinal strength of a vessel hull girder.
+  - path: src/digitalmodel/hull_wastage_screen/
+    purpose: Screens hull structural wastage and buckling using thickness measurements.
+  - path: src/digitalmodel/hydrodynamics/
+    purpose: Models waves, vessel response, resistance and interactions with nearby vessels and structures.
+  - path: src/digitalmodel/hydrostatics/
+    purpose: Calculates hydrostatic pressure in fluid columns.
+  - path: src/digitalmodel/infrastructure/
+    purpose: Provides shared configuration, solver interfaces and runtime services for engineering modules.
+  - path: src/digitalmodel/installation/
+    purpose: Generates installation pamphlets with calculations and risk references.
+  - path: src/digitalmodel/lifting_lug/
+    purpose: Evaluates lifting-lug mechanics and welded connections and reports the assessment.
+  - path: src/digitalmodel/marine_ops/
+    purpose: Groups marine operations, installation, vessel and production analysis workflows.
+  - path: src/digitalmodel/materials/
+    purpose: Provides material grades, properties and lookup functions for engineering assessments.
+  - path: src/digitalmodel/mooring_fatigue/
+    purpose: Calculates fatigue damage in chain and steel wire mooring lines from load histories.
+  - path: src/digitalmodel/mooring_resilience/
+    purpose: Screens mooring-system resilience using line tension and foundation capacity.
+  - path: src/digitalmodel/motion_forecast/
+    purpose: Forecasts short-horizon vessel or structure motions from incident waves and motion transfer functions.
+  - path: src/digitalmodel/naval_architecture/
+    purpose: Calculates hull geometry, hydrostatics, stability and vessel performance.
+  - path: src/digitalmodel/nde/
+    purpose: Calculates nondestructive examination pulse timing and loads well acoustic scattering data.
+  - path: src/digitalmodel/orcaflex/
+    purpose: Prepares and processes OrcaFlex analyses, including environmental inputs and engineering checks.
+  - path: src/digitalmodel/orcawave/
+    purpose: Processes OrcaWave diffraction models, drift forces and hydrodynamic coefficients.
+  - path: src/digitalmodel/parametric/
+    purpose: Generates and catalogs parametric models and their atlases.
+  - path: src/digitalmodel/parametrics/
+    purpose: Runs parameter sweeps and connects their results to engineering atlases.
+  - path: src/digitalmodel/passing_ship_forces/
+    purpose: Calculates the forces induced on a vessel by a passing ship.
+  - path: src/digitalmodel/pipelay/
+    purpose: Prepares analytical screening calculations for J-lay and reel-lay installation.
+  - path: src/digitalmodel/power/
+    purpose: Models electrical power networks, data centers, protection and microgrid controls.
+  - path: src/digitalmodel/process_diagrams/
+    purpose: Defines geometry, symbols, tags and sheets for process diagrams.
+  - path: src/digitalmodel/process_piping/
+    purpose: Calculates process line sizes, pressure requirements and bolted-joint checks.
+  - path: src/digitalmodel/production_chemistry/
+    purpose: Predicts mineral-scale tendency in produced water from saturation indices.
+  - path: src/digitalmodel/production_engineering/
+    purpose: Models well inflow, pump hydraulics and production economics.
+  - path: src/digitalmodel/provider_data/
+    purpose: Defines equipment specification records and their source-document provenance.
+  - path: src/digitalmodel/rao_spectral_fatigue/
+    purpose: Calculates fatigue damage from a stress response transfer function and a wave spectrum.
+  - path: src/digitalmodel/report_pack/
+    purpose: Assembles marine engineering workflow results into a standard report pack.
+  - path: src/digitalmodel/reporting/
+    purpose: Renders engineering results as self-contained HTML reports using reusable sections.
+  - path: src/digitalmodel/reservoir/
+    purpose: Models stratigraphy and estimates reservoir volumes.
+  - path: src/digitalmodel/residual/
+    purpose: Fits a bounded correction to numerical predictions and measures residual error.
+  - path: src/digitalmodel/riser_bom/
+    purpose: Builds and costs a riser bill of materials from configuration data and supplied rates.
+  - path: src/digitalmodel/riser_configuration_screen/
+    purpose: Screens static riser configurations using simplified calculations.
+  - path: src/digitalmodel/riser_database/
+    purpose: Loads riser data and retrieves component properties and code-check factors.
+  - path: src/digitalmodel/riser_fatigue/
+    purpose: Screens fatigue of catenary and lazy-wave risers from stress ranges and touchdown conditions.
+  - path: src/digitalmodel/riser_reporting/
+    purpose: Renders fatigue reports from supplied riser workflow observations.
+  - path: src/digitalmodel/riser_results/
+    purpose: Exchanges and validates riser results independently of the originating solver.
+  - path: src/digitalmodel/riser_study/
+    purpose: Processes exported riser stress ranges and cycle counts into benchmark fatigue damage.
+  - path: src/digitalmodel/seismic/
+    purpose: Reads strong-motion records and calculates baseline corrections and response spectra.
+  - path: src/digitalmodel/signal_processing/
+    purpose: Processes time series for spectral analysis and cycle counting.
+  - path: src/digitalmodel/solvers/
+    purpose: Connects engineering solvers to model preparation, execution, result comparison and benchmarking.
+  - path: src/digitalmodel/specialized/
+    purpose: Groups specialist tools for design checks, rigging, ship analysis and other workflows.
+  - path: src/digitalmodel/specs/
+    purpose: Defines schemas for engineering results and module manifests.
+  - path: src/digitalmodel/spectral_fatigue/
+    purpose: Calculates frequency-domain fatigue damage from a stress power spectrum.
+  - path: src/digitalmodel/structural/
+    purpose: Calculates structural response and capacity for pipes, plates, frames and offshore structures.
+  - path: src/digitalmodel/subsea/
+    purpose: Models subsea equipment, risers, moorings, pipelines and their cross sections.
+  - path: src/digitalmodel/synthetic_rope_mooring_fatigue/
+    purpose: Evaluates fatigue for synthetic rope in mooring systems.
+  - path: src/digitalmodel/technical_safety/
+    purpose: Screens accidental impact loads and fire heat flux against selected criteria.
+  - path: src/digitalmodel/tug/
+    purpose: Evaluates tug performance, towing loads, fendering and emissions.
+  - path: src/digitalmodel/uncertainty/
+    purpose: Samples uncertain inputs and evaluates and summarizes the resulting model outputs.
+  - path: src/digitalmodel/usecase_registry/
+    purpose: Lists solver analysis use cases and their preparation and dispatch requirements.
+  - path: src/digitalmodel/vessel_seakeeping/
+    purpose: Screens vessel operability from motion transfer functions and a specified sea state.
+  - path: src/digitalmodel/vessel_stability_screening/
+    purpose: Screens intact vessel stability.
+  - path: src/digitalmodel/visualization/
+    purpose: Provides dashboards, CAD design tools and engineering visualizations.
+  - path: src/digitalmodel/viv_screening/
+    purpose: Screens risers for vortex-induced vibration.
+  - path: src/digitalmodel/weather_window/
+    purpose: Identifies weather windows for marine operations from wave heights and operational limits.
+  - path: src/digitalmodel/web/
+    purpose: Implements web application authentication, views and engineering result interfaces.
+  - path: src/digitalmodel/well/
+    purpose: Provides workflows for well barriers, construction, intervention and tubular design.
+  - path: src/digitalmodel/well_access/
+    purpose: Compares well-access strategies using intervention rates, resource availability and lifecycle logistics.
+  - path: src/digitalmodel/workflow_api/
+    purpose: Exposes an in-process interface for running engineering workflows and recording result provenance.
+  - path: src/digitalmodel/workflows/
+    purpose: Automates engineering workflows and coordinates model generation and validation.
+  - path: tests/
+    purpose: Collects automated checks, input fixtures and reference outputs for the package and its supporting workflows.
+  - path: tests/ansys/
+    purpose: Tests ANSYS model preparation, run protocols and interpretation of analysis evidence.
+  - path: tests/ansys/fixtures/
+    purpose: Provides sample design-point logs, solver journals and license-status records for ANSYS tests.
+  - path: tests/asset_integrity/
+    purpose: Checks asset fitness-for-service and integrity assessments against worked cases.
+  - path: tests/asset_integrity/hull_wastage_screen/
+    purpose: Checks hull wastage screening from thickness data through workflow output.
+  - path: tests/asset_integrity/test_data/
+    purpose: Supplies example inputs and reference cases for API 579 fitness-for-service tests.
+  - path: tests/benchmarks/
+    purpose: Checks engineering benchmark inputs, classifications and numerical results.
+  - path: tests/bha_database/
+    purpose: Tests drilling bottom-hole assembly records and tabulated reference dimensions.
+  - path: tests/cad/
+    purpose: Tests CAD geometry readers, unit conversion, mesh handling and export.
+  - path: tests/capabilities/
+    purpose: Checks inventories of supported analyses and the documentation that advertises them.
+  - path: tests/cathodic_protection/
+    purpose: Tests anode sizing, design demand, depletion and standards-based cathodic protection calculations.
+  - path: tests/cfd/
+    purpose: Checks an analytical sloshing fixture for computational fluid dynamics cases.
+  - path: tests/citations/
+    purpose: Tests whether engineering citations resolve to the intended standards and source tables.
+  - path: tests/citations/fixtures/
+    purpose: Provides a miniature standards library for exercising citation resolution.
+  - path: tests/code_checks/
+    purpose: Tests standards-based pipe and storage tank design checks.
+  - path: tests/common/
+    purpose: Tests common units, specification authoring and assumption ledger serialization.
+  - path: tests/compare_tool/
+    purpose: Checks the workflow for comparing tabular results.
+  - path: tests/compat/
+    purpose: Checks backward-compatible import paths after engineering modules were regrouped.
+  - path: tests/contracts/
+    purpose: Tests interfaces with package dependencies and project configuration contracts.
+  - path: tests/corrosion/
+    purpose: Checks galvanic corrosion screening.
+  - path: tests/cross_repo/
+    purpose: Checks repository layout and agent configuration against shared workspace conventions.
+  - path: tests/data/
+    purpose: Tests data retrieval, manifests, registry freshness and stored dataset references.
+  - path: tests/data_systems/
+    purpose: Tests data acquisition, catalogs, migration and quality checks.
+  - path: tests/data_systems/data/
+    purpose: Tests engineering data catalog and migration behavior.
+  - path: tests/data_systems/data_procurement/
+    purpose: Checks metocean procurement adapters with recorded response structures and synthetic data.
+  - path: tests/data_systems/data_quality/
+    purpose: Tests how data completeness requirements are enforced.
+  - path: tests/data_systems/data_scraping/
+    purpose: Checks retrieval and extraction of equipment data from manufacturer pages and PDF documents.
+  - path: tests/data_systems/fixtures/
+    purpose: Supplies a bathymetric grid subset and its provenance record.
+  - path: tests/docs/
+    purpose: Checks that documented examples, package references and runbooks match their implementation.
+  - path: tests/domains/
+    purpose: Supplies shared pytest configuration and fixtures for domain module tests.
+  - path: tests/drilling_riser/
+    purpose: Tests drilling-riser assembly, global response and postprocessing.
+  - path: tests/drilling_riser/fixtures/
+    purpose: Provides drilling-riser component tables, drift-off and drive-off cases and reference records.
+  - path: tests/drilling_riser/global_model/
+    purpose: Tests global drilling-riser model setup, campaign parameters and response calculations.
+  - path: tests/drilling_riser/postprocess/
+    purpose: Tests extraction, aggregation and evaluation of drilling-riser response channels.
+  - path: tests/drilling_riser/stackup_drawing/
+    purpose: Tests reconciliation of riser stackup drawings with their component specifications.
+  - path: tests/drilling_riser/stackup_static_weights/
+    purpose: Tests component weights, tension and capacity in static drilling-riser stackups.
+  - path: tests/engineering_validation/
+    purpose: Groups engineering validation cases and their calculation reports.
+  - path: tests/engineering_validation/pipe_sizing/
+    purpose: Checks pipe sizing formulas and design-code cases and records the validation results.
+  - path: tests/fatigue/
+    purpose: Tests fatigue damage calculations, design curves and references for fatigue methods.
+  - path: tests/field_development/
+    purpose: Checks field concept selection, architecture, cost models and related interfaces.
+  - path: tests/fire_safety/
+    purpose: Tests foam-system sizing and its firefighting criteria library.
+  - path: tests/fixtures/
+    purpose: Collects reusable engineering test inputs, recorded outputs and reference values.
+  - path: tests/fixtures/cathodic_protection/
+    purpose: Supplies YAML inputs for cathodic protection workflows across several offshore asset types.
+  - path: tests/fixtures/geotechnical/
+    purpose: Provides worked slope-stability spreadsheets with source and license records.
+  - path: tests/fixtures/orcaflex/
+    purpose: Supplies OrcaFlex overbend and sagbend model files for pipelay tests.
+  - path: tests/fixtures/reporting/
+    purpose: Supplies result data, report metadata and HTML snapshots for rendering tests.
+  - path: tests/fixtures/solver/
+    purpose: Pairs native hydrodynamic solver results with spreadsheet references for comparison.
+  - path: tests/fixtures/test_vectors/
+    purpose: Provides expected numerical values and inputs for engineering calculation tests.
+  - path: tests/floating_wind/
+    purpose: Tests floating wind turbine concepts, floater models and economic workflows.
+  - path: tests/geotechnical/
+    purpose: Checks soil, slope and foundation calculations against fixtures and solver benchmarks.
+  - path: tests/geotechnical/slope_input_labels/
+    purpose: Checks slope input labels and spreadsheet formula evidence against reference fixtures.
+  - path: tests/geotechnical/tabulated_py_curves/
+    purpose: Tests tabulated soil load–displacement curves and their input validation.
+  - path: tests/gis/
+    purpose: Tests coordinate transformations, spatial features and geographic data export.
+  - path: tests/governance/
+    purpose: Checks the retirement of repository identifier gates.
+  - path: tests/hydrodynamics/
+    purpose: Tests hydrodynamic model preparation, vessel response, berthing and environmental loads.
+  - path: tests/hydrodynamics/aqwa/
+    purpose: Tests AQWA model formats, result parsing and command-line integration.
+  - path: tests/hydrodynamics/bemrosetta/
+    purpose: Checks BEMRosetta format handling with sample meshes and hydrodynamic results.
+  - path: tests/hydrodynamics/berth_mooring/
+    purpose: Tests the berth-mooring workflow and its reports.
+  - path: tests/hydrodynamics/berthing_energy/
+    purpose: Tests berthing energy calculations against example fender data.
+  - path: tests/hydrodynamics/capytaine/
+    purpose: Tests Capytaine benchmark cases, diffraction model setup and export.
+  - path: tests/hydrodynamics/diffraction/
+    purpose: Checks diffraction benchmarks against stored reference cases and expected results.
+  - path: tests/hydrodynamics/fender_design/
+    purpose: Tests fender selection methods, coefficient bases, catalog import and parameter sweeps.
+  - path: tests/hydrodynamics/hull_library/
+    purpose: Tests hull geometry generation and exchange between line drawings, surfaces and export files.
+  - path: tests/hydrodynamics/parametric_hull_analysis/
+    purpose: Tests hull parameter sweeps, depth effects, forward speed and chart production.
+  - path: tests/hydrodynamics/passing_ship/
+    purpose: Tests passing-ship forces, model configuration and campaign preparation.
+  - path: tests/hydrodynamics/rao_analysis/
+    purpose: Tests analysis and plotting of vessel motion response amplitude operators.
+  - path: tests/hydrodynamics/rao_tabulation/
+    purpose: Tests frequency-based reliability labels for tabulated vessel response data.
+  - path: tests/hydrodynamics/river_currents/
+    purpose: Checks river current profiles and the modeled effects of nearby banks.
+  - path: tests/hydrostatics/
+    purpose: Tests hydrostatic pressure calculations for fluid columns.
+  - path: tests/hygiene/
+    purpose: Checks the format of tracked TODO annotations.
+  - path: tests/infrastructure/
+    purpose: Tests shared application services, numerical utilities and runtime behavior.
+  - path: tests/infrastructure/common/
+    purpose: Tests shared data and visualization helpers.
+  - path: tests/infrastructure/contracts/
+    purpose: Checks the API contracts of infrastructure components.
+  - path: tests/infrastructure/core/
+    purpose: Tests caching, configuration, database management and provenance tracking.
+  - path: tests/infrastructure/factories/
+    purpose: Supplies shared factories for constructing simulation test data.
+  - path: tests/infrastructure/installation/
+    purpose: Checks the structure of installation workflow results using a mocked engine.
+  - path: tests/infrastructure/performance/
+    purpose: Runs benchmarks and load tests against recorded performance baselines.
+  - path: tests/infrastructure/property/
+    purpose: Checks mathematical and state-machine properties over generated input cases.
+  - path: tests/infrastructure/security/
+    purpose: Tests input validation and defenses against injection in shared infrastructure.
+  - path: tests/infrastructure/unit/
+    purpose: Checks solver base classes and utilities for engineering calculations and data access.
+  - path: tests/infrastructure/utils/
+    purpose: Tests shared helper functions and parallel benchmark utilities.
+  - path: tests/infrastructure/validation/
+    purpose: Checks validation pipeline composition, severity filters and reports.
+  - path: tests/installation/
+    purpose: Tests installation pamphlets and pipe installation screening calculations.
+  - path: tests/integration/
+    purpose: Checks CAD geometry round trips through FreeCAD.
+  - path: tests/legal/
+    purpose: Tests handling of private identifiers and paths in repository and publication tooling.
+  - path: tests/lifting_lug/
+    purpose: Tests lifting-lug mechanics, assessment boundaries and report generation.
+  - path: tests/maintenance/
+    purpose: Checks archive candidate selection, archive handling and issue update utilities.
+  - path: tests/marine_ops/
+    purpose: Tests marine installation, production, vessel and operational analysis workflows.
+  - path: tests/marine_ops/artificial_lift/
+    purpose: Tests artificial lift diagnostics, rod-pump behavior and dynamometer card benchmarks.
+  - path: tests/marine_ops/fowt_quasi_static/
+    purpose: Tests geometry, mooring, dependencies and reporting in the quasi-static floating wind workflow.
+  - path: tests/marine_ops/installation/
+    purpose: Tests marine lifting and installation decisions, vessel motions and load distribution.
+  - path: tests/marine_ops/marine_analysis/
+    purpose: Checks marine analysis charts, vessel response quality and visualization imports.
+  - path: tests/marine_ops/marine_engineering/
+    purpose: Tests marine engineering calculations including static catenary solutions.
+  - path: tests/marine_ops/reservoir/
+    purpose: Tests the reservoir modeling interface used by marine operations.
+  - path: tests/marine_ops/vessel_db/
+    purpose: Checks vessel capability records, confidence and operational screening decisions.
+  - path: tests/materials/
+    purpose: Tests material grades, pipe properties and fitness-for-service material lookups.
+  - path: tests/metocean/
+    purpose: Tests handling of network failures in live meteorological and oceanographic data checks.
+  - path: tests/motion_forecast/
+    purpose: Tests vessel motion forecast conventions, consistency and decision criteria.
+  - path: tests/motion_forecast/fixtures/
+    purpose: Supplies a minimal OrcaFlex response table for motion forecast tests.
+  - path: tests/naming_convention_validation/
+    purpose: Checks sea-state naming conventions used by the integrated fatigue processor.
+  - path: tests/naval_architecture/
+    purpose: Tests hull geometry, vessel sizing, hydrostatics, stability and propulsion calculations.
+  - path: tests/naval_architecture/fixtures/
+    purpose: Supplies an alternative-fuel bulk carrier sizing case.
+  - path: tests/nde/
+    purpose: Tests nondestructive examination calculations and pulse timing.
+  - path: tests/orcaflex/
+    purpose: Checks OrcaFlex domain workflows, model conventions and report generation.
+  - path: tests/orcaflex/fixtures/
+    purpose: Supplies reference report sections and synthetic rope load data for OrcaFlex tests.
+  - path: tests/orcaflex/reporting/
+    purpose: Tests OrcaFlex report sections, shared section logic and rendered outputs.
+  - path: tests/orcawave/
+    purpose: Checks OrcaWave model inputs, audit evidence and calculated hydrodynamic quantities.
+  - path: tests/output/
+    purpose: Holds tracked CLI output decks used by tests.
+  - path: tests/output/test_cli_base/
+    purpose: Holds modular vessel, line and buoy model outputs for CLI generation cases.
+  - path: tests/parametric/
+    purpose: Tests the parametric model catalog, atlases and default model references.
+  - path: tests/parametrics/
+    purpose: Tests parameter sweeps, pilot workflows and their connections to published atlases.
+  - path: tests/performance/
+    purpose: Stores baseline measurements for performance comparisons.
+  - path: tests/pipelay/
+    purpose: Tests pipelay screening inputs, evidence manifests and numerical reference cases.
+  - path: tests/postprocess/
+    purpose: Checks the conversion of result files into multi-sheet workbooks.
+  - path: tests/power/
+    purpose: Tests electrical network analysis, protection, controls and commissioning records.
+  - path: tests/power/analysis/
+    purpose: Tests electrical load-flow calculations against reference cases.
+  - path: tests/power/commissioning/
+    purpose: Checks commissioning test sequence generation, result validation and export.
+  - path: tests/power/datacenter/
+    purpose: Tests data center power topology, model inputs and examples.
+  - path: tests/power/microgrid/
+    purpose: Tests battery control, island detection and energy management for microgrids.
+  - path: tests/power/protection/
+    purpose: Tests protective relay coordination.
+  - path: tests/power/protocols/
+    purpose: Tests IEC 61850 GOOSE messaging.
+  - path: tests/process_diagrams/
+    purpose: Tests geometry, sheet layout and tagging in process diagrams.
+  - path: tests/process_piping/
+    purpose: Tests pressure design, bolting and line sizing calculations.
+  - path: tests/production_chemistry/
+    purpose: Tests mineral-scale saturation index calculations.
+  - path: tests/production_engineering/
+    purpose: Tests well inflow models, production inputs and reported reference values.
+  - path: tests/production_engineering/fixtures/
+    purpose: Supplies published inflow performance reference values for well model checks.
+  - path: tests/provider_data/
+    purpose: Tests equipment specification loading, companion file discovery and source provenance.
+  - path: tests/rainflow_comparison_results/
+    purpose: Stores a plot and table comparing rainflow cycle-counting results.
+  - path: tests/repo_structure/
+    purpose: Checks repository layout, naming constraints and retirement of generated artifacts.
+  - path: tests/report_evals/
+    purpose: Tests report evaluation contracts, comparison rules and run records.
+  - path: tests/report_pack/
+    purpose: Tests the assembly of engineering workflow results into report packs.
+  - path: tests/report_pack/golden/
+    purpose: Stores the expected HTML results section for report pack comparisons.
+  - path: tests/reporting/
+    purpose: Tests report rendering, adapters and generated sections against reference documents.
+  - path: tests/reporting/fixtures/
+    purpose: Supplies an independent vessel seakeeping calculation for report checks.
+  - path: tests/reporting/golden/
+    purpose: Stores reference HTML reports for comparison with generated output.
+  - path: tests/reservoir/
+    purpose: Tests stratigraphy and reservoir volume calculations.
+  - path: tests/residual/
+    purpose: Tests numerical residual correction and error measurement.
+  - path: tests/riser_bom/
+    purpose: Tests riser bill-of-materials inputs, configuration adapters and cost calculations.
+  - path: tests/riser_capability/
+    purpose: Checks the riser database register, inventory and worked riser configurations.
+  - path: tests/riser_configuration_screen/
+    purpose: Tests the static riser configuration screening workflow.
+  - path: tests/riser_database/
+    purpose: Checks riser records, engineering factors, code editions and citations.
+  - path: tests/riser_fatigue/
+    purpose: Tests riser fatigue screening, input handling, design factors and reporting.
+  - path: tests/riser_results/
+    purpose: Tests solver-independent riser result exchange and native result handling.
+  - path: tests/riser_study/
+    purpose: Compares riser wall sizing calculations with a fixed reference matrix.
+  - path: tests/scripts/
+    purpose: Tests repository utilities for data processing, maintenance and engineering automation.
+  - path: tests/scripts/artificial_lift/
+    purpose: Checks extraction of artificial lift reference catalogs.
+  - path: tests/scripts/fixtures/
+    purpose: Supplies coverage and collection records for testing repository scripts.
+  - path: tests/scripts/hull_library/
+    purpose: Checks hull abstractions, CAD conversion probes and source manifests.
+  - path: tests/scripts/tools/
+    purpose: Tests the script that builds LibreDWG.
+  - path: tests/security/
+    purpose: Checks regressions addressed by repository security remediation.
+  - path: tests/seismic/
+    purpose: Tests earthquake record readers, baseline corrections and seismic response calculations.
+  - path: tests/seismic/fixtures/
+    purpose: Provides sample one- and two-column acceleration records for reader tests.
+  - path: tests/signal_processing/
+    purpose: Tests signal processing, spectral calculations and time-series workflows.
+  - path: tests/signal_processing/signal_analysis/
+    purpose: Checks spectral calculations, inverse transforms and fatigue analysis against test signals.
+  - path: tests/signal_processing/time_series/
+    purpose: Checks windowing, frequency components and discrete transforms of sampled time series.
+  - path: tests/solver/
+    purpose: Exercises end-to-end solver workflows, including licensed diffraction runs.
+  - path: tests/solvers/
+    purpose: Tests individual solver adapters and their shared benchmarking and execution tools.
+  - path: tests/solvers/benchmark/
+    purpose: Tests solver benchmark case selection, execution, receipts and reporting.
+  - path: tests/solvers/blender_automation/
+    purpose: Tests Blender batch processing, CAD imports and geometry calculations.
+  - path: tests/solvers/calculix/
+    purpose: Tests CalculiX model generation, beam connectivity and native solution results.
+  - path: tests/solvers/fea/
+    purpose: Supplies YAML test cases for structural integrity, catenaries, drilling, mooring and pipelay.
+  - path: tests/solvers/ghs/
+    purpose: Tests GHS result comparison, qualification boundaries and evidence requirements.
+  - path: tests/solvers/gmsh_meshing/
+    purpose: Tests mesh generation and conversion for component and tank geometries with Gmsh.
+  - path: tests/solvers/mystran/
+    purpose: Tests MYSTRAN model inputs and native results against stored solver fixtures.
+  - path: tests/solvers/openfoam/
+    purpose: Tests OpenFOAM case setup, wave damping and tracking of run artifacts.
+  - path: tests/solvers/orcaflex/
+    purpose: Tests OrcaFlex solver integration, mooring case preparation and analysis scripts.
+  - path: tests/solvers/orcawave/
+    purpose: Checks OrcaWave diffraction setup, pack validation and solver startup.
+  - path: tests/solvers/smoke/
+    purpose: Exercises native solver launch and result readback with small test models.
+  - path: tests/specialized/
+    purpose: Tests specialist engineering tools, command-line workflows and supporting applications.
+  - path: tests/specialized/cathodic_protection/
+    purpose: Tests specialist cathodic protection calculations for ships and offshore structures.
+  - path: tests/specialized/cli/
+    purpose: Checks command-line entry points for riser, diffraction, hydrodynamics and pipe design workflows.
+  - path: tests/specialized/code_dnvrph103/
+    purpose: Checks DNV-RP-H103 workflows for circular and rectangular sections.
+  - path: tests/specialized/custom/
+    purpose: Tests the custom pipe sizing implementation.
+  - path: tests/specialized/digitalmarketing/
+    purpose: Tests digital marketing and search engine analysis using sample configurations.
+  - path: tests/specialized/gis/
+    purpose: Checks GIS coordinate transformations, map data formats and Blender integration.
+  - path: tests/specialized/rigging/
+    purpose: Tests rigging component lookup, fractional-inch dimensions and load statics.
+  - path: tests/specialized/ship_design/
+    purpose: Checks ship design interfaces for hydrodynamic analysis and combined fatigue processing.
+  - path: tests/specialized/umbilical_analysis/
+    purpose: Tests umbilical installation analysis and line property calculations.
+  - path: tests/specs/
+    purpose: Checks engineering result and module manifest schemas.
+  - path: tests/structural/
+    purpose: Tests structural stress, fatigue, buckling and component capacity calculations.
+  - path: tests/structural/analysis/
+    purpose: Tests structural design calculations, including code-specific wall thickness and combined loading.
+  - path: tests/structural/fatigue/
+    purpose: Checks design curves, damage accumulation, migration and fatigue reporting.
+  - path: tests/structural/fatigue_analysis/
+    purpose: Tests fatigue analyses driven by stress-life curves, time histories and counted cycles.
+  - path: tests/structural/fatigue_apps/
+    purpose: Checks load scaling and conversion of tension into stress for fatigue applications.
+  - path: tests/structural/fe/
+    purpose: Tests finite element workflows for elastic buckling and equivalent stress.
+  - path: tests/structural/jacket_topside/
+    purpose: Tests jacket and topside member screening, tubular geometry and load scaling.
+  - path: tests/structural/offshore_resilience/
+    purpose: Tests offshore structural health, installation readiness and lifecycle planning.
+  - path: tests/structural/ovality/
+    purpose: Checks the pipe ovality workflow.
+  - path: tests/structural/parachute/
+    purpose: Tests parachute canopy loads, frame geometry and structural response.
+  - path: tests/structural/pipe_capacity/
+    purpose: Checks pipe capacity calculations across design-code and custom methods.
+  - path: tests/structural/pipe_cross_section/
+    purpose: Tests pipe cross-section properties and buoyancy for layered pipes.
+  - path: tests/structural/plate_capacity/
+    purpose: Tests plate buckling and compressive capacity calculations.
+  - path: tests/structural/stress/
+    purpose: Checks equivalent stress, nonlinear stress–strain behavior and related workflows.
+  - path: tests/structural/structural_analysis/
+    purpose: Tests buckling, connections and strength of structural members, panels and grillages.
+  - path: tests/subsea/
+    purpose: Tests subsea equipment design, riser and pipeline response, mooring and intervention workflows.
+  - path: tests/subsea/capping_stack/
+    purpose: Tests subsea capping stack performance and containment flow calculations.
+  - path: tests/subsea/catenary_riser/
+    purpose: Tests catenary riser geometry, equilibrium and workflow outputs.
+  - path: tests/subsea/connectors/
+    purpose: Tests subsea connector design, fatigue integration and OrcaFlex export.
+  - path: tests/subsea/control_systems/
+    purpose: Tests subsea control system architecture.
+  - path: tests/subsea/cross_sections/
+    purpose: Checks layered cross-section geometry, stiffness, schemas and reports.
+  - path: tests/subsea/field/
+    purpose: Tests steady-flow handoffs between subsea production trees and field components.
+  - path: tests/subsea/flexcom_tools/
+    purpose: Tests creation of steel catenary riser models for Flexcom.
+  - path: tests/subsea/flexible_pipes/
+    purpose: Tests flexible pipe geometry, configuration comparisons and mechanical calculations.
+  - path: tests/subsea/hipps/
+    purpose: Tests high-integrity pressure protection hydraulics, overpressure, valve sizing and integrity calculations.
+  - path: tests/subsea/jumper_tools/
+    purpose: Tests subsea jumper analysis tools and their workbook formulas.
+  - path: tests/subsea/manifolds/
+    purpose: Tests subsea manifold design checks, flow aggregation and pressure balance.
+  - path: tests/subsea/mooring_analysis/
+    purpose: Tests mooring geometry, DYNMOOR calculations and command-line workflows.
+  - path: tests/subsea/on_bottom_stability/
+    purpose: Checks seabed pipeline stability calculations and their reference table inputs.
+  - path: tests/subsea/pipeline/
+    purpose: Tests subsea pipeline design and installation checks against applicable codes and examples.
+  - path: tests/subsea/riser/
+    purpose: Checks clearance along riser trajectories.
+  - path: tests/subsea/riser_study/
+    purpose: Tests riser study execution and fatigue result exchange.
+  - path: tests/subsea/rov/
+    purpose: Checks remotely operated vehicle intervention sequencing, interfaces, tools and sea-state limits.
+  - path: tests/subsea/structural_checks/
+    purpose: Checks subsea structural calculations using API RP 2A.
+  - path: tests/subsea/survey_qa/
+    purpose: Tests survey patch-test corrections and timing estimates against synthetic swath geometry.
+  - path: tests/subsea/trees/
+    purpose: Tests subsea production tree flow capacity, pressure control and design checks.
+  - path: tests/subsea/umbilicals/
+    purpose: Tests subsea umbilical sizing, lay analysis and chemical delivery flow.
+  - path: tests/subsea/vertical_riser/
+    purpose: Checks component units and suspended tension in vertical risers.
+  - path: tests/subsea/viv_analysis/
+    purpose: Tests vortex-induced vibration calculations, frequency limits and evidence checks.
+  - path: tests/subsea/viv_tools/
+    purpose: Tests mode identification for SHEAR7 vibration analysis.
+  - path: tests/technical_safety/
+    purpose: Tests accidental load calculations, fire heat flux and associated screening criteria.
+  - path: tests/test_automation/
+    purpose: Implements utilities for discovering, analyzing, repairing and reporting on tests.
+  - path: tests/test_automation/cli/
+    purpose: Provides command-line access to the test automation tools.
+  - path: tests/test_automation/core/
+    purpose: Implements test discovery, analysis, comparison and automated repairs.
+  - path: tests/test_automation/coverage/
+    purpose: Tracks coverage for the test automation framework.
+  - path: tests/test_automation/fixtures/
+    purpose: Supplies engineering fixtures for automated test generation and execution.
+  - path: tests/test_automation/integration/
+    purpose: Connects test automation to continuous integration jobs.
+  - path: tests/test_automation/reporting/
+    purpose: Generates reports from test automation results.
+  - path: tests/test_automation/scripts/
+    purpose: Runs batch test repairs and coordinates repair campaigns.
+  - path: tests/test_configs/
+    purpose: Supplies a base YAML configuration for tests.
+  - path: tests/test_data/
+    purpose: Supplies a sample time series in CSV format.
+  - path: tests/test_failure_recovery_temp/
+    purpose: Preserves malformed input and recorded outputs from failed-run recovery exercises.
+  - path: tests/test_failure_recovery_temp/output/
+    purpose: Stores failed-run lists and rerun configurations from recovery tests.
+  - path: tests/test_wall_thickness_codes/
+    purpose: Checks pipe wall thickness and collapse calculations across design codes.
+  - path: tests/tug/
+    purpose: Tests tug performance calculations, fender geometry and towline inputs.
+  - path: tests/uncertainty/
+    purpose: Tests uncertainty sampling, experimental design and propagation through model evaluations.
+  - path: tests/unit/
+    purpose: Collects focused unit checks for hull geometry, hydrodynamics, marine operations and structural calculations.
+  - path: tests/unit/hull_library/
+    purpose: Checks hull catalog coverage and parametric geometry.
+  - path: tests/unit/hydrodynamics/
+    purpose: Tests wave spectra, added resistance and related hydrodynamic calculations in isolation.
+  - path: tests/unit/marine_ops/
+    purpose: Tests mooring resilience screening independently of other marine workflows.
+  - path: tests/unit/structural/
+    purpose: Checks offshore container, sling geometry and structural calculations.
+  - path: tests/validation/
+    purpose: Checks riser configuration semantics, length and monitoring bindings.
+  - path: tests/verification/
+    purpose: Checks the verification script for OrcaFlex campaigns.
+  - path: tests/visualization/
+    purpose: Tests CAD design tables, vessel geometry and visualization tools.
+  - path: tests/visualization/design_tools/
+    purpose: Tests design tables, CAD geometry, finite element integration and hull hydrostatics.
+  - path: tests/web/
+    purpose: Tests authentication examples, web application routes and engineering result handling.
+  - path: tests/well/
+    purpose: Tests well barriers, drilling, intervention, completion and tubular design.
+  - path: tests/well/barriers/
+    purpose: Checks well barrier leak paths, permanent barriers and worked probability examples.
+  - path: tests/well/completion/
+    purpose: Tests pump-down calculations and transient responses for well completion.
+  - path: tests/well/drilling/
+    purpose: Tests drilling hydraulics, cementing, dysfunction detection and penetration rate models.
+  - path: tests/well/intervention/
+    purpose: Tests well intervention screening.
+  - path: tests/well/tubulars/
+    purpose: Tests casing design, tubular stress, capacity and design envelopes.
+  - path: tests/well_access/
+    purpose: Tests well-access screening and calibration data handling.
+  - path: tests/workflow_api/
+    purpose: Checks the deterministic workflow API against expected results and provenance contracts.
+  - path: tests/workflow_api/goldens/
+    purpose: Supplies expected JSON results for deterministic engineering workflow comparisons.
+  - path: tests/workflows/
+    purpose: Tests workflow automation, model generation and solver integration.
+  - path: tests/workflows/agents/
+    purpose: Checks the OrcaFlex agent template library.
+  - path: tests/workflows/automation/
+    purpose: Tests scanning, analysis and minimization of reference folders used for workflow automation.
+  - path: tests/workflows/integration/
+    purpose: Checks interactions between workflow components and end-to-end execution.
+  - path: tests/workflows/orcawave/
+    purpose: Tests OrcaWave automation connections and end-to-end workflow integration.
+  - path: tests/workflows/standalone/
+    purpose: Tests the standalone document-to-Markdown converter.
+  - path: tests/workflows/workflow_automation/
+    purpose: Checks workflow callbacks, caching, raw data access and continuous integration behavior.
