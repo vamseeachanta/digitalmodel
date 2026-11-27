@@ -73,7 +73,7 @@ def test_pass_verdict_exit_status_is_zero() -> None:
 
 
 def test_completed_run_with_no_artifacts_is_refusal() -> None:
-    """D10: reproduces ``lr_acma_ff132001b7ad``.
+    """D10: reproduces ``lr_client-4e09_ff132001b7ad``.
 
     That run reported ``returncode: 0`` with no ``returned_files`` key at all.
     A run that produced nothing must not pass.

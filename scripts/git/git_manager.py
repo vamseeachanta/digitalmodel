@@ -30,7 +30,7 @@ class GitManager:
     def get_all_repos(self) -> List[str]:
         """Get list of all repository directories"""
         repos = [
-            "doris", "aceengineer-admin", "aceengineer-website", 
+            "aceengineer-admin", "aceengineer-website",
             "aceengineercode", "achantas-data", "achantas-media",
             "<project-archive>", "ai-native-traditional-eng", "assethold",
             "assetutilities", "client_projects", "digitalmodel",
@@ -39,7 +39,25 @@ class GitManager:
             "sabithaandkrishnaestates", "contractor", "sd-work",
             "seanation", "teamresumes", "worldenergydata"
         ]
-        return [r for r in repos if (self.base_path / r).exists()]
+        # Private checkout names come from ACE_PRIVATE_REPOS (CSV), else one
+        # per line in ACE_PRIVATE_CONFIG (default ~/.config/ace/private-repos.txt).
+        # A missing file adds no checkouts.
+        if configured := os.environ.get("ACE_PRIVATE_REPOS"):
+            private = configured.split(",")
+        else:
+            config = Path(
+                os.environ.get("ACE_PRIVATE_CONFIG")
+                or Path.home() / ".config" / "ace" / "private-repos.txt"
+            )
+            try:
+                private = config.read_text(encoding="utf-8").splitlines()
+            except FileNotFoundError:
+                private = []
+        for entry in private:
+            name = entry.strip()
+            if name and name not in (".", "..") and Path(name).name == name and "\\" not in name:
+                repos.append(name)
+        return [r for r in dict.fromkeys(repos) if (self.base_path / r).is_dir()]
     
     def run_command(self, cmd: str, repo_path: Path) -> Tuple[bool, str]:
         """Run a shell command in the given repository"""

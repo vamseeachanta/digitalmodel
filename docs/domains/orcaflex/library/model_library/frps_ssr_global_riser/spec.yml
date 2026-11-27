@@ -11,7 +11,7 @@
 # ---------------------------------------------------------------------------
 # WHAT THIS IS
 #   A parameterized OrcaFlex model-input definition for the global dynamic
-#   analysis the FDAS screening (#3-#7) concluded it needs. The screens fail
+#   analysis the client-381d screening (#3-#7) concluded it needs. The screens fail
 #   every conservative hand-check; the verdict pivots on inputs the screens
 #   cannot manufacture (restraint efficiency, demand definition, section
 #   basis). This file captures the model geometry and a parametric matrix so
@@ -44,15 +44,15 @@
 
 metadata:
   name: "frps_ssr_global_riser"
-  description: "Free-standing dry-tree riser on SSR/wellhead landing - global dynamic model input scaffold (FDAS #2)"
+  description: "Free-standing dry-tree riser on SSR/wellhead landing - global dynamic model input scaffold (client-381d #2)"
   structure: riser                              # riser | pipeline | mooring | installation | vessel
   operation: in-place                           # in-place | installation | production | drilling
-  project: "FrPS SSR Global Riser (FDAS)"
+  project: "FrPS SSR Global Riser (client-381d)"
   version: "0.1"
   provenance:
-    screening_campaign: "llm-wiki-fdas #3-#7"
-    global_model_scope: "llm-wiki-fdas #2"
-    basis_page: "llm-wiki-fdas pages/frps-fsr-global-riser-model.md (PR #9, unmerged)"
+    screening_campaign: "client-381d project wiki, #3-#7"
+    global_model_scope: "client-381d project wiki, #2"
+    basis_page: "client-381d project wiki, pages/frps-fsr-global-riser-model.md (PR #9, unmerged)"
     status: "input-scaffold-not-solved"
   open_inputs:                                  # MUST be resolved before build
     - section_basis                             # 82.51 vs ~97 in^2 (see parameters.yml)
@@ -179,7 +179,7 @@ generic:
       Cdn: 1.2
       Can: 1.0
       pretension_note: >-
-        BASELINE per FDAS #2 (Jun-4 Chuck<->Roy): 7-in tubing ALWAYS installed
+        BASELINE per client-381d #2 (Jun-4 Chuck<->Roy): 7-in tubing ALWAYS installed
         and pre-tensioned when tree is on the SSR. Sensitivity case = no tubing
         structural contribution (parameters.yml -> sensitivity.no_tubing).
       basis_note: "7-in WT 0.50->0.75 in is the section_basis swing (82.51 vs ~97 in^2)"
@@ -208,7 +208,7 @@ generic:
       IncludeTorsion: true
       TopEnd: End A                              # top at SSR / surface wellhead landing
       Representation: Finite element
-      # Top boundary (FDAS #2, Jun-4): axially sliding on UHMW pads (mu<0.1)
+      # Top boundary (client-381d #2, Jun-4): axially sliding on UHMW pads (mu<0.1)
       # but RESTRAINED AGAINST ROTATION (no articulation). Model as guided /
       # rotation-fixed with stroke limits at the set-down stops.
       top_boundary_note: "axially sliding (mu<0.1), rotation-fixed; stroke-limited at stops"
@@ -256,7 +256,7 @@ generic:
     properties:
       # Top landing: axially free (sliding), rotation-fixed (per #2). Heave/
       # stroke DOF free between stops; lateral + rotational locked.
-      landing_note: "axial-slide free (stroke-limited), rotation-fixed per FDAS #2"
+      landing_note: "axial-slide free (stroke-limited), rotation-fixed per client-381d #2"
       InFrameInitialPosition: [0, 0, 0]
 
 # ---------------------------------------------------------------------------

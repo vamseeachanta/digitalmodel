@@ -2,7 +2,7 @@
 
 > **Status: INPUT SCAFFOLD — not solved, no results.**
 > This directory contains the *model-input definition* for the global dynamic
-> analysis the FDAS riser-buckling screening campaign concluded it needs. It is
+> analysis identified by the client-381d riser-buckling screening campaign. It is
 > **not a run** and produces **no engineering results**. A licensed solver
 > (OrcaFlex / Flexcom / Abaqus-Aqua) is required to execute it and is almost
 > certainly **not installed or licensed** in the environment where this was
@@ -11,11 +11,11 @@
 ## What this model is
 
 A parameterized OrcaFlex model of a **free-standing, dry-tree riser** landed on
-a surface SSR / wellhead. It is the engineering follow-on to the FDAS screening
-campaign (`github.com/vamseeachanta/llm-wiki-fdas` issues **#2–#7**), whose
+a surface SSR / wellhead. It is the engineering follow-on to the client-381d screening
+campaign (client-381d project wiki, issues **#2–#7**), whose
 conservative hand-screens (unrestrained Euler #2/#3, survival-pushdown stress
 #4, tendon tension #7) all fail — and whose verdict pivots on inputs the screens
-cannot manufacture. The global-model scope is **FDAS issue #2**; this scaffold
+cannot manufacture. The global-model scope is **client-381d issue #2**; this scaffold
 mirrors that scope as reviewable YAML.
 
 ### Geometry
@@ -25,7 +25,7 @@ mirrors that scope as reviewable YAML.
 - Set-down stops, surface wellhead landing.
 - Water depths **6,000 / 8,000 / 10,000 ft** (1828.8 / 2438.4 / 3048.0 m).
 
-### Top boundary (per FDAS #2, Jun-4 Chuck↔Roy exchange)
+### Top boundary (per client-381d #2, Jun-4 Chuck↔Roy exchange)
 Axially sliding on UHMW pads (μ < 0.1) but **restrained against rotation** (no
 articulation) — modeled as guided / rotation-fixed with stroke limits at the
 set-down stops. Baseline assumes the **7-in tubing is always installed and
@@ -50,13 +50,13 @@ Both are unresolved in the screening campaign and are carried as explicit
 **variants** in `inputs/parameters.yml` — they are deliberate engineering
 decisions, not values to guess:
 
-1. **Section basis** (`section_basis`, FDAS #3) —
+1. **Section basis** (`section_basis`, client-381d #3) —
    **82.51 in²** (two-casing, tubing not structural) **vs ~97 in²**
    (three-string, 7-in WT 0.50→0.75 in). This sets the buckling demand the
    screens flagged. Pick one variant; derive EA/EI for the concentric stack
    and write it into `spec.yml` line types before build. *Do not average.*
 
-2. **Roy demand / set-down definition** (`demand.setdown_definition`, FDAS #4/#7) —
+2. **Roy demand / set-down definition** (`demand.setdown_definition`, client-381d #4/#7) —
    Roy's "5–10 ft pushdown": does it **net the slip-joint stroke**?
    Variants `gross_pushdown` vs `net_of_stroke` bound it. The preferred
    resolution per #2 is to derive imposed set-down + heave from the **coupled
@@ -116,8 +116,8 @@ This follows the same convention as the other entries under
 
 ## Provenance
 
-- Screening campaign: `llm-wiki-fdas` #3–#7.
-- Global-model scope: `llm-wiki-fdas` #2.
-- Basis page: `llm-wiki-fdas pages/frps-fsr-global-riser-model.md` (PR #9, unmerged).
+- Screening campaign: client-381d project wiki, issues #3–#7.
+- Global-model scope: client-381d project wiki, issue #2.
+- Basis page: client-381d project wiki, `pages/frps-fsr-global-riser-model.md` (PR #9, unmerged).
 - No raw vendor files are committed; off-repo raw data should be referenced by
   sha256 pointer per the house method.

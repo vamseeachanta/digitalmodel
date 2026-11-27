@@ -11,7 +11,7 @@ Issue #1631, D5/D5a/D6. Five OrcaFlex surfaces infer mock mode from
 
 plus the surface the issue's three-file list omits entirely
 (``orcaflex_utilities`` / ``opp.post_process_router``), which is the path
-behind ``lr_acma_ff132001b7ad`` -- the queued run that returned no artifacts
+behind ``lr_client-4e09_ff132001b7ad`` -- the queued run that returned no artifacts
 and still reported ``returncode: 0``.
 
 Every test here patches the availability flag explicitly rather than relying on
@@ -266,7 +266,7 @@ def test_batch_processor_mock_artifact_name_carries_the_mock_infix(
 def test_strength_post_refuses_without_license() -> None:
     """``opp.post_process_router:172-175`` prints and returns ``cfg``.
 
-    This is the path behind ``lr_acma_ff132001b7ad``: the run produced no
+    This is the path behind ``lr_client-4e09_ff132001b7ad``: the run produced no
     artifacts, and the result JSON has no ``returned_files`` key at all, yet
     it recorded ``returncode: 0``. None of the three modules the issue names
     is on this call path.

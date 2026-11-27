@@ -46,7 +46,7 @@ BASIS_LABEL = {
     "barge": "Generic 100 m barge parametric RAO (initial proxy — pessimistic)",
     "drillship": (
         "Ship-shaped (drillship) parametric RAO — adapted basis, justified by "
-        "completed FPSO diffraction run lr_acma_8de9c018adbd"
+        "completed FPSO diffraction run lr_client-4e09_8de9c018adbd"
     ),
     "fpso": "Ship-shaped (FPSO 250 m) parametric RAO — adapted basis",
     "vessel": "Vessel-specific HLV-A RAO (OrcaWave diffraction)",

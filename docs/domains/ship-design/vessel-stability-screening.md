@@ -172,9 +172,9 @@ flooding case:
   thresholds without GZ data rejected.
 
 A GHS golden fixture (run file + output listing) is the planned
-cross-check once the extraction lane lands (llm-wiki-acma#227/#262);
+cross-check once the extraction lane lands (client-4e09 project wiki, issues #227 and #262);
 geometry-based flooding and T&S-booklet assembly via `report_pack` are
-later slices (llm-wiki-acma#239).
+later slices (client-4e09 project wiki, issue #239).
 
 ## Config
 

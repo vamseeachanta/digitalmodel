@@ -40,8 +40,8 @@ def _orcawave_dir(tmp_path: Path) -> Path:
 def test_workbook_has_expected_tabs_and_keeps_heavy_local(tmp_path, builder):
     out = tmp_path / "report.xlsx"
     result_json = tmp_path / "result.json"
-    result_json.write_text(json.dumps({"run_id": "lr_acma_x", "state": "finished",
-                                        "returncode": 0, "audit": {"scope": "acma"}}))
+    result_json.write_text(json.dumps({"run_id": "lr_client-4e09_x", "state": "finished",
+                                        "returncode": 0, "audit": {"scope": "client-4e09"}}))
 
     builder.main([str(_orcawave_dir(tmp_path)),
                   "--result-json", str(result_json), "--out", str(out)])

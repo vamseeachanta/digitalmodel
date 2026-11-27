@@ -15,7 +15,7 @@
 
 ## 0. Motivation
 
-The ACMA ingest/extraction pipeline validated the poppler / office / `.wbpz` paths, but **tesseract failed on scanned/raster PDFs**. Scanned documents and raster engineering pages are therefore a hard gap in the document-adapter layer (#1014) and, downstream, the CAD adapter package (#1016). DeepSeek-OCR — and specifically the MIT-licensed [`baidu/Unlimited-OCR`](https://github.com/baidu/Unlimited-OCR) wrapper around it — is a layout-aware, multi-page, transformer-based candidate to fill that gap.
+The client-4e09 ingest/extraction pipeline validated the poppler / office / `.wbpz` paths, but **tesseract failed on scanned/raster PDFs**. Scanned documents and raster engineering pages are therefore a hard gap in the document-adapter layer (#1014) and, downstream, the CAD adapter package (#1016). DeepSeek-OCR — and specifically the MIT-licensed [`baidu/Unlimited-OCR`](https://github.com/baidu/Unlimited-OCR) wrapper around it — is a layout-aware, multi-page, transformer-based candidate to fill that gap.
 
 This plan defines: hardware needed, install steps, a benchmark protocol against the exact files tesseract failed on, a decision gate, a thin adapter sketch, and risks.
 
@@ -136,10 +136,10 @@ Client = OpenAI-compatible `POST http://127.0.0.1:10000/v1/chat/completions` wit
 
 ### 3.1 Test set (the exact files tesseract failed on)
 
-The corpus is the **ACMA ingest/extraction campaign op-set** — the scanned/raster PDFs that the validated tesseract step failed to extract, plus a few engineering drawings that contain text. These live on the **ace share** (op-set staging used by the ACMA campaign). `[to confirm path on box — do not commit the raw share path; digitalmodel is PUBLIC]`
+The corpus is the **client-4e09 ingest/extraction campaign op-set** — the scanned/raster PDFs that the validated tesseract step failed to extract, plus a few engineering drawings that contain text. These live on the **ace share** (op-set staging used by the client-4e09 campaign). `[to confirm path on box — do not commit the raw share path; digitalmodel is PUBLIC]`
 
 Construct the evaluation subset:
-1. From the ACMA op-set, select **10–15 representative scanned/raster PDF pages** spanning: dense typed scans, mixed text+table pages, and ≥ 2 engineering drawings with callout/title-block text.
+1. From the client-4e09 op-set, select **10–15 representative scanned/raster PDF pages** spanning: dense typed scans, mixed text+table pages, and ≥ 2 engineering drawings with callout/title-block text.
 2. **Hand-key ground truth** for a smaller **3–5 page** subset (typed text + one table) for CER/WER. Drawings get qualitative scoring only (see 3.3). Keep ground-truth files **off the public repo** (store with the de-identified subset). `[to confirm path]`
 3. Copy the de-identified subset to the GPU box (or cloud GPU).
 
@@ -147,7 +147,7 @@ Construct the evaluation subset:
 
 | Run | Engine | Mode / settings |
 |-----|--------|-----------------|
-| R0 | **tesseract** (baseline) | current ACMA config — reproduce the known failure |
+| R0 | **tesseract** (baseline) | current client-4e09 config — reproduce the known failure |
 | R1 | Unlimited-OCR HF | **base** (`1024/1024`, crop off) |
 | R2 | Unlimited-OCR HF | **gundam** (`1024/640`, crop on) |
 | R3 | Unlimited-OCR HF | multi-page PDF (base, `ngram_window=1024`), `--concurrency 8` |
@@ -231,7 +231,7 @@ def ocr_document(
 1. Resolve §1.4 — find a CUDA GPU (`nvidia-smi` on dev boxes; else rent). **Gate: no GPU → stop, escalate.**
 2. Install env (§2.1) via `uv`; resolve flash-attn/kernels questions. `[to confirm]`
 3. Path A HF smoke test on one README example image.
-4. Stage de-identified ACMA op-set subset + hand-keyed ground truth (§3.1). `[to confirm path]`
+4. Stage de-identified client-4e09 op-set subset + hand-keyed ground truth (§3.1). `[to confirm path]`
 5. Run R0–R3 (and R4 if A passes), capture §3.3 metrics incl. VRAM peak.
 6. Score against §4 gate → post results + recommendation to #1038.
 
@@ -244,5 +244,5 @@ def ocr_document(
 - torch 2.10.0 + CUDA 12.9 wheel availability for the box's driver (§2.1).
 - Whether Unlimited-OCR needs `flash-attn` at runtime (not in its requirements list) (§2.1).
 - SGLang `kernels` pin: `0.9.0` vs `0.11.7` (§2.3).
-- ACMA op-set / ground-truth paths on the ace share (§3.1).
+- client-4e09 op-set / ground-truth paths on the ace share (§3.1).
 - Behavior on 100+ page scanned PDFs past the 32k context (§6.4).

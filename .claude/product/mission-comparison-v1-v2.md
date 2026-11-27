@@ -319,7 +319,7 @@
 
 ### Future Integration Candidates
 - frontierdeepwater - Deepwater riser and mooring analysis (potential module source)
-- doris, contractor - Offshore installation workflows (integration potential)
+- client-c29b, contractor - Offshore installation workflows (integration potential)
 ```
 
 **Improvements:**

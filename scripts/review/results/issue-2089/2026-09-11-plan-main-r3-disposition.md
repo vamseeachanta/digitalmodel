@@ -8,7 +8,7 @@ Main inline r3 resolves Claude's two remaining nits: the operator will manually 
 
 Disposition: the staged plan is suitable for user review. Milestone1 will remain unimplemented until approval; actual solver capture and parser-format implementation will additionally require their stated concrete approvals. No live host, license entitlement or GHS execution is claimed.
 
-Scoped cleanup: expected task-owned plan/index/HTML/reviews only in the isolated worktree; no stashes or top-level partial/tmp files. Canonical digitalmodel pre-existing Finder metadata and .worktrees residue remain preserved. Review temporary directories are removed by context managers. The completed ACMA350 worktree was removed after clean-state and remote-head verification; its source branch remains preserved. Other existing repository/worktree residue is outside this task.
+Scoped cleanup: expected task-owned plan/index/HTML/reviews only in the isolated worktree; no stashes or top-level partial/tmp files. Canonical digitalmodel pre-existing Finder metadata and .worktrees residue remain preserved. Review temporary directories are removed by context managers. The completed client-4e09-350 worktree was removed after clean-state and remote-head verification; its source branch remains preserved. Other existing repository/worktree residue is outside this task.
 
 Final canonical plan SHA256: bbd0bc72328bb62b3f311ade8b476a47235c0b2ce318fd3dc46393fccab43a6c
 

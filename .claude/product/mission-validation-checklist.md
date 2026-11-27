@@ -409,7 +409,7 @@ For each listed capability:
 
 ### Future Integration Candidates
 
-- [ ] **frontierdeepwater, doris, contractor**
+- [ ] **frontierdeepwater, client-c29b, contractor**
   - [ ] Still candidates?
   - [ ] Priority adjusted?
   - [ ] New candidates to add?

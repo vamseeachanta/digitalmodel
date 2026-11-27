@@ -39,7 +39,7 @@ domains_active: 7
 ### Critical Gaps
 
 1. **Knowledge domain entirely nascent** -- All 3 KNOW repos are placeholders (maturity 1), no structured knowledge capture system exists
-2. **50% of repos lack test coverage** -- 12 repos have zero tests; engineering repos doris, contractor, seanation carry delivery risk
+2. **50% of repos lack test coverage** -- 12 repos have zero tests; engineering repos client-c29b, contractor, seanation carry delivery risk
 3. **Weak cross-repo integration** -- assetutilities (shared library) consumed by only 1 of 23 repos; OrcaFlex integration duplicated across digitalmodel, <project-archive>, contractor
 
 ## Full Capability Table
@@ -57,7 +57,7 @@ domains_active: 7
 | **assethold** | FIN | Stock analysis -- insider trading, institutional holders, options, technical indicators | 2 | Yes (pytest) | 6 | -- |
 | **achantas-data** | DATA | Personal/family data management (finance, health, travel, printer setup) | 2 | -- | -- | -- |
 | **client_projects** | BIZ | Client engagement tracking -- energy, pipeline, ML, legacy submodules | 2 | -- | -- | -- |
-| **doris** | ENG | Subsea pipeline design, structural analysis, DNV/API code compliance | 2 | -- | -- | -- |
+| **client-c29b** | ENG | Subsea pipeline design, structural analysis, DNV/API code compliance | 2 | -- | -- | -- |
 | **frontierdeepwater** | ENG | Deepwater exploration project framework, regulatory compliance | 2 | -- | -- | -- |
 | **OGManufacturing** | ENG | AI-powered CAD/CAM for O&G subsea equipment manufacturing | 2 | Basic | 5 | -- |
 | **rock-oil-field** | ENG | Oil field engineering, contract navigation, admin documentation | 2 | Coverage file | Yes | -- |
@@ -75,7 +75,7 @@ domains_active: 7
 
 ### Engineering Analysis (`ENG`)
 
-**Repos**: digitalmodel, <project-archive>, doris, frontierdeepwater, OGManufacturing, rock-oil-field, contractor, seanation, worldenergydata (partial)
+**Repos**: digitalmodel, <project-archive>, client-c29b, frontierdeepwater, OGManufacturing, rock-oil-field, contractor, seanation, worldenergydata (partial)
 
 | Capability Area | Maturity | Lead Repo | Notes |
 |----------------|:--------:|-----------|-------|
@@ -87,7 +87,7 @@ domains_active: 7
 | Mooring design | 3 | digitalmodel | Chain database (R3-R5), router pattern |
 | VIV analysis | 3 | digitalmodel | Vortex-induced vibration assessment |
 | CAD/mesh generation | 3 | digitalmodel | GMSH, FreeCAD automation, BEMRosetta |
-| Subsea pipeline design | 2 | doris | MATLAB/Excel-based, DNV/API codes, no Python impl |
+| Subsea pipeline design | 2 | client-c29b | MATLAB/Excel-based, DNV/API codes, no Python impl |
 | Offshore drilling | 2 | seanation | CT drilling, reel operations, Excel/VBA |
 | Manufacturing automation | 2 | OGManufacturing | AI-powered CAD/CAM concept, partial implementation |
 | Deepwater exploration | 2 | frontierdeepwater | Project framework, empty src/ |
@@ -199,7 +199,7 @@ domains_active: 7
 
 ### At Risk
 
-- **doris, contractor, seanation** -- Active engineering consulting repos with zero tests and no CI/CD; delivery risk for client projects
+- **client-c29b, contractor, seanation** -- Active engineering consulting repos with zero tests and no CI/CD; delivery risk for client projects
 - **6 nascent repos** -- Maintenance overhead with no value delivery; should be archived or activated within 30 days
 
 ## Recommendations
@@ -207,7 +207,7 @@ domains_active: 7
 | # | Priority | Recommendation | Approach | Target |
 |---|----------|---------------|----------|--------|
 | 1 | High | Archive 6 nascent repos or set 30-day activation deadline | Review with stakeholder; archive via `git archive` + README tombstone | 2026-03-15 |
-| 2 | High | Add pytest + CI to doris, contractor, seanation | Use pyproject-starter template; add GitHub Actions ci.yml | 2026-03-31 |
+| 2 | High | Add pytest + CI to client-c29b, contractor, seanation | Use pyproject-starter template; add GitHub Actions ci.yml | 2026-03-31 |
 | 3 | Medium | Extract shared OrcaFlex utilities to assetutilities | Identify common patterns (model loading, post-processing, RAO extraction) | 2026-04-30 |
 | 4 | Medium | Consolidate duplicated skills into workspace-hub shared library | Audit 157 + 38 + 14 + 13 skills for overlap; deduplicate | 2026-04-15 |
 | 5 | Medium | Deploy unified CI/CD pipeline across all active repos | GitHub Actions reusable workflows in workspace-hub/.github/ | 2026-04-30 |

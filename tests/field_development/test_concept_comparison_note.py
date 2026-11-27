@@ -9,6 +9,8 @@ from __future__ import annotations
 
 import pytest
 
+from scripts.legal.check_identifiers import Redactor, load_rules
+
 from digitalmodel.field_development.concept_comparison_note import (
     build_comparison_note,
     render_comparison_note,
@@ -52,11 +54,16 @@ class TestRender:
         assert "paid feed" in md  # rig $/day honesty flag
 
     def test_no_client_names(self, spec):
-        result, md = build_comparison_note(spec)
-        lowered = md.lower()
-        # public-repo hygiene: no FDAS / client identifiers
-        for forbidden in ("fdas", "frontier", "frps "):
-            assert forbidden not in lowered
+        codename = "client-381d"
+        spec.name = codename
+        _, md = build_comparison_note(spec)
+        has_codename = codename in md
+        assert has_codename
+        # Keep a leaking note out of pytest's assertion diff.
+        needs_redaction = Redactor(load_rules()).redact(md) != md
+        assert not needs_redaction, "comparison note contains a denied identifier"
+        for forbidden in ("frontier", "frps "):
+            assert forbidden not in md.lower()
 
     def test_governing_trade_off_section(self, spec):
         result, md = build_comparison_note(spec)

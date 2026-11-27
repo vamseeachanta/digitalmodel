@@ -6,7 +6,7 @@ ecosystem, what schema it uses, and how digitalmodel consumes it.
 ## TL;DR
 
 The real OCIMF MEG3/MEG4 coefficient corpus is **off-repo** at
-`/mnt/ace/acma-codes/OCIMF/` and `/mnt/ace/acma-codes/OCIMF (MEG 4)/`. It is
+`<licensed-codes-root>/OCIMF/` and `<licensed-codes-root>/OCIMF (MEG 4)/`. It is
 NOT in this repository (vendor-licensed standard, correctly routed off-repo).
 Digitized Annex A tables landed in the **private `vamseeachanta/llm-wiki`** repo
 on 2026-05-20 at `wikis/marine-engineering/wiki/datasets/ocimf-meg4-annex-a/`
@@ -45,15 +45,15 @@ Routing rule: [workspace-hub:.claude/rules/codes-standards-data-routing.md §4](
 
 | Artifact | Location | Role |
 |---|---|---|
-| MEG3 (2008) full PDF | `/mnt/ace/acma-codes/OCIMF/OCIMF - 2008 - Mooring Equipment Guidelines.pdf` | Canonical published 3rd-edition standard |
-| MEG4 (2018) full PDF | `/mnt/ace/acma-codes/OCIMF (MEG 4)/Mooring Equipment Guidelines - MEG4.pdf` | Canonical published 4th-edition standard |
-| **Digitized lookup (master)** | **`/mnt/ace/acma-codes/OCIMF/OCIMF Coef.xlsx`** | **17 sheets, 3 data + 14 chart; covers Annex A A5-A19** |
-| Alternative WPD digitization | `/mnt/ace/acma-codes/OCIMF 3rd ed/Digitizer/` | WebPlotDigitizer extraction for A5-A9 only — cross-validation reference |
-| Figure PDF extracts (15 files) | `/mnt/ace/acma-codes/OCIMF/Figures/` | Per-figure extracts of the published curves |
+| MEG3 (2008) full PDF | `<licensed-codes-root>/OCIMF/OCIMF - 2008 - Mooring Equipment Guidelines.pdf` | Canonical published 3rd-edition standard |
+| MEG4 (2018) full PDF | `<licensed-codes-root>/OCIMF (MEG 4)/Mooring Equipment Guidelines - MEG4.pdf` | Canonical published 4th-edition standard |
+| **Digitized lookup (master)** | **`<licensed-codes-root>/OCIMF/OCIMF Coef.xlsx`** | **17 sheets, 3 data + 14 chart; covers Annex A A5-A19** |
+| Alternative WPD digitization | `<licensed-codes-root>/OCIMF 3rd ed/Digitizer/` | WebPlotDigitizer extraction for A5-A9 only — cross-validation reference |
+| Figure PDF extracts (15 files) | `<licensed-codes-root>/OCIMF/Figures/` | Per-figure extracts of the published curves |
 | Project-bundled MEG4 extracts | `<private-data>/ocimf/` | 8 PDFs covering A13-A21 + worked examples |
-| MEG4 justification commentary | `/mnt/ace/acma-codes/OCIMF (MEG 4)/Mooring Equipment Guidelines (MEG4) justification.pdf` | Update commentary for MEG3 → MEG4 transition |
-| LNG-specific wind coefficients (separate file, not in master) | `/mnt/ace/acma-codes/OCIMF 3rd ed/old & other/LNGC Coeficients.xlsx` | Supplementary LNG-focused coefficients |
-| Tandem mooring guideline | `/mnt/ace/acma-codes/OCIMF/OCIMF-Tandem Mooring and Offloading Guidelines for Conventional Tankers at FPSO Facilities.pdf` | Specialized guideline (not coefficient data) |
+| MEG4 justification commentary | `<licensed-codes-root>/OCIMF (MEG 4)/Mooring Equipment Guidelines (MEG4) justification.pdf` | Update commentary for MEG3 → MEG4 transition |
+| LNG-specific wind coefficients (separate file, not in master) | `<licensed-codes-root>/OCIMF 3rd ed/old & other/LNGC Coeficients.xlsx` | Supplementary LNG-focused coefficients |
+| Tandem mooring guideline | `<licensed-codes-root>/OCIMF/OCIMF-Tandem Mooring and Offloading Guidelines for Conventional Tankers at FPSO Facilities.pdf` | Specialized guideline (not coefficient data) |
 
 ## In-repo references
 

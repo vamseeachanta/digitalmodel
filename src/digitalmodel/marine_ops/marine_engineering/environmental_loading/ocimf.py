@@ -7,11 +7,11 @@ secondary axis (WD/T for current, tank type for gas-carrier wind, bow shape
 for loaded-tanker Cxc).
 
 References (off-repo per feedback_offrepo_intel_routing):
-- OCIMF MEG3 (2008) — /mnt/ace/acma-codes/OCIMF/OCIMF - 2008 - Mooring Equipment Guidelines.pdf
-- OCIMF MEG4 (2018) — /mnt/ace/acma-codes/OCIMF (MEG 4)/Mooring Equipment Guidelines - MEG4.pdf
-- Digitized lookup tables — /mnt/ace/acma-codes/OCIMF/OCIMF Coef.xlsx (17 sheets,
+- OCIMF MEG3 (2008) — <licensed-codes-root>/OCIMF/OCIMF - 2008 - Mooring Equipment Guidelines.pdf
+- OCIMF MEG4 (2018) — <licensed-codes-root>/OCIMF (MEG 4)/Mooring Equipment Guidelines - MEG4.pdf
+- Digitized lookup tables — <licensed-codes-root>/OCIMF/OCIMF Coef.xlsx (17 sheets,
   Annex A Figures A5-A19; A15 absent from digitization)
-- Figure PDF extracts — /mnt/ace/acma-codes/OCIMF/Figures/
+- Figure PDF extracts — <licensed-codes-root>/OCIMF/Figures/
 - Project-bundled extracts — <private-data>/ocimf/
 - OCIMF "Prediction of Wind and Current Loads on VLCCs" (1994) — separately
   referenced for tanker wind; NOT in OCIMF Coef.xlsx

@@ -142,12 +142,6 @@ structural:
       Email address. An address at a client domain identifies both the
       engagement and the person on it.
 
-  - id: project-archive-path
-    pattern: '\bacma-projects\b'
-    severity: block
-    message: >-
-      Internal project archive name.
-
 # ---------------------------------------------------------------------------
 # Hashed names. Salted SHA-256 of the lowercased token.
 #
@@ -160,6 +154,7 @@ structural:
 # To add one, append the hash it prints. Do not add a comment saying what it is.
 # ---------------------------------------------------------------------------
 hashed_names:
+  - 20ca928aadc29c1c7bf59144d5781d4aa3e065e094c0f7ed2981a13bcc8674a0
   - 406319d624de9f52535555b61e260bee599a3f262b97a50e850a7da0770d6779
   - 747038e09cdd8f4f1e3480c2381c70ff3592b4e3c3fc9924dc4718519bb182be
   - 2030249d720adcc621a76bb1fd14f1835d663565331ed438b42483d146c8406c
@@ -171,6 +166,11 @@ hashed_names:
   - 0108f22578e20ebafd8c4027091790ac776eefcaa773b8a7cd348ab2a8f9a499
   - a33284c7f2643109e7120a3ef606a7a463e2a8a0aaa6a6bbf74c2cfb2e485800
   - 88e57215500d2ff44034fa872f4cb6cf9b1f0313035b7794369bf47aae9a7522
+  - 5e7397f2b0dae4e2994185634dfa730a02e468f2a846bad03635c77ca0422031
+  - 7c76b5e7b884386d435fe61324c25bd508948753f4c102a5d7767815200c0c75
+  - c0ffa34f220e3bf59730fa2dbca9f4290cb120557bcbbd8fa8e20969e72028ba
+  - de800a53f6f195a45eb4ae77bccfd96b0604a187481c4fc739f1f6a9ce97f384
+  - e6910418608d8b5c4419bb038bbad44df1df7aef8b441e44b17d5e3c844dd460
 
 # Hashes kept under the salt they were made with. The salt above was rotated
 # on 2026-09-25 (owner decisions C13/C16) and every name whose plaintext is

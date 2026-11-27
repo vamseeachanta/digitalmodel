@@ -60,7 +60,6 @@ class TestStructuralPatternsAreCaught:
         ((r"input = r'J:", r"\Projects\Something\file.dat'"),
          "mapped-drive-path"),
         (("contact person", "@somecompany.example"), "foreign-domain-email"),
-        (("stored under acma", "-projects/archive"), "project-archive-path"),
     ])
     def test_each_pattern_fires(self, tmp_path, parts, rule):
         line = "".join(parts)
@@ -71,6 +70,7 @@ class TestStructuralPatternsAreCaught:
 
 class TestOrdinaryContentIsNotCaught:
     @pytest.mark.parametrize("line", [
+        "stored under client-4e09-projects/archive",
         r'exe = r"C:\Program Files\ANSYS Inc\v261\aqwa\bin\winx64\Aqwa.exe"',
         r'py = r"C:\Python312\python.exe"',
         "A JONSWAP spectrum with a peak enhancement factor of 3.3.",

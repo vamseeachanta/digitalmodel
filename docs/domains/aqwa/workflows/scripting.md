@@ -31,7 +31,7 @@ damping for fender is linear. Can you provide an example of non-linear (i.e. dam
 3rd Way:
 
 - parameterize the variables.
-- SDC verifier to ACMA (3rd party?)
+- SDC verifier to client-4e09 (3rd party?)
 
 - User defined functions in python
 -

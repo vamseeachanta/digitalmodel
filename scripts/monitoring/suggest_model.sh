@@ -26,9 +26,25 @@ fi
 # Determine repository tier
 WORK_TIER1="workspace-hub|digitalmodel|energy|frontierdeepwater"
 WORK_TIER2="aceengineercode|assetutilities|worldenergydata|rock-oil-field|teamresumes"
-WORK_TIER3="doris|contractor|OGManufacturing|seanation"
+WORK_TIER3="contractor|OGManufacturing|seanation"
 PERSONAL_ACTIVE="aceengineer-admin|aceengineer-website"
 PERSONAL_EXPERIMENTAL="hobbies|sd-work|<project-archive>|achantas-data"
+
+# Private checkout names come from ACE_PRIVATE_REPOS (CSV), else one per line
+# in ACE_PRIVATE_CONFIG (default ~/.config/ace/private-repos.txt). A missing
+# file adds no checkouts.
+is_private_repo() {
+    local config="${ACE_PRIVATE_CONFIG:-$HOME/.config/ace/private-repos.txt}" names
+    case "$REPO" in ""|.|..|*/*|*\\*) return 1 ;; esac
+    if [[ -n ${ACE_PRIVATE_REPOS:-} ]]; then
+        names=${ACE_PRIVATE_REPOS//,/$'\n'}
+    elif [[ -f $config ]]; then
+        names=$(<"$config")
+    else
+        return 1
+    fi
+    sed 's/^[[:space:]]*//; s/[[:space:]]*$//' <<< "$names" | grep -Fxq -- "$REPO"
+}
 
 # Complexity indicators
 OPUS_KEYWORDS="architecture|refactor|design|security|complex|multi-file|algorithm|optimization|strategy|planning|cross-repository|performance|migration"
@@ -55,18 +71,24 @@ word_count=$(echo "$TASK" | wc -w)
 if [ "$word_count" -gt 15 ]; then
     ((complexity+=1))
 elif [ "$word_count" -lt 5 ]; then
-    ((complexity-=1))
+    complexity=$((complexity - 1))
 fi
 
 # Repository tier adjustment
-if echo "$REPO" | grep -qE "$WORK_TIER1"; then
+set_maintenance_tier() {
+    repo_tier="Work Tier 3 (Maintenance)"
+    complexity=$((complexity - 1))  # Bias toward efficiency
+}
+
+if is_private_repo; then
+    set_maintenance_tier
+elif echo "$REPO" | grep -qE "$WORK_TIER1"; then
     repo_tier="Work Tier 1 (Production)"
     ((complexity+=1))  # Bias toward higher quality
 elif echo "$REPO" | grep -qE "$WORK_TIER2"; then
     repo_tier="Work Tier 2 (Active)"
 elif echo "$REPO" | grep -qE "$WORK_TIER3"; then
-    repo_tier="Work Tier 3 (Maintenance)"
-    ((complexity-=1))  # Bias toward efficiency
+    set_maintenance_tier
 elif echo "$REPO" | grep -qE "$PERSONAL_ACTIVE"; then
     repo_tier="Personal (Active)"
 elif echo "$REPO" | grep -qE "$PERSONAL_EXPERIMENTAL"; then

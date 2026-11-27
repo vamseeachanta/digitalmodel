@@ -113,13 +113,13 @@ def test_citation_defaults_source_sibling_to_generic():
 
 def test_citation_accepts_explicit_source_sibling_client_slug():
     """source_sibling can be set to a client slug per workspace-hub#2778."""
-    c = Citation(**_valid_kwargs(source_sibling="acma"))
-    assert c.source_sibling == "acma"
+    c = Citation(**_valid_kwargs(source_sibling="client-4e09"))
+    assert c.source_sibling == "client-4e09"
 
 
 def test_citation_accepts_source_project_when_set():
     """source_project is optional but valid when populated."""
-    c = Citation(**_valid_kwargs(source_sibling="acma", source_project="example-project"))
+    c = Citation(**_valid_kwargs(source_sibling="client-4e09", source_project="example-project"))
     assert c.source_project == "example-project"
 
 
