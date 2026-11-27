@@ -198,7 +198,7 @@ results = {
     "jumpers": jumpers,
 }
 
-with open(Path(__file__).with_name("calc_results.json"), "w") as f:
+with open(Path(__file__).with_name("calc_results.json"), "w", encoding="utf-8") as f:
     json.dump(results, f, indent=2)
 
 print("\nCalculations complete. Results saved to calc_results.json")
