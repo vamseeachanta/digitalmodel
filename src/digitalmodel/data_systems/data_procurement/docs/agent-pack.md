@@ -163,7 +163,7 @@ The annulus-arithmetic check FAILS at the unchanged code pin: rounded output dia
 The grep is deliberately broad; the following inventory includes benign missing-value returns, intentional filters and internal constants as well as error paths, so its count is a count of reviewed sites, not a count of distinct defects. [src/digitalmodel/data_systems/data_procurement/common/cache_manager.py:L78-L110] [src/digitalmodel/data_systems/data_procurement/mooring/database_clients/chain_db_client.py:L426-L437]
 
 ```sh
-rg -n --glob '*.py' 'except|continue|return None|return \[\]|return \{\}|\b(int|float)\(|\b1970\b|= 0(\.0)?\b|\.get\(|ttl = ttl or|density|degrees|rad/s|kg/m|kN|/ 1000|\* 1000' src/digitalmodel/data_systems/data_procurement
+rg -n --glob '*.py' 'except|continue|return None|return \[\]|return \{\}|\b(int|float)\(|\b(?:1970)\b|= 0(\.0)?\b|\.get\(|ttl = ttl or|density|degrees|rad/s|kg/m|kN|/ 1000|\* 1000' src/digitalmodel/data_systems/data_procurement
 ```
 
 Every Python file was also parsed as syntax, without importing it: each exception handler, continue, empty/bare return, numeric conversion, fallback getter and numeric literal in executable definitions was examined; literal catalogue tables were reviewed in section 3 as data assumptions. [src/digitalmodel/data_systems/data_procurement/mooring/database_clients/chain_db_client.py:L57-L72] [src/digitalmodel/data_systems/data_procurement/common/stream_handler.py:L66-L94]

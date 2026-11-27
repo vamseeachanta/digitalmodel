@@ -53,19 +53,19 @@ modules:
       request_guide: docs/domains/asset-integrity/uniform-loss-request-study.md
       request_example: examples/asset_integrity/uniform_loss_requests.json
       request_validation: tests/asset_integrity/test_uniform_loss_study.py
-      results_owner: digitalmodel-data
+      results_owner: the private data repository
       note: No qualified API 579 envelope; exact synthetic pressure-study outputs retained privately with verified hashes.
       canonical_preliminary_results:
-        owner_repo: vamseeachanta/digitalmodel-data
+        owner_repo: https://api.github.com/repositories/1370823847
         dataset_id: uniform-local-loss-screening
         run_id: preliminary-pressure-20261006T030939Z-3c238c26
         revision: 795b35099bf29cdfc59e6e2184cbdc0da76131be
         manifest_sha256: 428196dd032899e91bb823dbd46e3a09715767778a85eadd43e6168d4e65f807
-        manifest: https://github.com/vamseeachanta/digitalmodel-data/blob/795b35099bf29cdfc59e6e2184cbdc0da76131be/data/uniform-local-loss-screening/manifest.json
-        plot: https://github.com/vamseeachanta/digitalmodel-data/blob/795b35099bf29cdfc59e6e2184cbdc0da76131be/data/uniform-local-loss-screening/derived/r1/preliminary-pressure-curves.png
-        csv: https://github.com/vamseeachanta/digitalmodel-data/blob/795b35099bf29cdfc59e6e2184cbdc0da76131be/data/uniform-local-loss-screening/derived/r1/preliminary-pressure-summary.csv
-        json: https://github.com/vamseeachanta/digitalmodel-data/blob/795b35099bf29cdfc59e6e2184cbdc0da76131be/data/uniform-local-loss-screening/derived/r1/preliminary-pressure-results.json
-        publication_receipt: https://github.com/vamseeachanta/digitalmodel-data/blob/2b91fcfb9a6412ae17ec640f2f0f009953df4d6f/reports/uniform-local-loss-screening-r1-publication.json
+        manifest: https://api.github.com/repositories/1370823847/contents/data/uniform-local-loss-screening/manifest.json?ref=795b35099bf29cdfc59e6e2184cbdc0da76131be
+        plot: https://api.github.com/repositories/1370823847/contents/data/uniform-local-loss-screening/derived/r1/preliminary-pressure-curves.png?ref=795b35099bf29cdfc59e6e2184cbdc0da76131be
+        csv: https://api.github.com/repositories/1370823847/contents/data/uniform-local-loss-screening/derived/r1/preliminary-pressure-summary.csv?ref=795b35099bf29cdfc59e6e2184cbdc0da76131be
+        json: https://api.github.com/repositories/1370823847/contents/data/uniform-local-loss-screening/derived/r1/preliminary-pressure-results.json?ref=795b35099bf29cdfc59e6e2184cbdc0da76131be
+        publication_receipt: https://api.github.com/repositories/1370823847/contents/reports/uniform-local-loss-screening-r1-publication.json?ref=2b91fcfb9a6412ae17ec640f2f0f009953df4d6f
         publication_receipt_sha256: ba13d25485030f4dd3a3e38697467b047abcce3aab79313dc6150ee5bbf5c4d2
         publication_receipt_hash_scope: Exact committed LF bytes verified by fresh remote readback; working checkout line endings may differ.
         engineering_qualified: false

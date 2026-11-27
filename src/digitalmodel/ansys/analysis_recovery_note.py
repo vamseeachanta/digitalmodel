@@ -10,12 +10,13 @@ CASE_ID = 'ocv-t60-p10-n4'
 KIND = 'n4-recovery-note-1'
 BASELINE_HASH = 'd8960b943de200287daeb1c9a0af88d659373dac9bbd73852c3a5dba3b6a2ec6'
 OWNER_REVISION = '6bc9bf842643f928b297437e585cfc7d84081c8f'
+SOURCE_MATRIX_SHA256 = '5b2d08289e0e2affea908883c73967f9ab5afa6af4a864aceb04ef68bb400e59'
 REFERENCES = {
-    'observation': dict(id='digitalmodel-data/reports/ansys-n4-recovery-2026-09-16.json',
+    'observation': dict(id='private-data/reports/ansys-n4-recovery-2026-09-16.json',
         sha256='d38703f10f5cdd190802b57d1374ddf9f7b81d628e36ae77030a0e1418881c5f'),
-    'report': dict(id='digitalmodel-data/reports/ansys-n4-recovery-2026-09-16.html',
+    'report': dict(id='private-data/reports/ansys-n4-recovery-2026-09-16.html',
         sha256='4269bf86501b787f2cb16563c36f5ef0f415fdabc4bca84f731bfed0c11a2316'),
-    'review_archive': dict(id='digitalmodel-data/reports/reviews/ansys-n4-recovery-2026-09-16/evidence.zip',
+    'review_archive': dict(id='private-data/reports/reviews/ansys-n4-recovery-2026-09-16/evidence.zip',
         sha256='d519be855f8b069770598b5e79f968696ae76db6493fc7aebd2e816213fa1310'),
 }
 SOURCE_NAMES = ('analysis_recovery_note', 'analysis_matrix_publish', 'analysis_evidence', 'analysis_records')
@@ -105,3 +106,38 @@ def build_recovery_note(baseline, resolver):
 def validate_recovery_note_transition(package, baseline, resolver):
     expected = build_recovery_note(baseline, resolver)
     require(canonical_bytes(package) == canonical_bytes(expected), 'recovery supplement transition differs')
+
+
+def public_recovery_view(source_bytes: bytes) -> dict:
+    """Generate the public r6 lookup view from the exact retained owner matrix."""
+    source_digest = digest_bytes(source_bytes)
+    require(source_digest == SOURCE_MATRIX_SHA256, 'retained r6 source matrix digest differs')
+    view = parse_json(source_bytes)
+    validate_package(view)
+    original_package_hash = view.pop('package_hash')
+
+    # The owner matrix records each of the three report IDs in both inventories.
+    # Only the repository prefix changes. Digests, relative paths, and case rows
+    # retain their original values, including the historical source fingerprints.
+    evidence = view['diagnostic_supplement']['evidence']
+    review_sources = {ref['id']: ref for ref in view['review_sources']}
+    for role, public_ref in REFERENCES.items():
+        retained_ref = evidence[role]
+        review_ref = review_sources[retained_ref['id']]
+        require(review_ref == retained_ref, 'review source differs from supplement evidence')
+        require(
+            retained_ref['sha256'] == public_ref['sha256']
+            and retained_ref['id'].partition('/')[2] == public_ref['id'].partition('/')[2],
+            'public reference differs from pinned evidence',
+        )
+        retained_ref['id'] = review_ref['id'] = public_ref['id']
+
+    view['public_projection'] = {
+        'schema': 'recovery-reference-aliases/1',
+        'source_file_sha256': source_digest,
+        'source_package_hash': original_package_hash,
+        'source_revision': view['revision'],
+    }
+    view['package_hash'] = digest_bytes(canonical_bytes(view))
+    validate_package(view)
+    return view

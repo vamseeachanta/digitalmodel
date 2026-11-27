@@ -13,7 +13,9 @@ PURPLE='\033[0;35m'
 CYAN='\033[0;36m'
 NC='\033[0m'
 
-WORKSPACE_ROOT="/mnt/github/workspace-hub"
+repo_parent=$(dirname "$(git -C "$(dirname "${BASH_SOURCE[0]}")" rev-parse --show-toplevel)")
+
+WORKSPACE_ROOT="${WORKSPACE_HUB:-${repo_parent%/workspace-hub}/workspace-hub}"
 REGISTRY_FILE="$WORKSPACE_ROOT/config/ai-agents-registry.json"
 SELECTOR_SCRIPT="src/digitalmodel/modules/automation/intelligent_agent_selector.py"
 WEIGHTS_CONFIG="config/agent-selection-weights.yaml"

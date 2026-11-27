@@ -59,7 +59,7 @@ Fetched workspace-hub#2708 on 2026-05-15:
 
 ### Reproduction Evidence
 
-Command run on 2026-05-15 America/Chicago from `/mnt/local-analysis/workspace-hub/digitalmodel`:
+Command run on 2026-05-15 America/Chicago from `.`:
 
 ```bash
 uv run python - <<'PY'

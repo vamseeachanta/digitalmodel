@@ -5,7 +5,7 @@
 
 Every table value is asserted against the fixture CSVs under
 ``tests/fixtures/test_vectors/cathodic_protection/datasets/dnv-rp-b401/``:
-the 2005/2010 files are verbatim copies of the llm-wiki datasets, the
+the 2005/2010 files are verbatim copies of the knowledge-base datasets, the
 2017-06 and 2021-05 files are hand transcriptions of the licensed prints (see
 ``PROVENANCE.md`` there). Citations of the 2017 and 2021 editions are
 validated against the vendored wiki fixture pages; the 2010 page is validated

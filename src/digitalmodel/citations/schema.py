@@ -46,12 +46,12 @@ class Citation:
     wiki_path: str
     note: str = ""
     # Wiki sibling routing fields (workspace-hub#2778, calc-citation-contract.md Rule 8).
-    # source_sibling: required — "generic" (sourced from vamseeachanta/llm-wiki) or a
-    #                 client slug (e.g., "client-4e09" when sourced from llm-wiki-client-4e09).
+    # source_sibling: required — "generic" (sourced from the knowledge base repository) or a
+    #                 client slug (e.g., "client-4e09" when sourced from the knowledge base-client-4e09).
     #                 Default "generic" preserves backcompat for existing call sites
     #                 during the rollout; new code should set explicitly.
     # source_project: optional — populated when the citation is project-scoped
-    #                 (e.g., "example-project" for content under llm-wiki-client-4e09/projects/example-project/);
+    #                 (e.g., "example-project" for content under knowledge base-client-4e09/projects/example-project/);
     #                 None for client-level or generic citations.
     source_sibling: str = "generic"
     source_project: Optional[str] = None

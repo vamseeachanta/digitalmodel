@@ -68,7 +68,7 @@ def test_shared_provenance_import_is_compliant(tree, symbol, module):
         "def generate_demo_report():\n    return 'literal results'\n",
         "def render_html():\n    return '<p>results</p>'\n",
         "from pathlib import Path\nPath('result.html').write_text('results')\n",
-        "with open('result.html', 'w') as f:\n    f.write('results')\n",
+        "with open('result.html', 'w') as f:\n    f.write('results')\n",  # identifier-gate: example
         "figure.to_html('result.html')\n",
         "output = 'result.html'\noutput.write_text('results')\n",
     ],

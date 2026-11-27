@@ -38,7 +38,7 @@
           {
             "type": "command",
             "statusMessage": "Logging session activity",
-            "command": "bash -c 'INPUT=$(cat); WS=\"/d/workspace-hub\"; [ ! -d \"$WS\" ] && WS=\"/mnt/github/workspace-hub\"; LOG=\"$WS/.claude/skills/session-logs/session_$(date +%Y%m%d).jsonl\"; mkdir -p \"$(dirname $LOG)\" 2>/dev/null; TOOL=$(echo \"$INPUT\" | jq -r \".tool_name // \\\"unknown\\\"\" 2>/dev/null); echo \"{\\\"ts\\\":\\\"$(date -Iseconds)\\\",\\\"hook\\\":\\\"pre\\\",\\\"tool\\\":\\\"$TOOL\\\",\\\"project\\\":\\\"$(basename $(pwd))\\\"}\" >> \"$LOG\"'"
+            "command": "bash -c 'INPUT=$(cat); PARENT=$(dirname \"$(git rev-parse --show-toplevel)\"); WS=\"${WORKSPACE_HUB:-${PARENT%/workspace-hub}/workspace-hub}\"; LOG=\"$WS/.claude/skills/session-logs/session_$(date +%Y%m%d).jsonl\"; mkdir -p \"$(dirname $LOG)\" 2>/dev/null; TOOL=$(echo \"$INPUT\" | jq -r \".tool_name // \\\"unknown\\\"\" 2>/dev/null); echo \"{\\\"ts\\\":\\\"$(date -Iseconds)\\\",\\\"hook\\\":\\\"pre\\\",\\\"tool\\\":\\\"$TOOL\\\",\\\"project\\\":\\\"$(basename $(pwd))\\\"}\" >> \"$LOG\"'"
           }
         ]
       }
@@ -50,7 +50,7 @@
           {
             "type": "command",
             "statusMessage": "Logging session activity (post)",
-            "command": "bash -c 'INPUT=$(cat); WS=\"/d/workspace-hub\"; [ ! -d \"$WS\" ] && WS=\"/mnt/github/workspace-hub\"; LOG=\"$WS/.claude/skills/session-logs/session_$(date +%Y%m%d).jsonl\"; mkdir -p \"$(dirname $LOG)\" 2>/dev/null; TOOL=$(echo \"$INPUT\" | jq -r \".tool_name // \\\"unknown\\\"\" 2>/dev/null); echo \"{\\\"ts\\\":\\\"$(date -Iseconds)\\\",\\\"hook\\\":\\\"post\\\",\\\"tool\\\":\\\"$TOOL\\\",\\\"project\\\":\\\"$(basename $(pwd))\\\"}\" >> \"$LOG\"'"
+            "command": "bash -c 'INPUT=$(cat); PARENT=$(dirname \"$(git rev-parse --show-toplevel)\"); WS=\"${WORKSPACE_HUB:-${PARENT%/workspace-hub}/workspace-hub}\"; LOG=\"$WS/.claude/skills/session-logs/session_$(date +%Y%m%d).jsonl\"; mkdir -p \"$(dirname $LOG)\" 2>/dev/null; TOOL=$(echo \"$INPUT\" | jq -r \".tool_name // \\\"unknown\\\"\" 2>/dev/null); echo \"{\\\"ts\\\":\\\"$(date -Iseconds)\\\",\\\"hook\\\":\\\"post\\\",\\\"tool\\\":\\\"$TOOL\\\",\\\"project\\\":\\\"$(basename $(pwd))\\\"}\" >> \"$LOG\"'"
           }
         ]
       },
@@ -60,7 +60,7 @@
           {
             "type": "command",
             "statusMessage": "Capturing correction patterns for RAGS learning",
-            "command": "cat | bash -c 'HOOK=\"\"; [ -f \"/mnt/local-analysis/workspace-hub/.claude/hooks/capture-corrections.sh\" ] && HOOK=\"/mnt/local-analysis/workspace-hub/.claude/hooks/capture-corrections.sh\"; [ -z \"$HOOK\" ] && [ -f \"/d/workspace-hub/.claude/hooks/capture-corrections.sh\" ] && HOOK=\"/d/workspace-hub/.claude/hooks/capture-corrections.sh\"; [ -z \"$HOOK\" ] && [ -f \"/mnt/github/workspace-hub/.claude/hooks/capture-corrections.sh\" ] && HOOK=\"/mnt/github/workspace-hub/.claude/hooks/capture-corrections.sh\"; [ -n \"$HOOK\" ] && cat | \"$HOOK\" || cat > /dev/null'"
+            "command": "cat | bash -c 'PARENT=$(dirname \"$(git rev-parse --show-toplevel)\"); HOOK=\"${WORKSPACE_HUB:-${PARENT%/workspace-hub}/workspace-hub}/.claude/hooks/capture-corrections.sh\"; [ -f \"$HOOK\" ] && cat | \"$HOOK\" || cat > /dev/null'"
           }
         ]
       }

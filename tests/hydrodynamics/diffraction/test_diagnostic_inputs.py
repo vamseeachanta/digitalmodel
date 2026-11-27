@@ -4,10 +4,40 @@ import json
 
 import pytest
 
+from digitalmodel.hydrodynamics.diffraction import diagnostic_inputs
 from digitalmodel.hydrodynamics.diffraction.diagnostic_inputs import (
     build_bundle, divergence_ledger, native_yaml,
 )
 from tests.hydrodynamics.diffraction.test_diagnostic_mesh import synthetic_mesh
+
+
+SYNTHETIC_DESTINATION = "example/diagnostic-evidence"
+
+
+@pytest.fixture(autouse=True)
+def evidence_repository(monkeypatch):
+    monkeypatch.setenv("DIGITALMODEL_EVIDENCE_REPOSITORY", SYNTHETIC_DESTINATION)
+    monkeypatch.setattr(diagnostic_inputs, "_AUTHORIZED_DESTINATION_SHA256",
+                        hashlib.sha256(SYNTHETIC_DESTINATION.encode()).hexdigest())
+
+
+def test_unconfigured_destination_cannot_authorize_a_bundle(monkeypatch):
+    monkeypatch.delenv("DIGITALMODEL_EVIDENCE_REPOSITORY")
+    raw = sources()
+    ref, resolver = rights(raw)
+    with pytest.raises(ValueError, match="destination"):
+        build_bundle(raw, ref, resolver, {"revision": "a" * 40, "dirty": False},
+                     expected_source_sha256=expected_sources(raw))
+
+
+def test_matching_unpinned_destination_cannot_authorize_a_bundle(monkeypatch):
+    destination = "example/unapproved-destination"
+    monkeypatch.setenv("DIGITALMODEL_EVIDENCE_REPOSITORY", destination)
+    raw = sources()
+    ref, resolver = rights(raw, destination)
+    with pytest.raises(ValueError, match="destination"):
+        build_bundle(raw, ref, resolver, {"revision": "a" * 40, "dirty": False},
+                     expected_source_sha256=expected_sources(raw))
 
 
 def sources():
@@ -21,10 +51,10 @@ def sources():
     }).encode()}
 
 
-def rights(raw):
+def rights(raw, destination=SYNTHETIC_DESTINATION):
     payload = json.dumps({'sources': {k: hashlib.sha256(v).hexdigest() for k, v in raw.items()},
         'operations': ['transform', 'private-retention'],
-        'destination': 'vamseeachanta/digitalmodel-data', 'audience': 'authorized-private',
+        'destination': destination, 'audience': 'authorized-private',
         'decision': 'permitted', 'basis': 'SYNTHETIC TEST ONLY'}).encode()
     return {'id': 'synthetic-rights', 'sha256': hashlib.sha256(payload).hexdigest()}, lambda _: payload
 
@@ -38,7 +68,7 @@ def test_complete_ledger_unknown_units_and_owner_status():
     reference, resolver = rights(raw)
     result = build_bundle(raw, reference, resolver, {'revision': 'a' * 40, 'dirty': True},
                           expected_source_sha256=expected_sources(raw))
-    assert result['manifest']['owner_repo'] == 'vamseeachanta/digitalmodel-data'
+    assert result['manifest']['owner_repo'] == SYNTHETIC_DESTINATION
     assert result['manifest']['intake_status'] == 'not_established_pending_exact_payload_review'
     assert result['manifest']['engineering_qualified'] is False
     assert result['manifest']['source_tree']['dirty'] is True

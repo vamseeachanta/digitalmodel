@@ -21,6 +21,31 @@ def test_manifest_is_frozen(tmp_path):
         evidence.legacy_files(tmp_path, "a" * 40)
 
 
+def test_stored_atlas_contains_only_the_published_producer():
+    revision = "c12624942c025e3d68182fa157cb479616a95f5d"
+    path = "scripts/python/digitalmodel/ocimf/build_coefficient_explorer.py"
+    entry = evidence.legacy_files(ROOT, revision)[path]
+    assert entry["storage"] == "redacted-blob"
+    assert entry["archived_blob"] == "08e84f7083ca298b914dc5396d3f182f10a1f44e"
+    with pytest.raises(ValueError, match="redacted"):
+        evidence.read_evidence(ROOT, revision, path)
+    source = evidence.read_evidence(ROOT, revision, path, allow_redacted=True)
+    assert hashlib.sha256(source).hexdigest() == "c37be3500043b51731ca59680ad07def74b91288123875197e410ae970234849"
+
+    manifest = json.loads((ROOT / evidence.MANIFEST).read_bytes())
+    published = {entry["sha256"] for paths in manifest["files"].values() for entry in paths.values()
+                 if entry["storage"] != "same-as-root"}
+    store = (ROOT / evidence.MANIFEST).parent / "blobs"
+    assert {blob.name for blob in store.iterdir()} == published
+
+
+def test_archived_ref_evidence_uses_publication_refs():
+    manifest = json.loads((ROOT / evidence.MANIFEST).read_bytes())
+    for refs in manifest["archived_refs"].values():
+        assert refs
+        assert all(not ref.startswith("refs/heads/backup/") for ref in refs)
+
+
 def test_exists_claim_is_limited_to_the_cited_revision_and_path():
     revision = "3256bab95f84da3d9fadce8d5dcf8458d66d1eb4"
     path = "docs/registry/implementation-map.yaml"
@@ -54,14 +79,18 @@ def test_corrupt_stored_bytes_are_rejected(tmp_path):
         evidence.read_legacy(tmp_path, revision, path)
 
 
-def test_root_storage_checks_head_bytes_and_exact_path(monkeypatch):
+def test_root_storage_checks_pinned_bytes_and_exact_path(monkeypatch):
     revision = "b4c10284fa7d28398e6fa02c262c219c0fec8fef"
     path = "src/digitalmodel/materials/grades.py"
-    assert evidence.legacy_files(ROOT, revision)[path]["storage"] == "same-as-root"
+    entry = evidence.legacy_files(ROOT, revision)[path]
+    assert entry["storage"] == "same-as-root"
     with pytest.raises(ValueError, match="No frozen evidence"):
         evidence.read_legacy(ROOT, revision, "README.md")
-    monkeypatch.setattr(evidence, "_tree_blob", lambda *args: b"changed in HEAD")
+    monkeypatch.setattr(evidence, "git_output", lambda *args: b"corrupt object")
     with pytest.raises(ValueError, match="digest mismatch"):
+        evidence.read_legacy(ROOT, revision, path)
+    monkeypatch.setitem(entry, "mode", "120000")
+    with pytest.raises(ValueError, match="Missing regular file"):
         evidence.read_legacy(ROOT, revision, path)
 
 
@@ -92,12 +121,15 @@ def test_new_sources_require_main_ancestry(tmp_path, monkeypatch, rule):
 
     # A side branch can retain a pre-reset object outside current main.
     listed = git("rev-parse", "HEAD")
-    entry = {"rule": rule, "storage": "same-as-root", "blob": git("rev-parse", "HEAD:source"),
+    entry = {"rule": rule, "storage": "same-as-root", "mode": "100644",
+             "blob": git("rev-parse", "HEAD:source"),
              "sha256": hashlib.sha256(b"published").hexdigest()}
     monkeypatch.setattr(evidence, "_manifest", lambda root: {
         "files": {listed: {"source": entry}},
     })
     git("checkout", "-q", "main")
+    (tmp_path / "source").write_bytes(b"revised after publication")
+    git("commit", "-qam", "revise source")
     assert evidence.read_evidence(tmp_path, listed, "source") == b"published"
     with pytest.raises(ValueError, match="main"):
         evidence.read_evidence(tmp_path, listed, "uncited")

@@ -54,7 +54,7 @@ def prepare_probe(tmp_path):
     for repo in (target, decoy):
         git(repo, "add", ".")
         git(repo, "commit", "-qm", "test: disposable analytic fixture source\n\n"
-            "Co-Authored-By: Codex <noreply@openai.com>")
+            "Co-Authored-By: Codex <noreply@openai.com>")  # identifier-gate: example
     script = target / "scripts/validation/generate_mesh_legacy_pickles.py"
     script.parent.mkdir(parents=True)
     script.write_text(SCRIPT.read_text().replace(generator.BASELINE, git(target, "rev-parse", "HEAD")))

@@ -65,5 +65,5 @@ Gap: there's no bridge running Capytaine on the OC4 mesh + comparing against WAM
 
 ## Open Questions
 
-- The Capytaine env at `/mnt/local-analysis/capytaine-env` may not be on every CI runner. The `slow` marker keeps these tests out of the fast lane; benchmark runs happen via dedicated nightly job. Confirm a nightly job slot exists.
+- The Capytaine env at `${WORKSPACE_ROOT}/capytaine-env` may not be on every CI runner. The `slow` marker keeps these tests out of the fast lane; benchmark runs happen via dedicated nightly job. Confirm a nightly job slot exists.
 - OC4 mesh size: if the GDF is too coarse for direct Capytaine ingestion, may require `mesh_refiner` from `hull_library/`. Spike it during step 1.

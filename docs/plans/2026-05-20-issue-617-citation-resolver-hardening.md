@@ -17,8 +17,8 @@
 - Found: `src/digitalmodel/orcaflex/mooring_design.py:38` — `_default_repo_root()` already implements a layered fallback: (1) explicit kwarg, (2) **`DIGITALMODEL_REPO_ROOT`** env var, (3) bounded parent walk (cap `_REPO_ROOT_WALK_HARD_CAP = 8`, addresses [`feedback_path_parent_infinite_loop`](https://github.com/vamseeachanta/workspace-hub/blob/main/.claude/memory/feedback_path_parent_infinite_loop.md)), (4) `None` → standalone mode with one-shot `RuntimeWarning`.
 - Gap 1: env-var name is `DIGITALMODEL_REPO_ROOT`, **not** `LLM_WIKI_PATH` as the issue and routing rule prescribe. Routing rule [`codes-standards-data-routing.md`](https://github.com/vamseeachanta/workspace-hub/blob/main/.claude/rules/codes-standards-data-routing.md) §4 explicitly names `LLM_WIKI_PATH` as the contract surface.
 - Gap 2: env-var resolution lives in `mooring_design.py` (caller), not in `citations/` (the contract surface). External callers of `get_mooring_safety_factor()` directly bypass the env-var fallback entirely.
-- Gap 3: the hardcoded `wiki_path` carries the `knowledge/wikis/` prefix — that prefix is a **workspace-hub mount artifact**, not the llm-wiki repo's own layout. A standalone `llm-wiki` clone has `wikis/engineering/wiki/standards/dnv-os-e301.md` (no `knowledge/` prefix). See Evidence below.
-- Gap 4: `CitationResolutionError` messages are opaque (`reason=page_missing`) — no mention of `LLM_WIKI_PATH`, no mention that `llm-wiki` is private, no pointer to the repo URL or routing rule.
+- Gap 3: the hardcoded `wiki_path` carries the `knowledge/wikis/` prefix — that prefix is a **workspace-hub mount artifact**, not the knowledge-base repo's own layout. A standalone `knowledge base` clone has `wikis/engineering/wiki/standards/dnv-os-e301.md` (no `knowledge/` prefix). See Evidence below.
+- Gap 4: `CitationResolutionError` messages are opaque (`reason=page_missing`) — no mention of `LLM_WIKI_PATH`, no mention that `knowledge base` is private, no pointer to the repo URL or routing rule.
 - Gap 5: no logging at INFO/ERROR level (issue scope item 3).
 
 ### Standards
@@ -29,7 +29,7 @@
 
 ### LLM Wiki pages consulted
 
-- `wikis/engineering/wiki/standards/dnv-os-e301.md` (in the private llm-wiki clone) — confirmed present at `/mnt/local-analysis/llm-wiki/wikis/engineering/wiki/standards/dnv-os-e301.md` with frontmatter `code_id: DNV-OS-E301`, `publisher: DNV`, `revision: 2021-07`. Path **does NOT** start with `knowledge/`.
+- `wikis/engineering/wiki/standards/dnv-os-e301.md` (in the private knowledge base clone) — confirmed present at `${LLM_WIKI_PATH}/wikis/engineering/wiki/standards/dnv-os-e301.md` with frontmatter `code_id: DNV-OS-E301`, `publisher: DNV`, `revision: 2021-07`. Path **does NOT** start with `knowledge/`.
 
 ### Documents consulted
 
@@ -44,7 +44,7 @@
 
 1. No `LLM_WIKI_PATH` env-var support in the codebase (only `DIGITALMODEL_REPO_ROOT`).
 2. Env-var fallback is in the caller (`mooring_design.py`), not in `citations/registry.py` where the contract belongs.
-3. Hardcoded `wiki_path` prefix `knowledge/wikis/` is wrong for standalone llm-wiki clones — only correct under workspace-hub overlay.
+3. Hardcoded `wiki_path` prefix `knowledge/wikis/` is wrong for standalone knowledge-base clones — only correct under workspace-hub overlay.
 4. Error message gives no actionable guidance about `LLM_WIKI_PATH` / private repo / routing rule.
 5. No INFO/ERROR logging on resolve success/failure.
 6. `OCIMF_CORPUS_README.md` does not mention the env-var contract.
@@ -53,21 +53,21 @@
 
 **Issue statuses** (verified 2026-05-20 via `gh issue view`):
 
-- `vamseeachanta/digitalmodel#617` — OPEN — "Citation-resolver hardening for LLM_WIKI_PATH env var + fail-closed UX (post llm-wiki privacy flip)" — label `enhancement`.
-- `vamseeachanta/workspace-hub#2774` — OPEN — "Private llm-wiki corpus-ingest program (post-2026-05-20 privacy flip)".
+- `vamseeachanta/digitalmodel#617` — OPEN — "Citation-resolver hardening for LLM_WIKI_PATH env var + fail-closed UX (post knowledge base privacy flip)" — label `enhancement`.
+- `vamseeachanta/workspace-hub#2774` — OPEN — "private knowledge base corpus-ingest program (post-2026-05-20 privacy flip)".
 - `vamseeachanta/workspace-hub#2685` — CLOSED — "Citation pilot contradiction…".
 
 **File existence** (`ls -la` 2026-05-20):
 
-- EXISTS: `/mnt/local-analysis/digitalmodel/src/digitalmodel/citations/schema.py` (4467 B)
-- EXISTS: `/mnt/local-analysis/digitalmodel/src/digitalmodel/citations/registry.py` (2004 B)
-- EXISTS: `/mnt/local-analysis/digitalmodel/src/digitalmodel/citations/__init__.py` (432 B)
-- EXISTS: `/mnt/local-analysis/digitalmodel/tests/citations/test_schema.py`
-- EXISTS: `/mnt/local-analysis/digitalmodel/tests/citations/test_registry.py`
-- EXISTS: `/mnt/local-analysis/digitalmodel/tests/citations/fixtures/knowledge/` (vendored wiki fixture tree)
-- EXISTS: `/mnt/local-analysis/digitalmodel/tests/orcaflex/test_mooring_design_citations.py` (env-var coverage for `DIGITALMODEL_REPO_ROOT`)
-- EXISTS: `/mnt/local-analysis/digitalmodel/docs/data/OCIMF_CORPUS_README.md`
-- EXISTS: `/mnt/local-analysis/llm-wiki/wikis/engineering/wiki/standards/dnv-os-e301.md` (standalone clone — note absence of `knowledge/` prefix)
+- EXISTS: `src/digitalmodel/citations/schema.py` (4467 B)
+- EXISTS: `src/digitalmodel/citations/registry.py` (2004 B)
+- EXISTS: `src/digitalmodel/citations/__init__.py` (432 B)
+- EXISTS: `tests/citations/test_schema.py`
+- EXISTS: `tests/citations/test_registry.py`
+- EXISTS: `tests/citations/fixtures/knowledge/` (vendored wiki fixture tree)
+- EXISTS: `tests/orcaflex/test_mooring_design_citations.py` (env-var coverage for `DIGITALMODEL_REPO_ROOT`)
+- EXISTS: `docs/data/OCIMF_CORPUS_README.md`
+- EXISTS: `${LLM_WIKI_PATH}/wikis/engineering/wiki/standards/dnv-os-e301.md` (standalone clone — note absence of `knowledge/` prefix)
 - MISSING (this plan creates): `src/digitalmodel/citations/resolver.py` (new — central env-var/precedence resolver)
 
 **Line excerpts**:
@@ -101,13 +101,13 @@ if env:
 
 **Gap proofs**:
 
-- `grep -rn "LLM_WIKI_PATH" /mnt/local-analysis/digitalmodel/src /mnt/local-analysis/digitalmodel/tests /mnt/local-analysis/digitalmodel/docs` → no matches. Confirms `LLM_WIKI_PATH` is not implemented anywhere.
-- `ls /mnt/local-analysis/llm-wiki/knowledge/wikis/` → "No such file or directory". Confirms the `knowledge/` prefix is workspace-hub-specific.
+- `grep -rn "LLM_WIKI_PATH" src tests docs` → no matches. Confirms `LLM_WIKI_PATH` is not implemented anywhere.
+- `ls ${LLM_WIKI_PATH}/knowledge/wikis/` → "No such file or directory". Confirms the `knowledge/` prefix is workspace-hub-specific.
 
 **Reproduction proofs** (verify-against-repo-state, per Step 1.5 of `issue-planning-mode`):
 
 ```
-$ cd /tmp/repro-617 && env -u DIGITALMODEL_REPO_ROOT -u LLM_WIKI_PATH PYTHONPATH=/mnt/local-analysis/digitalmodel/src python3 -c "
+$ cd /tmp/repro-617 && env -u DIGITALMODEL_REPO_ROOT -u LLM_WIKI_PATH PYTHONPATH=src python3 -c "
 from digitalmodel.citations.registry import get_mooring_safety_factor, MooringCondition
 from pathlib import Path
 try:
@@ -124,7 +124,7 @@ ERROR MSG: CitationResolutionError: code_id='DNV-OS-E301' wiki_path='knowledge/w
 - Reproduced at: 2026-05-20 local
 - Failure mode observed matches issue claim: YES — the current message is opaque (`page_missing`), with no mention of `LLM_WIKI_PATH`, no mention that the wiki is now private, and no actionable remediation. This is exactly the UX the issue scopes a fix for.
 
-<!-- Source count: issue body, schema.py, registry.py, mooring_design.py, codes-standards-data-routing rule, calc-citation-contract rule, OCIMF_CORPUS_README, llm-wiki standalone clone, reproduction = 9 distinct sources. -->
+<!-- Source count: issue body, schema.py, registry.py, mooring_design.py, codes-standards-data-routing rule, calc-citation-contract rule, OCIMF_CORPUS_README, knowledge base standalone clone, reproduction = 9 distinct sources. -->
 
 ---
 
@@ -158,10 +158,10 @@ A new `digitalmodel.citations.resolver` module that resolves the wiki base path 
 ```
 # src/digitalmodel/citations/resolver.py
 
-WIKI_REPO_URL = "https://github.com/vamseeachanta/llm-wiki"
+WIKI_REPO_URL = "https://api.github.com/repositories/1230228585"
 ROUTING_RULE_URL = "https://github.com/vamseeachanta/workspace-hub/blob/main/.claude/rules/codes-standards-data-routing.md"
 _WALK_HARD_CAP = 8
-_KNOWN_LOCAL_CLONES = ("/mnt/local-analysis/llm-wiki",)  # documented user convention
+_KNOWN_LOCAL_CLONES = ("~/.local/share/digitalmodel/knowledge",)  # documented user convention
 _RESOLUTION_CACHE = {}  # thread-safe one-shot warn key set
 _LOGGER = logging.getLogger("digitalmodel.citations.resolver")
 
@@ -194,7 +194,7 @@ def resolve_wiki_path(citation_wiki_path: str, *, override=None) -> Path:
     """Resolve a citation wiki_path (canonical form: 'wikis/<domain>/...') to
     an absolute file path on disk. Handles both layouts:
 
-      - llm-wiki standalone clone: <base>/wikis/<domain>/...
+      - knowledge base standalone clone: <base>/wikis/<domain>/...
       - workspace-hub overlay:     <base>/knowledge/wikis/<domain>/...
 
     Strips the optional 'knowledge/' prefix iff the resolved base does NOT
@@ -266,16 +266,16 @@ def get_mooring_safety_factor(
 | Test name | What it verifies | Expected input | Expected output |
 |---|---|---|---|
 | `test_resolver_explicit_override_wins` | explicit kwarg beats env vars | `override=tmp_path` (valid clone), `LLM_WIKI_PATH` set to garbage | resolves to `tmp_path` |
-| `test_resolver_llm_wiki_path_env_valid_standalone_layout` | env var pointing to standalone llm-wiki clone (no `knowledge/` prefix) | `LLM_WIKI_PATH=/tmp/llm-wiki` with `wikis/engineering/...` | resolves successfully; resolved path joins correctly |
+| `test_resolver_llm_wiki_path_env_valid_standalone_layout` | env var pointing to standalone knowledge-base clone (no `knowledge/` prefix) | `LLM_WIKI_PATH=/tmp/knowledge-base` with `wikis/engineering/...` | resolves successfully; resolved path joins correctly |
 | `test_resolver_llm_wiki_path_env_valid_workspace_hub_layout` | env var pointing to workspace-hub root (with `knowledge/wikis/`) | `LLM_WIKI_PATH=/tmp/workspace-hub` with `knowledge/wikis/...` | resolves successfully |
 | `test_resolver_llm_wiki_path_env_invalid_path` | env var set but path doesn't contain a wiki tree | `LLM_WIKI_PATH=/tmp/nonexistent` | raises `CitationResolutionError`; reason starts `llm_wiki_path_invalid:` ; message names env var |
 | `test_resolver_llm_wiki_path_env_stale_clone_detection` | env var path exists but is missing expected subdirs | `LLM_WIKI_PATH=/tmp/empty-dir` | raises `CitationResolutionError`; reason starts `llm_wiki_path_stale_clone:` |
 | `test_resolver_digitalmodel_repo_root_legacy_alias` | legacy env var still works, emits DeprecationWarning | `DIGITALMODEL_REPO_ROOT=/tmp/workspace-hub` (no `LLM_WIKI_PATH`) | resolves successfully; one `DeprecationWarning` recorded |
 | `test_resolver_parent_walk_finds_overlay` | bounded parent walk finds workspace-hub overlay with sentinel | resolver invoked from within nested workspace-hub checkout | resolves to workspace-hub root |
 | `test_resolver_parent_walk_has_sentinel` | walk halts at hard cap, does NOT infinite-loop at `/` | invoked from `/tmp/deep/path` outside any clone | raises `CitationResolutionError`, walk count ≤ 8 |
-| `test_resolver_known_local_clone_fallback` | falls back to `/mnt/local-analysis/llm-wiki` when env vars unset and parent walk fails | unset env, fake `/mnt/local-analysis/llm-wiki` via monkeypatched `_KNOWN_LOCAL_CLONES` | resolves to the patched path |
-| `test_resolver_fail_closed_no_env_no_clone` | env unset, no clone anywhere | clean tmp dir, all env unset, `_KNOWN_LOCAL_CLONES=()` | raises `CitationResolutionError`; message contains `LLM_WIKI_PATH`, `vamseeachanta/llm-wiki`, `codes-standards-data-routing` |
-| `test_resolver_fail_closed_message_is_actionable` | error message string contract | trigger fail-closed | `str(exc)` contains: `LLM_WIKI_PATH=`, the GH URL `https://github.com/vamseeachanta/llm-wiki`, the routing-rule pointer string |
+| `test_resolver_known_local_clone_fallback` | falls back to `~/.local/share/digitalmodel/knowledge` when env vars unset and parent walk fails | unset env, fake `~/.local/share/digitalmodel/knowledge` via monkeypatched `_KNOWN_LOCAL_CLONES` | resolves to the patched path |
+| `test_resolver_fail_closed_no_env_no_clone` | env unset, no clone anywhere | clean tmp dir, all env unset, `_KNOWN_LOCAL_CLONES=()` | raises `CitationResolutionError`; message contains `LLM_WIKI_PATH`, `knowledge base repository`, `codes-standards-data-routing` |
+| `test_resolver_fail_closed_message_is_actionable` | error message string contract | trigger fail-closed | `str(exc)` contains: `LLM_WIKI_PATH=`, the GH URL `https://api.github.com/repositories/1230228585`, the routing-rule pointer string |
 | `test_resolver_info_log_on_success` | INFO-level log when resolution succeeds | valid env-var resolution | one INFO record at `digitalmodel.citations.resolver` naming the resolved base |
 | `test_resolver_error_log_on_failure` | ERROR-level log when resolution fails | trigger fail-closed | one ERROR record at `digitalmodel.citations.resolver` |
 | `test_resolver_layout_join_workspace_hub` | `resolve_wiki_path()` joins `knowledge/wikis/...` correctly under workspace-hub layout | layout has `knowledge/wikis/` | absolute path under `knowledge/wikis/` |
@@ -293,8 +293,8 @@ def get_mooring_safety_factor(
 
 - [ ] All new tests pass: `cd digitalmodel && uv run pytest tests/citations/test_resolver.py tests/citations/test_registry.py tests/citations/test_schema.py tests/orcaflex/test_mooring_design_citations.py -v`
 - [ ] No regression: `cd digitalmodel && uv run pytest tests/citations/ tests/orcaflex/test_mooring_design_citations.py` is fully green (existing 14+ cases preserved).
-- [ ] Reproduction script from this plan's "Reproduction proofs" block, when run after merge with `LLM_WIKI_PATH` unset and no local clone discoverable, prints an error message containing the literal substrings: `LLM_WIKI_PATH`, `https://github.com/vamseeachanta/llm-wiki`, and `codes-standards-data-routing`.
-- [ ] Reproduction script, when run with `LLM_WIKI_PATH=/mnt/local-analysis/llm-wiki` (standalone clone with `wikis/` not `knowledge/wikis/`), resolves successfully and emits one INFO log.
+- [ ] Reproduction script from this plan's "Reproduction proofs" block, when run after merge with `LLM_WIKI_PATH` unset and no local clone discoverable, prints an error message containing the literal substrings: `LLM_WIKI_PATH`, `https://api.github.com/repositories/1230228585`, and `codes-standards-data-routing`.
+- [ ] Reproduction script, when run with `LLM_WIKI_PATH=~/.local/share/digitalmodel/knowledge` (standalone clone with `wikis/` not `knowledge/wikis/`), resolves successfully and emits one INFO log.
 - [ ] `docs/data/OCIMF_CORPUS_README.md` contains a new section naming `LLM_WIKI_PATH`, the private repo URL, and a pointer to the routing rule.
 - [ ] Existing `DIGITALMODEL_REPO_ROOT` env-var users see a `DeprecationWarning` but the calc still resolves.
 - [ ] No `from <module> import *` of resolver internals from outside the citations package; resolver's public API is documented in `__init__.py`.
@@ -318,13 +318,13 @@ Pre-empted findings (the plan author's own adversarial pass):
 
 2. **CI without wiki access (legitimate).** What if a CI environment legitimately runs digitalmodel tests with no wiki access? — Mitigated: (a) `validate_citation()` keeps the explicit-`repo_root` path for tests-with-fixtures, so the existing vendored test fixtures (`tests/citations/fixtures/knowledge/...`) continue to work without any env var; (b) the resolver only raises at calc invocation, not at import — import remains side-effect-free. Tested via `test_registry_get_mooring_safety_factor_explicit_repo_root_preserved`.
 
-3. **Thread safety of the resolution cache.** `_REPO_ROOT_RESOLUTION_CACHE` in `mooring_design.py` and the new resolver's `_RESOLUTION_CACHE` are plain dicts. Concurrent first-resolution in a threaded test runner could double-warn. — Acceptable for v1: warning is idempotent (same message, one-shot is "best-effort"), not a correctness defect. Documented in module docstring. If we ever observe a test flake, promote to `threading.Lock` in a follow-on.
+3. **Thread safety of the resolution cache.** `_REPO_ROOT_RESOLUTION_CACHE` in `mooring_design.py` and the new resolver's `_RESOLUTION_CACHE` are plain dicts. Concurrent first-resolution in a threaded test runner could double-warn. — Acceptable for v1: warning is idempotent (same message, one-shot is "best-effort"), not a correctness defect. Documented in module docstring. If a test exhibits this race, promote to `threading.Lock` in a follow-on.
 
 4. **Parent-walk sentinel.** Per [`feedback_path_parent_infinite_loop`](https://github.com/vamseeachanta/workspace-hub/blob/main/.claude/memory/feedback_path_parent_infinite_loop.md), an unbounded `Path.parent` walk can infinite-loop at `/`. — Mitigated: hard cap `_WALK_HARD_CAP = 8` (matches the existing `mooring_design.py:_REPO_ROOT_WALK_HARD_CAP` precedent). Tested via `test_resolver_parent_walk_has_sentinel`.
 
-5. **Hardcoded `knowledge/wikis/` prefix in registry template.** The current `_DNV_OS_E301_CITATION_TEMPLATE["wiki_path"]` embeds the workspace-hub overlay prefix. — **Resolved (user, 2026-05-20)**: change canonical form to `wikis/<domain>/...` (no `knowledge/` prefix). Standalone `vamseeachanta/llm-wiki` is canonical post-privacy-flip; the resolver `_prepend_knowledge_if_workspace_hub_layout()` adds the prefix when the resolved base is a workspace-hub root. Implementation: update `_DNV_OS_E301_CITATION_TEMPLATE["wiki_path"]` in registry.py to drop the `knowledge/` prefix.
+5. **Hardcoded `knowledge/wikis/` prefix in registry template.** The current `_DNV_OS_E301_CITATION_TEMPLATE["wiki_path"]` embeds the workspace-hub overlay prefix. — **Resolved (user, 2026-05-20)**: change canonical form to `wikis/<domain>/...` (no `knowledge/` prefix). Standalone `knowledge base repository` is canonical post-privacy-flip; the resolver `_prepend_knowledge_if_workspace_hub_layout()` adds the prefix when the resolved base is a workspace-hub root. Implementation: update `_DNV_OS_E301_CITATION_TEMPLATE["wiki_path"]` in registry.py to drop the `knowledge/` prefix.
 
-6. **Error-message stability.** Tests assert literal substrings in the error message. — Acceptable: documented as part of the public contract. Future message updates must update tests in lockstep.
+6. **Error-message stability.** Tests assert literal substrings in the error message. — The message text is documented as part of the public contract. Future message updates must update tests in lockstep.
 
 7. **`DIGITALMODEL_REPO_ROOT` legacy aliasing.** Removing it would break existing users; keeping it forever bloats the resolver. — Mitigated: keep with `DeprecationWarning`, mark for removal in a future release tracked by a follow-on issue (TBD; do not file in this plan to avoid scope creep).
 
@@ -341,21 +341,21 @@ Pre-empted findings (the plan author's own adversarial pass):
 
 ### Resolved (user, 2026-05-20)
 
-- **Q1 — canonical citation `wiki_path` form**: **CHANGE to `wikis/<domain>/...`** (no `knowledge/` prefix). The standalone `vamseeachanta/llm-wiki` repo is the canonical source post-privacy-flip; its layout has no `knowledge/` prefix. The workspace-hub overlay (`knowledge/wikis/...`) is the legacy convention. The resolver detects layout and prepends `knowledge/` ONLY when the resolved base is a workspace-hub root (i.e., contains `knowledge/wikis/` directly). Implementation impact: `_DNV_OS_E301_CITATION_TEMPLATE["wiki_path"]` changes from `"knowledge/wikis/engineering/wiki/standards/dnv-os-e301.md"` to `"wikis/engineering/wiki/standards/dnv-os-e301.md"`; resolver gains a `_prepend_knowledge_if_workspace_hub_layout()` helper.
-- **Q2 — `_KNOWN_LOCAL_CLONES` cross-platform**: **YES**. Default set: `(Path("/mnt/local-analysis/llm-wiki"), Path.home() / "workspace-hub" / "llm-wiki")`. The `Path.home()` form resolves to `~/workspace-hub/llm-wiki` on Linux/macOS and `C:\Users\<user>\workspace-hub\llm-wiki` on Windows. Per `feedback_path_parent_infinite_loop`, paths are validated via `is_dir()` before use (no walk hazard).
-- **Q3 — fail-closed shell command**: **YES, include `export LLM_WIKI_PATH=/path/to/your/llm-wiki` in the error message** as a copy-pasteable example. Full message contract:
+- **Q1 — canonical citation `wiki_path` form**: **CHANGE to `wikis/<domain>/...`** (no `knowledge/` prefix). The standalone `knowledge base repository` repo is the canonical source post-privacy-flip; its layout has no `knowledge/` prefix. The workspace-hub overlay (`knowledge/wikis/...`) is the legacy convention. The resolver detects layout and prepends `knowledge/` ONLY when the resolved base is a workspace-hub root (i.e., contains `knowledge/wikis/` directly). Implementation impact: `_DNV_OS_E301_CITATION_TEMPLATE["wiki_path"]` changes from `"knowledge/wikis/engineering/wiki/standards/dnv-os-e301.md"` to `"wikis/engineering/wiki/standards/dnv-os-e301.md"`; resolver gains a `_prepend_knowledge_if_workspace_hub_layout()` helper.
+- **Q2 — `_KNOWN_LOCAL_CLONES` cross-platform**: **YES**. Default set: `(Path.home() / ".local" / "share" / "digitalmodel" / "knowledge",)`. The `Path.home()` form resolves to `~/.local/share/digitalmodel/knowledge` on Linux/macOS and `C:\Users\<user>\.local\share\digitalmodel\knowledge` on Windows. Per `feedback_path_parent_infinite_loop`, paths are validated via `is_dir()` before use (no walk hazard).
+- **Q3 — fail-closed shell command**: **YES, include `export LLM_WIKI_PATH=/path/to/your/knowledge-base` in the error message** as a copy-pasteable example. Full message contract:
   ```
   CitationResolutionError: code_id='<id>' wiki_path='<path>' reason=resolver_unconfigured
 
-  The citation resolver cannot find a wiki clone. The vamseeachanta/llm-wiki repo
+  The citation resolver cannot find a wiki clone. The knowledge-base repository
   is private as of 2026-05-20 (codes-standards-data-routing rule §4).
 
   To fix: clone the private repo (requires GitHub auth) and set the env var:
-      git clone https://github.com/vamseeachanta/llm-wiki.git
-      export LLM_WIKI_PATH=$(pwd)/llm-wiki
+      git clone "$DIGITALMODEL_WIKI_URL" knowledge-base
+      export LLM_WIKI_PATH=$(pwd)/knowledge-base
 
   Or set the env var to point at an existing local clone:
-      export LLM_WIKI_PATH=/path/to/your/llm-wiki
+      export LLM_WIKI_PATH=/path/to/your/knowledge-base
 
   See: https://github.com/vamseeachanta/workspace-hub/blob/main/.claude/rules/codes-standards-data-routing.md §4
   ```
@@ -376,7 +376,7 @@ Pre-empted findings (the plan author's own adversarial pass):
 
 ## Related
 
-- Umbrella: [workspace-hub#2774](https://github.com/vamseeachanta/workspace-hub/issues/2774) — private llm-wiki corpus-ingest program
+- Umbrella: [workspace-hub#2774](https://github.com/vamseeachanta/workspace-hub/issues/2774) — private knowledge base corpus-ingest program
 - Pilot precedent: [workspace-hub#2685](https://github.com/vamseeachanta/workspace-hub/issues/2685) — DNV-OS-E301 citation pilot LIVE
 - Calc-citation contract: [`.claude/rules/calc-citation-contract.md`](https://github.com/vamseeachanta/workspace-hub/blob/main/.claude/rules/calc-citation-contract.md)
 - Routing rule: [`.claude/rules/codes-standards-data-routing.md`](https://github.com/vamseeachanta/workspace-hub/blob/main/.claude/rules/codes-standards-data-routing.md) §4

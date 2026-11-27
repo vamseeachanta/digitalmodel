@@ -77,7 +77,10 @@ _KEPT_PUBLIC = (
 
 
 def test_no_whole_file_exclusion_for_confidential_content():
-    paths = [str(e["path"]) for e in _committed().get("exclusions") or []]
+    paths = [
+        str(e["path"]) for e in _committed().get("exclusions") or []
+        if "line_sha256" not in e
+    ]
     bad = [p for p in paths if p.startswith(_CONFIDENTIAL_PREFIXES)]
     bad += [
         p
@@ -110,12 +113,14 @@ def gate(tmp_path):
             yaml.safe_dump(rules), encoding="utf-8"
         )
 
-    def run(*args):
+    def run(*args, private_list=None):
         e = {k: v for k, v in os.environ.items() if k not in _GIT_BINDINGS}
         for k in ("DIGITALMODEL_DENY_LIST", "CI", "GITHUB_ACTIONS"):
             e.pop(k, None)
         e["HOME"] = str(home)
         e["USERPROFILE"] = str(home)
+        if private_list is not None:
+            e["DIGITALMODEL_DENY_LIST"] = str(private_list)
         return subprocess.run(
             [
                 sys.executable,
@@ -145,6 +150,88 @@ def _sample(gate, text: str) -> str:
     p = gate.root / "sample.md"
     p.write_text(text, encoding="utf-8")
     return str(p)
+
+
+def test_source_line_exclusion_is_bound_to_its_path_content_and_rule(gate):
+    line = "Public source zzcurrentname"
+    rules = _rules(
+        hashed_names=[_h("new-salt-for-test-000000000", "zzcurrentname")],
+        exclusions=[{
+            "path": "sample.md",
+            "reason": "Public source credit",
+            "line_sha256": [hashlib.sha256(line.encode()).hexdigest()],
+            "token_sha256": _h("new-salt-for-test-000000000", "zzcurrentname"),
+        }],
+    )
+    gate.write_rules(rules)
+    _sample(gate, line + "\n")
+    assert gate("sample.md").returncode == 0
+    other = gate.root / "other.md"
+    other.write_text(line + "\n", encoding="utf-8")
+    assert gate("other.md").returncode == 1
+    _sample(gate, line + "\n" + line + " changed\n")
+    result = gate("sample.md")
+    assert result.returncode == 1 and "sample.md:2: [denied-name]" in result.stdout
+    rules["structural"] = [{"id": "test-structure", "pattern": "^Public source"}]
+    gate.write_rules(rules)
+    assert "sample.md:1: [test-structure]" in gate("sample.md").stdout
+    rules["exclusions"][0]["rule"] = "test-structure"
+    del rules["exclusions"][0]["token_sha256"]
+    gate.write_rules(rules)
+    result = gate("sample.md")
+    assert result.returncode == 1 and "sample.md:1: [denied-name]" in result.stdout
+    assert "sample.md:1: [test-structure]" not in result.stdout
+    assert "sample.md:2: [test-structure]" in result.stdout
+
+
+@pytest.mark.parametrize("second_list", ["hashed", "legacy", "private"])
+def test_reviewed_name_cannot_hide_a_second_name_on_the_same_line(gate, second_list):
+    salt = "fixture-salt"
+    line = "Source zzreviewed for zzsecond"
+    rules = _rules(
+        salt=salt,
+        hashed_names=[_h(salt, "zzreviewed")],
+        exclusions=[{
+            "path": "sample.md",
+            "line_sha256": [hashlib.sha256(line.encode()).hexdigest()],
+            "token_sha256": _h(salt, "zzreviewed"),
+        }],
+    )
+    gate.write_rules(rules)
+    _sample(gate, line)
+    assert gate("sample.md").returncode == 0
+    private_path = None
+    if second_list == "legacy":
+        rules["legacy_hashed_names"] = {"salt": OLD_SALT, "hashes": [_h(OLD_SALT, "zzsecond")]}
+    elif second_list == "private":
+        private_path = gate.root / "private.txt"
+        private_path.write_text("zzsecond\n", encoding="utf-8")
+    else:
+        rules["hashed_names"].append(_h(salt, "zzsecond"))
+    gate.write_rules(rules)
+    result = gate("sample.md", private_list=private_path)
+    assert result.returncode == 1
+    assert "sample.md:1: [denied-name]" in result.stdout
+
+
+def test_unbound_reviewed_name_is_rejected(gate):
+    line = "Source zzreviewed"
+    gate.write_rules(_rules(exclusions=[{
+        "path": "sample.md",
+        "line_sha256": [hashlib.sha256(line.encode()).hexdigest()],
+    }]))
+    _sample(gate, line)
+    assert gate("sample.md").returncode != 0
+
+
+@pytest.mark.parametrize("scope", [{"line_sha256": None}, {"line_sha256": []},
+                                    {"line_sha256": ["bad"]}, {"lines_sha256": []},
+                                    {"token_sha256": "a" * 64},
+                                    {"line_sha256": ["a" * 64], "token_sha256": "bad"}])
+def test_invalid_line_exclusion_cannot_exempt_a_file(gate, scope):
+    gate.write_rules(_rules(exclusions=[{"path": "sample.md", **scope}]))
+    _sample(gate, "fixture\n")
+    assert gate("sample.md").returncode != 0
 
 
 def test_a_name_under_the_current_salt_is_denied(gate):

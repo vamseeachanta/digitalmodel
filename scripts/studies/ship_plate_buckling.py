@@ -3,8 +3,9 @@
 """Bounded research adapter over existing plate/panel buckling implementations.
 
 No ingestion pipeline, engineering acceptance, local-patch model or solver dispatch.
-Outputs must be retained by private digitalmodel-data, per existing owner contract.
+Outputs must be retained by the private data repository, per existing owner contract.
 """
+import os
 import argparse
 import hashlib
 import itertools
@@ -270,7 +271,7 @@ def compute_reference_study(data):
     data = validate_reference_study(data)
     return dict(schema_version=1, method=REFERENCE_METHOD, inputs=data,
                 engineering_status='NOT_EVALUATED', limitation=REFERENCE_LIMIT,
-                evidence_repository='digitalmodel-data',
+                evidence_repository=os.environ.get('DIGITALMODEL_EVIDENCE_REPOSITORY') or 'private data repository',
                 rows=[_reference_row(c, data['materials'][c['material_id']])
                       for c in data['cases']])
 
@@ -341,7 +342,7 @@ def write_reference_study(source, output):
     render_reference(saved, output / 'lookup.html')
     paths = [Path(__file__), REFERENCE_SCHEMA,
              ROOT / 'src/digitalmodel/structural/plate_capacity/elastic_buckling.py']
-    manifest = dict(method=REFERENCE_METHOD, evidence_repository='digitalmodel-data',
+    manifest = dict(method=REFERENCE_METHOD, evidence_repository=os.environ.get('DIGITALMODEL_EVIDENCE_REPOSITORY') or 'private data repository',
                     retention_status='execution_replica_not_archived',
                     engineering_status='NOT_EVALUATED',
                     input_sha256=hashlib.sha256(source.read_bytes()).hexdigest(),
@@ -391,7 +392,7 @@ def main(argv=None):
                   ROOT/'src/digitalmodel/structural/structural_analysis/models.py']
     result_digest = hashlib.sha256(output.read_bytes()).hexdigest()
     revision = subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT,text=True).strip()
-    manifest = dict(schema_version=1, owner_repo='digitalmodel-data', run_id='ship-plate-synthetic-'+result_digest[:16],
+    manifest = dict(schema_version=1, owner_repo=os.environ.get('DIGITALMODEL_EVIDENCE_REPOSITORY') or 'private data repository', run_id='ship-plate-synthetic-'+result_digest[:16],
         executed_utc=datetime.now(timezone.utc).isoformat(), workflow_git_revision=revision,
         workflow_dirty=bool(subprocess.check_output(['git','status','--porcelain'],cwd=ROOT,text=True).strip()),
         evaluated_lower_thickness_mm=.5, threshold_bracket_resolution_upper_bound_mm=(12-.5)/2**50,

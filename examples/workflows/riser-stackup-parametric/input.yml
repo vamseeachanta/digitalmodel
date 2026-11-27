@@ -2,7 +2,7 @@ basename: parametric_run
 
 parametric_run:
   # Offline legacy-derived design matrix from:
-  # /mnt/remote/ace-linux-1/ace/aceengineercode/data_manager/data/risers/drilling/
+  # ${ACE_DATA_ROOT}/aceengineercode/data_manager/data/risers/drilling/
   # app_vertical_riser_<DEPTH>ft_WT<WT>_<PCF>pcf_stack_up_properties.csv.
   # submerged_weight_kn is sum(wet_weight_per_unit_length * stack_length) from
   # each legacy stack-up CSV. WT is retained in case_id only because the

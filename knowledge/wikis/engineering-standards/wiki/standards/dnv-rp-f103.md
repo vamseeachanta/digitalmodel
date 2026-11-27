@@ -6,7 +6,7 @@ domain: engineering-standards
 code_id: dnv-rp-f103
 publisher: DNV
 revision: "2010"
-visibility: private-llm-wiki
+visibility: private-knowledge-base
 license_status: licensed-local-reference-derived-notes
 ---
 

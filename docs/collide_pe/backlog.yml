@@ -125,7 +125,7 @@ wave_1:
     likes: 11
     hotness: 37
 
-# Second wave — next tier by hotness (all conceptual; concepts -> llm-wiki).
+# Second wave — next tier by hotness (all conceptual; concepts -> knowledge base).
 wave_2:
   - id: pe-2026-01-12
     date: "2026-01-12"

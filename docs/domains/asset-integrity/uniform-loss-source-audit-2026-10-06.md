@@ -122,7 +122,7 @@ uv run python -m pytest tests/asset_integrity/test_uniform_loss_diagnostic.py -q
 Runtime/library versions, host and module SHA-256 values are written into the
 diagnostic output. Numerical files remain task-local; the common repository
 retains the method and qualification record. Later qualified reusable results
-belong in private digitalmodel-data with stable IDs, manifest revision/digest,
+belong in the private data repository with stable IDs, manifest revision/digest,
 criteria and qualified intended use; no storage migration occurs here.
 Hashes cover all digitalmodel Python source bytes, including imported helpers;
 CRLF/LF checkout differences deliberately change these raw-byte digests.

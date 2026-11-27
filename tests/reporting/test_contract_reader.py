@@ -222,7 +222,7 @@ def test_digest_format_is_required(declared, digest):
         "/values.json",
         "C:/values.json",
         "C:values.json",
-        "\\\\server\\share\\values.json",
+        "\\\\server\\share\\values.json",  # identifier-gate: example
         "results\\values.json",
         "//server/share/values.json",
         "results//values.json",

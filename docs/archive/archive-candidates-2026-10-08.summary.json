@@ -2566,7 +2566,7 @@
     "bytes_saved": 75409494
   },
   "archive_store": {
-    "root": "/mnt/ace/digitalmodel",
+    "root": "${ACE_DATA_ROOT}/digitalmodel",
     "layout": "blobs/sha256/<first two hex>/<sha256>.<ext>",
     "one_copy_per_unique_blob": true
   },

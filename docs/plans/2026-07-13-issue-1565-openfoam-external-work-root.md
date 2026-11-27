@@ -126,7 +126,7 @@ its current schema until a separate migration.
 are code-owned records with ID, exact basename, schema, media type, byte bound,
 and policy version; YAML/glob discovery cannot register one. #1576 reserves but
 does not activate `openfoam-artifact-index-v1` while Deckhand
-[#564](https://github.com/vamseeachanta/deckhand/issues/564) is open. Activation
+[#564](https://api.github.com/repositories/1257558103/issues/564) is open. Activation
 requires #564 merged plus separately approved integration/readback. Heavy trees,
 checkpoints, logs, mesh/field/VTK/processor output remain external.
 

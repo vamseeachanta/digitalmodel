@@ -15,7 +15,7 @@ import sys
 import pandas as pd
 import pytest
 
-from digitalmodel.legacy_evidence import read_evidence
+from digitalmodel.legacy_evidence import legacy_files, read_evidence
 
 
 FIXTURE_DIR = pathlib.Path(__file__).parent / "fixtures"
@@ -55,17 +55,25 @@ def _assert_capture_source_identity(repo_root: pathlib.Path, fixture: dict) -> N
     revision = fixture["source_commit_sha"]
     path = fixture["build_script_path"]
     source_spec = f"{revision}:{path}"
+    expected_blob = fixture["build_script_blob_sha"]
+    published = "published_build_script_blob_sha" in fixture
     try:
-        source = read_evidence(repo_root, revision, path)
+        source = read_evidence(repo_root, revision, path, allow_redacted=published)
+        if published:
+            record = legacy_files(repo_root, revision).get(path, {})
+            assert record.get("archived_blob") == expected_blob, (
+                f"archived generating source blob differs for {source_spec}"
+            )
+            expected_blob = fixture["published_build_script_blob_sha"]
     except ValueError as error:
         raise AssertionError(f"historical generating source is unavailable: {source_spec}: {error}") from error
     actual_blob = subprocess.check_output(
         ["git", "hash-object", "--stdin"],
         cwd=repo_root, env=_git_environment(), input=source,
     ).decode("utf-8").strip()
-    assert actual_blob == fixture["build_script_blob_sha"], (
+    assert actual_blob == expected_blob, (
         f"generating source blob differs for {source_spec}: "
-        f"expected {fixture['build_script_blob_sha']}, got {actual_blob}"
+        f"expected {expected_blob}, got {actual_blob}"
     )
     assert any(
         isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
@@ -75,7 +83,7 @@ def _assert_capture_source_identity(repo_root: pathlib.Path, fixture: dict) -> N
 
 
 def test_capture_source_matches_recorded_blob():
-    """The historical capture identifies the exact pre-refactor producer blob."""
+    """The capture identifies the archived producer and its redacted publication."""
     fixture = json.loads(TRACE_SIG_FIXTURE.read_text(encoding="utf-8"))
     _assert_capture_source_identity(_repo_root(), fixture)
 

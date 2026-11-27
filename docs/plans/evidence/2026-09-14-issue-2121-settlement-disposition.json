@@ -3,25 +3,27 @@
   "observed_utc": "2026-09-14T15:57:00.094827+00:00",
   "verdict": "MAJOR",
   "scope": "Supported bounded normal-exit settlement defect and product-selection preparation; no general solver qualification",
+  "source_revision": "e776031cf201989433b7c9678871c2b5bd1cd614",
+  "source_revision_scope": "The three repository-relative source digests describe the parent of the disposition commit. The two external JSON digests identify artifacts at the observation time.",
   "sources": [
     {
-      "path": "D:\\ws\\_worktrees\\digitalmodel-2094-offline\\src\\digitalmodel\\ansys\\cylinder_runner.py",
+      "path": "src/digitalmodel/ansys/cylinder_runner.py",
       "sha256": "3ea772545d863cbbc6ddd1e072f33aac5ebf5c96beca5322e0081bb68e813d2e"
     },
     {
-      "path": "D:\\ws\\_worktrees\\digitalmodel-2094-offline\\src\\digitalmodel\\ansys\\cylinder_process.py",
+      "path": "src/digitalmodel/ansys/cylinder_process.py",
       "sha256": "6a91eddc2a9dfffff6d9ca55bd89b53d224106b42cd9f3c15d69773339b0fb59"
     },
     {
-      "path": "D:\\ws\\_worktrees\\digitalmodel-2094-offline\\tests\\ansys\\test_cylinder_runner.py",
+      "path": "tests/ansys/test_cylinder_runner.py",
       "sha256": "6df886571b76e24b1835058b3109fdcfc17e7cc6e7c66ea4a04422cf7931f7e3"
     },
     {
-      "path": "D:\\ws\\_coordination\\SOLVERS-2121-b2-supervisor-normal-exit\\receipt.json",
+      "path": "${COORDINATION_ROOT}/SOLVERS-2121-b2-supervisor-normal-exit/receipt.json",
       "sha256": "b0b923c5d4d9dc4ea06597f0c0a64c1fce5e6e15fc9022955d9080fb5e3724df"
     },
     {
-      "path": "D:\\ws\\_coordination\\SOLVERS-2121-b2-supervisor-settlement-observation\\receipt.json",
+      "path": "${COORDINATION_ROOT}/SOLVERS-2121-b2-supervisor-settlement-observation/receipt.json",
       "sha256": "52af940808ea162ef785fa3bd64a6be108b5ff1ce00c7ddead91e2a631481272"
     }
   ],

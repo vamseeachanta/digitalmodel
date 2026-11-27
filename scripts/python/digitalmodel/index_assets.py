@@ -15,12 +15,6 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Default Configuration
-DEFAULT_SEARCH_PATHS = [
-    "/mnt/ace/O&G-Standards",
-    "/mnt/ace/docs",
-    "/mnt/ace/Production"
-]
-
 DEFAULT_OUTPUT_FILE = "data/legacy_assets_index.json"
 
 # File Type Classification
@@ -107,12 +101,18 @@ def index_directory(paths: List[str]) -> List[Dict[str, Any]]:
 
 def main():
     parser = argparse.ArgumentParser(description="Index legacy assets for Digital Model.")
-    parser.add_argument("--paths", nargs='+', default=DEFAULT_SEARCH_PATHS, help="List of paths to index")
+    parser.add_argument("--paths", nargs='+', help="List of paths to index")
     parser.add_argument("--output", default=DEFAULT_OUTPUT_FILE, help="Output JSON file path")
     
     args = parser.parse_args()
     
-    assets = index_directory(args.paths)
+    paths = args.paths
+    if paths is None:
+        data_root = os.environ.get("ACE_DATA_ROOT")
+        if not data_root:
+            parser.error("supply --paths or set ACE_DATA_ROOT to the mounted data share")
+        paths = [str(Path(data_root) / folder) for folder in ("O&G-Standards", "docs", "Production")]
+    assets = index_directory(paths)
     
     # Ensure output directory exists
     Path(args.output).parent.mkdir(parents=True, exist_ok=True)

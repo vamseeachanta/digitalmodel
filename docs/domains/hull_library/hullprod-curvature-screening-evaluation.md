@@ -8,7 +8,7 @@
 | **Paper** | Serani, A. & Maki, K. J. (2026). *Geometry-Based Metrics for Early-Stage Hull-Form Producibility Screening*. arXiv:2609.27544, DOI 10.48550/arXiv.2609.27544 |
 | **Source** | LinkedIn post by Andrea Serani, 2026-09 (BEAM project, ONR N00014-26-1-2164) |
 | **Spike** | [`docs/spikes/2026-09-25-hullprod-curvature-screening/`](../../spikes/2026-09-25-hullprod-curvature-screening/README.md) |
-| **Verdict** | **Adopt as an optional curvature/fairness screen.** Not a producibility or cost predictor for our hull types. |
+| **Verdict** | **Adopt as an optional curvature/fairness screen.** Not a producibility or cost predictor for the hull types assessed. |
 
 ---
 
@@ -33,7 +33,7 @@ The authors are explicit that these are geometry screening descriptors only: no 
 simulation, no panelization, no cost, no fairing. Mesh results are always flagged
 `MESH-SENSITIVE`; BRep is the canonical realization.
 
-## 2. Where our ecosystem stands today
+## 2. Where the toolchain stands today
 
 Nothing in the ecosystem computes surface curvature as a quality measure:
 
@@ -53,7 +53,7 @@ change the form, so it produces no measure of how a variant's surface differs fr
 HullProd installed cleanly into a Python 3.12 venv on the dev-primary Windows 11 workstation, bundling
 OpenCascade via `cadquery-ocp`. Each hull assessed in 0.4 to 1.2 s.
 
-Our panel meshes are WAMIT GDF. HullProd does not read GDF, so the spike adds a 60-line
+The repository panel meshes are WAMIT GDF. HullProd does not read GDF, so the spike adds a 60-line
 `gdf_to_stl.py` (quad split, ISX/ISY mirroring, vertex merge). OBJ was read directly.
 
 ### 3.1 Ecosystem hulls (auto `L_ref`, mesh backend)
@@ -66,7 +66,7 @@ Our panel meshes are WAMIT GDF. HullProd does not read GDF, so the spike adds a 
 | L01 default vessel | `docs/domains/orcawave/examples/L01_default_vessel/L01 Vessel mesh.gdf` | 1 514 | 15.1 | 0.43 | 0.20 | 0.25 | 0.12 | caution |
 | FPSO | `<client-wiki>/cases/orcawave-diffraction-fpso/fpso.gdf` | 1 760 | 10.2 | 0.13 | 0.75 | 0.09 | 0.03 | caution |
 | floating production vessel FPV-A | `worldenergydata/.../hulls/<FPV-A>.obj` (Rhino export) | 30 k | 6.6 | 0.00 | 0.00 | 0.21 | 0.78 | **poor** (slivers, 21 non-manifold edges, 25 components, valence 112) |
-| Test ship, our generator | `tests/.../conftest.py::ship_profile` via `HullMeshGenerator`, 7 225 panels | 28 900 | 3.13 | 0.13 | 0.12 | 0.16 | **0.60** | caution |
+| Test ship, repository generator | `tests/.../conftest.py::ship_profile` via `HullMeshGenerator`, 7 225 panels | 28 900 | 3.13 | 0.13 | 0.12 | 0.16 | **0.60** | caution |
 | Unit sphere (control) | HullProd example | 80 | 4.00 | 0 | 0 | 1.00 | 0 | good |
 
 ## Correction 2026-09-27
@@ -97,12 +97,12 @@ The sphere control is exact: `K = 1`, `L_ref = 2`, so `I_D = 4`.
 | | 160x40 | 4.16 | 0.636 | 0.364 | 0 |
 | | 320x80 | 4.24 | 0.630 | 0.370 | 0 |
 | Cylinder D=12, H=26 (OC4 column) | 19x13, 48x26, 120x60 | 0.00 | 0 | 0 | **1.00** |
-| Our test ship, uniform x-grid | 400 / 1 600 / 7 225 panels | 2.72 / 3.01 / 3.13 | 0.47 / 0.25 / 0.16 | 0.53 / 0.64 / 0.60 | 0 / 0.07 / 0.12 |
-| Our test ship, adaptive x-grid | 400 / 1 600 / 7 208 panels | 2.75 / 3.01 / 3.16 | 0.46 / 0.24 / 0.15 | 0.54 / 0.65 / 0.60 | 0 / 0.07 / 0.14 |
+| Test ship, uniform x-grid | 400 / 1 600 / 7 225 panels | 2.72 / 3.01 / 3.13 | 0.47 / 0.25 / 0.16 | 0.53 / 0.64 / 0.60 | 0 / 0.07 / 0.12 |
+| Test ship, adaptive x-grid | 400 / 1 600 / 7 208 panels | 2.75 / 3.01 / 3.16 | 0.46 / 0.24 / 0.15 | 0.54 / 0.65 / 0.60 | 0 / 0.07 / 0.14 |
 
 ## 4. Findings
 
-1. **Runs on what we already have.** GDF panel meshes from OrcaWave, AQWA and our own generator
+1. **Runs with the available meshes.** GDF panel meshes from OrcaWave, AQWA and the repository generator
    go through unchanged apart from the STL conversion. No CAD licence, no FreeCAD, no gmsh.
 
 2. **The drillship map is physically right.** Parallel midbody is 74 % flat with zero
@@ -118,7 +118,7 @@ The sphere control is exact: `K = 1`, `L_ref = 2`, so `I_D = 4`.
    curvature. HullProd is not a producibility measure for semi-subs, spars or TLPs built from
    developable primitives. It is still a useful paneling-quality metric for them.
 
-4. **Our own hull generator produces reverse curvature.** The fixture ship is 60 % saddle at
+4. **The repository hull generator produces reverse curvature.** The fixture ship is 60 % saddle at
    every resolution and the value does not fall with refinement, so it is geometry, not mesh
    noise. `mesh_generator.py` interpolates between stations with `scipy.interp1d(kind="linear")`
    in x (lines 150, 229, 302). Linear lofting between two different section curves is a ruled
@@ -139,7 +139,7 @@ The sphere control is exact: `K = 1`, `L_ref = 2`, so `I_D = 4`.
    for slivers, non-manifold edges and 25 disconnected components. Our `MeshQuality` and
    `quality_gates.py` would not have caught the non-manifold edges or the component count.
 
-7. **Reference-length handling matches our needs.** `--lref` takes any unit and records the
+7. **Reference-length handling supports the input units.** `--lref` takes any unit and records the
    choice; auto mode uses principal-axis span (about Lpp for monohulls, about beam for the OC4).
    Always pass `lref=length_bp` for catalog hulls so signatures are comparable.
 
@@ -156,7 +156,7 @@ dimensionless, hull-type-independent signature. Concretely:
 | Panel density gate before BEM | `diffraction/quality_gates.py`, `orcawave/panel_mesh.py` | `curvature_reliability` (good/caution/poor) plus non-manifold and component counts |
 | Curvature-adaptive refinement target | `mesh_refiner.py`, `coarsen_mesh.py` | refine where `|K| L_ref^2` is high (bow, stern, moonpool, bilge) instead of |d²y/dx²| only |
 | Canonical BRep signature for catalog hulls | `visualization/design_tools/freecad_hull.py` STEP export | mesh-independent reference values for the catalog and for regression tests |
-| Client-facing hull comparison | `parametric_hull_analysis` charts, `llm-wiki` naval-architecture wiki | drillship vs. drillship "how much of this hull is flat plate" tables from geometry alone |
+| Client-facing hull comparison | `parametric_hull_analysis` charts, `knowledge base` naval-architecture wiki | drillship vs. drillship "how much of this hull is flat plate" tables from geometry alone |
 
 What it does not do: it will not make `HullParametricSpace` a form generator. True
 parametrization (Cb, Cp, LCB, bilge radius, flare, moonpool) still needs a surface model
@@ -183,7 +183,7 @@ Each item needs its own plan and approval per `CLAUDE.md`. Ordered by value per 
    record BRep vs mesh delta in provenance. Needs FreeCAD on the runner (ace-linux-2 candidate).
 6. **Semi-sub handling** (M). Split OC4-type meshes into primitives at creases (columns, pontoons,
    braces) and screen per primitive, or restrict HullProd to paneling-quality use for these types.
-7. **Wiki and citation** (XS). Add HullProd to `llm-wiki/wikis/naval-architecture` sources and
+7. **Wiki and citation** (XS). Add HullProd to `${LLM_WIKI_PATH}/wikis/naval-architecture` sources and
    cite Serani & Maki 2026 wherever the signature is reported.
 
 ## 7. Limitations and cautions

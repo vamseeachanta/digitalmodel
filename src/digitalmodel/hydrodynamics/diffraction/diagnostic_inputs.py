@@ -5,6 +5,7 @@ Returned bundles remain unadmitted pending exact payload review and root intake.
 """
 import hashlib
 import json
+import os
 import re
 from decimal import Decimal, InvalidOperation
 
@@ -13,7 +14,8 @@ import yaml
 from .diagnostic_basis import canonical_intent, prescribed_basis, strict_json
 from .diagnostic_mesh import transform_mesh
 
-OWNER = 'vamseeachanta/digitalmodel-data'
+
+_AUTHORIZED_DESTINATION_SHA256 = 'fb1fe55350e1d4049fae86830cf00ca93ef938979e0f276532d2d59586e48b29'
 MAX_SOURCE_NODES = 10000  # Shared expansion-work bound, not engineering accuracy.
 FIELD_MAP = {
     'vessel.geometry.symmetry': 'symmetry',
@@ -142,11 +144,15 @@ def _rights(raw, reference, resolver):
     if set(record['sources']) != required or any(
             record['sources'][name] != hashlib.sha256(raw[name]).hexdigest() for name in required):
         raise ValueError('Rights do not bind original source bytes')
-    if (record.get('decision') != 'permitted' or record.get('destination') != OWNER
+    destination = os.environ.get('DIGITALMODEL_EVIDENCE_REPOSITORY', '')
+    if (not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9_.-]*/[A-Za-z0-9][A-Za-z0-9_.-]*', destination)
+            or hashlib.sha256(destination.encode('utf-8')).hexdigest() != _AUTHORIZED_DESTINATION_SHA256
+            or record.get('decision') != 'permitted' or record.get('destination') != destination
             or record.get('audience') != 'authorized-private'
             or record.get('operations') != ['transform', 'private-retention']
             or not isinstance(record.get('basis'), str) or not record['basis'].strip()):
         raise ValueError('Required transformation and destination rights not established')
+    return destination
 
 
 def _source_tree(tree):
@@ -183,14 +189,14 @@ def build_bundle(raw, rights_reference, rights_resolver, source_tree, *,
         raise ValueError('Bounded original source bytes required')
     tree = _source_tree(source_tree)
     _expected_sources(raw, expected_source_sha256)
-    _rights(raw, rights_reference, rights_resolver)
+    destination = _rights(raw, rights_reference, rights_resolver)
     mesh = transform_mesh(raw['mesh'])
     ledger = divergence_ledger(raw['spec'], mesh['header'])
     basis = prescribed_basis()
     intent_bytes = canonical_intent(basis)
     ledger_bytes = json.dumps({'divergence': ledger, 'mesh_transformation': mesh['panels']},
         sort_keys=True, separators=(',', ':'), ensure_ascii=False, allow_nan=False).encode('utf-8')
-    return {'manifest': {'owner_repo': OWNER,
+    return {'manifest': {'owner_repo': destination,
             'intake_status': 'not_established_pending_exact_payload_review',
             'engineering_qualified': False, 'source_tree': tree,
             'source_sha256': {name: hashlib.sha256(value).hexdigest() for name, value in raw.items()},

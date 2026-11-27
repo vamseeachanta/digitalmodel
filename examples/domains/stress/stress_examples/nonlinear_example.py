@@ -4,6 +4,7 @@ Nonlinear Stress Analysis Example
 This example demonstrates how to use the nonlinear stress analysis module
 to solve plasticity problems with various yield criteria and hardening models.
 """
+from pathlib import Path
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -303,7 +304,9 @@ def main():
                     textcoords='offset points', fontsize=8)
 
     plt.tight_layout()
-    plt.savefig('/mnt/github/github/digitalmodel/examples/stress/nonlinear_analysis.png',
+    output_dir = Path(__file__).resolve().parents[3] / "stress"
+    output_dir.mkdir(exist_ok=True)
+    plt.savefig(output_dir / 'nonlinear_analysis.png',
                 dpi=300, bbox_inches='tight')
 
     # Create detailed stress-strain plot
@@ -335,7 +338,9 @@ def main():
     plt.legend(fontsize=10)
     plt.tight_layout()
 
-    plt.savefig('/mnt/github/github/digitalmodel/examples/stress/hardening_comparison.png',
+    output_dir = Path(__file__).resolve().parents[3] / "stress"
+    output_dir.mkdir(exist_ok=True)
+    plt.savefig(output_dir / 'hardening_comparison.png',
                 dpi=300, bbox_inches='tight')
 
     print("Plots saved:")

@@ -781,11 +781,38 @@ def check(
     legacy_salt = str(legacy.get("salt", ""))
     legacy_hashed = {str(h).lower() for h in legacy.get("hashes") or []}
     private = set(rules.get("_private_names") or [])
-    excluded = {
-        str(e["path"]).replace("\\", "/")
-        for e in (rules.get("exclusions") or [])
-        if "path" in e
-    }
+    excluded: set[str] = set()
+    source_lines: dict[str, dict[str, set[tuple[str, str | None]]]] = {}
+    rule_ids = {"denied-name", *(rule["id"] for rule in rules["structural"])}
+    for entry in rules.get("exclusions") or []:
+        # A misspelled digest field must not become a whole-file exemption.
+        if (
+            not isinstance(entry, dict)
+            or not isinstance(entry.get("path"), str)
+            or entry.keys() - {"path", "reason", "line_sha256", "rule", "token_sha256"}
+        ):
+            die("check_identifiers: invalid exclusion")
+        path = entry["path"].replace("\\", "/")
+        if not ({"line_sha256", "rule", "token_sha256"} & entry.keys()):
+            excluded.add(path)
+            continue
+        hashes = entry.get("line_sha256")
+        rule_id = entry.get("rule", "denied-name")
+        if not (
+            isinstance(rule_id, str) and rule_id in rule_ids
+            and isinstance(hashes, list) and hashes
+            and all(isinstance(h, str) and _SHA256.fullmatch(h) for h in hashes)
+        ):
+            die("check_identifiers: exclusion needs valid line_sha256 digests")
+        token_digest = entry.get("token_sha256")
+        if rule_id == "denied-name":
+            if not isinstance(token_digest, str) or not _SHA256.fullmatch(token_digest):
+                die("check_identifiers: denied-name exclusion needs a salted token_sha256")
+        elif "token_sha256" in entry:
+            die("check_identifiers: token_sha256 applies only to a denied-name exclusion")
+        by_digest = source_lines.setdefault(path, {})
+        for digest in hashes:
+            by_digest.setdefault(digest, set()).add((rule_id, token_digest))
     media = {str(x).lower() for x in rules.get("binary_media_extensions") or []}
     compiled = []
     for rule in rules["structural"]:
@@ -804,7 +831,10 @@ def check(
     scanned = 0
     private_rx = list(rules.get("_private_patterns") or [])
 
-    def scan(label: str, n: int | str, line: str) -> None:
+    def scan(
+        label: str, n: int | str, line: str,
+        allowed_lines: dict[str, set[tuple[str, str | None]]] | None = None,
+    ) -> None:
         for rx in private_rx:
             if rx.search(line):
                 findings.append(
@@ -812,8 +842,11 @@ def check(
                     f"the private list matches here" + _excerpt(line, show_lines)
                 )
                 break
+        exceptions = allowed_lines.get(hashlib.sha256(line.encode()).hexdigest(), ()) if allowed_lines else ()
         structural = [] if EXAMPLE_MARK in line else compiled
         for rid, rx, msg in structural:
+            if (rid, None) in exceptions:
+                continue
             pos = 0
             while (m := rx.search(line, pos)) is not None:
                 # A vendor install path exempts itself, not its neighbours.
@@ -830,9 +863,12 @@ def check(
         if hashed or private or legacy_hashed:
             for word in WORD.findall(line):
                 if any(
-                    c in private
-                    or token_hash(c, salt) in hashed
-                    or (legacy_hashed and token_hash(c, legacy_salt) in legacy_hashed)
+                    (
+                        c in private
+                        or token_hash(c, salt) in hashed
+                        or (legacy_hashed and token_hash(c, legacy_salt) in legacy_hashed)
+                    )
+                    and (not exceptions or ("denied-name", token_hash(c, salt)) not in exceptions)
                     for c in _candidates(word)
                 ):
                     findings.append(
@@ -903,8 +939,9 @@ def check(
                 )
             continue
         scanned += 1
+        allowed_lines = source_lines.get(disp)
         for n, line in enumerate(text.splitlines(), start=1):
-            scan(label, n, line)
+            scan(label, n, line, allowed_lines)
     return findings, scanned, media_skipped, uninspectable
 
 

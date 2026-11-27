@@ -13,7 +13,7 @@ Existing infrastructure already in place:
 - 27-section breakdown is correct (`compute_orcaflex_sections` in `jumper_lift.py`)
 - Both jumper specs (`gom_tieback_mf_plet/spec.yml`, `gom_tieback_plet_plem/spec.yml`) carry `pipe`, `environment`, `metadata`, `cranes` — what's missing for a full modular spec is `vessels`, `line_types` (with bend stiffness + axial stiffness), `analysis` (static + dynamic settings), and the modular generator's `model.yml` envelope.
 
-Reference live SZ.yml: `rock-oil-field/s7/gom_tieback/sut_mm/SZ.yml` (40 scenario files) — the canonical shape of the .dat-bound model.yml the generator should produce.
+Reference live SZ.yml: `${FIELD_PROJECT_ROOT}/s7/gom_tieback/sut_mm/SZ.yml` (40 scenario files) — the canonical shape of the .dat-bound model.yml the generator should produce.
 
 ## Plan
 

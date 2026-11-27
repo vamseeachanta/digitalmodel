@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import hashlib
+import json
 import os
 import subprocess
 
@@ -101,6 +102,14 @@ def test_mismatched_blob_digest_is_rejected(squash_capture):
     fixture["build_script_blob_sha"] = other_blob
     with pytest.raises(AssertionError, match="generating source blob differs"):
         traces._assert_capture_source_identity(repo, fixture)
+
+
+@pytest.mark.parametrize("field", ["build_script_blob_sha", "published_build_script_blob_sha"])
+def test_published_capture_checks_archived_and_published_pins(field):
+    fixture = json.loads(traces.TRACE_SIG_FIXTURE.read_bytes())
+    fixture[field] = "0" * 40
+    with pytest.raises(AssertionError, match="generating source blob differs"):
+        traces._assert_capture_source_identity(traces._repo_root(), fixture)
 
 
 @pytest.mark.parametrize("field,value", [

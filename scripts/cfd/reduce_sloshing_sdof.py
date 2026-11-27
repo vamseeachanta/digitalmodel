@@ -54,7 +54,7 @@ def _fit_zeta(pairs: List[tuple]) -> float:
 
 def main(argv: List[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description="Sloshing SDOF + tuning reduction (#1433)")
-    ap.add_argument("--work-dir", type=Path, default=Path("/mnt/local-analysis/sloshing_cfd_work"))
+    ap.add_argument("--work-dir", type=Path, default=Path.home() / "sloshing_cfd_work")
     ap.add_argument(
         "--output",
         type=Path,

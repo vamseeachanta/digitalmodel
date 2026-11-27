@@ -163,7 +163,7 @@ The read-only issue search found #1112 (an adjacent splash-envelope feature) and
 Exact sweep commands (run from the repository root):
 
 ```sh
-rg -n 'except|continue|return None|return \[\]|return \{\}|\b1970\b|\b0\.05\b|= 0(\.0)?\b' src/digitalmodel/installation/jumper_installation --glob '*.py'
+rg -n 'except|continue|return None|return \[\]|return \{\}|\b(?:1970)\b|\b0\.05\b|= 0(\.0)?\b' src/digitalmodel/installation/jumper_installation --glob '*.py'
 rg -n '\b(int|float|bool)\(|\.get\(|_cfg\(|_json_safe|write_text|json.dump|round\(' src/digitalmodel/installation/jumper_installation --glob '*.py'
 ```
 

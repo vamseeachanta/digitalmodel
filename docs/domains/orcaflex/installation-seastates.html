@@ -1,7 +1,7 @@
 <!doctype html><html lang="en"><meta charset="utf-8"><title>Installation sea-state workflow</title>
 <style>body{font:16px system-ui;max-width:1050px;margin:3em auto;line-height:1.5}pre{background:#eef2f5;padding:1em;overflow:auto}</style>
 <h1>Installation sea-state workflow</h1>
-<p>Tracking: <a href="https://github.com/vamseeachanta/digitalmodel/issues/1836">installation analysis workflow</a>. Digitalmodel owns reusable code; private digitalmodel-data owns retained reusable inputs, simulations, extracted datasets and engineering reports.</p>
+<p>Tracking: <a href="https://github.com/vamseeachanta/digitalmodel/issues/1836">installation analysis workflow</a>. Digitalmodel owns reusable code; the private data repository owns retained reusable inputs, simulations, extracted datasets and engineering reports.</p>
 <h2>Input architecture</h2><p>The installation_seastates module writes one byte-identical master, small per-case BaseFile change files and a hashed matrix manifest. The default matrix contains 156 cells: Hs 0.25–3.0 m at 0.25 m increments and Tp 4–16 s at 1 s increments. Only a selected case is resolved into a standalone execution snapshot. The existing reproduction runner retains its rejection of unresolved file dependencies.</p>
 <pre>from digitalmodel.workflows.installation_seastates import prepare_matrix
 prepare_matrix(source, source_sha256, study_dir, seed=20260915)

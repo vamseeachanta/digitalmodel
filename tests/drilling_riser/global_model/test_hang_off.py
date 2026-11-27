@@ -1,4 +1,4 @@
-"""Hang-off and running topology of the drilling-riser global model (digitalmodel-data #13, owner decision W414
+"""Hang-off and running topology of the drilling-riser global model (private data repository issue 13, owner decision W414
 'hangoff_fatigue_then_events'): the riser disconnected at the LMRP connector and hung off - hard (telescopic joint
 locked, the string on the vessel at the upper flex joint, no tensioners) or soft (the string on the tensioners, here a
 vertical gas-spring about mid-stroke) - with or without the LMRP; the running string hung off at a deployed length

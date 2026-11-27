@@ -18,7 +18,7 @@
   <li><code>cylinder_process_inventory.py</code> lines 106â€“131 and 217â€“257 will remain the source for complete-snapshot validation and unbound CONFLICT/UNKNOWN/CLEAR classification.</li>
   <li>The new pure verifier will recompute the existing <code>_seed</code> predicate across complete <code>initial_inventory</code> and will refuse any seed omitted from selected rows. The existing selector will not independently seed an orphan <code>interFoam.exe</code>, so the verifier will also refuse that name case-insensitively.</li>
   <li><code>cylinder_diagnostic_preflight.py</code> lines 214â€“256 and <code>cylinder_pressure_resources.py</code> lines 27â€“63 currently reuse a cached process observation after initial preflight. Root-owned integration will collect a fresh absence snapshot at initial preflight, immediately before launch, and during phase 2.</li>
-  <li>The source finding is retained in <code>D:/ws/_coordination/SOLVERS-intermediate-resource-absence-gate-analysis.json</code>, SHA-256 <code>f403b2e4a9c5b8aede88a18536e3ab5f8661a67f10047fc572ca7992c24a349d</code>.</li>
+  <li>The source finding is retained in <code>${COORDINATION_ROOT}/SOLVERS-intermediate-resource-absence-gate-analysis.json</code>, SHA-256 <code>f403b2e4a9c5b8aede88a18536e3ab5f8661a67f10047fc572ca7992c24a349d</code>.</li>
 </ul>
 <p>The result will establish only point-in-time absence within the implemented Windows process scope. It will not establish capacity, licence availability, a reservation, launch readiness, engineering qualification, unspecified solver-product absence, or ownership of CONTROL resources.</p>
 

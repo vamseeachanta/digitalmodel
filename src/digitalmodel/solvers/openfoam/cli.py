@@ -272,7 +272,7 @@ def run_cmd(
     "-o",
     type=click.Path(),
     default=None,
-    help="Output root to test for writability (default: /mnt/ace/cfd-output).",
+    help="Output root to test for writability (default: cfd-output under ACE_DATA_ROOT or the current directory).",
 )
 @click.option(
     "--require-solver",

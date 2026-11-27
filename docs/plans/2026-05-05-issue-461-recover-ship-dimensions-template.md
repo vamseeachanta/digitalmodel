@@ -13,16 +13,16 @@ What **was** found during this plan's prep:
 - `data/ship_dimensions_template.yaml` exists in digitalmodel (111 lines, 10 hull entries with units in feet/long-tons)
 - `src/digitalmodel/naval_architecture/ship_dimensions.py` exists (204 lines) with `default_dimension_template_path()` resolving to `data/ship_dimensions_template.yaml`
 - No `generate-ship-dimension-template.py` anywhere in the digitalmodel repo (confirmed by `find . -name "generate*ship*dimension*"` → empty)
-- No reference to such a script in workspace-hub either (executor must verify with `grep -r "generate-ship-dimension-template" /mnt/local-analysis/workspace-hub --include="*.py" --include="*.md"`)
+- No reference to such a script in workspace-hub either (executor must verify with `grep -r "generate-ship-dimension-template" ${WORKSPACE_ROOT}/workspace-hub --include="*.py" --include="*.md"`)
 
 This points strongly toward the **"deliberately replace"** path of the issue's required outcome (#3): the template was never generated programmatically — it was hand-authored as `data/ship_dimensions_template.yaml`. The generator concept can either be (a) declared a non-deliverable (template is the artifact, period), or (b) authored fresh as a post-hoc template generator that can rebuild the YAML from a vessel-class CSV plus PDF metadata.
 
 ## Plan
 
 1. **Final search for the missing artifact.** Run a wider sweep:
-   - `find /mnt/local-analysis/workspace-hub -name "generate*dimension*" -o -name "generate*ship*" 2>/dev/null`
-   - `grep -rln "generate-ship-dimension-template" /mnt/local-analysis/workspace-hub --include="*.py" --include="*.md" --include="*.yaml"`
-   - Check git history: `cd /mnt/local-analysis/workspace-hub/digitalmodel && git log --all --diff-filter=AD -- "*ship*dimension*"`
+   - `find ${WORKSPACE_ROOT}/workspace-hub -name "generate*dimension*" -o -name "generate*ship*" 2>/dev/null`
+   - `grep -rln "generate-ship-dimension-template" ${WORKSPACE_ROOT}/workspace-hub --include="*.py" --include="*.md" --include="*.yaml"`
+   - Check git history: `cd . && git log --all --diff-filter=AD -- "*ship*dimension*"`
    - Check abandoned branches: `git branch -a | grep -i wrk-1339`
    Document outcome as a comment on this issue. If anything turns up, import to step 4's canonical path.
 
@@ -63,7 +63,7 @@ This points strongly toward the **"deliberately replace"** path of the issue's r
 
 ## Acceptance Criteria
 
-- [ ] Wider artifact search documented in issue thread (negative result acceptable)
+- [ ] Wider artifact search documented in issue thread (record any negative result)
 - [ ] `data/ship_dimensions_template.yaml` head comment updates with provenance and schema documentation
 - [ ] All references to "missing Child E artifact" in #457 / #463 / WRK trackers replaced with explicit canonical paths
 - [ ] Loader smoke command passes

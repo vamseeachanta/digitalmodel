@@ -1,4 +1,4 @@
-"""Suite 3 (#1245): standards_crosswalk identifiers resolve in the llm-wiki
+"""Suite 3 (#1245): standards_crosswalk identifiers resolve in the knowledge base
 standards registry (in-context; loud skip standalone).
 
 Registry gotcha guarded here: API reclassified RP 2RD as STD 2RD — the
@@ -7,31 +7,22 @@ registry key is ``api-std-2rd`` and there is NO ``api-rp-2rd`` entry.
 from __future__ import annotations
 
 import json
-import os
-from pathlib import Path
 
 import pytest
 
-from digitalmodel.riser_database.loader import RiserDatabase
+from digitalmodel.citations.resolver import find_wiki_content_root
 
-_KNOWN_WIKI_CLONES = (
-    Path("/mnt/local-analysis/llm-wiki"),  # abs-path-allowed
-    Path.home() / "workspace-hub" / "llm-wiki",
-)
+from digitalmodel.riser_database.loader import RiserDatabase
 
 
 def _registry() -> dict:
-    candidates = []
-    env = os.environ.get("LLM_WIKI_PATH")
-    if env:
-        candidates.append(Path(env))
-    candidates.extend(_KNOWN_WIKI_CLONES)
-    for base in candidates:
-        path = base / "data" / "standards-registry.json"
+    root = find_wiki_content_root()
+    if root is not None:
+        path = root / "data" / "standards-registry.json"
         if path.is_file():
             return json.loads(path.read_text())
     pytest.skip(
-        "llm-wiki standards-registry.json not available (standalone mode) — "
+        "knowledge base standards-registry.json not available (standalone mode) — "
         "this suite is part of the in-context merge gate and must run green "
         "in a workspace-hub checkout before the PR"
     )

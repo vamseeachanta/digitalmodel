@@ -2,7 +2,7 @@
 
 This directory contains a minimal vendored wiki fixture for DNV-RP-F103.
 It exists so digitalmodel citation tests can validate fail-closed frontmatter
-resolution in standalone CI without requiring access to the private llm-wiki
+resolution in standalone CI without requiring access to the private knowledge base
 checkout.
 
 The fixture intentionally includes only resolver frontmatter and a short
@@ -11,7 +11,7 @@ source material.
 
 ## Canonical source
 
-- **Repo:** `vamseeachanta/llm-wiki`
+- **Repo:** `knowledge base repository`
 - **Path:** `wikis/engineering-standards/wiki/standards/dnv-rp-f103.md`
 - **Canonical SHA at vendoring time:** `76303d8be41969d7c5bb66171ce2c20a99bd39a8`
 
@@ -42,14 +42,14 @@ formulas, or licensed source material.
 
 ## Canonical sources
 
-- **Repo:** `vamseeachanta/llm-wiki`
+- **Repo:** `knowledge base repository`
 - `wikis/engineering-standards/wiki/standards/dnv-os-f201.md` —
   canonical SHA at vendoring time: `acdbc9f842b59340d384392941fa0c3177af90b2`
 - `wikis/engineering-standards/wiki/standards/dnv-rp-c203.md` —
   canonical SHA at vendoring time: `23f3251def0dac360eb6b6b80e585fbcb1608efe`
   (#2161: fixture revision re-pinned from `2024-10` to `2021`, the edition
   whose S-N tables the code implements; the canonical page needs the
-  matching re-pin in a paired llm-wiki change)
+  matching re-pin in a paired knowledge base change)
 
 ## Vendored copies
 
@@ -79,10 +79,10 @@ standard text, tables, formulas, or licensed source material.
 
 ## Canonical source
 
-- **Repo:** `vamseeachanta/llm-wiki`
+- **Repo:** `knowledge base repository`
 - `wikis/engineering-standards/wiki/standards/api-rp-16q.md` —
   canonical SHA at vendoring time: `2252d2c3f9c69b11a70ccce011e33d9f306bb63e`
-  (the revision "1993" pin landed by llm-wiki PR #820; before that the page
+  (the revision "1993" pin landed by knowledge base PR #820; before that the page
   carried the `public-metadata-required-before-citation-use` sentinel).
 
 ## Vendored copy
@@ -112,14 +112,14 @@ or licensed source material.
 
 ## Canonical source
 
-- **Repo:** `vamseeachanta/llm-wiki`
+- **Repo:** `knowledge base repository`
 - `wikis/engineering-standards/wiki/standards/api-std-2rd.md` —
   canonical SHA at vendoring time: `74aeb6f3e47806c377fc614b152d80c31b61bb5e`
   (revision `3e-2025`; the page was already citation-ready — no paired wiki PR
   was needed for #1281a).
 - #2161 (owner decision C04): the fixture revision is re-pinned to `2e-2013`
   (API STD 2RD 2nd Edition, 2013). The canonical page needs the matching
-  re-pin in a paired llm-wiki change.
+  re-pin in a paired knowledge base change.
 
 ## Vendored copy
 
@@ -150,7 +150,7 @@ material.
 
 ## Canonical sources
 
-- **Repo:** `vamseeachanta/llm-wiki`
+- **Repo:** `knowledge base repository`
 - `wikis/engineering-standards/wiki/standards/dnv-rp-b401-2017.md` —
   `code_id: dnv-rp-b401`, `publisher: DNV`, `revision: "2017-06"`
 - `wikis/engineering-standards/wiki/standards/dnv-rp-b401-2021.md` —
@@ -159,7 +159,7 @@ material.
   `code_id: dnv-rp-f103`, `publisher: DNV`, `revision: "2019-09"`
 - The canonical pages are created in parallel with these fixtures
   (2026-09-26) with the same frontmatter; record their SHAs here once the
-  llm-wiki change lands.
+  knowledge base change lands.
 
 ## Vendored copies
 

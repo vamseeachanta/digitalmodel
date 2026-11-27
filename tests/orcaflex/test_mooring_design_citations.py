@@ -44,11 +44,12 @@ def _unset_env_var(monkeypatch):
 
 
 @pytest.fixture(autouse=True)
-def _disable_known_clones_fallback(monkeypatch):
+def _disable_known_clones_fallback(tmp_path, monkeypatch):
     """Disable real-filesystem known-clone fallbacks so tests in this module
     can exercise fail-closed paths deterministically without false-positive
     resolution via developer-machine local clones."""
     from digitalmodel.citations import resolver as _resolver
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / "no-config"))
     monkeypatch.setattr(_resolver, "_KNOWN_LOCAL_CLONES", ())
 
 

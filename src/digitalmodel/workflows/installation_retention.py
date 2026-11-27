@@ -1,5 +1,6 @@
 """Exact postprocessing coverage audit and append-only local archive preparation."""
 
+import os
 import csv
 import gzip
 import hashlib
@@ -240,7 +241,7 @@ def create_archive(source_root, entries, target, allowed_parent):
     incomplete = target / ".incomplete"
     with incomplete.open("x", encoding="utf-8") as stream:
         stream.write("Postprocessing archive creation has not completed readback.\n")
-    manifest = dict(version="lean-r1", owner="private digitalmodel-data", created_utc=datetime.now(timezone.utc).isoformat(),
+    manifest = dict(version="lean-r1", owner=os.environ.get("DIGITALMODEL_EVIDENCE_REPOSITORY") or "private data repository", created_utc=datetime.now(timezone.utc).isoformat(),
                     archive_kind="postprocessing_only", rerun_bundle_complete=False,
                     archive_root=str(target), source_root=str(source), backup_status="NOT_VERIFIED",
                     immutability="Version path refuses overwrite; integrity hashes verified. Not WORM storage.",

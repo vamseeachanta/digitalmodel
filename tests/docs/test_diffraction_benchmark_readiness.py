@@ -78,6 +78,6 @@ def test_pack_routes_unverified_u5_to_the_acceptance_record():
     assert "(benchmark-evidence-readiness.md)" in u5
     note = NOTE.read_text(encoding="utf-8")
     assert "(benchmark-evidence-readiness.json)" in note
-    assert "digitalmodel-data" in note
+    assert "private data repository" in note
     assert "NOT_EVALUATED" in note
     assert "UNVERIFIED" in note

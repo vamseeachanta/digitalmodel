@@ -5,6 +5,7 @@ This example demonstrates how to use the stress-strain analysis module
 to create and analyze stress-strain curves using various material models,
 reproducing and extending the legacy stress-strain calculation functionality.
 """
+from pathlib import Path
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -242,7 +243,9 @@ def main():
     ax4.legend()
 
     plt.tight_layout()
-    plt.savefig('/mnt/github/github/digitalmodel/examples/stress/stress_strain_analysis.png',
+    output_dir = Path(__file__).resolve().parents[3] / "stress"
+    output_dir.mkdir(exist_ok=True)
+    plt.savefig(output_dir / 'stress_strain_analysis.png',
                 dpi=300, bbox_inches='tight')
 
     # Create legacy-style plot (similar to original output)
@@ -254,7 +257,9 @@ def main():
     plt.title('Non-Linear Stress Strain Curve')
     plt.grid(True, alpha=0.3)
     plt.tight_layout()
-    plt.savefig('/mnt/github/github/digitalmodel/examples/stress/legacy_style_curve.png',
+    output_dir = Path(__file__).resolve().parents[3] / "stress"
+    output_dir.mkdir(exist_ok=True)
+    plt.savefig(output_dir / 'legacy_style_curve.png',
                 dpi=300, bbox_inches='tight')
 
     print("Plots saved:")

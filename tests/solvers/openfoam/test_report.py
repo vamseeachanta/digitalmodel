@@ -132,7 +132,7 @@ def make_manifest():
         # Deliberately dev/client-looking absolute path: this fixture verifies the
         # report scrubs it to a basename (asserted below). Exempted from the
         # no-abs-paths CI gate because the literal is the test's adversarial input.
-        "provenance": "/mnt/local-analysis/secret-client/run_2026/manifest.json",  # abs-path-allowed
+        "provenance": "/mnt/example/project/run_2026/manifest.json",  # abs-path-allowed
         "cases": cases,
         "content_hash": "abc123def456",
     }

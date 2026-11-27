@@ -1,6 +1,6 @@
 """Build interactive OCIMF coefficient explorer HTML.
 
-Reads /mnt/ace/acma-codes/OCIMF/OCIMF Coef.xlsx and produces a single-file
+Reads /mnt/ace/client-4e09-codes/OCIMF/OCIMF Coef.xlsx and produces a single-file
 interactive HTML with Plotly charts + usage descriptions + parametric
 comparisons. Output: /mnt/local-analysis/digitalmodel/docs/domains/charts/
 phase2/ocimf/ocimf_coefficient_explorer.html
@@ -13,7 +13,7 @@ import pandas as pd
 import plotly.graph_objects as go
 import plotly.io as pio
 
-XLSX = Path("/mnt/ace/acma-codes/OCIMF/OCIMF Coef.xlsx")
+XLSX = Path("/mnt/ace/client-4e09-codes/OCIMF/OCIMF Coef.xlsx")
 OUT = Path("/mnt/local-analysis/digitalmodel/docs/domains/charts/phase2/ocimf/ocimf_coefficient_explorer.html")
 
 
@@ -558,12 +558,12 @@ PROVENANCE_HTML = """
 <h2 id="provenance">5. Data provenance and citation</h2>
 <table class="spec">
 <tr><th>Artifact</th><th>Path</th><th>Role</th></tr>
-<tr><td>Full MEG3 (2008) PDF</td><td class="path">/mnt/ace/acma-codes/OCIMF/OCIMF - 2008 - Mooring Equipment Guidelines.pdf</td><td>Canonical published standard, 3rd edition</td></tr>
-<tr><td>Full MEG4 (2018) PDF</td><td class="path">/mnt/ace/acma-codes/OCIMF (MEG 4)/Mooring Equipment Guidelines - MEG4.pdf</td><td>Canonical published standard, 4th edition</td></tr>
-<tr><td><b>OCIMF Coef.xlsx (this explorer's data source)</b></td><td class="path">/mnt/ace/acma-codes/OCIMF/OCIMF Coef.xlsx</td><td>Digitized Annex A coefficient lookup tables (Figures A5–A19)</td></tr>
-<tr><td>WebPlotDigitizer alt extraction (A5–A9 only)</td><td class="path">/mnt/ace/acma-codes/OCIMF 3rd ed/Digitizer/</td><td>Independent re-digitization for cross-validation</td></tr>
-<tr><td>Figure PDFs (15 files)</td><td class="path">/mnt/ace/acma-codes/OCIMF/Figures/</td><td>Per-figure extract PDFs</td></tr>
-<tr><td>Project-bundled MEG4 extracts</td><td class="path">/mnt/ace/acma-projects/B1522/ctr-7/_data/ocimf/</td><td>Project-specific bundle (Fig. A13–A21 + worked examples)</td></tr>
+<tr><td>Full MEG3 (2008) PDF</td><td class="path">/mnt/ace/client-4e09-codes/OCIMF/OCIMF - 2008 - Mooring Equipment Guidelines.pdf</td><td>Canonical published standard, 3rd edition</td></tr>
+<tr><td>Full MEG4 (2018) PDF</td><td class="path">/mnt/ace/client-4e09-codes/OCIMF (MEG 4)/Mooring Equipment Guidelines - MEG4.pdf</td><td>Canonical published standard, 4th edition</td></tr>
+<tr><td><b>OCIMF Coef.xlsx (this explorer's data source)</b></td><td class="path">/mnt/ace/client-4e09-codes/OCIMF/OCIMF Coef.xlsx</td><td>Digitized Annex A coefficient lookup tables (Figures A5–A19)</td></tr>
+<tr><td>WebPlotDigitizer alt extraction (A5–A9 only)</td><td class="path">/mnt/ace/client-4e09-codes/OCIMF 3rd ed/Digitizer/</td><td>Independent re-digitization for cross-validation</td></tr>
+<tr><td>Figure PDFs (15 files)</td><td class="path">/mnt/ace/client-4e09-codes/OCIMF/Figures/</td><td>Per-figure extract PDFs</td></tr>
+<tr><td>Project-bundled MEG4 extracts</td><td class="path">/mnt/ace/client-4e09-projects/job-code/ctr-7/_data/ocimf/</td><td>Project-specific bundle (Fig. A13–A21 + worked examples)</td></tr>
 </table>
 <div class="callout">
 <p><b>Citation contract:</b> Per <code>.claude/rules/calc-citation-contract.md</code>, any digitalmodel calc module emitting a coefficient from this data must produce a <code>Citation</code> sidecar binding to <code>wiki/standards/ocimf-meg3.md</code> or <code>wiki/standards/ocimf-meg4.md</code>. Those wiki pages are tracked at <a href="https://github.com/vamseeachanta/workspace-hub/issues/2284">workspace-hub#2284</a>. Precedent: DNV-OS-E301 pilot at <code>digitalmodel/src/digitalmodel/orcaflex/mooring_design.py::check_mbl_with_safety_factor</code>.</p>
@@ -587,7 +587,7 @@ FOOTER_HTML = """
 <li><a href="https://github.com/vamseeachanta/digitalmodel/issues/563">digitalmodel#563</a> — OCIMF database performance (adapter scope)</li>
 <li><a href="https://github.com/vamseeachanta/workspace-hub/issues/2685">workspace-hub#2685</a> — DNV-OS-E301 citation pilot (precedent for OCIMF citation pattern)</li>
 </ul>
-<p class="meta">Generated 2026-05-20 from <code>/mnt/ace/acma-codes/OCIMF/OCIMF Coef.xlsx</code> · explorer build script <code>/tmp/build_ocimf_explorer.py</code></p>
+<p class="meta">Generated 2026-05-20 from <code>/mnt/ace/client-4e09-codes/OCIMF/OCIMF Coef.xlsx</code> · explorer build script <code>/tmp/build_ocimf_explorer.py</code></p>
 """
 
 
@@ -602,7 +602,7 @@ def render_html(figs_meta):
     parts.append("<h1>OCIMF MEG3/MEG4 Coefficient Explorer</h1>")
     parts.append(
         "<p class='meta'>Interactive visualization of digitized Annex A wind and current coefficients "
-        "for tankers and gas carriers — sourced from <code>/mnt/ace/acma-codes/OCIMF/OCIMF Coef.xlsx</code>, "
+        "for tankers and gas carriers — sourced from <code>/mnt/ace/client-4e09-codes/OCIMF/OCIMF Coef.xlsx</code>, "
         "covering OCIMF Mooring Equipment Guidelines Annex A Figures A5–A19. "
         "Generated 2026-05-20.</p>"
     )

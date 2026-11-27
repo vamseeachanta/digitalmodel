@@ -75,7 +75,7 @@ unit_conversions:
   m_to_mm: 1000.0
 
 # Identifiers + wiki_path ONLY — no clause text, no table values (plan D2/[R2-B4]).
-# registry_revision mirrors llm-wiki data/standards-registry.json verbatim.
+# registry_revision mirrors wiki data/standards-registry.json verbatim.
 crosswalk_rows:
   - code_id: amjig-2000
     family_key: amjig-2000
@@ -644,7 +644,7 @@ stackup_rows:
     riser_od_in: ""
     water_depth_band: ""
     rig_ref: ""
-  # RSU-0071..RSU-0084 (llm-wiki#829 pairing): handle rows for the wave-5
+  # RSU-0071..RSU-0084 (wiki issue 829 pairing): handle rows for the wave-5
   # registry ingest. Same governance — handles + coarse bands only; the
   # private registry page is the value authority for every row below.
   - rsu_id: RSU-0071
@@ -826,7 +826,7 @@ rig_rows:
     n_tension_wires: ""
     wed_rig_name: ""
     note: drillship class keyed by subsea stack GA mass; deeper-water-rated variant
-  # llm-wiki#829 wave-5 rig classes. Two drillship classes keyed by subsea-stack
+  # wiki issue 829 wave-5 rig classes. Two drillship classes keyed by subsea-stack
   # weight-estimate mass (the wave-2 GA-mass precedent) plus one wireline-
   # tensioner semisub capability class from a documented tension chain.
   - rig_ref: drillship-10k-stack-356kip

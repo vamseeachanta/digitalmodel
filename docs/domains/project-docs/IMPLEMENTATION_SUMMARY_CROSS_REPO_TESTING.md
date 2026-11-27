@@ -141,7 +141,7 @@ uv run python scripts/validate_cross_repo_setup.py
 4. coordination
 5. digitalmodel
 6. contractor
-7. teamresumes
+7. team records repository
 8. worldenergydata
 
 **Note:** Expected 26 total. Others may not have `tests/` directory yet.
@@ -303,7 +303,7 @@ reporting:
 ### Design Principles
 
 1. **Isolated Execution** - Each repository runs in its own uv environment
-2. **Fail-Safe** - Individual failures don't block other tests
+2. **Failure isolation** - Individual failures don't block other tests
 3. **Comprehensive Reporting** - Multiple output formats for different use cases
 4. **Standards Enforcement** - Automated compliance checking
 5. **Performance Optimized** - Parallel execution with configurable workers

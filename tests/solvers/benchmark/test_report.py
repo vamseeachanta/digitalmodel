@@ -203,7 +203,7 @@ def test_a_file_that_is_not_a_receipt_is_refused(tmp_path):
 def test_no_hostname_path_or_licence_server_from_errors_reaches_html(monkeypatch):
     monkeypatch.setattr(runner.platform, "node", lambda: "buildhost77")
     error = ("BUILDHOST77 cannot reach 1055@lic01 reading "
-             "C:\\Users\\bob\\cases\\motorBike.zip and /home/alice/run/log.simpleFoam")
+             "C:\\Users\\bob\\cases\\motorBike.zip and /home/alice/run/log.simpleFoam")  # identifier-gate: example
     entry = _entry(n_ok=0, eligible=False, errors=[error])
     entry["skipped"] = "host busy on buildhost77 under /home/alice/run/x"
     html = report.render_html(report.build_report([_receipt("fleet-a", [entry])]))

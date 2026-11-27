@@ -15,6 +15,7 @@ Other rates, costs and model parameters are synthetic boundary/test inputs.
 from copy import deepcopy
 from math import exp, log
 import sys
+from unittest.mock import patch
 
 import pytest
 
@@ -30,8 +31,7 @@ DEFAULT_RATES = [0.05, 0.10, 0.15, 0.20, 0.25, 0.30]
 @pytest.fixture
 def scenario(monkeypatch):
     """Exercise real evaluator fallback with optional adapters unavailable."""
-    for name in ("worldenergydata.fdas",
-                 "worldenergydata.eia_us.analysis.us_fiscal"):
+    for name in ("worldenergydata", "worldenergydata.eia_us.analysis.us_fiscal"):
         monkeypatch.setitem(sys.modules, name, None)
     return ec.EconomicsInput(
         field_name="Synthetic", water_depth_m=1000.0, host_type="TLP",
@@ -226,3 +226,71 @@ def test_decline_package_exports():
 
     assert field_development.decline_sensitivity is ec.decline_sensitivity
     assert field_development.DeclineSensitivityResult is ec.DeclineSensitivityResult
+
+
+@pytest.mark.parametrize("provider_count", [0, 1, 2])
+def test_financial_adapter_uses_a_unique_provider(tmp_path, monkeypatch, provider_count, caplog):
+    root = tmp_path / "worldenergydata"
+    root.mkdir()
+    (root / "__init__.py").touch()
+    unrelated = root / "unrelated"
+    unrelated.mkdir()
+    (unrelated / "__init__.py").write_text("raise AssertionError('unexpected import')")
+    for index in range(provider_count):
+        provider = root / f"financial_fixture_{index}"
+        core = provider / "core"
+        core.mkdir(parents=True)
+        (core / "financial.py").touch()
+        (provider / "__init__.py").write_text(
+            "def calculate_all_metrics(cashflows, discount_rate_annual, period):\n"
+            "    return dict(cashflows=list(cashflows), rate=discount_rate_annual, period=period)\n"
+        )
+
+    monkeypatch.syspath_prepend(str(tmp_path))
+    with patch.dict(sys.modules):
+        sys.modules.pop("worldenergydata", None)
+        cashflows = ec.np.array([-10.0, 16.5])
+        with caplog.at_level("DEBUG", logger=ec.__name__):
+            adapter = ec._resolve_financial_adapter()
+            result = adapter(cashflows, 0.1)
+            # Fiscal evaluations reuse the adapter for a second cashflow series.
+            post_tax = adapter(ec.np.array([-10.0, 11.0]), 0.1)
+    diagnostics = [record.getMessage() for record in caplog.records if record.name == ec.__name__]
+    if provider_count == 1:
+        assert result == {"cashflows": [-10.0, 16.5], "rate": 0.1, "period": "annual"}
+        assert post_tax == {"cashflows": [-10.0, 11.0], "rate": 0.1, "period": "annual"}
+        assert not diagnostics
+    else:
+        assert result["npv"] == pytest.approx(5.0)
+        assert post_tax["npv"] == pytest.approx(0.0)
+        assert len(diagnostics) == 1
+        assert f"{provider_count} financial providers" in diagnostics[0]
+
+
+def test_financial_adapter_finds_provider_on_extended_path(tmp_path, monkeypatch):
+    base = tmp_path / "base"
+    extension = tmp_path / "extension"
+    package = base / "worldenergydata"
+    package.mkdir(parents=True)
+    (package / "__init__.py").write_text(
+        "from pkgutil import extend_path\n"
+        "__path__ = extend_path(__path__, __name__)\n"
+    )
+    provider = extension / "worldenergydata" / "split_fixture"
+    (provider / "core").mkdir(parents=True)
+    (provider / "core" / "financial.py").touch()
+    (provider / "__init__.py").write_text(
+        "def calculate_all_metrics(cashflows, discount_rate_annual, period):\n"
+        "    return dict(source=__name__, rate=discount_rate_annual, period=period)\n"
+    )
+
+    with patch.dict(sys.modules):
+        sys.modules.pop("worldenergydata", None)
+        # Limit extend_path to the two distributions, even on developer installs.
+        with monkeypatch.context() as paths:
+            paths.setattr(sys, "path", [str(base), str(extension)])
+            import worldenergydata
+
+        assert list(worldenergydata.__path__) == [str(package), str(provider.parent)]
+        result = ec._resolve_financial_adapter()(ec.np.array([-10.0, 16.5]), 0.1)
+    assert result == {"source": "worldenergydata.split_fixture", "rate": 0.1, "period": "annual"}

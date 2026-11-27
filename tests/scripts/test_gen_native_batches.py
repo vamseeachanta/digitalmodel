@@ -158,12 +158,12 @@ def test_cli_generates_exact_batches(tmp_path):
     sw = manifest["batches"][0]
     assert sw["priority"] == 2  # Existing generator: docs groups have queue rank 2.
     assert (output / sw["sw_file"]).read_bytes() == (
-        b"Q:\\parts\\one.sldprt\r\nQ:\\parts\\two.sldasm\r\n"
+        b"Q:\\parts\\one.sldprt\r\nQ:\\parts\\two.sldasm\r\n"  # identifier-gate: example
     )
     inv = manifest["batches"][1]
     other = manifest["batches"][2]
-    assert (output / inv["inv_file"]).read_bytes() == b"Q:\\assemblies\\three.iam\r\n"
-    assert (output / other["other_file"]).read_bytes() == b"Q:\\parts\\four.prt\r\n"
+    assert (output / inv["inv_file"]).read_bytes() == b"Q:\\assemblies\\three.iam\r\n"  # identifier-gate: example
+    assert (output / other["other_file"]).read_bytes() == b"Q:\\parts\\four.prt\r\n"  # identifier-gate: example
     assert str(source) not in result.stdout
     assert str(output) not in result.stdout
 
@@ -171,8 +171,8 @@ def test_cli_generates_exact_batches(tmp_path):
 def test_unc_mapping(adapter, tmp_path):
     source = tmp_path / "source"
     assert adapter.winpath(
-        str(source / "parts/item.ipt"), source, r"\\example.invalid\archive"
-    ) == (r"\\example.invalid\archive\parts\item.ipt")
+        str(source / "parts/item.ipt"), source, r"\\example.invalid\archive"  # identifier-gate: example
+    ) == (r"\\example.invalid\archive\parts\item.ipt")  # identifier-gate: example
 
 
 @pytest.mark.parametrize(
@@ -244,7 +244,7 @@ def test_invalid_windows_source_components_leave_no_output(
     assert not output.parent.exists()
 
 
-@pytest.mark.parametrize("root", ["Q:\\", "\\\\example.invalid\\archive\\"])
+@pytest.mark.parametrize("root", ["Q:\\", "\\\\example.invalid\\archive\\"])  # identifier-gate: example
 def test_invalid_windows_subdirectories_leave_no_output(
     adapter, tmp_path, invalid_windows_component, root
 ):
@@ -298,7 +298,7 @@ def test_containment_is_by_components(adapter, tmp_path, kind):
         adapter.winpath(candidate, source, "Q:\\")
 
 
-@pytest.mark.parametrize("root", ["Q:", "relative", "Q:\\folder\nextra", "/archive"])
+@pytest.mark.parametrize("root", ["Q:", "relative", "Q:\\folder\nextra", "/archive"])  # identifier-gate: example
 def test_invalid_windows_root_leaves_no_output(adapter, tmp_path, root):
     index = tmp_path / "index.tsv"
     output = tmp_path / "batches"
@@ -488,5 +488,5 @@ def test_posix_root_is_not_part_of_windows_filename(adapter, tmp_path):
     source = tmp_path / "archive:release"
     assert (
         adapter.winpath(str(source / "parts/item.ipt"), source, "Q:\\")
-        == r"Q:\parts\item.ipt"
+        == r"Q:\parts\item.ipt"  # identifier-gate: example
     )

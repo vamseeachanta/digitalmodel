@@ -18,8 +18,7 @@ that produced these artifacts has been generalized and moved into the
 | (hard-coded `addresses.json`/`addresses.yaml`) | `digitalmodel.gis.imagery.manifest.ImageryManifest` |
 | — | CLI: `imagery-timelapse` (`digitalmodel.gis.imagery.cli`) |
 
-The key change in the port: the hard-coded `/mnt/local-analysis/ace2-gis-timelapse`
-working directory was replaced by manifest-driven `output_root` / `cache_root` /
+The key change in the port: the fixed working directory was replaced by manifest-driven `output_root` / `cache_root` /
 `log_root`, so the same code runs for any address set in any workspace. The
 ported AOI math reproduces this example's buffer bounds exactly.
 
@@ -34,10 +33,8 @@ imagery-timelapse probe       --manifest addresses.yaml
 imagery-timelapse render      --manifest addresses.yaml
 ```
 
-> Note: `addresses.yaml`/`addresses.json` here still contain the original
-> absolute `output_root` paths from the live run. For a fresh run, point those
-> roots at a local output directory (relative roots resolve against the manifest
-> file's location).
+The archived manifests record the original run. For a new run, copy the manifest
+and set its cache, log and output roots relative to the copy.
 
 ## What's in this folder
 

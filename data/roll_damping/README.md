@@ -10,7 +10,7 @@ checks. Load them with `digitalmodel.hydrodynamics.roll_damping_benchmarks`.
 | `sources.csv` | Citation and link for each `source_id` | see `manifest.yaml` |
 | `acceptance_criteria.yaml` | Three-colour benchmark bands (green, amber, red) per quantity, each with its rationale | 8 quantities |
 | `method_matrix.csv` | Recommended estimation route, cross-check and screening damping per scenario | see `manifest.yaml` |
-| `wiki_tables.csv` | Pointers to the copyrighted paper tables (C1, C2, Table 1) held in the private llm-wiki; no values | see `manifest.yaml` |
+| `wiki_tables.csv` | Pointers to the copyrighted paper tables (C1, C2, Table 1) held in the private knowledge base; no values | see `manifest.yaml` |
 
 ## Rules
 
@@ -20,7 +20,7 @@ checks. Load them with `digitalmodel.hydrodynamics.roll_damping_benchmarks`.
 - Measured decay damping is **total** damping and includes the wave (radiation)
   part. The calculator's eddy and friction parts are viscous only; compare like
   with like, and state the basis in every comparison.
-- Copyrighted coefficient tables stay in the private llm-wiki. This directory
+- Copyrighted coefficient tables stay in the private knowledge base. This directory
   holds only the `wiki_path` to each.
 - `examples/hydrodynamics/roll_damping/generic_roll_damping_study.py`
   computes the generic roll damping report's numbers and verdicts. From public

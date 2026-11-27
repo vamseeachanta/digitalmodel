@@ -14,12 +14,15 @@ Failure output never echoes a private pattern — only its group and index.
 """
 from __future__ import annotations
 
+import json
 import os
 import re
 from pathlib import Path
 
 import pytest
 import yaml
+
+from digitalmodel.citations.resolver import read_checkout_config
 
 from digitalmodel.riser_database.loader import (
     _TABLE_SPECS as rdb_loader_specs,
@@ -62,14 +65,15 @@ def test_layer_a_public_rows_structurally_clean():
 # -- Layer B: private deny list (in-context hard gate) -----------------------------
 
 _KNOWN_HUB_ROOTS = (
-    Path("/mnt/local-analysis/workspace-hub"),  # abs-path-allowed
+    Path(__file__).resolve().parents[3] / "workspace-hub",
     Path.home() / "workspace-hub",
 )
 
 
 def _deny_list_path() -> Path | None:
     env = os.environ.get("WORKSPACE_HUB_ROOT")
-    candidates = ([Path(env)] if env else []) + list(_KNOWN_HUB_ROOTS)
+    configured = env or read_checkout_config().get("workspace_root")
+    candidates = ([Path(configured)] if configured else []) + list(_KNOWN_HUB_ROOTS)
     for base in candidates:
         path = base / ".legal-deny-list.yaml"
         if path.is_file():
@@ -126,3 +130,16 @@ def test_layer_b_private_deny_list_scan():
                 # Never echo the private pattern itself.
                 violations.append((table, key, f"{group}[{index}]"))
     assert not violations, violations
+
+
+def test_private_deny_list_location_from_config(tmp_path, monkeypatch):
+    base = tmp_path / "policy"
+    base.mkdir()
+    deny_list = base / ".legal-deny-list.yaml"
+    deny_list.write_text("{}", encoding="utf-8")
+    config = tmp_path / "config" / "digitalmodel" / "paths.json"
+    config.parent.mkdir(parents=True)
+    config.write_text(json.dumps({"workspace_root": str(base)}), encoding="utf-8")
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / "config"))
+    monkeypatch.delenv("WORKSPACE_HUB_ROOT", raising=False)
+    assert _deny_list_path() == deny_list

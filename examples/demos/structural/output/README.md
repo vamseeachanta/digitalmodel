@@ -8,7 +8,7 @@ Regenerate commands are run **from the repo root** using the project venv
 interpreter (not `uv run`):
 
 ```
-/mnt/local-analysis/digitalmodel/.venv/bin/python <script>
+.venv/bin/python <script>
 ```
 
 | File | What it is | Status | Regenerate command |

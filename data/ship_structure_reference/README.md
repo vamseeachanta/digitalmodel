@@ -1,7 +1,7 @@
 Ship structure references, issue #2288
 =====================================
 
-Existing discovery authorities remain llm-wiki:data/data-source-catalog.yml,
+Existing discovery authorities remain knowledge base:data/data-source-catalog.yml,
 data/domain-database-index.yml (structural-ffs), and data/query_sources.json.
 No replacement registry or ingestion pipeline is introduced. Existing
 data/aisc_shapes.yaml is referenced without replication or edition upgrade.

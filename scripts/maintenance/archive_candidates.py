@@ -13,7 +13,7 @@ Additions for owner decision M06 (2026-10-08):
   path, exact filename, or a resolvable glob pattern; narrowed by owner decision C02 so
   a bare directory mention no longer excludes everything under it);
 - candidates are deduplicated by git-blob SHA-256 and mapped to a content-addressed
-  store (`/mnt/ace/digitalmodel/blobs/sha256/<aa>/<sha256>.<ext>`, one copy per blob);
+  store (`${ACE_DATA_ROOT}/digitalmodel/blobs/sha256/<aa>/<sha256>.<ext>`, one copy per blob);
 - every tracked model YAML (OrcaFlex native, OrcaWave, modular spec) outside src/ and
   tests/ is parsed into a normalised feature set; files carrying a feature no other
   file has are reported, with a greedy cover that keeps every feature reachable.
@@ -56,7 +56,7 @@ EXCLUDED_REPORTS = {
     "docs/archive/model-yaml-feature-inventory-2026-10-08.json",
 }
 CODE_PREFIXES = ("src/", "tests/")
-ARCHIVE_ROOT = "/mnt/ace/digitalmodel"
+ARCHIVE_ROOT = "${ACE_DATA_ROOT}/digitalmodel"
 CLASS = {}
 for _e in ("dat", "lis", "qtf", "sim", "owr", "igs", "stl", "dwg", "dxf", "engd", "scdoc", "gz", "yml", "yaml", "csv"):
     CLASS[_e] = "solver-inputs"
@@ -660,6 +660,14 @@ def _parse_features(args):
 
 # --- generator ----------------------------------------------------------------
 
+def archive_store_descriptor():
+    return {
+        "root": ARCHIVE_ROOT,
+        "layout": "blobs/sha256/<first two hex>/<sha256>.<ext>",
+        "one_copy_per_unique_blob": True,
+    }
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser()
     ap.add_argument("repo")
@@ -917,8 +925,7 @@ def main(argv=None):
         "move_set_after_feature_keep": {k: move_dd[k] for k in ("files", "unique_blobs", "duplicate_groups",
                                                                  "duplicate_files", "bytes_total",
                                                                  "bytes_unique", "bytes_saved")},
-        "archive_store": {"root": ARCHIVE_ROOT, "layout": "blobs/sha256/<first two hex>/<sha256>.<ext>",
-                          "one_copy_per_unique_blob": True},
+        "archive_store": archive_store_descriptor(),
         "referenced": {"any": sum(row["referenced"] for row in rows),
                        "by_non_candidate": sum(row["ref_count_noncandidate"] > 0 for row in rows)},
         "by_top_level": agg("top_level", rows),

@@ -7,7 +7,7 @@ Issue: https://github.com/vamseeachanta/digitalmodel/issues/2287 .
 Execution: single-lane implementation, independent read-only adversarial review.
 Owned paths: new diagnostic and tests, this specification, source-audit note,
 asset_integrity row in module-routing and its routing test, study handoff.
-Read-only: all production physics, private wiki and digitalmodel-data.
+Read-only: all production physics, private wiki and the private data repository.
 Forbidden: CP lanes, client-fcf6, client originals, secrets, licensed originals,
 other registry rows, host/network/security configuration.
 
@@ -117,10 +117,10 @@ cells at demand = 70% of the F=0.72 reference pressure; none is engineering
 acceptance at full design pressure. Original B31G long-flaw transition can
 produce jumps along length; connecting plot lines are only sample guides.
 The exact numeric JSON, summary CSV and plot are retained in private
-digitalmodel-data, with one canonical dataset and no numerical rerun:
-[immutable manifest](https://github.com/vamseeachanta/digitalmodel-data/blob/795b35099bf29cdfc59e6e2184cbdc0da76131be/data/uniform-local-loss-screening/manifest.json).
+the private data repository, with one canonical dataset and no numerical rerun:
+[immutable manifest](https://api.github.com/repositories/1370823847/contents/data/uniform-local-loss-screening/manifest.json?ref=795b35099bf29cdfc59e6e2184cbdc0da76131be).
 Its SHA256 is `428196dd032899e91bb823dbd46e3a09715767778a85eadd43e6168d4e65f807`.
-The [publication receipt](https://github.com/vamseeachanta/digitalmodel-data/blob/2b91fcfb9a6412ae17ec640f2f0f009953df4d6f/reports/uniform-local-loss-screening-r1-publication.json)
+The [publication receipt](https://api.github.com/repositories/1370823847/contents/reports/uniform-local-loss-screening-r1-publication.json?ref=2b91fcfb9a6412ae17ec640f2f0f009953df4d6f)
 records fresh authenticated remote byte readback of all eight dataset files.
 Run ID `preliminary-pressure-20261006T030939Z-3c238c26` is an explicitly
 owner-assigned archive identifier, not a native FEA run ID. Source revision,
@@ -134,11 +134,11 @@ Run existing L1/L2 routines in a small reproducible diagnostic sweep to characte
 
 ## Level 3 concrete compute proposal (execution not authorized here)
 
-The spoken 'ICA' remains unresolved; no solver is inferred. Inspect existing digitalmodel ANSYS/CalculiX support and retained digitalmodel-data cylinder benchmarks for compatible cases before selecting a solver. Start with one intact and one damaged pipe and two mesh refinements (four pilot runs), closed-end internal pressure, large-deformation elastic-plastic solid analysis, measured/qualified temperature-dependent true stress-strain curve, smooth transition radius as explicit sensitivity, sound-boundary distance convergence, documented failure criterion and API579 Part5 Level3/Annex stress-analysis basis. After pilot, compare at three axial lengths x two widths x two walls near L1/L2 brackets for one size (12 damaged cases, two meshes each); expand only after review. Proposed cap: four pilot runs, <=2 h wall time/run, <=8 CPU cores, <=16 GB RAM/run, one concurrent licensed slot; actual host, solver/version/license, availability, disk quota, cost and stop conditions require preflight and compute approval. Stop on nonconvergence, >2% mesh sensitivity, criterion ambiguity or resource overrun. Numerical collapse pressure alone is not an FFS acceptance criterion. No new heavy/licensed runs or remote trust/security changes in preparation.
+The spoken 'ICA' remains unresolved; no solver is inferred. Inspect existing digitalmodel ANSYS/CalculiX support and cylinder benchmarks retained in the private data repository for compatible cases before selecting a solver. Start with one intact and one damaged pipe and two mesh refinements (four pilot runs), closed-end internal pressure, large-deformation elastic-plastic solid analysis, measured/qualified temperature-dependent true stress-strain curve, smooth transition radius as explicit sensitivity, sound-boundary distance convergence, documented failure criterion and API579 Part5 Level3/Annex stress-analysis basis. After pilot, compare at three axial lengths x two widths x two walls near L1/L2 brackets for one size (12 damaged cases, two meshes each); expand only after review. Proposed cap: four pilot runs, <=2 h wall time/run, <=8 CPU cores, <=16 GB RAM/run, one concurrent licensed slot; actual host, solver/version/license, availability, disk quota, cost and stop conditions require preflight and compute approval. Stop on nonconvergence, >2% mesh sensitivity, criterion ambiguity or resource overrun. Numerical collapse pressure alone is not an FFS acceptance criterion. No new heavy/licensed runs or remote trust/security changes in preparation.
 
 Inspected solver coverage: CalculiX fem_chain currently exposes plate-with-hole
 creation/validation, not a verified damaged-pipe nonlinear collapse workflow.
-Private digitalmodel-data ansys-cylinder-benchmark r4 publication metadata
+the private data repository ansys-cylinder-benchmark r4 publication metadata
 identifies an existing retained dataset and limited cylinder-check evidence;
 its receipt explicitly excludes engineering acceptance. Result compatibility,
 rights and nonlinear damaged-pipe criterion were not verified; no values copied
@@ -155,7 +155,7 @@ or license status is claimed by this preparation.
 
 ## Discovery and ownership
 
-Extend existing digitalmodel docs/registry/module-routing.yaml asset_integrity entry with study/report/validation locators and status. This is navigation metadata, not a new result index. Preserve ffs_lookup and existing result matrices as query authorities. The broader report-artifact index is only an existing hub proposal; do not invent a parallel catalog. Reuse existing report/provenance helpers when publishing qualified results. Common digitalmodel owns workflow/schema/validation; private digitalmodel-data owns reusable numerical results with stable dataset/run IDs, pinned manifests and digests. Measured/client originals remain in owning private project repository; retain private evidence references rather than copying reports/grids. Catalog ace-share-ffs-tubular-precedent identifies existing studies but rights and current-source eligibility are unresolved; no private result promotion occurs in this slice.
+Extend existing digitalmodel docs/registry/module-routing.yaml asset_integrity entry with study/report/validation locators and status. This is navigation metadata, not a new result index. Preserve ffs_lookup and existing result matrices as query authorities. The broader report-artifact index is only an existing hub proposal; do not invent a parallel catalog. Reuse existing report/provenance helpers when publishing qualified results. Common digitalmodel owns workflow/schema/validation; the private data repository owns reusable numerical results with stable dataset/run IDs, pinned manifests and digests. Measured/client originals remain in owning private project repository; retain private evidence references rather than copying reports/grids. Catalog ace-share-ffs-tubular-precedent identifies existing studies but rights and current-source eligibility are unresolved; no private result promotion occurs in this slice.
 
 Private wiki data/query_sources.json remains the established query-discovery
 authority; it is not edited by this lane. The new navigation metadata is in the

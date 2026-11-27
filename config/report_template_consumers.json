@@ -26,12 +26,12 @@
     },
     {
       "path": "examples/demos/gtm/output/demo_02_wall_thickness_report.html",
-      "sha256": "8396e8610f7a5ad1c8ec53d384d8fe7eed627ad9fbb83c192e6b424615e7d903",
+      "sha256": "244468af7b08952967e016dfd4832570b9bab777cfc4068f5ed0b81d2132596c",
       "page_classification": "not_classified_as_manual"
     },
     {
       "path": "examples/demos/gtm/output/demo_03_mudmat_installation_report.html",
-      "sha256": "10767201b509e9027754bfe04ee97d5a904a43dfbc0e90a0e5051e986093886c",
+      "sha256": "07be8baefbf495a17f4b75f4c30f603c38fe5139cba56842cda9c4e1104d1198",
       "page_classification": "not_classified_as_manual"
     },
     {

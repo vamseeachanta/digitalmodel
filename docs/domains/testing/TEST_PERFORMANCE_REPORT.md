@@ -181,7 +181,7 @@ pytest --cov=src --cov-report=html  # Full coverage
 ## 📊 Dashboard and Monitoring
 
 An interactive performance dashboard has been generated at:
-`/mnt/github/github/digitalmodel/docs/test_performance_dashboard.html`
+`docs/test_performance_dashboard.html`
 
 ### Dashboard Features:
 - **Real-time Metrics**: Live performance indicators

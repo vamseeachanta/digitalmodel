@@ -2,7 +2,7 @@
 
 The batch runner lives under examples/ and depends on wiki-side values. These
 tests intentionally assert status/schema only; private workbook values stay in
-llm-wiki calc contracts and generated CSV output.
+knowledge base calc contracts and generated CSV output.
 """
 
 from __future__ import annotations
@@ -37,7 +37,7 @@ def _load_batch_module():
 def _explicit_wiki_root() -> Path:
     raw = os.environ.get("LLM_WIKI_PATH")
     if raw is None:
-        pytest.skip("set LLM_WIKI_PATH to the reviewed llm-wiki checkout")
+        pytest.skip("set LLM_WIKI_PATH to the reviewed knowledge-base checkout")
     root = resolve_wiki_root()
     expected = Path(raw).resolve()
     assert root == expected

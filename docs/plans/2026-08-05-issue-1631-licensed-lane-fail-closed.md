@@ -10,7 +10,7 @@
 > **Review artifacts:** r1 Claude — inline, main session (see Adversarial Review Summary)
 
 > **Provenance.** Premises were re-measured on 2026-08-05 against digitalmodel
-> `origin/main` @ `0fdeea67` and against `vamseeachanta/deckhand-licensed-runs-queue`
+> `origin/main` @ `0fdeea67` and against `licensed execution repository-licensed-runs-queue`
 > `origin/main` @ `ece52e32`. The queue repository is a **separate repository and
 > was read only** — nothing in this plan modifies it. Two premises carried
 > forward from the issue are refuted below, one of them load-bearing: the three
@@ -37,7 +37,7 @@
 | 10b | (New) There are **five** availability-inferred mock surfaces, not three | **CONFIRMED** | Beyond the three named: `run_to_sim_cli.py:109-112` (`if not args.mock and not ORCAFLEX_AVAILABLE: args.mock = True`, then exits `0` on mock success at `:132-135`) and `universal/batch_processor.py:270-276` (writes `sim_file.write_text(f"Mock simulation for {model_path.name}")`, sets `success = True`). A further ~14 modules infer mock or print-and-continue; full inventory in Resource Intelligence. |
 | 10c | (New) Two mock behaviours are **more severe than the issue describes** | **CONFIRMED** | `core/model_interface.py:570-573` — `extract_results` in mock mode does `import numpy as np; return np.random.randn(100)`, i.e. **returns random numbers as engineering results**. `:509-511` — `save_model` does `output_path.touch()`, creating an **empty** `.sim`/`.dat`. Separately, `run_to_sim.py:74-80` sets `success = True` and reports `sim_output = str(sim_file)` while **writing no file at all**, so the reported artifact path points at nothing; and `:128` logs `Mode: REAL` on an auto-fallback run because `self.mock_mode` is never mutated there — **the log actively misreports the mode**. |
 | 11 | The validator verdict is discarded and exit status is decided solely by the subprocess not raising | **CONFIRMED, and root-caused more precisely than filed** | See rows 12–13. The discard happens in two places, and the second is the more fundamental. |
-| 12 | (New) The consuming side is a thin subprocess wrapper with no independent judgement | **CONFIRMED** | `deckhand/src/deckhand/licensed_run_agent_runtime.py:37-50`: `argv = ["uv", "run", "python", "-m", "digitalmodel", str(input_path)]` … `return {"returncode": proc.returncode, ...}`. Deckhand adds nothing. **The exit status of `python -m digitalmodel` is the entire success signal**, which places the fix squarely in this repository. |
+| 12 | (New) The consuming side is a thin subprocess wrapper with no independent judgement | **CONFIRMED** | `${EXECUTION_REPO_ROOT}/src/<execution-package>/licensed_run_agent_runtime.py:37-50`: `argv = ["uv", "run", "python", "-m", "digitalmodel", str(input_path)]` … `return {"returncode": proc.returncode, ...}`. licensed execution repository adds nothing. **The exit status of `python -m digitalmodel` is the entire success signal**, which places the fix squarely in this repository. |
 | 13 | (New) `python -m digitalmodel <input.yml>` has **no failure exit path at all** for the engine contract | **CONFIRMED — empirically** | `src/digitalmodel/__main__.py:main()` ends with a bare `engine()` call whose return value is discarded; there is no `sys.exit(...)` on that path. `engine()` returns `cfg_base` (a dict, `engine.py:847`), never a status code. Probe (stubbing `digitalmodel.engine` to return a config carrying `validation_verdict: FAIL`): `main()` returned `None`, no `SystemExit`, **process exit status 0**. The only way this command exits non-zero today is an uncaught exception. This is the mechanism behind `returncode: 0`, and it is host-independent and license-independent. |
 | 14 | (New) The diffraction lane **already refuses** a silent unlicensed fallback | **CONFIRMED — changes the scope** | `hydrodynamics/diffraction/workflow.py:118-127` already raises `RuntimeError` on `status == "failed"` and on `status == "dry_run" and not requested_dry_run` ("solver unavailable: run fell back to dry-run … Run on a licensed host"). Landed `19e8eae3`, 2026-07-04, i.e. **before** 8 of the 12 runs. Requirements "a run that cannot solve refuses" and "an unlicensed host is distinguishable" are therefore **already satisfied on the path that produced this evidence**. What is missing is narrower and more specific than the issue states. |
 | 15 | (New) The verdict is already computed, already typed, and already attached to the result object | **CONFIRMED — the gap is a few lines, not a subsystem** | `diffraction/validation_runner.py` defines a closed 5-value contract (`PASS`/`WARNING`/`FAIL`/`ERROR`/`SKIPPED`); `orcawave_runner.py:239` declares `validation_verdict: str = "SKIPPED"` on `RunResult` and `:594` populates it. `workflow.py:102-133` reads `result.status` and **never reads `result.validation_verdict`**. That single omission is the whole propagation gap. |
@@ -120,7 +120,7 @@ continue to report `0`.
 | Other inferred fallbacks | `orcaflex_converter_enhanced.py:132-141`, `examples_integration/converter.py:27-35`, `examples_integration/batch_converter.py:86-91`, `mooring_tension_iteration/orcaflex_interface.py:388-399` | Same shape: `except ImportError` → `use_mock = True` behind a caller who passed `False`. |
 | Fail-closed precedent | `src/digitalmodel/structural/parametric_coordinator.py:296-302` | Raises `OrcaFlexUnavailableError`; **already asserted** by `tests/test_parametric_coordinator.py:365,375-394` via `pytest.raises`. The contract to generalise. |
 | Package import hazard | `src/digitalmodel/solvers/orcaflex/__init__.py:20-25,36-41,43-54,84-92` | Wraps every subimport in `try/except ImportError` → `*_AVAILABLE = False`, `run_models = None`. **A fail-closed raise at import time would be swallowed into a `None` export.** Raises must therefore happen at call time, not import time. |
-| Consumer | `deckhand/src/deckhand/licensed_run_agent_runtime.py:37-50` | Separate repository. Thin subprocess wrapper; no judgement of its own. |
+| Consumer | `${EXECUTION_REPO_ROOT}/src/<execution-package>/licensed_run_agent_runtime.py:37-50` | Separate repository. Thin subprocess wrapper; no judgement of its own. |
 | Licensed e2e suite | `tests/solver/test_licensed_e2e_arbitrary_mesh.py:85` | `pytestmark = pytest.mark.skipif` on `OrcFxAPI` import; already contains `test_auto_validation_verdict`. |
 | Router tests | `tests/hydrodynamics/diffraction/test_workflow_router.py` | 15 tests, all passing, including `test_run_orcawave_silent_dry_run_fallback_raises` — the established pattern for proving refusal **without a license**, by patching `run_solve`. |
 
@@ -173,7 +173,7 @@ that *rely* on it firing.
 ### Evidence
 
 - Queue measurement commands and outputs are reproducible read-only against
-  `deckhand-licensed-runs-queue` `origin/main` @ `ece52e32`.
+  `licensed solver repository` `origin/main` @ `ece52e32`.
 - The exit-status probe is reproducible on any host, licensed or not, and is
   reduced to a regression test in the TDD list below (`test_main_exits_non_zero_on_fail_verdict`).
 - `uv run --no-sync python -m pytest tests/hydrodynamics/diffraction/test_workflow_router.py -q`
@@ -301,7 +301,7 @@ real solve is `skipif`-ed away — which is the *current* state of
    adds `docs/reports/2026-08-05-issue-1631-licensed-lane-result-audit.html`
    naming all 12 run IDs, their workflows, their validator verdicts, and the
    statement that none of them was gated. It then files a follow-on issue
-   against `deckhand-licensed-runs-queue` to annotate or quarantine the result
+   against `licensed solver repository` to annotate or quarantine the result
    files themselves. Rationale: **this plan must not modify that repository**,
    and an audit record that lives in the repository that caused the defect is
    the durable artifact.
@@ -419,7 +419,7 @@ def main():
 both); every file under `src/digitalmodel/hydrodynamics/diffraction/` **except**
 the two-line addition to `workflow.py`; `src/digitalmodel/engine.py` (the
 verdict is read from `cfg` by the entrypoint, so the engine needs no change);
-and the entire `deckhand-licensed-runs-queue` repository.
+and the entire `licensed solver repository` repository.
 
 ---
 
@@ -495,7 +495,7 @@ that file.
 - [ ] **The full suite is compared node-ID by node-ID** against a baseline captured in the same worktree at the branch point. No new failure node IDs, and **no test excluded from both sides** — symmetric exclusion proves nothing about the excluded file and hid two real regressions on [#1575](https://github.com/vamseeachanta/digitalmodel/issues/1575).
 - [ ] **The licensed e2e assertion is supplementary and its skip satisfies nothing.** On an unlicensed host it reports `skipped` (measured: 6 skipped, 2026-08-05) and **no criterion above may be met by that skip**. Merging does not require a licensed run; the owner may separately request one.
 - [ ] **The audit report names all 12 run IDs, their workflows, and their validator verdicts**, and states that none was gated. A report covering fewer than 12 does not satisfy this.
-- [ ] **A follow-on issue is filed against `deckhand-licensed-runs-queue`** for annotating or quarantining the committed results. **No file in that repository is modified by this work.**
+- [ ] **A follow-on issue is filed against `licensed solver repository`** for annotating or quarantining the committed results. **No file in that repository is modified by this work.**
 - [ ] The implementing agent will post a summary comment on [#1631](https://github.com/vamseeachanta/digitalmodel/issues/1631), and will not push to `main`, merge, or close the issue unless separately authorized.
 - [ ] r1 review artifact recorded.
 - [ ] **The legal-scan criterion is deliberately absent.** `scripts/legal/legal-sanity-scan.sh` does not exist in this repository (verified 2026-08-05), and the workspace-hub `--repo=` form is fail-open under workspace-hub [#3804](https://github.com/vamseeachanta/workspace-hub/issues/3804). The irony is worth stating plainly, because it is the same defect class this plan exists to fix: **a check that returns success without checking**. Citing it as evidence here would reproduce, inside the remedy, the exact failure being remedied.
@@ -509,7 +509,7 @@ that file.
 - **The `orcaflex-strength-post` crash itself** — [#885](https://github.com/vamseeachanta/digitalmodel/issues/885) owns it. This plan only ensures it can no longer report success.
 - **The public release and Hugging Face publication path** — [#1604](https://github.com/vamseeachanta/digitalmodel/issues/1604) owns that.
 - **Re-running the 12 cases.** D8 option 2; recommended only after the owner rules on the `FAIL` physics.
-- **Any modification to `deckhand-licensed-runs-queue` or to Deckhand.** Read-only throughout.
+- **Any modification to `licensed solver repository` or to Deckhand.** Read-only throughout.
 - **The remaining ~14 print-and-continue modules** (`OrcaFlexAnalysis.py:9`, `mooring.py:12`, `orcaflex_parallel_analysis.py`, `orcaflex_optimized_parallel*.py`, `comprehensive_benchmark.py`, `pipeline_schematic.py`, `post_results/postProcess.py`, `preprocess/load_vessel.py:53`, and the `examples_integration/` converters). Inventoried in Resource Intelligence and worth a follow-on. `orcaflex_utilities.py` and `opp.py` are **not** in this exclusion — they are in scope via D5a, because they are on the queued workflow's path.
 - **`tests/workflows/` and `docs/registry/workflows.yaml`.** The registry already excludes `orcaflex-strength-post` from CI via `runtime: requires-license` (premise 20). `tests/workflows/` is a live lane ([#1968](https://github.com/vamseeachanta/digitalmodel/issues/1968)), so this plan neither relies on changing that skip nor touches it.
 - **Deselecting the `solver` marker in CI, or adding `-m "not solver"` to any workflow.** Premise 21 notes no workflow does this today; changing CI selection is a separate decision with its own blast radius.

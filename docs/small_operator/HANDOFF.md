@@ -13,7 +13,7 @@ half**: physics, reusable analysis, anonymised brochure. Operators appear as
 a person, company, address or phone number.
 
 **Client identities and client-specific deliverables are in the private
-`aceengineer-strategy` repo**, `pipeline/small-operator-outreach/` — the
+`commercial outreach repository` repo**, `pipeline/small-operator-outreach/` — the
 pseudonym key, the per-client card review, and `DO-NOT-CONTACT.md`. Read that
 before contacting anyone.
 
@@ -37,27 +37,31 @@ Resources, Gulf Coast) and **OP-B** (an Illinois Basin operator, Illinois Basin)
 ## Do not repeat — the expensive lesson
 
 **OP-B replied "Please stop emailing me" on 2026-08-05.** Two unsolicited
-emails in seven days. He is on `aceengineer-strategy/pipeline/DO-NOT-CONTACT.md`
+emails in seven days. He is on `${OUTREACH_REPO_ROOT}/pipeline/DO-NOT-CONTACT.md`
 permanently and channel-wide — no email, no Collide DM, no apology note.
 
 What actually went wrong was not the copy:
 
-1. We publicly committed to *a month of value creation on our own time*, then
-   followed up **without any value in the follow-up**. The Indiana wellbore list
+1. The public commitment was to *a month of work on the project team’s own time*, followed by a message
+   **without the promised deliverable**. The Indiana wellbore list
    — the thing worth receiving — was never built.
 2. The draft was a no-ask value delivery opening "No reply needed". The version
-   sent replaced that with "coming up with ideas to see how I may be able to
-   help" and closed with "Please let me know your thoughts". That converts a
+   sent replaced that with the following wording.
+
+   > "coming up with ideas to see how I may be able to
+   > help"
+
+   The message closed with "Please let me know your thoughts". That converts a
    gift into a second unprompted ask, a week after an unanswered first one.
 
-**Rule that came out of it:** if a follow-up is justified only by "we promised
-value", it must *contain* the value and ask for nothing. If the value is not
+**Rule that came out of it:** if a follow-up is justified only by a promise of
+value, it must *contain* the value and ask for nothing. If the value is not
 built, the follow-up is not due.
 
 **Channel finding, and it is the important one.** Email is not working for this
 segment. OP-A has now had **five emails and replied to none**, while posting on
 Collide most days and answering other people in his own threads within hours —
-and he gave us his address *by Collide DM* rather than by writing to us. The
+and he gave his address *by Collide DM* rather than in direct correspondence. The
 motion that has actually produced engagement every single time is **answering
 technical questions in public**. Scale that, not the inbox.
 
@@ -104,7 +108,7 @@ partials), so **further briefs are content-only, not a new layout each time**.
 
 Deploy is **Vercel**, not GitHub Pages — push to `main` triggers Production.
 
-### aceengineer-strategy — 2 commits, NOT pushed, 4 behind
+### commercial outreach repository — 2 commits, NOT pushed, 4 behind
 
 Opt-out record and `pipeline/DO-NOT-CONTACT.md`.
 
@@ -145,9 +149,9 @@ review, and only the correct one surfaced the 50%-fillage result.
 Outreach is **stopped**. Nothing is posted and nothing is emailed until the work
 is grounded in fundamentals, built out, and can lead with a result rather than an
 offer. The drafted Collide reply is **withdrawn, not queued** — it led with a
-number our own RP 11L module refuses to state.
+number the RP 11L module refuses to state.
 
-Read `GROUNDING.md` before resuming any of it. Short version: we hand-rolled
+Read `GROUNDING.md` before resuming any of it. Short version: the earlier implementation hand-rolled
 physics next to a proper API RP 11L implementation in this same repo, omitted the
 tubing-pressure term, and published a volumetric efficiency that is undetermined
 without runtime and Bo. And every severe-pump-off claim rests on synthetic cards,
@@ -166,7 +170,7 @@ because the only real validation data spans 88–98% fillage.
 
 ## Second expensive lesson — read the repo's own rules first
 
-`aceengineer-strategy/.claude/CLAUDE.md` carries **hard gate 2: "No PII in
+`${OUTREACH_REPO_ROOT}/.claude/CLAUDE.md` carries **hard gate 2: "No PII in
 commits — contact details, deal terms, pricing specifics stay out of git."**
 
 The do-not-contact commit was written with **two email addresses and a phone
@@ -189,15 +193,17 @@ Recorded because they were asserted confidently and were wrong:
 
 - **"OP-A has published no email address."** False. He gave an address by Collide DM on 2026-07-03, with two existing email threads. Search Gmail before
   asserting contact history.
-- **`so-lift-004` "do not answer unless we can cite specific fields."** False.
+- **`so-lift-004`**. False.
+
+  > "do not answer unless we can cite specific fields."
   Already answered and sent — the Kansas low-BHP one-pager in
-  `aceengineer-strategy/pipeline/op-a-collide/`.
+  `${OUTREACH_REPO_ROOT}/pipeline/op-a-collide/`.
 - **OP-B treated as a cold first contact.** He had been emailed 2026-07-29.
 - **`problems.yml` did not parse** when first written. Validate YAML, do not
   assume.
 
 The pattern in all four: **the strategy repo already held the answer and was not
-checked.** Read `aceengineer-strategy/pipeline/` before starting outreach work.
+checked.** Read `${OUTREACH_REPO_ROOT}/pipeline/` before starting outreach work.
 
 ---
 

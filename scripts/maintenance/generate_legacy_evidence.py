@@ -14,6 +14,18 @@ from digitalmodel.legacy_evidence import (  # noqa: E402
     MANIFEST, RESET_ROOT, evidence_path, git_output, publication_digest,
 )
 
+# Only this archived producer has a reviewed publication redaction.
+PRODUCER_SOURCE_SHA256 = "f3212c10abde12e4da71d7e4344734aa46b67b7c6fe3777a70295f5dbbab86c8"
+
+
+def redact_producer(source):
+    """Replace the client directory prefix and job code in the pinned producer."""
+    public, names = re.subn(rb"(?<=/mnt/ace/)[a-z]+(?=-)", b"client-4e09", source)
+    public, jobs = re.subn(rb"(?i)(?<![a-z0-9])B1[0-9]{3}(?![a-z0-9])", b"job-code", public)
+    if (names, jobs) != (10, 1):
+        raise ValueError("Archived producer does not match the reviewed redactions")
+    return public
+
 
 def additional_claims(read_reset, archive_git):
     # These are the individual files read in pinned mode by the three report evaluators.
@@ -192,19 +204,31 @@ def generate(mirror):
         if "exists" in paths.values():
             refs = archive("for-each-ref", "--sort=refname", "--format=%(refname)",
                            "--contains", full).decode().splitlines()
-            archived_refs[full] = refs
+            # Workstation backup branch names identify the machine used to save them.
+            # Preserve resolvable archive refs for each existence claim.
+            retained = [ref for ref in refs if not ref.startswith("refs/heads/backup/")]
+            if not retained:
+                raise ValueError(f"No non-backup archive ref contains {full}")
+            archived_refs[full] = retained
         archived = tree_files(archive, full, paths)
         root = tree_files(local, RESET_ROOT, paths)
         for path, rule in paths.items():
             mode, blob = archived[path]
             sha = digest(blob)
             same = path in root and root[path][1] == blob
-            entries.setdefault(full, {})[path] = {
+            entry = {
                 "mode": mode, "blob": blob, "sha256": sha, "rule": rule,
                 "storage": "same-as-root" if same else "blob",
             }
-            if not same:
-                blobs[sha] = blob
+            if sha == PRODUCER_SOURCE_SHA256:
+                public = redact_producer(archive("cat-file", "blob", blob))
+                public_sha = hashlib.sha256(public).hexdigest()
+                entry.update(storage="redacted-blob", archived_blob=blob, sha256=public_sha,
+                             blob=hashlib.sha1(f"blob {len(public)}\0".encode() + public).hexdigest())
+                blobs[public_sha] = public
+            elif not same and sha not in blobs:
+                blobs[sha] = archive("cat-file", "blob", blob)
+            entries.setdefault(full, {})[path] = entry
 
     manifest = {"archived_main": old_main, "reset_root": RESET_ROOT, "aliases": aliases,
                 "archived_refs": archived_refs, "publications": publications, "files": entries}
@@ -212,9 +236,10 @@ def generate(mirror):
     destination = evidence_path(ROOT, MANIFEST)
     store = MANIFEST.parent / "blobs"
     evidence_path(ROOT, store).mkdir(parents=True, exist_ok=True)
-    for sha, blob in blobs.items():
-        evidence_path(ROOT, store / sha).write_bytes(archive("cat-file", "blob", blob))
+    for sha, data in blobs.items():
+        evidence_path(ROOT, store / sha).write_bytes(data)
     destination.write_bytes(raw)
+    evidence_path(ROOT, store / PRODUCER_SOURCE_SHA256).unlink(missing_ok=True)
     print(f"{sum(map(len, entries.values()))} files, {len(blobs)} stored blobs; "
           f"manifest sha256 {hashlib.sha256(raw).hexdigest()}")
 

@@ -36,7 +36,7 @@ Diagonal dominance is **not** a physics property of hydrodynamic added-mass matr
 
 ### Evidence (embedded verification)
 
-**File existence** (`ls` 2026-05-07T03:09:00Z, from `/mnt/local-analysis/workspace-hub/digitalmodel`):
+**File existence** (`ls` 2026-05-07T03:09:00Z, from `.`):
 - EXISTS: `tests/marine_ops/marine_engineering/integration/test_hydro_rao_integration.py`
 - EXISTS: `docs/plans/2026-05-05-issue-559-rao-full-matrix-interpolation.md` (this plan, being revised)
 - EXISTS: `src/digitalmodel/marine_ops/marine_analysis/hydrodynamic_coefficients/coefficients.py`
@@ -83,7 +83,7 @@ E    +  and   624146.2952202364 = abs(624146.2952202364)
 FAILED tests/marine_ops/marine_engineering/integration/test_hydro_rao_integration.py::TestHydroRAOIntegration::test_full_matrix_interpolation - AssertionError: Added mass should be diagonally dominant at (3,1)
 ```
 
-- Reproduced at: 2026-05-07T03:09:17Z (cwd `/mnt/local-analysis/workspace-hub/digitalmodel`)
+- Reproduced at: 2026-05-07T03:09:17Z (cwd `.`)
 - Failure mode observed matches issue claim: YES at (3,1). Numerical confirmation that swapping `>` for `>=` would shift the failure to (4,2): the fixture has `A[4,2]=0.1·scale ≈ 1,249,535` versus `A[4,4]=0.05·scale ≈ 624,768`, off-diag exceeds diag by 2×. So the prior plan's `>` → `>=` is **incorrect** in isolation.
 
 <!-- Source count: prior plan (1) + test fixture file (2) + issue body (3) + production module location (4) + reproduction (5) = 5 ≥ 3 minimum. -->
@@ -116,7 +116,7 @@ A repaired `test_full_matrix_interpolation` that asserts only the invariants the
 Rationale:
 
 - (a) **Marine engineering correctness.** The 6×6 added-mass matrix mixes translational mass (rows 0-2) with rotational moments of inertia (rows 3-5), and off-diagonal couplings are dimensional moments. The intuition "diagonal > off-diagonal entry-wise" holds for the translational rows of this fixture (S/Sw/H scales 1.0/1.1/1.3 vs couplings 0.05/0.1) but is not a physics property — Faltinsen, DNV-RP-C205 specify only symmetry and positive-semidefiniteness as universal properties of A. The fixture deliberately codes rotational diagonals as 0.03–0.05× scale (because rotational moments-of-inertia for this notional vessel are small relative to mass) while keeping couplings at 0.05–0.1× scale; that asymmetry was the author's choice and is physically defensible.
-- (b) **Blast radius.** Option 1 touches **only the test file**. Option 2 (reshape fixture) ripples into 4 sibling tests (`test_database_loading`, `test_coefficient_interpolation_accuracy`, `test_added_mass_affects_natural_frequency`, `test_coupling_terms_affect_response`) all of which read this fixture and assert numeric expectations against the current scales. Option 3 (replace dominance with positive-semidefinite + symmetry) is the strongest physics claim but loses the translational-row sanity check we currently get for free.
+- (b) **Blast radius.** Option 1 touches **only the test file**. Option 2 (reshape fixture) ripples into 4 sibling tests (`test_database_loading`, `test_coefficient_interpolation_accuracy`, `test_added_mass_affects_natural_frequency`, `test_coupling_terms_affect_response`) all of which read this fixture and assert numeric expectations against the current scales. Option 3 (replace dominance with positive-semidefinite + symmetry) is the strongest physics claim but loses the translational-row sanity check the current method provides.
 - (c) **False-negative risk.** Option 1 keeps a tight check on translational rows (where dominance IS a fixture invariant) and substitutes the rotational-row check with the universally-true invariants (symmetry already asserted at line 321; add PSD via eigenvalue check). False-negative risk: lower than current state (which asserts a property that does not hold). Option 2 false-negative risk: medium (changes coupling magnitudes, may mask interpolation defects in `test_coupling_terms_affect_response`). Option 3 alone false-negative risk: medium (PSD only, drops the translational row sanity).
 
 **Hybrid landed:** Option 1 for the rotational rows + retained strict dominance for translational rows + add explicit PSD eigenvalue check for full-matrix sanity. This is the smallest defensible change that puts the test on solid physics ground.

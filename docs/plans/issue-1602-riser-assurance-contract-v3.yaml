@@ -208,7 +208,7 @@ child_acceptance_extensions:
     - owns_motion_boundary_and_analytical_transfer_oracle
   https://github.com/vamseeachanta/digitalmodel/issues/1609:
     - bundle_preserves_full_chain_and_transform_evidence
-  https://github.com/vamseeachanta/deckhand/issues/568:
+  https://api.github.com/repositories/1257558103/issues/568:
     - execution_preserves_chain_without_hydrodynamic_interpretation
   https://github.com/vamseeachanta/digitalmodel/issues/1611:
     - engineering_validation_verifies_exact_chain_and_oracle_evidence
@@ -226,7 +226,7 @@ child_issue_owner_crosswalk:
   https://github.com/vamseeachanta/digitalmodel/issues/811: drilling_workflow
   https://github.com/vamseeachanta/digitalmodel/issues/138: analysis_semantics
   https://github.com/vamseeachanta/digitalmodel/issues/1609: normalized_ssot
-  https://github.com/vamseeachanta/deckhand/issues/568: licensed_execution
+  https://api.github.com/repositories/1257558103/issues/568: licensed_execution
   https://github.com/vamseeachanta/digitalmodel/issues/1611: analysis_semantics
   https://github.com/vamseeachanta/digitalmodel/issues/1604: public_release
   https://github.com/vamseeachanta/aceengineer-website/issues/75: website

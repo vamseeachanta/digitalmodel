@@ -13,7 +13,8 @@ READINESS_SCRIPT="${SKILL_PATH}/check_readiness.sh"
 # Check if readiness skill exists
 if [ ! -f "$READINESS_SCRIPT" ]; then
     # Fallback to workspace-hub location
-    WORKSPACE_HUB="${WORKSPACE_HUB:-/mnt/github/workspace-hub}"
+    repo_parent=$(dirname "$(git -C "$(dirname "${BASH_SOURCE[0]}")" rev-parse --show-toplevel)")
+    WORKSPACE_HUB="${WORKSPACE_HUB:-${repo_parent%/workspace-hub}/workspace-hub}"
     READINESS_SCRIPT="${WORKSPACE_HUB}/.claude/skills/workspace-hub/repo-readiness/check_readiness.sh"
 fi
 

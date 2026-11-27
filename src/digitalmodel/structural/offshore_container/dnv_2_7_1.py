@@ -169,7 +169,7 @@ def factor_citations(repo_root: Optional[Path] = None) -> dict:
     """Return ``{factor_name: CitedValue}`` for the DNV-ST-E271 design factors.
 
     Validates each citation against the wiki page (``code_id: dnvgl-st-e271``).
-    In standalone mode (no resolvable llm-wiki clone) it degrades gracefully:
+    In standalone mode (no resolvable knowledge-base clone) it degrades gracefully:
     emits a one-shot warning and returns ``{}`` rather than failing the calc —
     mirroring the calc-citation pilot. Where the wiki resolves, a missing or
     mismatched page fails closed (raises).

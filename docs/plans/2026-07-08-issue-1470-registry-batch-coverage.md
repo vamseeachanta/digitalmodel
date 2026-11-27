@@ -4,7 +4,7 @@
 > **Complexity:** T3
 > **Date:** 2026-07-08
 > **Issue:** https://github.com/vamseeachanta/digitalmodel/issues/1470
-> **Client:** llm-wiki
+> **Client:** knowledge base
 > **Project:** riser-projects
 > **Lane:** lane:codex
 > **Review artifacts:** scripts/review/results/2026-07-08-plan-1470-provider-unavailable.md | scripts/review/results/2026-07-08-plan-1470-subagent-engineering.md | scripts/review/results/2026-07-08-plan-1470-subagent-governance.md | scripts/review/results/2026-07-08-plan-1470-r2-engineering.md | scripts/review/results/2026-07-08-plan-1470-r2-governance.md | scripts/review/results/2026-07-08-plan-1470-r3-governance.md
@@ -38,9 +38,9 @@ This issue will not add standards-derived constants. It will extend source-deriv
 
 ### Documents Consulted
 
-- GitHub issue `#1470` defines this as wave-6 extraction plus missing-input closure, with paired `llm-wiki` then `digitalmodel` PRs and the registry claim protocol.
+- GitHub issue `#1470` defines this as wave-6 extraction plus missing-input closure, with paired `knowledge base` then `digitalmodel` PRs and the registry claim protocol.
 - `docs/riser_database.md` defines the public/private boundary: public `digitalmodel` carries handles, bands, parse shapes, and engine code; values, exact counts, and source-specific provenance tokens stay wiki-side; leak and provenance gates must run before first push.
-- Related completed issue/PR pattern: `digitalmodel#1468` and paired `llm-wiki#830`/`digitalmodel#1480` established the current paired-PR sequence, leak/provenance tripwires, and fail-closed getter/crosswalk discipline.
+- Related completed issue/PR pattern: `digitalmodel#1468` and paired `knowledge base issue 830`/`digitalmodel#1480` established the current paired-PR sequence, leak/provenance tripwires, and fail-closed getter/crosswalk discipline.
 
 ### Gaps Identified
 
@@ -71,13 +71,13 @@ This issue will not add standards-derived constants. It will extend source-deriv
 Command:
 
 ```bash
-env LLM_WIKI_PATH=<local-llm-wiki-checkout> \
+env LLM_WIKI_PATH=<local-knowledge base-checkout> \
   PYTHONPATH=src \
   .venv/bin/python \
   examples/workflows/riser-stackup-registry-batch/run.py
 ```
 
-Public-safe summary of output (numeric wiki-side values redacted by design):
+Public summary of output (numeric wiki-side values redacted by design):
 
 - Runnable contract-chain rows: `RSU-0010`, `RSU-0012`, `RSU-0014`, `RSU-0023`, `RSU-0075`
 - Runnable schedule-assembly rows: `RSU-0019` PASS, `RSU-0021` FINDING, `RSU-0040` FINDING
@@ -102,7 +102,7 @@ The full command prints private wiki-side computed values. Those values, raw loc
 | Focused re-review — engineering | `scripts/review/results/2026-07-08-plan-1470-r2-engineering.md` |
 | Focused re-review — governance | `scripts/review/results/2026-07-08-plan-1470-r2-governance.md` |
 | Final focused re-review — governance | `scripts/review/results/2026-07-08-plan-1470-r3-governance.md` |
-| Wiki source/proposal/calc-contract updates | `llm-wiki/wikis/riser-projects/wiki/...` |
+| Wiki source/proposal/calc-contract updates | `${LLM_WIKI_PATH}/wikis/riser-projects/wiki/...` |
 | dm batch workflow | `examples/workflows/riser-stackup-registry-batch/run.py` |
 | dm parser | `src/digitalmodel/drilling_riser/schedule_assembly.py` and/or `src/digitalmodel/drilling_riser/calc_contracts.py` |
 | dm parser tests | `tests/drilling_riser/test_schedule_assembly.py`, `tests/drilling_riser/test_assembly_golden.py` |
@@ -113,14 +113,14 @@ The full command prints private wiki-side computed values. Those values, raw loc
 
 ## Deliverable
 
-A paired `llm-wiki` then `digitalmodel` implementation that first promotes `RSU-0077` into a source-backed runnable row, extends fail-closed parser coverage only where source evidence is complete, and raises the registry-batch runnable count from 8/21 to at least 9/21.
+A paired `knowledge base` then `digitalmodel` implementation that first promotes `RSU-0077` into a source-backed runnable row, extends fail-closed parser coverage only where source evidence is complete, and raises the registry-batch runnable count from 8/21 to at least 9/21.
 
 ---
 
 ## Pseudocode
 
 ```text
-claim riser-projects-ingest in llm-wiki
+claim riser-projects-ingest in the knowledge base
 extract RSU-0077 first:
     create/update the private source page contract for the shallow-water cases
     map the documented source result into an explicit calc dialect
@@ -168,7 +168,7 @@ in digitalmodel:
 
 | Test name | What it verifies | Expected input | Expected output |
 |---|---|---|---|
-| `test_registry_batch_current_baseline_before_wave6` | Characterization baseline captures current 8/21 state before implementation | Current `llm-wiki` checkout | 8 runnable rows and 13 missing-input rows, with values not committed |
+| `test_registry_batch_current_baseline_before_wave6` | Characterization baseline captures current 8/21 state before implementation | Current `knowledge base` checkout | 8 runnable rows and 13 missing-input rows, with values not committed |
 | `test_rsu0077_shallow_water_contract_schema` | `RSU-0077` carries the complete source-backed four-case contract keys | `RSU-0077`, new calc dialect | All case rows and governing-operation fields present; missing key fails closed |
 | `test_rsu0077_shallow_water_source_consistency` | `RSU-0077` source-reported governing tension is internally consistent with its governing case | `RSU-0077` contract | Top-level governing value matches the governing case value and malformed contracts fail closed |
 | `test_wave6_contract_schema_<rsu>` | New wiki calc contract has required keys for a source-backed runnable candidate | New `rsu_id`, `calc` | Required keys present; missing key fails closed |
@@ -184,7 +184,7 @@ in digitalmodel:
 
 ## Acceptance Criteria
 
-- [ ] `llm-wiki` claim `riser-projects-ingest` is acquired before wiki edits and released after push.
+- [ ] `knowledge base` claim `riser-projects-ingest` is acquired before wiki edits and released after push.
 - [ ] Wiki PR lands first or remains the base branch for the `digitalmodel` PR; `digitalmodel` never references unpushed local wiki-only changes.
 - [ ] Wave-6 extraction artifacts use the established source-page + proposal + calc-contract/reproduction pattern with private source keys kept wiki-side.
 - [ ] `RSU-0077` is the first implementation tracer bullet. If extraction proves it cannot map to the batch's top-tension semantics, stop and revise this plan before any broader implementation.
@@ -232,10 +232,10 @@ Revisions made based on review:
 - **Risk:** The remaining private source candidates are mostly not top-tension chain sources; attempting to force them into runnable registry rows would create false coverage. Implementation must classify source utility before code changes.
 - **Risk:** `RSU-0077` is source-backed but may not map cleanly to the existing batch's API RP 16Q semantics. If that happens, implementation must stop for plan revision rather than pass on a no-lift explanation.
 - **Risk:** Two known source inconsistencies remain documented. Without new source evidence, they are findings, not implementation defects.
-- **Risk:** This is a paired private/public workflow. Auto-sync or claim clobber in `llm-wiki` can overwrite wiki edits; implementation must follow the claim protocol and recover from remote state before continuing.
+- **Risk:** This is a paired private/public workflow. Auto-sync or claim clobber in `knowledge base` can overwrite wiki edits; implementation must follow the claim protocol and recover from remote state before continuing.
 
 ---
 
 ## Complexity: T3
 
-T3 because the work spans paired repositories, private-source extraction, public leak constraints, engineering parser/tests, and review/merge ordering across `llm-wiki` and `digitalmodel`.
+T3 because the work spans paired repositories, private-source extraction, public leak constraints, engineering parser/tests, and review/merge ordering across `knowledge base` and `digitalmodel`.

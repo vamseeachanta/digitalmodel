@@ -17,7 +17,7 @@ mooring_mbl_design:
   # Wiki base (dir containing knowledge/wikis/) for DNV-OS-E301 citation resolution.
   # Relative -> resolved against the digitalmodel repo root (portable + embed-safe).
   # The committed fixture wiki tree is the only DNV-OS-E301 page in this public repo;
-  # production runs set LLM_WIKI_PATH to a private llm-wiki clone instead.
+  # production runs set LLM_WIKI_PATH to a private knowledge base clone instead.
   repo_root: tests/citations/fixtures
   design:
     water_depth: 1500.0

@@ -7,7 +7,7 @@ MAJOR
 - Retrieved the plan at pinned commit `106763a8da6eec7755095da048509c07950db77b`.
 - Verified digitalmodel baseline `87d56cac637f971ca3ed57d8ca98c16a845ff0f7`.
 - Inspected live issue contracts for digitalmodel #138, #811, #1602–#1604,
-  worldenergydata #1046, Deckhand #568, and aceengineer-website #75.
+  worldenergydata #1046, licensed execution issue 568, and aceengineer-website #75.
 - Confirmed the digitalmodel and worldenergydata component CSVs share SHA-256
   `c1d0d6dc01dc0793332689637804041c971423ae2a80ae9ed2385f0e77c4d6af`.
 

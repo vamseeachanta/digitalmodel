@@ -55,7 +55,7 @@ are not comparable across solver versions without re-validation.
 
 **Sourcing note:** the runner detects availability via `shutil.which("blockMesh")`. If the
 utilities are not found, the runner **fail-closes to DRY_RUN** rather than producing a false
-result — so an un-sourced shell is safe (it degrades, it doesn't lie). For automated/lane
+result, including when the shell environment has not been sourced. For automated/lane
 runs, ensure the OpenFOAM `etc/bashrc` is sourced in the environment that invokes
 `openfoam run` (e.g. a wrapper or the host's non-interactive profile).
 
@@ -113,7 +113,7 @@ checks:
 | OpenFOAM version | matches the pinned version in this spec |
 | gmsh | `import gmsh` succeeds |
 | PyVista / meshio | importable |
-| Output root | `/mnt/ace/cfd-output/` exists and is writable |
+| Output root | `${ACE_DATA_ROOT}/cfd-output/` exists and is writable |
 | Smoke | `openfoam run --dry-run` on a generated case returns `DRY_RUN`/`COMPLETED` cleanly |
 
 Until `cfd doctor` exists, the equivalent manual check is:
@@ -131,7 +131,7 @@ uv run openfoam run /tmp/doctor_case          # COMPLETED if OpenFOAM present; e
 Per #139: case *inputs* are git-tracked in-repo; *outputs* (field data, VTK, postProcessing/)
 are large and live **outside git**.
 
-- Output root: `/mnt/ace/cfd-output/` (shared across machines), fallback `/mnt/dde/cfd-output/`
+- Output root: `${ACE_DATA_ROOT}/cfd-output/` (shared across machines), fallback `${CFD_SCRATCH_ROOT}/cfd-output/`
 - Layout: `<output_root>/<project>/<case_name>/` containing the OpenFOAM tree
 - Run index: register each run (case id, solver, version, runtime, paths) in the doc index
   (`source: cfd_output`) — built in Phase 4
@@ -148,7 +148,7 @@ runner config and Phase 4's reporting will honor.
 - [ ] OpenFOAM version pinned (`openfoam2406`) and recorded here + in run provenance
 - [ ] `etc/bashrc` sourced in the lane/automation environment (non-interactive profile)
 - [ ] `uv sync --extra solvers` run on the CFD host
-- [ ] `/mnt/ace/cfd-output/` exists + writable
+- [ ] `${ACE_DATA_ROOT}/cfd-output/` exists + writable
 - [ ] `cfd doctor` green (once built) — or the manual smoke in §5
 - [ ] Known-answer validation (Phase 2) green on this host before any production run
 

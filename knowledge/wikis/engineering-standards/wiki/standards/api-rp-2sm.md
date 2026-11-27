@@ -7,7 +7,7 @@ code_id: api-rp-2sm
 publisher: API
 revision: "2001+2007"
 revision_source: "API RP 2SM 1st Edition (2001) with Addendum 1 (2007), licensed local reference"
-visibility: private-llm-wiki
+visibility: private-knowledge-base
 license_status: licensed-local-reference-derived-notes
 ---
 

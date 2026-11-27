@@ -8,7 +8,7 @@
 > It lives here rather than in the skill corpus because a specification
 > belongs with the codebase that would implement it — in a skill corpus an
 > agent may act on it as though it runs. Tracked in
-> `aceengineer-strategy#267`.
+> `commercial outreach issue 267`.
 
 ## Absent API surface
 

@@ -24,7 +24,7 @@ duplicated.
 
 ---
 
-## 1. Open-source toolchain (the answer to "what packages do we have")
+## 1. Open-source toolchain
 
 Both target domains — marine free-surface hydrodynamics **and** external aerodynamics — are
 covered by a single solver, which is the right consolidation for standing this up.
@@ -32,7 +32,7 @@ covered by a single solver, which is the right consolidation for standing this u
 | Role | Tool | Status in repo |
 |------|------|----------------|
 | **Solver** | **OpenFOAM (ESI / openfoam.com)** — FV, 2D & 3D, VOF free-surface (`interFoam`), RANS/LES, 6-DOF | code targets it; **binaries not installed** |
-| Solver (aero alt) | SU2 — compressible aero, adjoint optimization | not used; OpenFOAM `simpleFoam` covers our aero needs |
+| Solver (aero alt) | SU2 — compressible aero, adjoint optimization | not used; OpenFOAM `simpleFoam` covers the aerodynamic cases in scope |
 | **Geometry/CAD** | FreeCAD (+ pythonOCC / OpenCASCADE) | `solvers/blender_automation` + FreeCAD issues exist; FreeCAD not yet wired |
 | **Meshing** | **gmsh** (2D + parametric 3D); snappyHexMesh / cfMesh (3D from STL) | `solvers/gmsh_meshing` **working**; gmsh in optional deps |
 | **Wave gen (marine)** | olaFlow / waves2Foam (wave BCs + absorption) | wave BCs hand-built in `wave_models.py`; olaFlow not integrated |
@@ -88,7 +88,7 @@ OrcaWave lanes.
 | G4 | **No known-answer validation** — no regression-gated benchmark cases | issue #155 asks for them; none exist | — |
 | G5 | **External-aero path not framed/validated** — `simpleFoam` exists but no aero use-case (wind on topsides/vessel, Cd/Cl) or aero benchmark | `CurrentLoadingSetup` is single-phase RANS already | — |
 | G6 | **No provenance-gated report** — CFD runs have no T1–T8 ledger + HTML report | other workflows have it | `installation_pamphlet`, model-gen pipeline |
-| G7 | **Output storage unimplemented** — field data must live outside git (`/mnt/ace/cfd-output/`) | noted in #139, not built | — |
+| G7 | **Output storage unimplemented** — field data must live outside git (`${ACE_DATA_ROOT}/cfd-output/`) | noted in #139, not built | — |
 
 ---
 
@@ -135,7 +135,7 @@ ParaView state, with stage-gate validation (mesh quality, field-init, convergenc
 
 **Phase 4 — Provenance-gated reporting + output storage**
 T1–T8 assumption/provenance ledger + HTML report via `build_pages`; field outputs to
-`/mnt/ace/cfd-output/` with a run index. Closes G6, G7.
+`${ACE_DATA_ROOT}/cfd-output/` with a run index. Closes G6, G7.
 
 **Phase 5 — Domain applications (two parallel lanes)**
 - *Marine:* seakeeping (#470), ballast-sloshing cluster (#637–#643), CFD→roll coupling (#643)

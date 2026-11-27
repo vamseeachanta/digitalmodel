@@ -25,7 +25,7 @@
 
 ### Standards
 
-Held as full text in llm-wiki: API 579-1 2007 (all parts and Annexes B1, C, D, E, F), API 650 2007, BS 7910:2013. Metadata-only pages: API 653, API 510, API 570, API RP 571, API RP 580/581, API RP 2SIM, ISO 19902, API RP 2MIM, DNV-OS-E301, API RP 17B, API RP 2A, DNV-RP-C210, DNV-ST-F201. Rights posture: publisher identifiers and public overviews only; no clause text, tables, figures, formulas or licensed numeric thresholds in this repo (enforced for the catalog by `tests/asset_integrity/test_offering_catalog.py`); standards-derived constants are user inputs with public defaults recorded on the implementing issue (per #2157 owner card G10).
+Held as full text in the knowledge base: API 579-1 2007 (all parts and Annexes B1, C, D, E, F), API 650 2007, BS 7910:2013. Metadata-only pages: API 653, API 510, API 570, API RP 571, API RP 580/581, API RP 2SIM, ISO 19902, API RP 2MIM, DNV-OS-E301, API RP 17B, API RP 2A, DNV-RP-C210, DNV-ST-F201. Rights posture: publisher identifiers and public overviews only; no clause text, tables, figures, formulas or licensed numeric thresholds in this repo (enforced for the catalog by `tests/asset_integrity/test_offering_catalog.py`); standards-derived constants are user inputs with public defaults recorded on the implementing issue (per #2157 owner card G10).
 
 ### Private Evidence Consulted
 
@@ -35,7 +35,7 @@ None. The #2157 weldolet MAPDL model lives on the licensed Windows host (ace-win
 
 - `docs/domains/asset-integrity/ffs-architecture.md`, `ffs-validation-record-2026-06-27.md`, `b31g-validation-2026-06-27.md`, `docs/domains/circumferential-defect-validation-2026-06-29.md`, `docs/domains/rstreng-2d-validation-2026-06-29.md`
 - `docs/domains/asset-integrity/level3-and-part9-program-2026-09-25.md`, `ffs-readiness-review-2026-09-25.md` (in this branch; originally PR #2186)
-- Issues #1057, #1094, #1274, #2157, #2160, #2171–#2178, #2180–#2185, #2197–#2203, #2205, llm-wiki #913
+- Issues #1057, #1094, #1274, #2157, #2160, #2171–#2178, #2180–#2185, #2197–#2203, #2205, knowledge base issue 913
 - Public overviews listed in `docs/domains/asset-integrity/ffs-offering-catalog.md`
 
 ### Gaps Identified
@@ -85,7 +85,7 @@ Recorded from the decision page (`docs/plans/assets/2026-09-25-issue-1057-owner-
 | D6 | Review coverage | **A** then, after two Gemini failures, **G2 A: two-provider review accepted, exception recorded** (2026-09-26) | review table carries the exception row |
 | Gate | Plan approval | **G3 APPROVE r1.3** (2026-09-26); **G4 A** squash-merge PR #2204; **G5** Wave 0 = #1094, #2160, #2171, #2180, #2197, #2205; **G6 A** plan-lites first, batch approval, parallel worktrees | label applied; PR merged; plan-lites posted on each Wave 0 issue |
 
-**D3 check (2026-09-25).** The #2157 plan (PR #2194, board card R01, 2026-09-24) already settled the equation form on secondary sources: an open-access peer-reviewed paper (*Materials* 19 (2026) 465, CC BY 4.0) states that API 579-1/ASME FFS-1 2016 Level 2 uses the BS 7910 Level 2A generic curve, (1 − 0.14 Lr²)(0.3 + 0.7 e^(−0.65 Lr⁶)); the licensed BS 7910:2013 text confirms that its Option 1 is the different (1 + 0.5 Lr²)^−½ form that `crack_fad` implements today; and owner card G10 declared the Level 2 curve form committable (it is also the original R6 Option 1 curve in the open literature). The 2007 API 579 text held in llm-wiki refers to Figure 9.20 for the curve, and that figure is an image the extraction did not capture, so it neither confirms nor contradicts. What remains open is only a primary-source read of the 2016 PDF, which is FileOpen-protected; treat it as verification, not a gate. Recommendation for D3: record as *resolved by literature; viewer check optional*.
+**D3 check (2026-09-25).** The #2157 plan (PR #2194, board card R01, 2026-09-24) already settled the equation form on secondary sources: an open-access peer-reviewed paper (*Materials* 19 (2026) 465, CC BY 4.0) states that API 579-1/ASME FFS-1 2016 Level 2 uses the BS 7910 Level 2A generic curve, (1 − 0.14 Lr²)(0.3 + 0.7 e^(−0.65 Lr⁶)); the licensed BS 7910:2013 text confirms that its Option 1 is the different (1 + 0.5 Lr²)^−½ form that `crack_fad` implements today; and owner card G10 declared the Level 2 curve form committable (it is also the original R6 Option 1 curve in the open literature). The 2007 API 579 text held in the knowledge base refers to Figure 9.20 for the curve, and that figure is an image the extraction did not capture, so it neither confirms nor contradicts. What remains open is only a primary-source read of the 2016 PDF, which is FileOpen-protected; treat it as verification, not a gate. Recommendation for D3: record as *resolved by literature; viewer check optional*.
 
 ## Artifact Map
 
@@ -97,7 +97,7 @@ page  docs/domains/asset-integrity/ffs-offering-catalog.md              (lookup 
 notes docs/domains/asset-integrity/level3-and-part9-program-2026-09-25.md   (this branch)
       docs/domains/asset-integrity/ffs-readiness-review-2026-09-25.md       (this branch)
 epic  #1057  Phase 4 (Level 3 / Part 9) + readiness demonstrators + offering asset classes
-wiki  llm-wiki #913 (API 653 pointers, 2007->2021 crosswalk, Part 9 dataset audit)
+wiki  knowledge base issue 913 (API 653 pointers, 2007->2021 crosswalk, Part 9 dataset audit)
 ```
 
 ## Deliverable
@@ -126,7 +126,7 @@ wiki  llm-wiki #913 (API 653 pointers, 2007->2021 crosswalk, Part 9 dataset audi
 2. **TDD**: golden test from a published example first; applicability-limit tests (flags, never silent extrapolation); negative fixtures for guards.
 3. **Implement** in an isolated worktree on the lane's host (`machine:dev-primary` for closed-form work; `machine:licensed-win-1` (ace-win-1) for ANSYS; Linux host for CalculiX). Use `uv run`.
 4. **Wire**: registry row + `examples/workflows/<id>/` with committed results + durable test + `ffs_report` output + catalog status update; `test_offering_catalog.py` fails if a `live`/`workflow` engine lacks a registry id or a committed example input, or a `live`/`validated` row lacks a validation record.
-5. **Validate**: validation record under `docs/domains/asset-integrity/` with reference case, our value, difference, limits; the record's numbers asserted by a test.
+5. **Validate**: validation record under `docs/domains/asset-integrity/` with reference case, the calculated value, difference, limits; the record's numbers asserted by a test.
 6. **Land** via PR with cross-review; never `git merge` on main in-session (use `gh pr merge`); write a handoff before stopping.
 
 Parallelism: Wave 0 items are disjoint and can run concurrently on separate worktrees; Wave 2 asset classes are disjoint from each other and from Wave 3 solver work. Serialization points: #2160 before #2175/#2176/#2184; #2171 before #2173/#2174/#2175; #2178 (D2 spike) before #2173 scales and before #2174; #2205 (D1) before #2172/#2198/#2199/#2202 emit verdicts; #2180 requires a deckhand-repo PR and re-rendered API catalog before any `live` claim.
@@ -173,7 +173,7 @@ Parallelism: Wave 0 items are disjoint and can run concurrently on separate work
 
 1. Status validator was vacuous for `none` rows and used the wrong comparison: rewritten as `test_status_semantics` (none ⇒ no engines; row ≤ strongest engine; planned ⇒ planned engine or issue; live ⇒ only live/validated engines) and the catalog header now states the same rule.
 2. Offshore-wind lifetime-extension row listed an engine while `none`: engines cleared, note kept.
-3. Acceptance #2 relied on Deckhand `report_url`, which `docs/deckhand/API.md` calls a target contract: evidence is now the durable test id + route line, with `report_url` gated on deckhand #498/#499.
+3. Acceptance #2 relied on licensed execution repository `report_url`, which `docs/<execution-package>/API.md` calls a target contract: evidence is now the durable test id + route line, with `report_url` gated on licensed execution issue 498/#499.
 4. Gemini downgrade was unsupported: attempted; artifact recorded above; owner decision D6 added.
 5. PR #2186 evidence was outside this PR: its commit is cherry-picked into this branch; #2186 is superseded.
 6. Routed narrative named six engines for five rows: fixed (the legacy pipe engine is routed but no row depends on it).
@@ -185,7 +185,7 @@ Parallelism: Wave 0 items are disjoint and can run concurrently on separate work
 2. "Every engine reference resolves" was false: `structural-health` and `scour` engine entries added; seven code identifiers added (`asme-b31-8`, `dnv-rp-f105/f109/f110`, `dnv-rp-c201`, `api-rp-2fsim`, `chain-fears-jip`); `plate-panel-buckling` now points at the real `plate-buckling` registry id; the catalog test enforces all of this in this PR.
 3. Rights: IACS percentage limits and chain pitting dimensions removed from catalog and page; a test rejects threshold-like numerics.
 4. Misattributions: B31.8 Appendix R (not B31.8S); API STD 2RD supersedes RP 2RD; ISO 19902 note; unused DNV-RP-E303 replaced by DNV-OS-E303 for fibre rope.
-5. Paths: review policy lives in workspace-hub; Deckhand routing files live in the deckhand repo; companion notes were on PR #2186 and are now cherry-picked into this branch.
+5. Paths: review policy lives in workspace-hub; licensed execution repository routing files live in the licensed execution repo; companion notes were on PR #2186 and are now cherry-picked into this branch.
 6. End state vs milestones contradiction: end state now admits `none` rows with dated deferral notes, and M5 requires none to be undocumented.
 7. Missing enforcement test: `tests/asset_integrity/test_offering_catalog.py` ships in this PR; 7 tests pass.
 8. Decision vocabulary for non-pressure assets: filed #2205 (Wave 0) and owner decision D1.

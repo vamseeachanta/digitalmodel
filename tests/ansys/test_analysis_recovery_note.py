@@ -115,3 +115,33 @@ def test_observation_scope_guards_with_synthetic_repinned_evidence(note_data,mon
     resolver[ref['id']].write_bytes(raw)
     monkeypatch.setitem(ref,'sha256',digest_bytes(raw))
     with pytest.raises(ValueError):note.build_recovery_note(baseline,resolver)
+
+
+def test_public_reference_view_preserves_source_evidence_and_responses(note_data, monkeypatch):
+    from digitalmodel.ansys.analysis_evidence import response_csv, validate_package
+
+    baseline, resolver, _, note = note_data
+    source = note.build_recovery_note(baseline, resolver)
+    original_ids = {}
+    for role, ref in source["diagnostic_supplement"]["evidence"].items():
+        public_id = ref["id"]
+        original_ids[public_id] = "example-owner/" + public_id.split("/", 1)[1]
+        ref["id"] = original_ids[public_id]
+    for ref in source["review_sources"]:
+        ref["id"] = original_ids.get(ref["id"], ref["id"])
+    source.pop("package_hash")
+    source["package_hash"] = digest_bytes(canonical_bytes(source))
+    raw = canonical_bytes(source)
+    monkeypatch.setattr(note, "SOURCE_MATRIX_SHA256", digest_bytes(raw))
+
+    view = note.public_recovery_view(raw)
+    validate_package(view)
+    assert view["public_projection"]["source_package_hash"] == source["package_hash"]
+    assert view["public_projection"]["source_file_sha256"] == digest_bytes(raw)
+    assert view["package_hash"] != source["package_hash"]
+    assert view["diagnostic_supplement"]["evidence"] == note.REFERENCES
+    assert b"example-owner/" not in canonical_bytes(view)
+    assert view["cases"] == source["cases"]
+    assert response_csv(view) == response_csv(source)
+    with pytest.raises(ValueError, match="source matrix"):
+        note.public_recovery_view(raw + b"\n")

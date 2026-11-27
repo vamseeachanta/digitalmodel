@@ -12,7 +12,7 @@ Verified locally:
 Incomplete checks:
 - Did not rerun the batch reproduction command.
 - Did not verify drive-index search output.
-- Did not verify live llm-wiki claim state.
+- Did not verify live knowledge base claim state.
 
 ## Findings
 - MAJOR: Review-state evidence is false/incomplete. Plan lines 10 and 99-100 cite `2026-07-08-plan-1470-codex.md`, but that file does not exist. Existing `*1470*` provider artifacts are all `UNAVAILABLE`, not adversarial review evidence.

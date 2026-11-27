@@ -23,7 +23,7 @@ zero control and pressure N4. N8 and N16 remain unattempted. All 64 N4 matrix
 values remain null/not_evaluated; numerical response counts remain 152 computed,
 six failed and 192 not_evaluated.
 
-The [retained N4 offline recovery report](https://github.com/vamseeachanta/digitalmodel-data/blob/main/reports/ansys-n4-recovery-2026-09-16.html)
+The [retained N4 offline recovery report](https://api.github.com/repositories/1370823847/contents/reports/ansys-n4-recovery-2026-09-16.html?ref=main)
 records 54 checked exported quantities, nine derived von Mises values and the
 support sum. Frozen N4 criteria give 21 passing checks and one failed check:
 outer_y120 radial stress 0.01059709996930703 MPa exceeds the 0.010 MPa zero limit.
@@ -34,7 +34,7 @@ remains historical. Only 21 primary y120 checks plus axial equilibrium were
 evaluated; auxiliary and refinement criteria were not evaluated. The two
 auxiliary outer radial values also exceed the same numeric threshold, as
 disclosed in the supplement, without widening the governing N4 criteria.
-The private result owner is digitalmodel-data; this repository maintains the
+The private result owner is the private data repository; this repository maintains the
 existing computational lookup view. No additional native run is represented.
 The r6 supplement fingerprints four transformation entry files using
 `raw-sha256-v1`, distinct from the historical import fingerprint. It does not
@@ -126,22 +126,30 @@ The cooperative `.publish.lock` is removed on normal exit. After interruption,
 the owner first confirms that no publisher is active, then removes only that
 dataset's stale lock before retrying; active locks must not be cleared.
 
-The CLI reloads its published JSON before reporting success. The committed
-`manifest.json` tracks the current reviewed matrix revision, which can be later than r1. This self-contained check
-compares its package hash and reproduces the derived CSV:
+The public `manifest.json` is a lookup view of the retained r6 owner matrix.
+The `private-data/` prefix identifies three review records relative to the
+private data checkout. Their SHA-256 digests, the twelve case rows, and the CSV
+remain identical to the retained revision. The view records the original byte
+digest and package hash under `public_projection`. Its own package hash covers
+the public aliases and the projection metadata.
+
+Set `ANSYS_R6_MATRIX` to the file identified by `authoritative_matrix.path` in
+the owner's dataset manifest. To reproduce both public files from those pinned
+bytes, run the following from the repository root with `src` on the Python path.
 
 ```python
-from pathlib import Path
 from os import environ
-from digitalmodel.ansys.analysis_evidence import load_package, response_csv, read_response_csv
-root = Path(environ["ANSYS_DATASET_ROOT"])
-expected = load_package(Path("examples/ansys/analysis-evidence/manifest.json"))
-package = load_package(root / "ansys-retained-evidence" / (expected["revision"] + ".json"))
-assert package["package_hash"] == expected["package_hash"]
-text = response_csv(package)
-output = Path("examples/ansys/analysis-evidence/responses.csv")
-assert output.read_text(encoding="utf-8") == text
-assert read_response_csv(text)
+from pathlib import Path
+
+from digitalmodel.ansys.analysis_evidence import response_csv
+from digitalmodel.ansys.analysis_records import canonical_bytes
+from digitalmodel.ansys.analysis_recovery_note import public_recovery_view
+
+root = Path("examples/ansys/analysis-evidence")
+source = Path(environ["ANSYS_R6_MATRIX"]).read_bytes()
+view = public_recovery_view(source)
+assert canonical_bytes(view) == (root / "manifest.json").read_bytes()
+assert response_csv(view).encode("utf-8") == (root / "responses.csv").read_bytes()
 ```
 
 The code fingerprint uses declared `utf8-lf-v1` canonical source bytes so LF and
@@ -236,18 +244,18 @@ and a bounded solve budget under the standing analysis authorization. See the [t
 
 ## Original evidence storage
 
-The private [digitalmodel-data evidence owner](https://github.com/vamseeachanta/digitalmodel-data)
+The [private evidence owner](https://api.github.com/repositories/1370823847)
 retains the non-client cylinder originals under
-[`data/ansys-cylinder-benchmark/manifest.json`](https://github.com/vamseeachanta/digitalmodel-data/blob/fb25f39f285127fe63cf54579df4e53260f16c7d/data/ansys-cylinder-benchmark/manifest.json).
+[`data/ansys-cylinder-benchmark/manifest.json`](https://api.github.com/repositories/1370823847/contents/data/ansys-cylinder-benchmark/manifest.json?ref=fb25f39f285127fe63cf54579df4e53260f16c7d).
 The existing run and case IDs are preserved. Fresh remote verification on
 2026-09-15 checked 133 payloads; the private owner records the verification receipt
-in the [pinned publication receipt](https://github.com/vamseeachanta/digitalmodel-data/blob/68a2b9e955bec4b2753a60751454b34a3dc3a619/reports/ansys-cylinder-benchmark-r1-publication.json).
+in the [pinned publication receipt](https://api.github.com/repositories/1370823847/contents/reports/ansys-cylinder-benchmark-r1-publication.json?ref=68a2b9e955bec4b2753a60751454b34a3dc3a619).
 
 This `ansys-retained-evidence` matrix remains the sole computational lookup
 authority. Private retention does not qualify diagnostic results. The completed
 zero-load diagnostic and three pressure cases not attempted retain their existing
 states. Future non-client evidence and authorized generalized/de-identified client-derived
-solver inputs/results follow the private owner README and existing llm-wiki
+solver inputs/results follow the private owner README and existing private knowledge base
 catalogs. Identifiable client originals remain canonical in their private project
 owners; licensed-standard originals remain at licensed locations. Generalization
 requires recorded transformations, restricted provenance and physical-meaning

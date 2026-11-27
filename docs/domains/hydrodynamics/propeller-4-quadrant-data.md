@@ -401,7 +401,7 @@ survey. For WRK-1150 implementation:
 Series for Ship Performance Simulations." *Ship Technology Research*, 54:3,
 pp. 103–113. DOI: 10.1179/str.2007.54.3.002
 
-**Offline PDF:** `/mnt/ace/digitalmodel/docs/domains/hydrodynamics/literature/viviani-2007-four-quadrant-wageningen-b-series.pdf`
+**Offline PDF:** `${ACE_DATA_ROOT}/digitalmodel/docs/domains/hydrodynamics/literature/viviani-2007-four-quadrant-wageningen-b-series.pdf`
 
 ### Key Contribution
 
@@ -506,7 +506,7 @@ where [a,b] is the blending interval, A=g(a), B=h(b), C=g'(a), D=h'(b).
 
 | Document | Location |
 |----------|----------|
-| Viviani/Roddy (2007) PDF | `/mnt/ace/digitalmodel/docs/domains/hydrodynamics/literature/viviani-2007-four-quadrant-wageningen-b-series.pdf` |
+| Viviani/Roddy (2007) PDF | `${ACE_DATA_ROOT}/digitalmodel/docs/domains/hydrodynamics/literature/viviani-2007-four-quadrant-wageningen-b-series.pdf` |
 | McTaggart (2005) PDF | `digitalmodel/docs/domains/ship-design/maneuvering_ship.pdf` |
 | Mehdipour (2013) PDF | `digitalmodel/docs/domains/openfoam/naval_architecture/propeller_hull_interaction.pdf` |
 

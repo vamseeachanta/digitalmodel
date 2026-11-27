@@ -18,7 +18,7 @@ the case is standard interFoam (damBreak-derived, same dicts as the 2D suite).
 
     source /usr/lib/openfoam/openfoam2312/etc/bashrc
     uv run python scripts/cfd/run_sloshing_3d_benchmark.py \
-        --work-dir /mnt/local-analysis/sloshing_cfd_work --cpb 60 --end-time 0.30 \
+        --work-dir $HOME/sloshing_cfd_work --cpb 60 --end-time 0.30 \
         --ranks 1 2 4 8 16 24 32
 """
 from __future__ import annotations
@@ -163,7 +163,7 @@ def collect(cpb: int, end_time: float, rows: List[Dict[str, Any]],
 
 def main(argv: List[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description="3D sloshing MPI scaling benchmark (#1433)")
-    ap.add_argument("--work-dir", type=Path, default=Path("/mnt/local-analysis/sloshing_cfd_work"))
+    ap.add_argument("--work-dir", type=Path, default=Path.home() / "sloshing_cfd_work")
     ap.add_argument("--cpb", type=int, default=60)
     ap.add_argument("--end-time", type=float, default=0.30)
     ap.add_argument("--dt", type=float, default=0.001)

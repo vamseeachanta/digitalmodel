@@ -70,4 +70,4 @@ Practical scope for this PR: **close the loop on #464** by (1) confirming all li
 ## Open Questions
 
 - Capytaine's Hierarchical Toeplitz API surface in version 2.3.1 — confirm exact import path; spike during step 2 to derisk.
-- Dependency boundary: does this issue cross into `pyproject.toml` declaring `capytaine` as a runtime extra? Currently the env is at `/mnt/local-analysis/capytaine-env` (separate). Default: keep as optional extra `digitalmodel[hydrodynamics-bem]`, document install steps in README.
+- Dependency boundary: does this issue cross into `pyproject.toml` declaring `capytaine` as a runtime extra? Currently the env is at `${WORKSPACE_ROOT}/capytaine-env` (separate). Default: keep as optional extra `digitalmodel[hydrodynamics-bem]`, document install steps in README.

@@ -42,8 +42,8 @@
   "catalog_query": "ansys|pressure.vessel|padeye",
   "catalog_matches": 0,
   "catalog_scope": [
-    "llm-wiki:data/data-source-catalog.yml",
-    "llm-wiki:data/domain-database-index.yml"
+    "knowledge base:data/data-source-catalog.yml",
+    "knowledge base:data/domain-database-index.yml"
   ],
   "registration_status": "unresolved; no new catalog identity assigned",
   "provider_review": "pending exact-current Claude and independent Codex plan review"

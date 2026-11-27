@@ -12,20 +12,17 @@ test is where they are enforced for digitalmodel. Loud skip standalone.
 
 from __future__ import annotations
 
-import os
 import re
 from pathlib import Path
 
 import pytest
 
+from digitalmodel.drilling_riser.calc_contracts import resolve_wiki_root
+
 from digitalmodel.riser_database.loader import DEFAULT_DB_ROOT
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 REGISTRY_REL = "wikis/riser-projects/wiki/datasets/stackup-registry.md"
-_KNOWN_WIKI_CLONES = (
-    Path("/mnt/local-analysis/llm-wiki"),  # abs-path-allowed
-    Path.home() / "workspace-hub" / "llm-wiki",
-)
 
 #: Generic engineering/document words that appear in slugs but are not
 #: provenance names. Anything NOT here and >=4 chars is treated as a name.
@@ -148,7 +145,7 @@ _STOPWORDS = {
     "weight",
     "weights",
     "workover",
-    # -- #1453 wave-2 calc-contract generic additions: new post-llm-wiki#826
+    # -- #1453 wave-2 calc-contract generic additions: new post-knowledge base issue 826
     # source-page slugs carry these generic document/engineering words whose
     # normalized substrings occur in long-merged public artifacts (e.g.
     # "installation" in twin_loop.py/decision_spine.py prose, "sheets" in
@@ -244,16 +241,11 @@ def _normalize(text: str) -> str:
 
 
 def _wiki_base() -> Path:
-    candidates = []
-    env = os.environ.get("LLM_WIKI_PATH")
-    if env:
-        candidates.append(Path(env))
-    candidates.extend(_KNOWN_WIKI_CLONES)
-    for base in candidates:
-        if (base / REGISTRY_REL).is_file():
-            return base
+    root = resolve_wiki_root()
+    if root is not None:
+        return root
     pytest.skip(
-        "llm-wiki not available (standalone mode) — the provenance-token "
+        "knowledge base not available (standalone mode) — the provenance-token "
         "tripwire is part of the in-context merge gate"
     )
 

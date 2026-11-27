@@ -6,7 +6,7 @@
 
 ## Overview
 
-The digitalmodel configuration system provides a centralized, type-safe way to manage all application settings using Pydantic's `BaseSettings`. All settings can be configured via:
+The digitalmodel configuration system provides a centralized, typed interface to manage all application settings using Pydantic's `BaseSettings`. All settings can be configured via:
 1. **Default values** (in code)
 2. **Environment variables** (prefixed with `DM_`)
 3. **.env file** (for local development)
@@ -302,8 +302,8 @@ DM_LOG_LEVEL=WARNING
 DM_ENABLE_CACHING=true
 DM_MAX_MEMORY_MB=8192
 DM_ORCAFLEX_WORKERS=50
-DM_DATA_DIR=/mnt/shared/digitalmodel/data
-DM_OUTPUT_DIR=/mnt/shared/digitalmodel/reports
+DM_DATA_DIR=${SHARED_DATA_ROOT}/digitalmodel/data
+DM_OUTPUT_DIR=${SHARED_DATA_ROOT}/digitalmodel/reports
 ```
 
 ### Testing Environment
@@ -479,7 +479,7 @@ def analyze():
 
 **Benefits:**
 - ✅ Configurable via environment variables
-- ✅ Type-safe and validated
+- ✅ Typed and validated
 - ✅ Easy to override for testing
 - ✅ Centralized configuration
 - ✅ No code changes needed for different environments

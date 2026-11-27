@@ -64,7 +64,7 @@ analysis lists what it needs under `result.undetermined`.
 | > 0.35 | Resonance. **Raises `ValidityError`** — use a wave-equation solver. |
 
 Also refused: tapered strings without an explicit `Fc`; Mark II, RotaFlex and
-hydraulic long-stroke geometries passed to the Class I correlations; non-steel
+hydraulic long-stroke geometries passed to the correlations for Class I; non-steel
 sonic velocity used with the steel-derived 245,000 constant (caught by the
 cross-check that `245,000/L` and `15c/L` agree within 0.5%).
 
@@ -155,8 +155,8 @@ engine designation.
 
 ## Knowledge-side references
 
-- `vamseeachanta/llm-wiki` — `wikis/drilling-engineering/wiki/concepts/rod-string-natural-frequency-and-card-undulations.md`
-- `vamseeachanta/llm-wiki` — `wikis/drilling-engineering/wiki/sources/rowlan-2016-srpw-overtravel-load-peak-timing.md`
+- `knowledge base repository` — `wikis/drilling-engineering/wiki/concepts/rod-string-natural-frequency-and-card-undulations.md`
+- `knowledge base repository` — `wikis/drilling-engineering/wiki/sources/rowlan-2016-srpw-overtravel-load-peak-timing.md`
 
 ## Standards
 

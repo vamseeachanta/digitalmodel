@@ -1,12 +1,12 @@
 """Wiki-side calc-contract loader (#1280 / #1453, epic #1279).
 
-The private llm-wiki riser registry carries machine-readable ``calc_contracts``
+The private knowledge base riser registry carries machine-readable ``calc_contracts``
 fenced-YAML blocks — the golden-value data contracts consumed by
 digitalmodel's in-context golden tests and by the registry batch-run example.
 dm carries only the KEY names and this loader; the VALUES live wiki-side and
 resolve at test/run time (never committed here).
 
-Contract locations (llm-wiki#826): the registry page
+Contract locations (knowledge base issue 826): the registry page
 (``datasets/stackup-registry.md``, e.g. RSU-0007) AND per-dataset SOURCE pages
 (``sources/*.md``, e.g. RSU-0010/0012/0014/0023). This loader scans both.
 
@@ -17,12 +17,14 @@ Discipline mirrors ``riser_database.loader``: bounded reads (size caps,
 
 from __future__ import annotations
 
-import os
 import re
 from pathlib import Path
 from typing import Iterator, Optional
 
 import yaml
+
+from digitalmodel.citations.resolver import find_wiki_content_root
+from digitalmodel.citations.schema import CitationResolutionError
 
 __all__ = [
     "CalcContractError",
@@ -36,10 +38,6 @@ __all__ = [
 
 REGISTRY_REL = "wikis/riser-projects/wiki/datasets/stackup-registry.md"
 SOURCES_REL = "wikis/riser-projects/wiki/sources"
-_KNOWN_WIKI_CLONES = (
-    Path("/mnt/local-analysis/llm-wiki"),  # abs-path-allowed
-    Path.home() / "workspace-hub" / "llm-wiki",
-)
 #: Bounded-read cap per wiki page (these are curated markdown pages).
 MAX_PAGE_BYTES = 5 * 1024 * 1024
 _FENCED_YAML = re.compile(r"```yaml\n(.*?)```", re.DOTALL)
@@ -50,17 +48,15 @@ class CalcContractError(RuntimeError):
 
 
 def resolve_wiki_root() -> Optional[Path]:
-    """First llm-wiki clone whose registry page exists: ``LLM_WIKI_PATH``
-    env, then the known clone locations. ``None`` when unavailable
-    (standalone mode — callers skip loudly or report missing-inputs)."""
-    candidates: list[Path] = []
-    env = os.environ.get("LLM_WIKI_PATH")
-    if env:
-        candidates.append(Path(env))
-    candidates.extend(_KNOWN_WIKI_CLONES)
-    for base in candidates:
-        if (base / REGISTRY_REL).is_file():
-            return base
+    """Return the configured content root when it contains the riser registry."""
+    try:
+        root = find_wiki_content_root()
+    except CitationResolutionError as error:
+        if error.reason.startswith(("llm_wiki_path_invalid:", "llm_wiki_path_stale_clone:")):
+            return None
+        raise
+    if root is not None and (root / REGISTRY_REL).is_file():
+        return root
     return None
 
 

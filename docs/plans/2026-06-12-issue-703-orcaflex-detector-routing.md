@@ -252,7 +252,7 @@ Existing detector tests will remain in place and should continue passing.
 7. Run the available legal scan gate before final code-stage review. This repo
    does not currently contain `scripts/legal/legal-sanity-scan.sh`; if a
    repo-local wrapper is still absent during implementation closeout, run the
-   workspace-level scanner from `/mnt/local-analysis/workspace-hub` and report
+   workspace-level scanner from `${WORKSPACE_ROOT}/workspace-hub` and report
    the exact command and target checkout used.
 
 ## Acceptance Criteria
@@ -288,7 +288,7 @@ uv run --no-sources python scripts/ci/detect_touched_domains.py --mode full --do
 uv run --no-sources python scripts/ci/detect_touched_domains.py --mode touched --base origin/main --head HEAD --domains-file tests/DOMAINS.md --output-format list
 uv run --no-sources --with-editable . python -m pytest tests/scripts/test_detect_touched_domains.py -q -p no:randomly -p no:sugar
 uv run --no-sources python -m py_compile scripts/ci/detect_touched_domains.py
-if [ -x scripts/legal/legal-sanity-scan.sh ]; then scripts/legal/legal-sanity-scan.sh --diff-only; else (cd /mnt/local-analysis/workspace-hub && scripts/legal/legal-sanity-scan.sh --repo=digitalmodel --diff-only); fi
+if [ -x scripts/legal/legal-sanity-scan.sh ]; then scripts/legal/legal-sanity-scan.sh --diff-only; else (cd ${WORKSPACE_ROOT}/workspace-hub && scripts/legal/legal-sanity-scan.sh --repo=digitalmodel --diff-only); fi
 ```
 
 If `uv` mutates environment or lock artifacts, the closeout will clean or
@@ -303,8 +303,8 @@ restore unrelated residue before reporting completion.
   optimization. They must remain full-matrix so a parsed-no-op edit cannot
   produce an empty matrix and skip all domain tests.
 - `src/digitalmodel/orcaflex/` intentionally selects both `orcaflex` and
-  `orcaflex-solver`, plus `contracts` for package compatibility checks. That is
-  conservative for solver consumers and compatibility importers while still
+  `orcaflex-solver`, plus `contracts` for package compatibility checks. This selection
+  covers solver consumers and compatibility importers while still
   avoiding the full matrix.
 - `src/digitalmodel/solvers/orcaflex/` intentionally selects several
   import-owner domains beyond `orcaflex-solver`. This is broader than the

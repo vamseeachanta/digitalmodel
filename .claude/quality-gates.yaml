@@ -8,7 +8,7 @@
 # but NOT on the published PyPI 0.1.0 — so PyPI resolution raises TypeError across
 # every domain shard. Each command therefore overlays assetutilities from git
 # via `--with`, pinned to the same ref as [tool.uv.sources] in pyproject.toml
-# (fleet-ops#577: never `@main`): release tag v0.2.1 (commit dcae00f, same tree as v0.2.0 49072a4).
+# (fleet operations issue 577: never `@main`): release tag v0.2.1 (commit dcae00f, same tree as v0.2.0 49072a4).
 # REMOVE the overlay once a release with workflow_api is published to PyPI and
 # the dependency pin is bumped.
 #

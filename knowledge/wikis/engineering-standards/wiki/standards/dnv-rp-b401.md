@@ -6,11 +6,11 @@ domain: engineering-standards
 code_id: dnv-rp-b401
 publisher: DNV
 revision: "2011"
-revision_source: "/mnt/ace/O&G-Standards/DNV/DNV_RP_B401_(2011)_Cathodic_Protection_Design.pdf"
-visibility: private-llm-wiki
+revision_source: "${ACE_DATA_ROOT}/O&G-Standards/DNV/DNV_RP_B401_(2011)_Cathodic_Protection_Design.pdf"
+visibility: private-knowledge-base
 license_status: licensed-local-reference-derived-notes
 source_pdf:
-  - "/mnt/ace/O&G-Standards/DNV/DNV_RP_B401_(2011)_Cathodic_Protection_Design.pdf"
+  - "${ACE_DATA_ROOT}/O&G-Standards/DNV/DNV_RP_B401_(2011)_Cathodic_Protection_Design.pdf"
 ---
 
 # DNV-RP-B401 Cathodic Protection Design

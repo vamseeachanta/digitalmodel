@@ -31,7 +31,7 @@ CORPUS LOCATIONS (read-only; substitute the local mount for <licensed-codes-root
   <licensed-codes-root>/OCIMF/OCIMF Coef.xlsx
   (17 sheets, 3 data sheets: "Data 5a-9a", "Data 10a-14a", "Data 16a-19a")
 - Interactive coefficient explorer (open in browser to verify visually):
-  /mnt/local-analysis/digitalmodel/docs/domains/charts/phase2/ocimf/ocimf_coefficient_explorer.html
+  docs/domains/charts/phase2/ocimf/ocimf_coefficient_explorer.html
 - Full MEG3 (2008) standard PDF:
   <licensed-codes-root>/OCIMF/OCIMF - 2008 - Mooring Equipment Guidelines.pdf
 - Full MEG4 (2018) standard PDF:

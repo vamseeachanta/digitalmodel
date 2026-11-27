@@ -174,7 +174,7 @@ prior-head observation. Issue remains open awaiting source qualification.
 
 ## Durable preliminary results (2026-10-06)
 
-The exact reviewed synthetic PNG/CSV/JSON are now in private digitalmodel-data,
+The exact reviewed synthetic PNG/CSV/JSON are now in the private data repository,
 dataset `uniform-local-loss-screening`, archive run
 `preliminary-pressure-20261006T030939Z-3c238c26`. Dataset commit
 `795b35099bf29cdfc59e6e2184cbdc0da76131be` and manifest SHA256
@@ -188,7 +188,7 @@ Receipt remote bytes were separately verified; checkout line endings differ
 from this tracked LF receipt. Dataset payloads are protected by `data/** -text`.
 
 Existing asset_integrity registry metadata links manifest, PNG, CSV, JSON and
-receipt. Private results [draft PR 46](https://github.com/vamseeachanta/digitalmodel-data/pull/46)
+receipt. Private results [draft PR 46](https://api.github.com/repositories/1370823847/pulls/46)
 records retention; source [draft PR 2289](https://github.com/vamseeachanta/digitalmodel/pull/2289)
 records methods/spec/discovery. No rerun or FEA occurred in retention, no client
 or licensed originals were copied, and no parallel catalog was introduced.

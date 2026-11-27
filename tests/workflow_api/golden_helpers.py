@@ -23,7 +23,7 @@ GOLDENS = Path(__file__).resolve().parent / "goldens"
 
 # Wiki base for DNV-OS-E301 citation resolution in the mooring route. The committed
 # fixture tree is the only copy of the page in this public repo (the real wiki is the
-# private llm-wiki). The mooring example fixture points repo_root here too.
+# private knowledge base). The mooring example fixture points repo_root here too.
 FIXTURE_WIKI_ROOT = Path(__file__).resolve().parents[1] / "citations" / "fixtures"
 
 

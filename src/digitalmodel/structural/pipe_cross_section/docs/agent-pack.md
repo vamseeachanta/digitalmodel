@@ -182,7 +182,7 @@ All sweep findings were observed during source inspection on 2026-11-07 at the c
 Commands run over the entire package, including all subfolders:
 
 ```sh
-rg -n 'except|continue|return None|return \[\]|return \{\}|\b(?:int|float)\(|\b1970\b|=\s*0(?:\.0)?\b|0\.05|\b(?:density|inch|mm|kN|kg|cache)\b' src/digitalmodel/structural/pipe_cross_section --glob '*.py'
+rg -n 'except|continue|return None|return \[\]|return \{\}|\b(?:int|float)\(|\b(?:1970)\b|=\s*0(?:\.0)?\b|0\.05|\b(?:density|inch|mm|kN|kg|cache)\b' src/digitalmodel/structural/pipe_cross_section --glob '*.py'
 rg -n 'default=|default_factory|\.get\(|safe_load|default=str|round\(|9\.81|1000|2000|25\.4|internal_fluid|is_buoyant|> 0|< 0' src/digitalmodel/structural/pipe_cross_section --glob '*.py'
 ```
 

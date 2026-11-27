@@ -12,7 +12,7 @@ Official Orcina diffraction example L07 models wave drift effects for a ship-sha
 
 ## Local References
 
-All paths are share-relative. On ace-linux-1 prepend `/mnt/ace/`; on ace-linux-2 prepend `/mnt/remote/ace-linux-1/ace/`.
+All paths are relative to the configured data share (`${ACE_DATA_ROOT}`).
 
 | Artifact | Share-relative path | Size | SHA-256 |
 |---|---:|---:|---|

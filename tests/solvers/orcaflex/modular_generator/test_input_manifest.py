@@ -139,7 +139,7 @@ def test_rooted_reference_forms_are_rejected(tmp_path, kind):
         rooted = "/" + rooted.split(":", 1)[-1].lstrip("/")
     reference = {
         "drive": "Z:" + rooted,
-        "unc": "\\\\synthetic-host\\share\\leaf.yml",
+        "unc": "\\\\synthetic-host\\share\\leaf.yml",  # identifier-gate: example
         "posix-root": rooted,
         "windows-root": rooted.replace("/", "\\"),
     }[kind]

@@ -177,8 +177,8 @@ nothing and breaks four consumers.
 Making `correlation` nullable breaks more than `float()` at `677-684`:
 `compute_consensus` assigns `pair_corrs[pk] = corr` (`:465`) and then computes
 `float(np.mean(list(pair_corrs.values())))` (`:480`), which raises `TypeError` on
-a `None`. Every consumer of `.correlation` must be enumerated and made
-`None`-safe, and `mean_pairwise_correlation` needs a defined representation when
+a `None`. Every consumer of `.correlation` must be enumerated and updated to
+handle `None`, and `mean_pairwise_correlation` needs a defined representation when
 one or more pairs are unavailable (proposal: exclude unavailable pairs from the
 mean; if none remain, emit `null` rather than `nan`).
 
@@ -313,7 +313,7 @@ rather than calling `float()` (`multi_solver_comparator.py:677-684`).
 |---|---|---|
 | Create | `src/.../diffraction/benchmark_abscissa.py` | D1–D5: contract, evaluation grid, complex resampling |
 | Modify | `src/.../diffraction/comparison_framework.py` | add `quality` + `correlation: Optional[float]` to `DeviationStatistics` (r2-evidence 7) |
-| Modify | `src/.../diffraction/multi_solver_comparator.py` | consume contract; relative tolerance; 2-solver ladder; quality flags preserving 275-288; circular phase at 297 **and** 316; `None`-safe export at 677-684 |
+| Modify | `src/.../diffraction/multi_solver_comparator.py` | consume contract; relative tolerance; 2-solver ladder; quality flags preserving 275-288; circular phase at 297 **and** 316; export that handles `None` at 677-684 |
 | Create | `src/.../diffraction/benchmark_verdict.py` | `derive_status` incl. `suspect` and `incomplete` |
 | Modify | `src/.../diffraction/output_schemas.py` | matrix `source` provenance field (D6) |
 | Fix | `docs/domains/orcawave/L01_aqwa_benchmark/run_proper_comparison.py:149` | **(owner decision 2026-08-03: fix, do not delete)** route through the D1 loader so `xp` is ascending; add a regression test pinning the corrected orientation |
@@ -435,11 +435,11 @@ comparison). `--capture=no` is a partial mitigation (the comparator file alone
 gives **22 passed in 0.97 s**) but does not survive the whole directory, so the
 source fix is required rather than optional.
 
-**2. Do not build in the host's shared `main` checkout.** `D:/ws/digitalmodel`
+**2. Do not build in the host's shared `main` checkout.** `${WORKSPACE_ROOT}/digitalmodel`
 is on `main`, clean, 0 ahead but **7 behind** `origin/main`, and the host carries
 three other worktrees including `codex/issue-1565-implementation` — parallel work
 by another agent. Implementation uses a **dedicated worktree off `origin/main`**,
-matching the host's existing convention (`D:/ws/_worktrees/digitalmodel-1633`),
+matching the host's existing convention (`${WORKSPACE_ROOT}/_worktrees/digitalmodel-1633`),
 and leaves the shared checkout untouched.
 
 Consequence for the acceptance criteria: the node-ID baseline must be captured

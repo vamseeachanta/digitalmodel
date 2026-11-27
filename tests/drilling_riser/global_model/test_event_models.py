@@ -1,4 +1,4 @@
-"""Drift-off / drive-off and recoil event models of the drilling riser (digitalmodel-data #13, W414): the vessel on a
+"""Drift-off / drive-off and recoil event models of the drilling riser (private data repository issue 13, W414): the vessel on a
 prescribed drift trajectory (first-order RAO motion superimposed), the regular wave at a set phase, and the EDS
 disconnect at the LMRP connector with the anti-recoil tension schedule. Synthetic riser only."""
 

@@ -14,8 +14,8 @@ import subprocess
 class WebResourceImplementer:
     """Implements web resource management across repositories."""
     
-    def __init__(self, base_path="/mnt/github/github"):
-        self.base_path = Path(base_path)
+    def __init__(self, base_path=None):
+        self.base_path = Path(base_path) if base_path is not None else Path(__file__).resolve().parents[5]
         self.implementation_source = Path(__file__).parent.parent / "docs" / "handover-web-resource-management.md"
         
     def find_agent_os_repos(self):

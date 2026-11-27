@@ -20,7 +20,7 @@ Issue #2140 is the historical reference; its closure is not an acceptance record
 for the evidence requirements of #2539. No equations, numerical coefficients or
 engineering acceptance limits are introduced by this record.
 
-The evidence-owning repository is private `digitalmodel-data`, as referenced in
+Evidence is held in the private data repository, as referenced in
 issue #2140. Its maintainers are the evidence custodians at repository level;
 assignment of a responsible verifier remains to be confirmed privately. The pack
 requires a diffraction quality manager on a different provider from the producer.

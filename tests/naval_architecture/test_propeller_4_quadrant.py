@@ -4,7 +4,7 @@ Test data sources:
 - Oosterveld & van Oossanen (1975): 1st-quadrant B-series polynomials
   (39 KT + 47 KQ coefficients from Bernitsas et al. 1981 / nickholt15/wageningen)
 - Viviani, Roddy, Hess & Faller (2007): 4-quadrant formulation, Eqs. 1-6
-  PDF: /mnt/ace/digitalmodel/docs/domains/hydrodynamics/literature/
+  PDF: ${ACE_DATA_ROOT}/digitalmodel/docs/domains/hydrodynamics/literature/
        viviani-2007-four-quadrant-wageningen-b-series.pdf
 - McTaggart (2005): Esso Osaka KT polynomial, DRDC Atlantic TM 2005-071
   PDF: digitalmodel/docs/domains/ship-design/maneuvering_ship.pdf
