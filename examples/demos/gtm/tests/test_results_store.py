@@ -12,15 +12,18 @@ import csv
 import json
 import shutil
 import sqlite3
+import sys
 from pathlib import Path
 
 import pytest
+
+_GTM_DIR = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(_GTM_DIR))
 
 import demo_01_dnv_freespan_viv as demo
 import results_store as rs
 from sweep_config import load_sweep_config
 
-_GTM_DIR = Path(demo.__file__).resolve().parent
 _BASELINE_CONFIG_PATH = _GTM_DIR / "inputs" / "demo_01_freespan.yml"
 _GOLDEN_PATH = _GTM_DIR / "tests" / "fixtures" / "golden" / "demo_01_baseline_results.json"
 

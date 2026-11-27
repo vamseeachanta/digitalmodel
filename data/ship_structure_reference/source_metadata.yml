@@ -1,6 +1,6 @@
 schema_version: 1
 purpose: Authored source pointers and applicability; no extracted dimensional database
-discovery_authority: llm-wiki:data/data-source-catalog.yml and domain-database-index.yml structural-ffs
+discovery_authority: data/data-source-catalog.yml in the private knowledge base and domain-database-index.yml structural-ffs
 observed_on: '2026-10-06'
 research_records: source_research.yml (local-only; not published; pending rights)
 sources:
@@ -29,7 +29,7 @@ sources:
         solver_use: blocked_pending_resolution
         enforcement: advisory_metadata_not_runtime_enforced
         reason: confirmed_publisher_inertia_discrepancy_values_preserved
-        evidence_owner: digitalmodel-data
+        evidence_owner: https://api.github.com/repositories/1370823847
         evidence_revision: d3cdde0ed247a4d112b5139f9e66d3ab15e92bd2
         evidence_main_revision: 1722e55a49feb235b5e40eddd60ecbfb05ac958d
         evidence_path: docs/reviews/ship-plate-study/local-loss-diagnostic/source-database-verification.json
@@ -46,8 +46,8 @@ sources:
 existing_section_database: ../aisc_shapes.yaml (existing v15.0 header; inch units; no edition upgrade)
 study: ../../docs/domains/plate-buckling/ship-structure-study.md
 result_owner:
-  repo: digitalmodel-data
-  pull_request: https://github.com/vamseeachanta/digitalmodel-data/pull/44
+  repo: https://api.github.com/repositories/1370823847
+  pull_request: https://api.github.com/repositories/1370823847/pulls/44
   status: merged
   merged_revision: 1722e55a49feb235b5e40eddd60ecbfb05ac958d
   owner_path: docs/reviews/ship-plate-study/

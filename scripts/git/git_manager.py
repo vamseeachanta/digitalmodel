@@ -22,8 +22,8 @@ DEFAULT_PR_TITLE = "Auto-sync: Standardization and updates"
 class GitManager:
     """Manages Git operations across all repositories"""
     
-    def __init__(self, base_path: str = "/mnt/github/github"):
-        self.base_path = Path(base_path)
+    def __init__(self, base_path: Optional[str] = None):
+        self.base_path = Path(base_path) if base_path is not None else Path(__file__).resolve().parents[3]
         self.repos = self.get_all_repos()
         self.results = {}
         

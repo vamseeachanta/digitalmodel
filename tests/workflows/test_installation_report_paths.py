@@ -45,7 +45,7 @@ def render(kind, data, config, base):
 
 
 @pytest.mark.parametrize("kind", ["partial", "capability", "full"])
-@pytest.mark.parametrize("retained", [r"Z:\retired\runs\case", "/retired/runs/case"])
+@pytest.mark.parametrize("retained", [r"Z:\retired\runs\case", "/retired/runs/case"])  # identifier-gate: example
 def test_relocated_links_preserve_pinned_evidence(tmp_path, kind, retained):
     """Reports -> parent dataset -> runs/case -> extracted/report.html.
 
@@ -249,7 +249,7 @@ def test_no_mapping_keeps_existing_link_behavior(tmp_path):
 
 def test_full_generation_keeps_source_digest_and_retained_locator(tmp_path):
     """From reports, one parent step reaches runs/case; no drive is inferred."""
-    retained = summary(r"Z:\retired\runs\case")
+    retained = summary(r"Z:\retired\runs\case")  # identifier-gate: example
     source = tmp_path / "summary.json"
     source.write_text(json.dumps(retained), encoding="utf-8")
     digest = sha256(source.read_bytes()).hexdigest()

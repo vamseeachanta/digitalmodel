@@ -12,6 +12,7 @@ Examples include:
 - Stratigraphic correlation
 - Reservoir characterization workflows
 """
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -361,7 +362,7 @@ def example_production_forecasting():
             plt.grid(True)
             
             plt.tight_layout()
-            plt.savefig('/mnt/github/github/digitalmodel/examples/production_forecast.png', dpi=150)
+            plt.savefig(Path(__file__).resolve().parents[2] / 'production_forecast.png', dpi=150)
             print(f"Plot saved to: examples/production_forecast.png")
             
         except Exception as e:
@@ -448,7 +449,7 @@ def example_stratigraphic_correlation():
             datum_marker='Main_Reservoir'
         )
         
-        plt.savefig('/mnt/github/github/digitalmodel/examples/stratigraphic_correlation.png', dpi=150, bbox_inches='tight')
+        plt.savefig(Path(__file__).resolve().parents[2] / 'stratigraphic_correlation.png', dpi=150, bbox_inches='tight')
         print(f"Stratigraphic correlation plot saved to: examples/stratigraphic_correlation.png")
         
     except Exception as e:
@@ -541,7 +542,7 @@ def example_integrated_reservoir_model():
             plt.grid(True)
             
             plt.tight_layout()
-            plt.savefig('/mnt/github/github/digitalmodel/examples/reservoir_simulation.png', dpi=150)
+            plt.savefig(Path(__file__).resolve().parents[2] / 'reservoir_simulation.png', dpi=150)
             print(f"Simulation plot saved to: examples/reservoir_simulation.png")
             
         except Exception as e:

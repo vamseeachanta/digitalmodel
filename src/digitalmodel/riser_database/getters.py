@@ -5,7 +5,7 @@ scalar standards-derived design factors live here as code constants; each
 getter builds a :class:`Citation` from a template, validates it fail-closed,
 and returns a :class:`CitedValue`. Licensed table CONTENT never lives in this
 public repo — only these well-known scalar factors plus clause identifiers,
-with values resolving against the private llm-wiki.
+with values resolving against the private knowledge base.
 
 Provenance discipline (plan D6): a getter only cites the standard the code
 actually sources the value from. #1245 shipped the two DNV factors (dff, scf);

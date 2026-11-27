@@ -131,7 +131,7 @@ The count is reviewed risk/guard sites, including defensive and intentional defa
 Exact package sweep commands (text inspection only):
 
 ```bash
-rg -n 'except|continue|return None|return \[\]|return \{\}|\b1970\b|\b(?:int|float)\(|=\s*0(?:\.0)?\b|default|assum|unit|1e-|0\.0[0-9]|0\.0?5\b|cache' src/digitalmodel/solvers/gmsh_meshing --glob '*.py'
+rg -n 'except|continue|return None|return \[\]|return \{\}|\b(?:1970)\b|\b(?:int|float)\(|=\s*0(?:\.0)?\b|default|assum|unit|1e-|0\.0[0-9]|0\.0?5\b|cache' src/digitalmodel/solvers/gmsh_meshing --glob '*.py'
 rg -n 'return|except|continue|finally|pass|setdefault|\.get\(' src/digitalmodel/solvers/gmsh_meshing --glob '*.py'
 ```
 

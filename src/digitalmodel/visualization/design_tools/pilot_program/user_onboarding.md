@@ -10,7 +10,7 @@ You are the first user testing the FreeCAD + Blender engineering workflow. This 
 
 ### 1. Test Your Installation
 ```bash
-cd /mnt/github/github/digitalmodel/src/modules/design_tools
+cd src/modules/design_tools
 python3 workflow_test.py
 ```
 
@@ -75,7 +75,7 @@ print("✅ Renders complete! Check renders/ folder")
 
 ## 🎯 Test Scenarios Prepared for You
 
-We've created three real-world test cases for you to practice with:
+Three real-world test cases are available for practice:
 
 1. **Offshore Separator Vessel** - Complete with internals and nozzles
 2. **Subsea Piping Manifold** - Complex piping arrangement with valves
@@ -162,7 +162,7 @@ Your pilot will be considered successful if you can:
 
 ## 🎉 Pilot Incentives
 
-As our first pilot user, you'll receive:
+As the first pilot user, you'll receive:
 - **Priority support** for any issues encountered
 - **Input on feature development** for next version
 - **Recognition as early adopter** in documentation

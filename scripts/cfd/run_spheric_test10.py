@@ -24,7 +24,7 @@ run is one draw from a strongly stochastic (CoV ~20%) distribution, so agreement
 experiment's out-of-plane-thickness dependence or air entrapment.
 
     source /usr/lib/openfoam/openfoam2312/etc/bashrc
-    uv run python scripts/cfd/run_spheric_test10.py --work-dir /mnt/local-analysis/sloshing_cfd_work
+    uv run python scripts/cfd/run_spheric_test10.py --work-dir $HOME/sloshing_cfd_work
 """
 from __future__ import annotations
 
@@ -91,7 +91,7 @@ def _peak_pa(case_dir: Path, fo: str, tap: str) -> Dict[str, float] | None:
 
 def main(argv: List[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description="SPHERIC Test 10 validation (#1433)")
-    ap.add_argument("--work-dir", type=Path, default=Path("/mnt/local-analysis/sloshing_cfd_work"))
+    ap.add_argument("--work-dir", type=Path, default=Path.home() / "sloshing_cfd_work")
     args = ap.parse_args(argv)
     args.work_dir.mkdir(parents=True, exist_ok=True)
 

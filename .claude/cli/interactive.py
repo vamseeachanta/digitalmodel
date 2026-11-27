@@ -3,6 +3,7 @@
 Provides an interactive command-line interface with enhanced user experience.
 """
 
+import os
 import sys
 from typing import Optional, List, Dict, Any
 
@@ -208,10 +209,13 @@ class InteractiveMode:
                 "pyproject-starter", 
                 "worldenergydata",
                 "aceengineer-website",
-                "frontierdeepwater",
-                "OGManufacturing"
             ]
-            
+            # Additional checkout names are configured per workspace.
+            for entry in os.environ.get("ACE_PRIVATE_REPOS", "").split(","):
+                name = entry.strip()
+                if name and name not in available_repos:
+                    available_repos.append(name)
+
             for repo in available_repos:
                 if self.get_yes_no(f"Include {repo}?", default=False):
                     repos.append(repo)

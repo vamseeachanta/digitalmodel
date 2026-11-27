@@ -1,7 +1,7 @@
 """Unit tests for the wiki-side calc-contract loader (#1453).
 
 All fixture values are SYNTHETIC (public-safe) — the real contracts live on
-the private llm-wiki and are exercised by ``test_assembly_golden.py``.
+the private knowledge base and are exercised by ``test_assembly_golden.py``.
 """
 
 from __future__ import annotations

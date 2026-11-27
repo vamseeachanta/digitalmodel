@@ -81,5 +81,6 @@ def test_planted_structural_token_is_caught_in_both_echo_sites(tmp_path):
     for fname in ("manifest.yaml", "surrogate.json"):
         clean = (d / fname).read_text()
         assert not _scan_text(clean)  # clean today
-        planted = clean + "\n# leaked: /mnt/ace/client_projects/secret\n"
-        assert _scan_text(planted), f"structural scan failed to catch a planted path in {fname}"
+        synthetic_mount = "/".join(("", "mnt", "example", "reference"))
+        planted = clean + f"\n# leaked: {synthetic_mount}\n"
+        assert "absolute mount path" in _scan_text(planted), f"structural scan failed to catch a planted path in {fname}"

@@ -43,7 +43,7 @@ Verified on 2026-05-15 via GitHub issue fetch:
 - `docs/domains/diffraction/README.md` currently contains stale `src/digitalmodel/modules/diffraction/` structure and a quickstart that does not show the current `validate-spec` / `convert-spec` / `run-orcawave` path.
 - `docs/domains/diffraction/ORCAWAVE_CONVERTER_GUIDE.md` currently contains a stale `digitalmodel.orcawave.diffraction.orchestrator` import.
 - `docs/domains/diffraction/PHASE_2_COMPLETION.md` and `docs/domains/aqwa/README.md` contain stale `diffraction_cli.py` references that should be updated or clearly marked historical/legacy if retained.
-- `src/digitalmodel/hydrodynamics/diffraction/diffraction_cli.py` exists at HEAD as a parallel argparse entry point. #614 must not claim it is deleted; it should make current/canonical docs point to the Click CLI in `cli.py` and label `diffraction_cli.py` references as legacy/alternate argparse references when they remain.
+- `src/digitalmodel/hydrodynamics/diffraction/diffraction_cli.py` exists at HEAD as a parallel argparse entry point. #614 must not claim it is deleted; the recommended change is to make current/canonical docs point to the Click CLI in `cli.py` and label `diffraction_cli.py` references as legacy/alternate argparse references when they remain.
 - `docs/domains/orcawave/PHASE_1_COMPLETION.md`, `docs/domains/orcawave/DIFFRACTION_CAPABILITIES_EXPANSION_PLAN.md`, `docs/domains/orcawave/L01_aqwa_benchmark/COMPARISON_SUMMARY.md`, and `docs/domains/orcawave/L01_aqwa_benchmark/README_ORCAWAVE_EXECUTION.md` contain additional stale `diffraction_cli.py`, `src/digitalmodel/modules/...`, or old import references.
 
 ### Gaps identified
@@ -80,16 +80,16 @@ OrcaWave documentation reflects the current canonical `spec.yml -> validate -> c
 3. Add a minimal current quickstart: prepare spec, validate, convert YAML, dry-run, then run on licensed host. Add a separate "Planned workflow" callout for #500 and #605-#613. Resolve the broken `diffraction/QUICK_START.md` link by redirecting it to the new canonical quickstart section or creating a real quickstart document; do not leave a missing link.
 4. Document mesh path-resolution/package behavior based on current #500/#605 state; label future behavior as planned if not implemented.
 5. Link related issues explicitly: #500 and #605-#613, with planned/current wording.
-6. Add required docs guard tests. The guard scope includes `docs/domains/orcawave/`, `docs/domains/diffraction/`, and shared diffraction/AQWA docs under `docs/domains/aqwa/` that mention `diffraction_cli.py`, `digitalmodel.orcawave`, `run_orcawave*`, or canonical shared diffraction command paths. The guard should fail stale canonical docs, allow working example-script references only when labeled as examples/reference/historical, and require any `diffraction_cli.py` or legacy script references to be under a heading or nearby label containing `legacy`, `alternate`, `argparse`, `reference`, `example`, or `historical` rather than quickstart/current/recommended workflow. Canonical/current sections are headings or nearby text containing `quickstart`, `current`, `canonical`, `recommended`, or `usage` in non-historical docs.
+6. Add required docs guard tests. The guard scope includes `docs/domains/orcawave/`, `docs/domains/diffraction/`, and shared diffraction/AQWA docs under `docs/domains/aqwa/` that mention `diffraction_cli.py`, `digitalmodel.orcawave`, `run_orcawave*`, or canonical shared diffraction command paths. The proposed guard would fail stale canonical docs, allow working example-script references only when labeled as examples/reference/historical, and require any `diffraction_cli.py` or legacy script references to be under a heading or nearby label containing `legacy`, `alternate`, `argparse`, `reference`, `example`, or `historical` rather than quickstart/current/recommended workflow. Canonical/current sections are headings or nearby text containing `quickstart`, `current`, `canonical`, `recommended`, or `usage` in non-historical docs.
 
 ## Artifact Map
 
 | Artifact | Path |
 |---|---|
 | This plan | `docs/plans/2026-05-15-issue-614-orcawave-docs-canonical-workflow.md` |
-| Plan review - Claude (repo-rooted at `/mnt/local-analysis/workspace-hub/digitalmodel`, non-empty completed artifact required) | `scripts/review/results/2026-05-15-plan-614-claude.md` |
-| Plan review - Codex (repo-rooted at `/mnt/local-analysis/workspace-hub/digitalmodel`, non-empty completed artifact required) | `scripts/review/results/2026-05-15-plan-614-codex.md` |
-| Plan review - Gemini (repo-rooted at `/mnt/local-analysis/workspace-hub/digitalmodel`, optional best-effort artifact; `UNAVAILABLE` does not block if the review tool cannot complete) | `scripts/review/results/2026-05-15-plan-614-gemini.md` |
+| Plan review - Claude (repo-rooted at `.`, non-empty completed artifact required) | `scripts/review/results/2026-05-15-plan-614-claude.md` |
+| Plan review - Codex (repo-rooted at `.`, non-empty completed artifact required) | `scripts/review/results/2026-05-15-plan-614-codex.md` |
+| Plan review - Gemini (repo-rooted at `.`, optional best-effort artifact; `UNAVAILABLE` does not block if the review tool cannot complete) | `scripts/review/results/2026-05-15-plan-614-gemini.md` |
 | Plan review disagreement (optional if generated by fanout) | `scripts/review/results/2026-05-15-plan-614-disagreement.md` |
 | Plan index | N/A - `digitalmodel/docs/plans/README.md` does not exist; follow existing standalone-plan convention |
 
@@ -145,7 +145,7 @@ OrcaWave documentation reflects the current canonical `spec.yml -> validate -> c
 - [ ] The #614 implementation/plan-review issue comment links the final docs plan and summarizes which stale docs were updated.
 ## Plan Review Gating
 
-- [ ] Completed review artifacts under `/mnt/local-analysis/workspace-hub/digitalmodel/scripts/review/results/` exist for Claude and Codex; each non-empty artifact contains a `## Verdict` section. Gemini is best-effort for this T1 docs plan and an `UNAVAILABLE` artifact does not block if Claude and Codex have no unresolved `MAJOR`.
+- [ ] Completed review artifacts under `scripts/review/results/` exist for Claude and Codex; each non-empty artifact contains a `## Verdict` section. Gemini is best-effort for this T1 docs plan and an `UNAVAILABLE` artifact does not block if Claude and Codex have no unresolved `MAJOR`.
 - [ ] Any provider `MAJOR` finding requires a plan revision and re-review; the issue is commented with this plan and moved to `status:plan-review` only after no unresolved `MAJOR` findings remain.
 
 ## Adversarial Review Summary

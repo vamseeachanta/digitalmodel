@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import shutil
 import sys
+import os
 from pathlib import Path
 
 # Ensure src/ is importable
@@ -159,12 +160,15 @@ def build_catalog() -> PanelCatalog:
                 "path": str(WORKSPACE / "<project-archive>/_hulls"),
                 "source_id": "hull_collection",
             },
-            {
-                "path": str(WORKSPACE / "rock-oil-field/s7/analysis_general/ssRAOs_toolkit/iv03ParisMesh"),
-                "source_id": "rock_oil_field",
-            },
+
         ],
     }
+
+    if project_root := os.environ.get("FIELD_PROJECT_ROOT"):
+        source_config["metadata_dirs"].append({
+            "path": str(Path(project_root) / "s7/analysis_general/ssRAOs_toolkit/iv03ParisMesh"),
+            "source_id": "rock_oil_field",
+        })
 
     catalog = build_full_catalog(source_config)
 

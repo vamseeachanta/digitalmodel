@@ -13,8 +13,8 @@ from datetime import datetime
 class WebContextualizationDeployer:
     """Deploy web contextualization across repositories."""
     
-    def __init__(self, base_path="/mnt/github/github"):
-        self.base_path = Path(base_path)
+    def __init__(self, base_path=None):
+        self.base_path = Path(base_path) if base_path is not None else Path(__file__).resolve().parents[5]
         self.assetutilities_path = self.base_path / "assetutilities"
         self.module_path = self.assetutilities_path / "src" / "modules" / "web-contextualization"
         
@@ -41,7 +41,7 @@ import sys
 from pathlib import Path
 
 # Add assetutilities to path
-assetutilities_path = Path("/mnt/github/github/assetutilities")
+assetutilities_path = Path(__file__).resolve().parents[3] / "assetutilities"
 if assetutilities_path.exists():
     sys.path.insert(0, str(assetutilities_path / "src" / "modules"))
     
@@ -112,7 +112,7 @@ from pathlib import Path
 
 # Add paths
 sys.path.insert(0, str(Path(__file__).parent.parent))
-assetutilities_path = Path("/mnt/github/github/assetutilities")
+assetutilities_path = Path(__file__).resolve().parents[2] / "assetutilities"
 if assetutilities_path.exists():
     sys.path.insert(0, str(assetutilities_path / "src" / "modules"))
 
@@ -316,7 +316,7 @@ if __name__ == "__main__":
         print("   pip install requests PyPDF2 pdfplumber sentence-transformers")
         print()
         print("2. Test with a repository:")
-        print("   cd /mnt/github/github/digitalmodel")
+        print(f"   cd {self.base_path / 'digitalmodel'}")
         print("   python tools/manage-agent-resources.py status orcaflex")
         print()
         print("3. Fetch all pending resources:")

@@ -73,7 +73,7 @@
   "redacted_public_copies": {
     "decision": "Owner decision M04 (consolidation board r4): option (b), redact the public copies only",
     "summary": "The two files below carried an identifier fragment and are bound inside the r1-r6 result-matrix lineage. The public copies are redacted; the r1-r6 manifest pins, the hash-bound source constants and the private retained r6 snapshot are NOT rewritten. The lineage digests listed here are HISTORICAL: they refer to the original bytes, which are retained in the private data repository. A public checkout therefore no longer reproduces these historical digests from these two paths; the private copy does.",
-    "original_bytes_location": "private repository vamseeachanta/digitalmodel-data, data/public-repo-removals/digitalmodel-2114-redaction/files/<original repository path> (SHA-256 recorded in data/public-repo-removals/digitalmodel-2114-redaction/record.json)",
+    "original_bytes_location": "the private data repository, data/public-repo-removals/digitalmodel-2114-redaction/files/<original repository path> (SHA-256 recorded in data/public-repo-removals/digitalmodel-2114-redaction/record.json)",
     "files": [
       {
         "path": "docs/plans/evidence/2026-09-13-issue-2094-response-resource-intel.json",

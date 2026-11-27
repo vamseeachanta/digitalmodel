@@ -22,8 +22,8 @@ PATERLINI = (
 CROSSWALK = (
     "Cathodic-protection criteria evidence crosswalk (2026-09-29), "
     "unpaginated, Stray-current checklist / ICCP materials; "
-    "https://github.com/vamseeachanta/llm-wiki/blob/main/"
-    "wikis/engineering-standards/wiki/standards/cathodic-protection-criteria-evidence.md"
+    "https://api.github.com/repositories/1230228585/contents/"
+    "wikis/engineering-standards/wiki/standards/cathodic-protection-criteria-evidence.md?ref=main"
 )
 TP16 = (
     "DoD TSEWG, Electrical Technical Paper 16: Impressed Current Anode Material "

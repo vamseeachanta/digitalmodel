@@ -4,7 +4,7 @@
   "utc": "2026-05-31T03:32:53.956057+00:00",
   "git_sha": "74cd2d4f485e2c9a74b3dedd6193d401695a56dc",
   "code_ref": "DNV-RP-F105 (2017)",
-  "raw_source_path": "/mnt/local-analysis/.worktrees/dm-gtm-demo01/examples/demos/gtm/inputs/demo_01_freespan.yml",
+  "raw_source_path": "examples/demos/gtm/inputs/demo_01_freespan.yml",
   "total_cases": 680,
   "summary_counts": {
     "PASS": 68,
@@ -17,7 +17,7 @@
     "code_ref": "DNV-RP-F105 (2017)",
     "pipelines_catalog": "data/pipelines.json",
     "jumpers_catalog": "data/rigid_jumpers.json",
-    "source_path": "/mnt/local-analysis/.worktrees/dm-gtm-demo01/examples/demos/gtm/inputs/demo_01_freespan.yml",
+    "source_path": "examples/demos/gtm/inputs/demo_01_freespan.yml",
     "pipelines": {
       "sizes": [
         "8in",

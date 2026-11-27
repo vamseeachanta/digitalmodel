@@ -259,7 +259,7 @@ History-only inputs end at NOW. Conditional load forecasts use a supplied future
 <label><input id="truth-toggle" type="checkbox"> Show withheld simulated truth</label><div id="charts" class="charts"></div></section>
 <section><h2>4 · Limitations and pending qualification</h2><ul>{limitations}</ul>
 <p>No offshore connection, uncertainty qualification or operational forecast approval is represented.</p></section>
-<footer>Reusable engineering result owner: private digitalmodel-data. Offline review artifact.</footer></main>
+<footer>Reusable engineering result owner: the private data repository. Offline review artifact.</footer></main>
 <script id="payload" type="application/json">{encoded}</script><script>{JAVASCRIPT}</script></body></html>'''
 
 

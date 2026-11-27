@@ -15,7 +15,7 @@ physics, the reusable analysis, and an anonymised brochure that can go to any
 operator.
 
 **Client identities and client-specific deliverables live in the private
-`aceengineer-strategy` repo**, under `pipeline/small-operator-outreach/`. That
+`commercial outreach repository` repo**, under `pipeline/small-operator-outreach/`. That
 is where the pseudonym key is, where the per-client card review lives, and where
 `DO-NOT-CONTACT.md` lives. Check that repo before contacting anyone.
 
@@ -32,8 +32,8 @@ them.
 
 | Path | What |
 |---|---|
-| `problems.yml` | The catalogue: operators, problems, evidence, our capability, status. The "what to do next" list. |
-| `brochure.html` | The general pamphlet. Anonymised — safe to send to any operator. |
+| `problems.yml` | The catalogue: operators, problems, evidence, the available capability, status. The "what to do next" list. |
+| `brochure.html` | The general pamphlet. Anonymised — intended for distribution to operators. |
 | `dynacard-matrix.html` | Per-card review for ONE named operator. Quotes his posts, names his equipment. |
 | `examples/pumpoff_diagnosis.py` | Runnable worked example. Prints its own analysis limit. |
 | `build_pdfs.py` | Renders the HTML to client-ready PDFs. |
@@ -82,7 +82,7 @@ both. Amber is now reserved for semantic warnings only.
 **A discrepancy to be aware of:** `aceengineer-website/brand/BRAND.md` states the
 logo uses a "plum/copper family" and explicitly *not* navy/teal. The committed
 `logo.svg` is navy/teal, `tests/js/brand-assets.test.js` asserts navy/teal, and the
-wordmark commit (`510aa2e`) is newer than BRAND.md (`47694fc`). We followed the
+wordmark commit (`510aa2e`) is newer than BRAND.md (`47694fc`). This guide follows the
 asset and the test. **BRAND.md appears stale and should be corrected upstream** —
 if it turns out BRAND.md is right and the asset is wrong, these two documents
 inherit the error and need re-paletting.
@@ -93,7 +93,7 @@ Each problem is solved and then **connected as a dot**:
 
 - **Quantitative** → a reusable function in `src/digitalmodel/<domain>/` + a
   regression test pinning the numbers. Record it under `our_capability.functions`.
-- **Conceptual** → an llm-wiki concept page.
+- **Conceptual** → a knowledge-base concept page.
 - **Neither** (procurement, workload, capital) → a data file + a decision model,
   and say plainly that it is not a physics problem.
 
@@ -109,7 +109,7 @@ So, non-negotiably:
 
 1. **Quote, don't infer.** Every equipment name in `problems.yml` is a verbatim
    quote with a pointer to the post.
-2. **Tag inferences.** Anything we deduced carries `inference: true`.
+2. **Tag inferences.** Anything inferred from the evidence carries `inference: true`.
 3. **Error budget** on anything digitized off a plotted image.
 4. **Verify secondary numbers** (bonding thresholds, plugging costs) against
    primary sources before they appear in outreach. The `research_refs` numbers
@@ -122,9 +122,9 @@ So, non-negotiably:
 |---|---|---|
 | `lift` | 5 | 1 analysed (the 2026-07-27 thread), 4 open |
 | `maintenance` | 4 | all open; `so-maint-002` (well triage) is the highest-leverage |
-| `supply_chain` | 2 | the pooling thesis — **our proposal, not an operator ask** |
+| `supply_chain` | 2 | the pooling thesis — **the project proposal, not an operator ask** |
 | `data` | 2 | `so-data-002` "Tally app needed" is the cheapest concrete win |
-| `capital` | 1 | we underwrite technically; we are not a capital provider |
+| `capital` | 1 | the proposal covers technical underwriting and excludes capital provision |
 | `regulatory` | 3 | `so-reg-003` **built and tested**; the other two are context, not advice |
 
 Two named operators: **OP-A** (a Gulf Coast operator, Gulf Coast) and
@@ -144,7 +144,7 @@ The load-bearing idea: plugging cost is *deferred*, not avoided, so a marginal
 well competes against paying the P&A bill today rather than against zero. On the
 illustrative deck in `problems.yml`, a 1.5 BOPD well needs $92/bbl to break even
 on operating cash — yet shutting it in still beats plugging by ~$16k, purely from
-deferral. That is the arithmetic keeping the US stripper fleet standing.
+deferral. That is the arithmetic keeping the United States stripper fleet standing.
 
 One defect was found and fixed during the build: the first version reported
 `KEEP` for wells with *zero* cash-positive months, because deferring P&A by a

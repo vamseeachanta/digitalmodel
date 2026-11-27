@@ -426,7 +426,7 @@ def _resolve_financial_adapter() -> Callable:
         cashflows: np.ndarray,
         discount_rate: float,
     ) -> dict:
-        """Compute financial metrics using worldenergydata FDAS or numpy fallback."""
+        """Compute financial metrics with the optional adapter or the NumPy fallback."""
         try:
             from worldenergydata.fdas import calculate_all_metrics
 

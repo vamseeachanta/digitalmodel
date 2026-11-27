@@ -286,7 +286,7 @@ after successful evidence verification. Their current states remain visible in S
 excluded. The JSON sidecar retains the captured manifest, channel metrics, source hashes and governing cases.
 Failed evidence remains visible and is excluded from demand envelopes.</p><p class="hash">Matrix SHA-256: {summary['matrix_sha256']}<br>
 Campaign snapshot SHA-256: {summary['campaign_sha256']}</p></section>
-<footer>Reusable engineering results owner: private digitalmodel-data. Local retention does not establish remote backup.</footer></main></body></html>'''
+<footer>Reusable engineering results owner: the private data repository. Local retention does not establish remote backup.</footer></main></body></html>'''
 
 
 def generate_report(campaign_path, matrix_path, output, links=None, *, workers=1):

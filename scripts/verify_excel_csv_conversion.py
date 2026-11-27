@@ -74,7 +74,7 @@ def verify_conversion(excel_path: Path) -> bool:
 
 def main():
     """Main verification process."""
-    data_dir = Path("/mnt/github/workspace-hub/digitalmodel/data/modules")
+    data_dir = Path(__file__).resolve().parents[1] / "data/modules"
     excel_files = []
 
     for ext in ['*.xlsx', '*.xls', '*.xlsm']:

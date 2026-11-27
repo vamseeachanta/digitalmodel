@@ -1,7 +1,7 @@
 {
   "demo_id": "demo_03",
   "git_sha": "c6478557bbdba1f6ad06b87fccc25ee1728cd881",
-  "input_ref": "/mnt/local-analysis/.worktrees/dm-gtm-demo03/examples/demos/gtm/inputs/demo_03_mudmat.yml",
+  "input_ref": "examples/demos/gtm/inputs/demo_03_mudmat.yml",
   "n_error": 0,
   "n_go": 174,
   "n_marginal": 6,
@@ -37,14 +37,14 @@
       "Mudmat-M-100te",
       "Mudmat-L-200te"
     ],
-    "mudmats_path": "/mnt/local-analysis/.worktrees/dm-gtm-demo03/examples/demos/gtm/data/mudmat_structures.json",
+    "mudmats_path": "examples/demos/gtm/data/mudmat_structures.json",
     "nogo_utilisation": 1.0,
     "operating_radius_m": 40.0,
-    "output_root": "/mnt/local-analysis/.worktrees/dm-gtm-demo03/examples/demos/gtm/output",
+    "output_root": "examples/demos/gtm/output",
     "reference_hs": 2.0,
-    "results_root": "/mnt/local-analysis/.worktrees/dm-gtm-demo03/examples/demos/gtm/results",
+    "results_root": "examples/demos/gtm/results",
     "seawater_density_kg_m3": 1025.0,
-    "source_path": "/mnt/local-analysis/.worktrees/dm-gtm-demo03/examples/demos/gtm/inputs/demo_03_mudmat.yml",
+    "source_path": "examples/demos/gtm/inputs/demo_03_mudmat.yml",
     "steel_density_kg_m3": 7850.0,
     "tilt_limit_deg": 5.0,
     "tp_coefficient": 4.0,
@@ -53,7 +53,7 @@
       "Large CSV",
       "Medium CSV"
     ],
-    "vessels_path": "/mnt/local-analysis/.worktrees/dm-gtm-demo03/examples/demos/gtm/data/csv_hlv_vessels.json",
+    "vessels_path": "examples/demos/gtm/data/csv_hlv_vessels.json",
     "wire_mbl_sf": 0.85
   },
   "run_id": "baseline",

@@ -21,7 +21,7 @@ Runs the cases with an in-process thread pool (uncapped per case). Reuses the
 validated free-decay framework in sloshing_2d.py.
 
     source /usr/lib/openfoam/openfoam2312/etc/bashrc
-    uv run python scripts/cfd/run_sloshing_convergence.py --work-dir /mnt/local-analysis/sloshing_cfd_work
+    uv run python scripts/cfd/run_sloshing_convergence.py --work-dir $HOME/sloshing_cfd_work
 """
 from __future__ import annotations
 
@@ -122,7 +122,7 @@ def _richardson(cpbs: List[int], freqs: List[float]) -> Optional[Dict[str, float
 
 def main(argv: List[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description="Sloshing grid/timestep convergence (#1433)")
-    ap.add_argument("--work-dir", type=Path, default=Path("/mnt/local-analysis/sloshing_cfd_work"))
+    ap.add_argument("--work-dir", type=Path, default=Path.home() / "sloshing_cfd_work")
     ap.add_argument("--workers", type=int, default=8)
     args = ap.parse_args(argv)
     args.work_dir.mkdir(parents=True, exist_ok=True)

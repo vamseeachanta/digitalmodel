@@ -6,7 +6,7 @@
 > through `parametric_query` (see the query examples and outputs in
 > [`docs/registry/workflows.yaml`](../../registry/workflows.yaml)).
 >
-> Deckhand retired 2026-10-18 (deckhand issue 599).
+> Deckhand retired 2026-10-18 (execution-service issue 599).
 
 ## When this applies
 

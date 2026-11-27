@@ -125,7 +125,7 @@ sweep: 686 found
 Original overinclusive search (Python source only; package below); its fractional-literal and text hits are screened in the table:
 
 ```bash
-rg -n 'except|continue|return None|return \[\]|return \{\}|\b1970\b|=\s*0(?:\.0)?\b|\.get\(|\b(?:int|float)\(|Hz|MPa|units|sampling_rate|time_step|fillna|interpolat|fallback|[Ff]all.?back|success|valid.*True|return 0|:\s*0(?:\.0)?\b|self.results|cache|default|to_csv' src/digitalmodel/signal_processing/signal_analysis --glob '*.py'
+rg -n 'except|continue|return None|return \[\]|return \{\}|\b(?:1970)\b|=\s*0(?:\.0)?\b|\.get\(|\b(?:int|float)\(|Hz|MPa|units|sampling_rate|time_step|fillna|interpolat|fallback|[Ff]all.?back|success|valid.*True|return 0|:\s*0(?:\.0)?\b|self.results|cache|default|to_csv' src/digitalmodel/signal_processing/signal_analysis --glob '*.py'
 ```
 
 The following standard-library reproduction emits the original search plus the structural locators, using the code pin rather than unpinned files. Explicit line supplements capture branch outcomes seen while reviewing the enclosing definitions (empty extrema returns, mean/interpolation fallback, rejected outlier records and spectral fallback/diagnostics). It produced `original=491, supplemental=195, total=686`. Each location is classified in the table; not-applicable text/styling hits are retained only for auditability.
@@ -137,7 +137,7 @@ import subprocess
 
 package = 'src/digitalmodel/signal_processing/signal_analysis'
 pin = '7aad603be1c6136106dbb2381ce5096b050654f8'
-pattern = r'except|continue|return None|return \[\]|return \{\}|\b1970\b|=\s*0(?:\.0)?\b|\.get\(|\b(?:int|float)\(|Hz|MPa|units|sampling_rate|time_step|fillna|interpolat|fallback|[Ff]all.?back|success|valid.*True|return 0|:\s*0(?:\.0)?\b|self.results|cache|default|to_csv'
+pattern = r'except|continue|return None|return \[\]|return \{\}|\b(?:1970)\b|=\s*0(?:\.0)?\b|\.get\(|\b(?:int|float)\(|Hz|MPa|units|sampling_rate|time_step|fillna|interpolat|fallback|[Ff]all.?back|success|valid.*True|return 0|:\s*0(?:\.0)?\b|self.results|cache|default|to_csv'
 paths = subprocess.check_output(
     ['git', 'ls-tree', '-r', '--name-only', pin, '--', package], text=True,
 ).splitlines()

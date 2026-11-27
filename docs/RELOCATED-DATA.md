@@ -18,21 +18,11 @@ large, regenerable, or archival binaries moved.
 
 ## Where The Data Lives — Canonical Paths
 
-All relocated-data paths below are **share-relative**. Prepend your machine's
-path prefix to resolve them. This table is the key to the local-vs-remote-mount
-confusion.
+Relocated-data paths are share-relative. Set `ACE_DATA_ROOT` to the data share
+mounted on the current machine. The same reference resolves through the
+local disk on the file server and the NFS mount on a workstation.
 
-| Machine | Path prefix |
-|---|---|
-| ace-linux-1 (file server) | `/mnt/ace/` |
-| ace-linux-2 | `/mnt/remote/ace-linux-1/ace/` (NFS) |
-
-> **ace-linux-2 has no `/mnt/ace` symlink** — this is by design. Any hardcoded
-> `/mnt/ace/...` path will fail on ace-linux-2; use the NFS prefix above.
-
-**Example:** share-relative `digitalmodel/docs/openfoam/data/...` resolves to
-`/mnt/ace/digitalmodel/docs/openfoam/data/...` on ace-linux-1 and
-`/mnt/remote/ace-linux-1/ace/digitalmodel/docs/openfoam/data/...` on ace-linux-2.
+For example, use `${ACE_DATA_ROOT}/digitalmodel/docs/openfoam/data/`.
 
 **Full machine-readable index:** `digitalmodel/INDEX.md` on the share, plus the
 share-root `INDEX.md`.

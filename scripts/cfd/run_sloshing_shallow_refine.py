@@ -30,7 +30,7 @@ shipped sweep: resonance located by the QUADRATURE (damping) coefficient peak
 probe tail.
 
     source /usr/lib/openfoam/openfoam2312/etc/bashrc
-    uv run python scripts/cfd/run_sloshing_shallow_refine.py --work-dir /mnt/local-analysis/sloshing_cfd_work --workers 14
+    uv run python scripts/cfd/run_sloshing_shallow_refine.py --work-dir $HOME/sloshing_cfd_work --workers 14
 """
 from __future__ import annotations
 
@@ -230,7 +230,7 @@ def collect(work_dir: Path, rows: List[Dict[str, Any]]) -> Dict[str, Any]:
 
 def main(argv: List[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description="Shallow-fill refinement pack (#1433)")
-    ap.add_argument("--work-dir", type=Path, default=Path("/mnt/local-analysis/sloshing_cfd_work"))
+    ap.add_argument("--work-dir", type=Path, default=Path.home() / "sloshing_cfd_work")
     ap.add_argument("--workers", type=int, default=14)
     args = ap.parse_args(argv)
     args.work_dir.mkdir(parents=True, exist_ok=True)

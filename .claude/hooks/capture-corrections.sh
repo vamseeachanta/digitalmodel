@@ -14,7 +14,8 @@ set -uo pipefail
 
 # Central state: always save to workspace-hub for unified RAGS analysis
 # Override with WORKSPACE_STATE_DIR if needed
-WORKSPACE_HUB="${WORKSPACE_HUB:-/mnt/github/workspace-hub}"
+repo_parent=$(dirname "$(git -C "$(dirname "${BASH_SOURCE[0]}")" rev-parse --show-toplevel)")
+WORKSPACE_HUB="${WORKSPACE_HUB:-${repo_parent%/workspace-hub}/workspace-hub}"
 STATE_DIR="${WORKSPACE_STATE_DIR:-${WORKSPACE_HUB}/.claude/state}/corrections"
 SESSION_FILE="${STATE_DIR}/session_$(date +%Y%m%d).jsonl"
 RECENT_EDITS="${STATE_DIR}/.recent_edits"

@@ -7,7 +7,7 @@
 ## Context
 - **Standard / publisher / revision.** API RP 2A-WSD, 22nd Edition (Nov 2014), Reaffirmed 2025. Title: *Planning, Designing, and Constructing Fixed Offshore Platforms — Working Stress Design*. Wiki page already present at `knowledge/wikis/engineering-standards/wiki/standards/api-rp-2a-wsd.md` (workspace-hub).
 - **Why it matters.** Partial implementation exists today: `src/digitalmodel/structural/jacket_topside/joint_checks.py` (Section 4.3 Tubular Joints — punching shear) and `member_checks.py` (Sections 3.2/3.3/3.4/3.5 tubular member capacity). Citation contract is **not** wired (the docstring names API RP 2A-WSD without a `Citation` emission). Several headline calc surfaces remain GAPs: §2.3 environmental loading factors, §6 fatigue (cross-link to RP-2A-WSD §17 / RP 2A-FAD), §6.2 foundations, §17 in-service inspection (handed off to API RP 2SIM in #582 territory). This PR closes the **citation gap** plus adds the **highest-leverage missing calc surface: Section 5 Strength of Tubular Joints (Hot-Spot SCF + the SCF cross-walk to fatigue)**.
-- **Dependencies on other issues.** **Resolves duplicate ambiguity with `OGManufacturing#35` (= old WRK-540) which was filed against `OGManufacturing/structural` for the same standard.** Recommendation: **digitalmodel is the canonical home** because (i) `structural/jacket_topside/` already implements the WSD member + joint checks, (ii) `structural/fatigue/` already implements RP-C203 / RP 2A-FAD-style S-N machinery, and (iii) OGManufacturing's historical scope is fabrication / manufacturing, not in-service structural design. Action required outside this PR: post a comment on `OGManufacturing#35` proposing closure as duplicate-of-this. Do **not** transfer or close in this plan; that is execution.
+- **Dependencies on other issues.** **Resolves duplicate ambiguity with `equipment design issue 35` (= old WRK-540) which was filed against `${EQUIPMENT_REPO_ROOT}/structural` for the same standard.** Recommendation: **digitalmodel is the canonical home** because (i) `structural/jacket_topside/` already implements the WSD member + joint checks, (ii) `structural/fatigue/` already implements RP-C203 / RP 2A-FAD-style S-N machinery, and (iii) equipment design repository's historical scope is fabrication / manufacturing, not in-service structural design. Action required outside this PR: post a comment on `equipment design issue 35` proposing closure as duplicate-of-this. Do **not** transfer or close in this plan; that is execution.
 - Soft dependency: a `Citation` plumbing already exists via `src/digitalmodel/citations/schema.py`; the wiki page is already present.
 
 ## Scope
@@ -40,12 +40,12 @@
 3. **Efthymiou SCF.** Implement chord/brace saddle/crown formulas with the parametric ranges (β, γ, τ, α) from the OTC 5666 paper. Smoke check: `cd digitalmodel && uv run pytest tests/structural/jacket_topside/test_joint_scf.py -q`.
 4. **Fatigue cross-walk.** Compose SCF + RP-C203 curves; the mapping table for §17 → RP-C203 categories should be a Python dict. Smoke check: `cd digitalmodel && uv run pytest tests/structural/jacket_topside/test_fatigue_crosswalk.py -q`.
 5. **Coverage map doc.** Write `api_rp_2a_wsd_coverage_map.md` with three columns: clause / module / status (DONE / PARTIAL / GAP / out-of-scope). This is the deliverable that an executor can check off against.
-6. **Cross-repo coordination.** Comment on `OGManufacturing#35` recommending closure as duplicate-of-#581 (do not close — that is operator action).
+6. **Cross-repo coordination.** Comment on `equipment design issue 35` recommending closure as duplicate-of-#581 (do not close — that is operator action).
 
 ## Open questions
 - **Efthymiou vs Lloyd's-Register SCF.** RP 2A §5.5 cites Efthymiou as the primary set; some operators specify the Lloyd's Register formulation. Default: Efthymiou with hooks for an alternative. **Needs user input** if Lloyd's is contractually required.
-- **Reaffirmation status.** Wiki frontmatter says revision `22e-2014-r2025`. Confirm we should target the 2014 22nd Ed. text rather than waiting for a 23rd Ed. release.
-- **OGManufacturing duplicate resolution.** Confirm digitalmodel is canonical and OGManufacturing#35 should be closed as duplicate. **Needs user input.**
+- **Reaffirmation status.** Wiki frontmatter says revision `22e-2014-r2025`. Confirm the plan should target the 2014 22nd Ed. text rather than waiting for a 23rd Ed. release.
+- **equipment design repository duplicate resolution.** Confirm digitalmodel is canonical and equipment design issue 35 should be closed as duplicate. **Needs user input.**
 - **Test fixture license.** Efthymiou OTC paper Examples 1–4 are publicly distributed in the proceedings; CSV transcription is acceptable. Confirm.
 
 ## Acceptance Criteria
@@ -53,5 +53,5 @@
 - [ ] `joint_scf.py` implements Efthymiou SCF for T/Y, K, X joints with chord/brace × saddle/crown breakdown; validation test passes against ≥1 published example within ±10%.
 - [ ] `fatigue_crosswalk.py` produces a fatigue damage scalar from a synthetic sea-state for at least one joint type.
 - [ ] `docs/domains/articles/api_rp_2a_wsd_coverage_map.md` enumerates every Section of RP 2A-WSD and labels DONE / PARTIAL / GAP.
-- [ ] Comment on `OGManufacturing#35` proposing duplicate closure (manual operator action; flagged in plan).
+- [ ] Comment on `equipment design issue 35` proposing duplicate closure (manual operator action; flagged in plan).
 - [ ] Full module suite green: `cd digitalmodel && uv run pytest tests/structural/jacket_topside/ -q`.

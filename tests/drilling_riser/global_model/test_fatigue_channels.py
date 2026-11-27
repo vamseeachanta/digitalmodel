@@ -1,4 +1,4 @@
-"""Fatigue channels of a wave-fatigue window (digitalmodel-data #13, W414; plan damage path): OrcaFlex
+"""Fatigue channels of a wave-fatigue window (private data repository issue 13, W414; plan damage path): OrcaFlex
 RainflowHalfCycles of the axial (ZZ) stress at 8 points around the wall at each station, binned on a range derived
 from the observed maximum with no half-cycle out of range, and the peak-to-valley invariant checked per point."""
 

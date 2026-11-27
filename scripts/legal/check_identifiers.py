@@ -781,11 +781,32 @@ def check(
     legacy_salt = str(legacy.get("salt", ""))
     legacy_hashed = {str(h).lower() for h in legacy.get("hashes") or []}
     private = set(rules.get("_private_names") or [])
-    excluded = {
-        str(e["path"]).replace("\\", "/")
-        for e in (rules.get("exclusions") or [])
-        if "path" in e
-    }
+    excluded: set[str] = set()
+    source_lines: dict[str, dict[str, set[str]]] = {}
+    rule_ids = {"denied-name", *(rule["id"] for rule in rules["structural"])}
+    for entry in rules.get("exclusions") or []:
+        # A misspelled digest field must not become a whole-file exemption.
+        if (
+            not isinstance(entry, dict)
+            or not isinstance(entry.get("path"), str)
+            or entry.keys() - {"path", "reason", "line_sha256", "rule"}
+        ):
+            die("check_identifiers: invalid exclusion")
+        path = entry["path"].replace("\\", "/")
+        if "line_sha256" not in entry and "rule" not in entry:
+            excluded.add(path)
+            continue
+        hashes = entry.get("line_sha256")
+        rule_id = entry.get("rule", "denied-name")
+        if not (
+            isinstance(rule_id, str) and rule_id in rule_ids
+            and isinstance(hashes, list) and hashes
+            and all(isinstance(h, str) and _SHA256.fullmatch(h) for h in hashes)
+        ):
+            die("check_identifiers: exclusion needs valid line_sha256 digests")
+        by_digest = source_lines.setdefault(path, {})
+        for digest in hashes:
+            by_digest.setdefault(digest, set()).add(rule_id)
     media = {str(x).lower() for x in rules.get("binary_media_extensions") or []}
     compiled = []
     for rule in rules["structural"]:
@@ -804,7 +825,9 @@ def check(
     scanned = 0
     private_rx = list(rules.get("_private_patterns") or [])
 
-    def scan(label: str, n: int | str, line: str) -> None:
+    def scan(
+        label: str, n: int | str, line: str, allowed_lines: dict[str, set[str]] | None = None
+    ) -> None:
         for rx in private_rx:
             if rx.search(line):
                 findings.append(
@@ -812,8 +835,11 @@ def check(
                     f"the private list matches here" + _excerpt(line, show_lines)
                 )
                 break
+        exceptions = allowed_lines.get(hashlib.sha256(line.encode()).hexdigest(), ()) if allowed_lines else ()
         structural = [] if EXAMPLE_MARK in line else compiled
         for rid, rx, msg in structural:
+            if rid in exceptions:
+                continue
             pos = 0
             while (m := rx.search(line, pos)) is not None:
                 # A vendor install path exempts itself, not its neighbours.
@@ -827,6 +853,8 @@ def check(
                     f"{label}:{n}: [{rid}] {msg.strip()}" + _excerpt(line, show_lines)
                 )
                 break
+        if "denied-name" in exceptions:
+            return
         if hashed or private or legacy_hashed:
             for word in WORD.findall(line):
                 if any(
@@ -903,8 +931,9 @@ def check(
                 )
             continue
         scanned += 1
+        allowed_lines = source_lines.get(disp)
         for n, line in enumerate(text.splitlines(), start=1):
-            scan(label, n, line)
+            scan(label, n, line, allowed_lines)
     return findings, scanned, media_skipped, uninspectable
 
 

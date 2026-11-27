@@ -9,7 +9,7 @@ Covers the 6-level precedence chain:
   6. fail-closed with actionable message naming LLM_WIKI_PATH, the
      private repo URL, and the routing-rule pointer.
 
-Also covers layout-detection: standalone llm-wiki repos use `wikis/<domain>/...`
+Also covers layout-detection: standalone knowledge-base repos use `wikis/<domain>/...`
 without the `knowledge/` prefix; workspace-hub overlay uses `knowledge/wikis/...`.
 The resolver detects which layout a given base uses and joins accordingly.
 """
@@ -22,7 +22,6 @@ import pytest
 
 from digitalmodel.citations import CitationResolutionError
 from digitalmodel.citations.resolver import (
-    WIKI_REPO_URL,
     ROUTING_RULE_URL,
     resolve_wiki_base,
     resolve_wiki_path,
@@ -37,7 +36,7 @@ from digitalmodel.citations.resolver import (
 
 
 def _make_standalone_clone(root: Path) -> Path:
-    """Create a fake standalone-layout llm-wiki clone at root."""
+    """Create a fake standalone-layout knowledge-base clone at root."""
     (root / "wikis" / "engineering" / "wiki" / "standards").mkdir(parents=True)
     (root / "wikis" / "engineering" / "wiki" / "standards" / "dnv-os-e301.md").write_text(
         "---\ncode_id: DNV-OS-E301\npublisher: DNV\nrevision: 2021-07\n---\n",
@@ -100,7 +99,7 @@ def test_resolver_explicit_override_wins(tmp_path, monkeypatch):
 
 
 def test_resolver_llm_wiki_path_env_valid_standalone_layout(tmp_path, monkeypatch):
-    """LLM_WIKI_PATH pointing to a standalone llm-wiki clone (no knowledge/ prefix)."""
+    """LLM_WIKI_PATH pointing to a standalone knowledge-base clone (no knowledge/ prefix)."""
     standalone = _make_standalone_clone(tmp_path / "standalone")
     monkeypatch.setenv("LLM_WIKI_PATH", str(standalone))
 
@@ -250,18 +249,21 @@ def test_resolver_fail_closed_no_env_no_clone(tmp_path, monkeypatch, isolated_kn
 
 
 def test_resolver_fail_closed_message_is_actionable(tmp_path, monkeypatch, isolated_known_clones):
-    """Fail-closed error message must name LLM_WIKI_PATH, the repo URL, the routing rule, and `export`."""
+    """The configuration error gives usable shell commands without revealing the configured remote."""
     fake_file = tmp_path / "outside" / "no_clone.py"
     fake_file.parent.mkdir(parents=True)
     fake_file.write_text("# fake")
     from digitalmodel.citations import resolver
     monkeypatch.setattr(resolver, "__file__", str(fake_file))
 
+    configured_remote = "https://example.invalid/individual-checkout.git"
+    monkeypatch.setattr(resolver, "WIKI_REPO_URL", configured_remote)
     with pytest.raises(CitationResolutionError) as exc:
         resolve_wiki_base()
     msg = str(exc.value)
     assert "LLM_WIKI_PATH" in msg
-    assert "vamseeachanta/llm-wiki" in msg or WIKI_REPO_URL in msg
+    assert configured_remote not in msg
+    assert 'git clone "$DIGITALMODEL_WIKI_URL"' in msg
     assert "codes-standards-data-routing" in msg or ROUTING_RULE_URL in msg
     assert "export LLM_WIKI_PATH=" in msg
 

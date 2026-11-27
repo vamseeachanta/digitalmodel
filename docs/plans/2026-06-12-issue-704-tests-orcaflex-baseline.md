@@ -228,7 +228,7 @@ the minimum code/test-contract corrections:
 8. Run the available legal scan gate before code-stage review. This repo does
    not currently contain `scripts/legal/legal-sanity-scan.sh`; if a repo-local
    wrapper is still absent during implementation closeout, run the
-   workspace-level scanner from `/mnt/local-analysis/workspace-hub` and report
+   workspace-level scanner from `${WORKSPACE_ROOT}/workspace-hub` and report
    the exact command and target checkout used.
 
 ## Acceptance Criteria
@@ -258,7 +258,7 @@ After implementation and before code review, run:
 uv run --no-sources --with-editable . python -m pytest tests/orcaflex/test_mooring_design.py tests/orcaflex/test_installation_analysis.py tests/test_orcaflex_agent.py -q -p no:randomly -p no:sugar --tb=short
 uv run --no-sources --with-editable . python -m pytest tests/orcaflex/ tests/test_orcaflex_agent.py -q -p no:randomly -p no:sugar --tb=short
 uv run --no-sources python -m py_compile src/digitalmodel/orcaflex/mooring_design.py src/digitalmodel/orcaflex/installation_analysis.py src/digitalmodel/workflows/agents/orcaflex/generators/base_files.py
-if [ -x scripts/legal/legal-sanity-scan.sh ]; then scripts/legal/legal-sanity-scan.sh --diff-only; else (cd /mnt/local-analysis/workspace-hub && scripts/legal/legal-sanity-scan.sh --repo=digitalmodel --diff-only); fi
+if [ -x scripts/legal/legal-sanity-scan.sh ]; then scripts/legal/legal-sanity-scan.sh --diff-only; else (cd ${WORKSPACE_ROOT}/workspace-hub && scripts/legal/legal-sanity-scan.sh --repo=digitalmodel --diff-only); fi
 ```
 
 If `uv` mutates `uv.lock` or creates `.venv`, the implementation closeout will

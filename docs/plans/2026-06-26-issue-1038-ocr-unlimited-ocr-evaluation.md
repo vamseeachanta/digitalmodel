@@ -42,7 +42,7 @@ DeepSeek-OCR is ~3.3B params. At BF16/FP16 the **weights alone are ≈ 6.6–7 G
 
 ### 1.4 Which project machines could host it — GPU gap flag
 
-- **ace-linux-1 / ace-linux-2 (Linux dev boxes):** primary candidates for the *plan's* execution because they have native `/mnt/ace` access to the test files, **but they are CPU-class dev boxes and may lack a CUDA GPU** with adequate VRAM. `[to confirm: do either dev box have an NVIDIA GPU ≥ 16 GB? Run `nvidia-smi` on each]`
+- **ace-linux-1 / ace-linux-2 (Linux dev boxes):** primary candidates for the *plan's* execution because they have native `${ACE_DATA_ROOT}` access to the test files, **but they are CPU-class dev boxes and may lack a CUDA GPU** with adequate VRAM. `[to confirm: do either dev box have an NVIDIA GPU ≥ 16 GB? Run `nvidia-smi` on each]`
 - **Licensed Windows box (ace-win-2, OrcaFlex/OrcaWave host):** has GPU-class hardware but is kept deliberately thin and is Windows (CUDA 12.9 + the Linux-style `infer.py` path needs validation on Windows). Not the first choice. `[to confirm]`
 - **Fallback:** a **rented cloud GPU** (24 GB-class, ~$0.5–1.5/hr) for the one-off benchmark, with the de-identified test subset copied up. This is the most likely path if no dev box has a GPU. `[to confirm — see Risks §6]`
 

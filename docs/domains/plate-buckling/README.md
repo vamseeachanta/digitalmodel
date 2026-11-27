@@ -6,7 +6,7 @@ link the authoritative manufacturer and class-rule pages; numerical extracted
 source records remain internal staging pending rights. Existing AISC and central
 source catalogs are reused.
 
-[Private retained results, merged PR 44](https://github.com/vamseeachanta/digitalmodel-data/pull/44)
+[Private retained results, merged PR 44](https://api.github.com/repositories/1370823847/pulls/44)
 contains self-contained lookup.html, precomputed.json and a provenance manifest
 at docs/reviews/ship-plate-study/. Its local-loss-diagnostic subfolder is a separate
 18-case patch-length/breadth study. Download the authorized HTML to retrieve saved

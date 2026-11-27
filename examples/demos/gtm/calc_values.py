@@ -3,6 +3,7 @@
 Calculate derived engineering values for GTM demo data files.
 All values use SI units unless noted.
 """
+from pathlib import Path
 import math
 import json
 
@@ -197,7 +198,7 @@ results = {
     "jumpers": jumpers,
 }
 
-with open("/mnt/local-analysis/workspace-hub/digitalmodel/examples/demos/gtm/calc_results.json", "w") as f:
+with open(Path(__file__).with_name("calc_results.json"), "w") as f:
     json.dump(results, f, indent=2)
 
 print("\nCalculations complete. Results saved to calc_results.json")

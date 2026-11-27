@@ -23,8 +23,7 @@ from digitalmodel.riser_database.loader import DEFAULT_DB_ROOT
 REPO_ROOT = Path(__file__).resolve().parents[2]
 REGISTRY_REL = "wikis/riser-projects/wiki/datasets/stackup-registry.md"
 _KNOWN_WIKI_CLONES = (
-    Path("/mnt/local-analysis/llm-wiki"),  # abs-path-allowed
-    Path.home() / "workspace-hub" / "llm-wiki",
+    Path.home() / ".local" / "share" / "digitalmodel" / "knowledge",
 )
 
 #: Generic engineering/document words that appear in slugs but are not
@@ -148,7 +147,7 @@ _STOPWORDS = {
     "weight",
     "weights",
     "workover",
-    # -- #1453 wave-2 calc-contract generic additions: new post-llm-wiki#826
+    # -- #1453 wave-2 calc-contract generic additions: new post-knowledge base issue 826
     # source-page slugs carry these generic document/engineering words whose
     # normalized substrings occur in long-merged public artifacts (e.g.
     # "installation" in twin_loop.py/decision_spine.py prose, "sheets" in
@@ -253,7 +252,7 @@ def _wiki_base() -> Path:
         if (base / REGISTRY_REL).is_file():
             return base
     pytest.skip(
-        "llm-wiki not available (standalone mode) — the provenance-token "
+        "knowledge base not available (standalone mode) — the provenance-token "
         "tripwire is part of the in-context merge gate"
     )
 

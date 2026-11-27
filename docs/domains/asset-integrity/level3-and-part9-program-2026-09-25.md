@@ -3,7 +3,7 @@
 **Epic:** #1057 Phase 4
 **Module:** `digitalmodel.asset_integrity` (+ `solvers/calculix`, `materials`)
 **Standards:** API 579-1/ASME FFS-1 (2007 text held; 2016/2021 numbering in reports), API 653 Annex B, BS 7910:2013
-**Knowledge companion:** llm-wiki #913
+**Knowledge companion:** knowledge base issue 913
 
 ## Why this note exists
 
@@ -30,7 +30,7 @@ open-source chain.
 
 | Layer | Have | Do not have |
 |---|---|---|
-| Knowledge (llm-wiki) | API 579-1 2007 full text incl. Annex B1 (stress analysis), C (K solutions), D (reference stress), E (residual stress), F (material); API 650 2007 full text; BS 7910:2013 full text; 606 extracted API 579 tables | API 653 clause pointers (page is metadata-only, 3rd ed 2001 copy); 2007→2016/2021 annex crosswalk; verification status of the Annex C/E tables |
+| Knowledge (knowledge base) | API 579-1 2007 full text incl. Annex B1 (stress analysis), C (K solutions), D (reference stress), E (residual stress), F (material); API 650 2007 full text; BS 7910:2013 full text; 606 extracted API 579 tables | API 653 clause pointers (page is metadata-only, 3rd ed 2001 copy); 2007→2016/2021 annex crosswalk; verification status of the Annex C/E tables |
 | Code (digitalmodel) | Level 1/2 metal loss (Parts 4/5/6), Part 12 dents, B31G/ModB31G/RSTRENG, DNV-RP-F101, Level 2 FAD tracer (`crack_fad.py`), legacy BS 7910 Annex M/P module, Paris-law growth, riser-joint Level 1 envelopes, Level 3 handoff, `ffs_decision`/`ffs_report`, two registered API 579 pipe workflows | API 579 Level 2 curve + PSFs, Part 9 Level 1 curves, Annex C cylinder K, Annex E residual, Annex F material model, growth threshold/LBB, any storage-tank model, API 653 Annex B, nonlinear/shell/buckling CalculiX, Level 3 acceptance checks |
 | Solvers | gmsh (venv), CalculiX writer/parser (linear static, solids), ANSYS APDL generators (licensed host), in-house beam eigen-buckling | ccx on Windows hosts; shell/plastic/buckle/Riks in the INP writer; crack driving force in any unlicensed solver |
 | Delivery | `docs/registry/workflows.yaml` + `examples/workflows/<id>/` + durable test + the report the registered workflow writes | — |
@@ -44,7 +44,7 @@ open-source chain.
 | 0 | #1094 | Applicability-limit layer (flags, not silent numbers) | — |
 | 1 | #2175 | Part 9 Level 2 workflow from inspection data: intake schema, API 579 curve + PSFs, Annex C cylinder K, Annex E residual | #2160 |
 | 1 | #2157 | Part 9 from FE crack parameters: weldolet benchmark (ANSYS MAPDL, licensed host), growth with threshold, house-style report | plan r2.2 awaiting owner approval |
-| 2 | #2172 | API 653 Annex B tank-settlement screen (planar tilt, out-of-plane, edge, bottom) | llm-wiki #913 task 1 |
+| 2 | #2172 | API 653 Annex B tank-settlement screen (planar tilt, out-of-plane, edge, bottom) | knowledge base issue 913 task 1 |
 | 3 | #2173 | CalculiX: shell sections, plasticity, NLGEOM, buckling, Riks, strain/eigen parsing | #2171 |
 | 3 | #2174 | API 579 Level 3 tank-settlement workflow: strain limit, buckling margin, collapse, weld strain | #2172, #2173 |
 | 4 | #2176 | Part 9 Level 1 screening curves | #2175 |
@@ -61,8 +61,8 @@ application track buries it.
   the survey-derived bottom displacement profile and reports strain-limit and
   buckling margins first; the LRFD plastic-collapse check is reported but
   secondary; shell-to-bottom weld strain is a service criterion.
-- **Edition citations.** Code cites the 2007 numbering we hold and the current
-  edition via the crosswalk page (llm-wiki #913). No clause text in this repo.
+- **Edition citations.** Code cites the 2007 numbering in the project library and the current
+  edition via the crosswalk page (knowledge base issue 913). No clause text in this repo.
 - **Solver host.** CalculiX runs on a Linux host (candidate ace-linux-1); the
   workflow fails soft to a Level 3 handoff package when ccx is absent.
   Code_Aster (#253) is re-evaluated before committing to CalculiX only.

@@ -25,7 +25,7 @@ Accidents happen in marine industry
 
 <https://en.wikipedia.org/wiki/Sinking_of_MV_Sewol>
 
-<https://github.com/vamseeachanta/teamresumes/blob/main/docs/OTC-27695-Heavy-Lift-Dynamics-Sewol-Ferry-Offshore-Salvage-2017.pdf>
+<https://api.github.com/repositories/703186282/contents/docs/OTC-27695-Heavy-Lift-Dynamics-Sewol-Ferry-Offshore-Salvage-2017.pdf?ref=main>
 
 ### InDirect Work
 

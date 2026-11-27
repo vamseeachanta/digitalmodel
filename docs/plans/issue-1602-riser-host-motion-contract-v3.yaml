@@ -27,7 +27,7 @@ owners:
     issue: https://github.com/vamseeachanta/digitalmodel/issues/138
     amendment: own_vessel_motion_boundary_contract_and_riser_coupling_semantics
   licensed_execution:
-    issue: https://github.com/vamseeachanta/deckhand/issues/568
+    issue: https://api.github.com/repositories/1257558103/issues/568
     amendment: preserve_host_response_motion_IDs_and_hashes_without_interpretation
   public_release:
     issue: https://github.com/vamseeachanta/digitalmodel/issues/1604

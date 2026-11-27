@@ -33,7 +33,7 @@
     "usable_verified_cylinder_sources": 0,
     "limitation": "single generic stress-directory token match; no source-content verification; no ecosystem-wide absence claim"
   },
-  "catalogs": "llm-wiki data-source-catalog.yml and domain-database-index.yml; bounded ansys/cylinder text query returned zero; no ID allocated",
+  "catalogs": "knowledge base data-source-catalog.yml and domain-database-index.yml; bounded ansys/cylinder text query returned zero; no ID allocated",
   "dispositions": {
     "D1": "Replaced undefined offline feasibility prediction with a separately approved four-attempt native evidence test and explicit PASS/FAIL/INCOMPLETE rules. B1 prepares that test without claiming numerical feasibility.",
     "D2": "Fixed limits and independently stated detection goals; any initial or later relaxation requires amended review and matching approval; no observation-calibrated acceptance.",

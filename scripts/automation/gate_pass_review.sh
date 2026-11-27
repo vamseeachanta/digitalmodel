@@ -11,7 +11,9 @@ YELLOW='\033[1;33m'
 RED='\033[0;31m'
 NC='\033[0m'
 
-WORKSPACE_ROOT="/mnt/github/workspace-hub"
+repo_parent=$(dirname "$(git -C "$(dirname "${BASH_SOURCE[0]}")" rev-parse --show-toplevel)")
+
+WORKSPACE_ROOT="${WORKSPACE_HUB:-${repo_parent%/workspace-hub}/workspace-hub}"
 REGISTRY_FILE="$WORKSPACE_ROOT/config/ai-agents-registry.json"
 
 # Usage function

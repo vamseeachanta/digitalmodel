@@ -137,7 +137,7 @@ section.export pre{margin:0;background:var(--surface-2);border:1px solid var(--l
       <div class="opts">
         <label class="opt"><input type="radio" name="D3" value="A"><span><span class="lab">I will confirm it in an authorised viewer by a date</span><span class="rec">recommended</span><br><span class="why">Unblocks #2175 and #2157. Record the date below.</span></span></label>
         <label class="opt"><input type="radio" name="D3" value="B"><span><span class="lab">Keep the BS 7910 Option 1 label until confirmed</span><br><span class="why">Honest today; the Part 9 workflows ship as BS 7910 assessments, not API 579 Level 2.</span></span></label>
-        <label class="opt"><input type="radio" name="D3" value="C"><span><span class="lab">Acquire a readable 2021 edition</span><br><span class="why">Also gives the current Annex 2D / 9B–9F numbering the crosswalk (llm-wiki #913) needs. Cost and lead time.</span></span></label>
+        <label class="opt"><input type="radio" name="D3" value="C"><span><span class="lab">Acquire a readable 2021 edition</span><br><span class="why">Also gives the current Annex 2D / 9B–9F numbering the crosswalk (knowledge base issue 913) needs. Cost and lead time.</span></span></label>
       </div>
       <div class="row"><label class="small" for="D3-date">Target date</label><input type="date" id="D3-date" data-extra="date"></div>
       <p class="consequence" data-conseq></p>
@@ -230,7 +230,7 @@ section.export pre{margin:0;background:var(--surface-2);border:1px solid var(--l
   const CONSEQ={
     D1:{A:'#2205 becomes a Wave 0 serialization point ahead of #2172, #2198, #2199, #2202.',B:'#2205 is rescoped to a severity-ordering shim; each Wave 2 issue owns its verdict words.',C:'#2205 moves to Wave 2; plan risk table gains a rework item.'},
     D2:{A:'#2178 runs before #2173 scales; #2174 waits on the verdict.',B:'#2178 closes as decided; #2173 proceeds; crack Level 3 may need a second solver later.',C:'#2173 is rewritten for Code_Aster; #253 closes as decided.',D:'#2173, #2178 close; #2174 targets the ANSYS APDL path on the licensed host; T3 not offered through Deckhand.'},
-    D3:{A:'#2175 and #2157 unblock on the date given; curves relabelled when confirmed.',B:'Part 9 workflows ship as BS 7910 assessments; catalog rows say so.',C:'Procurement item; llm-wiki #913 crosswalk uses the 2021 numbering directly.'},
+    D3:{A:'#2175 and #2157 unblock on the date given; curves relabelled when confirmed.',B:'Part 9 workflows ship as BS 7910 assessments; catalog rows say so.',C:'Procurement item; knowledge base issue 913 crosswalk uses the 2021 numbering directly.'},
     D5:{A:'No change.',B:'#2197 gains a second catalog file; rows move.',C:'Catalog drops two rows; readiness count changes to 3 routed.'},
     D6:{A:'Approval waits for the Gemini artifact.',B:'Exception recorded on #1057; approval may proceed.',C:'Wave 0 starts on approval; Wave 1 issues carry a "Gemini pass on plan" prerequisite.'}
   };

@@ -37,6 +37,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List
 
+from result_manifest import write_manifest
+
 try:
     import pandas as pd
 except ImportError as exc:  # pragma: no cover — real dep required.
@@ -441,8 +443,9 @@ def write_run(
         },
         "resolved_config": _json_safe(resolved_snapshot),
     }
-    with (run_dir / "manifest.json").open("w", encoding="utf-8") as fh:
-        json.dump(manifest, fh, indent=2)
+    manifest = write_manifest(run_dir / "manifest.json", manifest, sort_keys=False)
+    input_ref = manifest["raw_source_path"]
+    resolved_snapshot = manifest["resolved_config"]
 
     # 3. index.csv upsert
     _upsert_index(base_dir, {

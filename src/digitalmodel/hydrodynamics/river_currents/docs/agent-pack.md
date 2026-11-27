@@ -129,7 +129,7 @@ sweep: 27 found
 Sweep record: every package Python file was read; the command below searches error swallowing, skipped records, null/empty error returns, zero/epoch defaults, numeric conversions, unit assumptions and writes. There are no `except` handlers, `continue` statements, `return None`, error-path `return []`/`return {}`, epoch defaults or empty-result cache writes in the package; local empty accumulators are not error fallbacks. [src/digitalmodel/hydrodynamics/river_currents/bank_effects.py:L27-L120] [src/digitalmodel/hydrodynamics/river_currents/extremes.py:L23-L118] [src/digitalmodel/hydrodynamics/river_currents/vessel_forces.py:L30-L110] [src/digitalmodel/hydrodynamics/river_currents/profiles.py:L23-L262] [src/digitalmodel/hydrodynamics/river_currents/examples.py:L13-L214]
 
 ```sh
-rg -n 'except|continue|return None|return \[\]|return \{\}|\b(?:int|float)\(|\b1970\b|\b(?:0|0\.0|0\.05)\b|default|clamp|assum|unit|cache|write' src/digitalmodel/hydrodynamics/river_currents --glob '*.py'
+rg -n 'except|continue|return None|return \[\]|return \{\}|\b(?:int|float)\(|\b(?:1970)\b|\b(?:0|0\.0|0\.05)\b|default|clamp|assum|unit|cache|write' src/digitalmodel/hydrodynamics/river_currents --glob '*.py'
 ```
 
 Rows group occurrences sharing a function and symptom; finding IDs refer to this source audit, not observed field incidents. Dates refer to this audit (2026-10-26); linked issues are follow-up records rather than evidence that an incident occurred. [src/digitalmodel/hydrodynamics/river_currents/__init__.py:L20-L22]

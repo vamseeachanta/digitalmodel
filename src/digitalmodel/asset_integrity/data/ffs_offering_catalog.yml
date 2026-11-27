@@ -29,7 +29,7 @@ tiers:
   T3: Level 3 (numerical)
 
 codes:
-  api-579-1: {short: "API 579", title: "API 579-1/ASME FFS-1 Fitness-For-Service", edition_held: "2007 (2nd) full text in llm-wiki; 2016/2021 numbering cited via crosswalk (llm-wiki #913)", parts: {3: brittle fracture, 4: general metal loss, 5: local metal loss, 6: pitting, 7: hydrogen blisters / HIC / SOHIC, 8: weld misalignment and shell distortion, 9: crack-like flaws, 10: creep, 11: fire damage, 12: dents and gouges, 13: laminations, 14: fatigue (2016+)}}
+  api-579-1: {short: "API 579", title: "API 579-1/ASME FFS-1 Fitness-For-Service", edition_held: "2007 (2nd) full text in the knowledge base; 2016/2021 numbering cited via crosswalk (knowledge base issue 913)", parts: {3: brittle fracture, 4: general metal loss, 5: local metal loss, 6: pitting, 7: hydrogen blisters / HIC / SOHIC, 8: weld misalignment and shell distortion, 9: crack-like flaws, 10: creep, 11: fire damage, 12: dents and gouges, 13: laminations, 14: fatigue (2016+)}}
   api-rp-571: {short: "API RP 571", title: "API RP 571 Damage Mechanisms Affecting Fixed Equipment in the Refining Industry", edition_held: "3rd ed 2020 (metadata)", note: "60+ mechanisms; the damage-mechanism taxonomy that routes a finding to an API 579 part"}
   api-510: {short: "API 510", title: "API 510 Pressure Vessel Inspection Code"}
   api-570: {short: "API 570", title: "API 570 Piping Inspection Code"}
@@ -53,7 +53,7 @@ codes:
   dnv-rp-f109: {short: "DNV-RP-F109", title: "DNV-RP-F109 On-bottom Stability Design of Submarine Pipelines"}
   dnv-rp-f110: {short: "DNV-RP-F110", title: "DNV-RP-F110 Global Buckling of Submarine Pipelines"}
   pdam: {short: "PDAM", title: "Pipeline Defect Assessment Manual (Penspen JIP)", note: "defect-free pipe, corrosion, gouges, plain/kinked dents, dents on welds, dent-gouge, manufacturing defects, girth/seam weld defects, cracking, environmental cracking, interaction, fittings, leak/rupture"}
-  bs-7910: {short: "BS 7910", title: "BS 7910:2013+A1:2015 Guide to methods for assessing the acceptability of flaws in metallic structures", edition_held: "2013 full text in llm-wiki"}
+  bs-7910: {short: "BS 7910", title: "BS 7910:2013+A1:2015 Guide to methods for assessing the acceptability of flaws in metallic structures", edition_held: "2013 full text in the knowledge base"}
   asme-pcc-2: {short: "ASME PCC-2", title: "ASME PCC-2 Repair of Pressure Equipment and Piping"}
   iso-24817: {short: "ISO 24817", title: "ISO 24817 Composite repairs for pipework"}
   api-rp-2sim: {short: "API RP 2SIM", title: "API RP 2SIM Structural Integrity Management of Fixed Offshore Structures"}

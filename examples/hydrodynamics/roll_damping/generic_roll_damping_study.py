@@ -16,7 +16,7 @@ through :mod:`digitalmodel.hydrodynamics.roll_damping_benchmarks`.
 Usage::
 
     python examples/hydrodynamics/roll_damping/generic_roll_damping_study.py \
-        --out study.json [--wiki-root <llm-wiki clone>]
+        --out study.json [--wiki-root <knowledge-base clone>]
 
 ``--wiki-root`` is used to resolve both hulls' citations fail-closed; without it
 the citation resolver's search order is used. Both sidecars are retained in the

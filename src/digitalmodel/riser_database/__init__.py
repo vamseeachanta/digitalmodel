@@ -1,8 +1,8 @@
 """Riser domain database (#1245 / #1199a) — first slice of the domain-database
-flywheel (llm-wiki epic #799 exemplar, parent digitalmodel #1199).
+flywheel (knowledge base epic #799 exemplar, parent digitalmodel #1199).
 
 Public tables carry identifiers and references only; standards-derived values
-come through the citation getters (fail-closed against the private llm-wiki).
+come through the citation getters (fail-closed against the private knowledge base).
 """
 
 from digitalmodel.riser_database.code_check_getters import get_dnv_safety_class_factor

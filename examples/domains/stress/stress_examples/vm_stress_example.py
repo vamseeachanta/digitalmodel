@@ -5,6 +5,7 @@ This example demonstrates how to use the Von Mises stress analysis module
 to analyze pipe stress under various loading conditions, reproducing and
 extending the functionality of the legacy VMStressCalculations code.
 """
+from pathlib import Path
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -130,7 +131,9 @@ def main():
 
     # Save plot
     plt.tight_layout()
-    plt.savefig('/mnt/github/github/digitalmodel/examples/stress/tension_moment_envelope.png',
+    output_dir = Path(__file__).resolve().parents[3] / "stress"
+    output_dir.mkdir(exist_ok=True)
+    plt.savefig(output_dir / 'tension_moment_envelope.png',
                 dpi=300, bbox_inches='tight')
     print(f"\nInteraction envelope plot saved to: tension_moment_envelope.png")
 
@@ -210,7 +213,9 @@ def main():
     ax2.set_ylim(0, max(safety_factors) * 1.1)
 
     plt.tight_layout()
-    plt.savefig('/mnt/github/github/digitalmodel/examples/stress/pressure_study.png',
+    output_dir = Path(__file__).resolve().parents[3] / "stress"
+    output_dir.mkdir(exist_ok=True)
+    plt.savefig(output_dir / 'pressure_study.png',
                 dpi=300, bbox_inches='tight')
     print(f"\nParametric study plot saved to: pressure_study.png")
 

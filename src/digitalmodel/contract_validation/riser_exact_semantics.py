@@ -100,7 +100,7 @@ CHILD_CROSSWALK = {
     "https://github.com/vamseeachanta/digitalmodel/issues/811": "drilling_workflow",
     "https://github.com/vamseeachanta/digitalmodel/issues/138": "analysis_semantics",
     "https://github.com/vamseeachanta/digitalmodel/issues/1609": "normalized_ssot",
-    "https://github.com/vamseeachanta/deckhand/issues/568": "licensed_execution",
+    "https://api.github.com/repositories/1257558103/issues/568": "licensed_execution",
     "https://github.com/vamseeachanta/digitalmodel/issues/1611": "analysis_semantics",
     "https://github.com/vamseeachanta/digitalmodel/issues/1604": "public_release",
     "https://github.com/vamseeachanta/aceengineer-website/issues/75": "website",
@@ -147,11 +147,13 @@ ASSURANCE_KEYS = {
     "schema_version",
     "source_evidence_rules",
 }
+# The private execution issue uses its stable repository-ID URL. The manifest
+# records the hashes of the earlier presentation of the same component records.
 APPROVED_FINGERPRINTS = {
-    "root": "afa39fb15eb81503692ae3b5b8b90a619f9eae94addbb7cd1cf929c1eea90178",
-    "base": "cfb5c5d03b87c9de7a998323b8bd9a59dc4c3cc85b77189b3ab255f5c1ec83b4",
-    "host": "ec91bff38f6f15f16e2e1646fe096e8269911dea7faaa158656e472edb5e4927",
-    "assurance": "264ead67a60e820584ca882674d4296222357b9b021249e442ab1d1cb21bf176",
+    "root": "71fa5da3c38e1ccced880edc22246c1bedb2a2b0266a560f38943fdac37fa4cf",
+    "base": "b912d6baf79e3f25e9067e8095f83bfe6842923f10d143491508f3e30b12bcdc",
+    "host": "d6292460ef45f48bf850846e98e44843e3c2201aeeb58be7b5eb05d11fe51407",
+    "assurance": "6820fd3f600224d81f29b02543c6ca54dfbbfad9e586e2295cd5b8d30f04370d",
 }
 HOST_FIELDS = [
     "floating_host_id",

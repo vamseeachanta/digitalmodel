@@ -1,4 +1,4 @@
-# Cold-store dataset_path values are relative to /mnt/ace/.
+# Cold-store dataset_path values are relative to ${ACE_DATA_ROOT}/.
 # Maintainer-approved exception, 2026-10-17, for the May pack retirement:
 # https://github.com/vamseeachanta/digitalmodel/issues/2688
 # Historical archive inventories and maps may retain retired pack paths because

@@ -45,7 +45,6 @@ _CURATED_RELS = (_CURATED_REL, _CURATED_REL_PACKAGE)
 def _local_wed_roots() -> list[Path]:
     """Candidate local worldenergydata checkouts (used when no env var is set)."""
     roots = [
-        Path("/mnt/local-analysis/worldenergydata"),  # abs-path-allowed
         Path.home() / "workspace-hub" / "worldenergydata",
     ]
     # Sibling of the digitalmodel repo (…/<parent>/worldenergydata).

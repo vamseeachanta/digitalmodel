@@ -18,7 +18,7 @@
 #
 # Detection (excludes legitimate cross-platform tool paths such as
 # C:\Program Files\Orcina, /opt/orcina, /usr/lib/openfoam):
-#   - Unix dev/client shares:   /mnt/local-analysis|dde|ace/, and
+#   - Unix development and data-share mounts, and
 #                               /home|/Users/<user>/(workspace-hub|github|
 #                               projects|Desktop|Documents)
 #   - DOS developer home:       <drive>:\Users\<name>\

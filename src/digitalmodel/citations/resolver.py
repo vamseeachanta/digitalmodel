@@ -9,7 +9,7 @@ Implements the 6-level precedence chain:
   6. fail-closed with actionable message
 
 Handles both layouts:
-  - standalone llm-wiki clone:  <base>/wikis/<domain>/...
+  - standalone knowledge-base clone:  <base>/wikis/<domain>/...
   - workspace-hub overlay:      <base>/knowledge/wikis/<domain>/...
 
 The resolver detects which layout a given base uses and joins accordingly.
@@ -45,7 +45,7 @@ from typing import Optional
 from digitalmodel.citations.schema import CitationResolutionError
 
 
-WIKI_REPO_URL = "https://github.com/vamseeachanta/llm-wiki"
+WIKI_REPO_URL = os.environ.get("DIGITALMODEL_WIKI_URL") or "${DIGITALMODEL_WIKI_URL}"
 ROUTING_RULE_URL = (
     "https://github.com/vamseeachanta/workspace-hub/blob/main/"
     ".claude/rules/codes-standards-data-routing.md"
@@ -57,8 +57,7 @@ _WALK_HARD_CAP = 8
 
 # Default cross-platform local-clone search paths. Cross-platform via Path.home().
 _KNOWN_LOCAL_CLONES: tuple[Path, ...] = (
-    Path("/mnt/local-analysis/llm-wiki"),  # abs-path-allowed
-    Path.home() / "workspace-hub" / "llm-wiki",
+    Path.home() / ".local" / "share" / "digitalmodel" / "knowledge",
 )
 
 # One-shot cache so repeated calls don't multi-warn for the same condition.
@@ -189,14 +188,11 @@ def resolve_wiki_base(*, override: Optional[Path] = None) -> Path:
         code_id="<resolver>",
         wiki_path="<base>",
         reason=(
-            f"{RESOLVER_UNCONFIGURED_PREFIX} cannot find an llm-wiki clone.\n\n"
-            "The vamseeachanta/llm-wiki repo is PRIVATE as of 2026-05-20 "
-            "(codes-standards-data-routing rule §4).\n\n"
-            "To fix: clone the private repo (requires GitHub auth) and set:\n"
-            "    git clone " + WIKI_REPO_URL + ".git\n"
-            "    export LLM_WIKI_PATH=$(pwd)/llm-wiki\n\n"
-            "Or point the env var at an existing local clone:\n"
-            "    export LLM_WIKI_PATH=/path/to/your/llm-wiki\n\n"
+            f"{RESOLVER_UNCONFIGURED_PREFIX} cannot find a knowledge-base checkout.\n\n"
+            "Set DIGITALMODEL_WIKI_URL to the authorized Git remote, then run:\n"
+            '    git clone "$DIGITALMODEL_WIKI_URL" knowledge-base\n'
+            "    export LLM_WIKI_PATH=$(pwd)/knowledge-base\n\n"
+            "For an existing checkout, set LLM_WIKI_PATH to its directory.\n\n"
             "See: " + ROUTING_RULE_URL + " §4"
         ),
     )
@@ -240,7 +236,7 @@ def _is_contained(child: Path, base: Path) -> bool:
 def _validate_clone(base: Path) -> Optional[Path]:
     """Return the resolved base if it looks like a real wiki clone; else None.
 
-    A valid clone contains either `<base>/wikis/` (standalone llm-wiki layout)
+    A valid clone contains either `<base>/wikis/` (standalone knowledge base layout)
     or `<base>/knowledge/wikis/` (workspace-hub overlay layout).
 
     Hardening (#618): the base is resolved with `Path.resolve(strict=True)` so a

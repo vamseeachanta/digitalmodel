@@ -1,12 +1,12 @@
 """Wiki-side calc-contract loader (#1280 / #1453, epic #1279).
 
-The private llm-wiki riser registry carries machine-readable ``calc_contracts``
+The private knowledge base riser registry carries machine-readable ``calc_contracts``
 fenced-YAML blocks — the golden-value data contracts consumed by
 digitalmodel's in-context golden tests and by the registry batch-run example.
 dm carries only the KEY names and this loader; the VALUES live wiki-side and
 resolve at test/run time (never committed here).
 
-Contract locations (llm-wiki#826): the registry page
+Contract locations (knowledge base issue 826): the registry page
 (``datasets/stackup-registry.md``, e.g. RSU-0007) AND per-dataset SOURCE pages
 (``sources/*.md``, e.g. RSU-0010/0012/0014/0023). This loader scans both.
 
@@ -37,8 +37,7 @@ __all__ = [
 REGISTRY_REL = "wikis/riser-projects/wiki/datasets/stackup-registry.md"
 SOURCES_REL = "wikis/riser-projects/wiki/sources"
 _KNOWN_WIKI_CLONES = (
-    Path("/mnt/local-analysis/llm-wiki"),  # abs-path-allowed
-    Path.home() / "workspace-hub" / "llm-wiki",
+    Path.home() / ".local" / "share" / "digitalmodel" / "knowledge",
 )
 #: Bounded-read cap per wiki page (these are curated markdown pages).
 MAX_PAGE_BYTES = 5 * 1024 * 1024
@@ -50,7 +49,7 @@ class CalcContractError(RuntimeError):
 
 
 def resolve_wiki_root() -> Optional[Path]:
-    """First llm-wiki clone whose registry page exists: ``LLM_WIKI_PATH``
+    """First knowledge-base clone whose registry page exists: ``LLM_WIKI_PATH``
     env, then the known clone locations. ``None`` when unavailable
     (standalone mode — callers skip loudly or report missing-inputs)."""
     candidates: list[Path] = []

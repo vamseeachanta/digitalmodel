@@ -13,21 +13,21 @@
 
 ### Existing repo code (verified 2026-05-20T19:50:00Z)
 
-- **EXISTS** `/mnt/local-analysis/digitalmodel/scripts/python/digitalmodel/ocimf/build_coefficient_explorer.py` (770 LOC) — current polar overlay function at lines 396-457: `make_polar_overlay(df, figure_key, coef, group_col)` uses `Scatterpolar` with `r = |C|`, `direction="clockwise"`, `rotation=90`, ticks at bow/stbd/stern/port. No silhouette, no force-arrows.
-- **EXISTS** `/mnt/local-analysis/digitalmodel/src/digitalmodel/marine_ops/marine_analysis/reporting/ocimf_interactive_report.py` (660 LOC) — `OCIMFInteractiveReport` class with its own polar diagrams, 3D surfaces, heatmaps, force-comparison charts. Header comment claims `HTML_REPORTING_STANDARDS.md ✅`. **Potentially overlapping** with build_coefficient_explorer.py but predates it — decision needed (extend / deprecate / leave alone).
-- **EXISTS** `/mnt/local-analysis/digitalmodel/src/digitalmodel/marine_ops/marine_engineering/environmental_loading/ocimf.py` (826 LOC) — `OCIMFDatabase` class; the source-of-truth for coefficient lookups.
-- **EXISTS** `/mnt/local-analysis/digitalmodel/src/digitalmodel/marine_ops/marine_analysis/environmental_loading/ocimf.py` (825 LOC) — duplicate twin (umbrella'd at workspace-hub#2768).
-- **EXISTS** `/mnt/local-analysis/digitalmodel/src/digitalmodel/visualization/` — top-level viz tree (has `agent_dashboard.py`, `reporting/`, `design_tools/`, `orcaflex_dashboard/`).
-- **EXISTS** `/mnt/local-analysis/digitalmodel/src/digitalmodel/marine_ops/marine_analysis/visualization/` — marine-specific viz tree (subdirectory of the duplicate-twin path).
-- **EXISTS** `/mnt/local-analysis/digitalmodel/src/digitalmodel/hydrodynamics/diffraction/polars_exporter.py` — unrelated; for orcawave RAO polars.
+- **EXISTS** `scripts/python/digitalmodel/ocimf/build_coefficient_explorer.py` (770 LOC) — current polar overlay function at lines 396-457: `make_polar_overlay(df, figure_key, coef, group_col)` uses `Scatterpolar` with `r = |C|`, `direction="clockwise"`, `rotation=90`, ticks at bow/stbd/stern/port. No silhouette, no force-arrows.
+- **EXISTS** `src/digitalmodel/marine_ops/marine_analysis/reporting/ocimf_interactive_report.py` (660 LOC) — `OCIMFInteractiveReport` class with its own polar diagrams, 3D surfaces, heatmaps, force-comparison charts. Header comment claims `HTML_REPORTING_STANDARDS.md ✅`. **Potentially overlapping** with build_coefficient_explorer.py but predates it — decision needed (extend / deprecate / leave alone).
+- **EXISTS** `src/digitalmodel/marine_ops/marine_engineering/environmental_loading/ocimf.py` (826 LOC) — `OCIMFDatabase` class; the source-of-truth for coefficient lookups.
+- **EXISTS** `src/digitalmodel/marine_ops/marine_analysis/environmental_loading/ocimf.py` (825 LOC) — duplicate twin (umbrella'd at workspace-hub#2768).
+- **EXISTS** `src/digitalmodel/visualization/` — top-level viz tree (has `agent_dashboard.py`, `reporting/`, `design_tools/`, `orcaflex_dashboard/`).
+- **EXISTS** `src/digitalmodel/marine_ops/marine_analysis/visualization/` — marine-specific viz tree (subdirectory of the duplicate-twin path).
+- **EXISTS** `src/digitalmodel/hydrodynamics/diffraction/polars_exporter.py` — unrelated; for orcawave RAO polars.
 
 **Existing vessel/hull dataclasses and models (added in r1 revision per M2):**
 
-- **EXISTS** `/mnt/local-analysis/digitalmodel/src/digitalmodel/hydrodynamics/hull_library/profile_schema.py` — `HullType` (Enum), `HullStation` (Pydantic BaseModel), `HullProfile` (Pydantic BaseModel: "Complete hull profile definition"). Primary candidate for reuse instead of introducing a new dataclass.
-- **EXISTS** `/mnt/local-analysis/digitalmodel/src/digitalmodel/hydrodynamics/models.py` — header comment: "Data models for hydrodynamic analysis including coefficient matrices, vessel properties, wave parameters, and environmental conditions." Uses both `@dataclass` and `Enum` patterns. Likely defines vessel-property dataclasses adjacent to this module's needs.
-- **EXISTS** `/mnt/local-analysis/digitalmodel/src/digitalmodel/orcawave/vessel_database.py` — vessel database; likely has its own Vessel/Hull type adjacent to OrcaWave workflows.
-- **EXISTS** `/mnt/local-analysis/digitalmodel/src/digitalmodel/hydrodynamics/diffraction/input_schemas.py` — diffraction input schemas; likely includes vessel-geometry input shapes for OrcaWave/diffraction analyses.
-- **EXISTS** `/mnt/local-analysis/digitalmodel/src/digitalmodel/hydrodynamics/hull_library/{catalog,lookup,mesh_generator}.py` — hull-library helpers (catalog browse, lookup, mesh generation) that compose with `HullProfile`.
+- **EXISTS** `src/digitalmodel/hydrodynamics/hull_library/profile_schema.py` — `HullType` (Enum), `HullStation` (Pydantic BaseModel), `HullProfile` (Pydantic BaseModel: "Complete hull profile definition"). Primary candidate for reuse instead of introducing a new dataclass.
+- **EXISTS** `src/digitalmodel/hydrodynamics/models.py` — header comment: "Data models for hydrodynamic analysis including coefficient matrices, vessel properties, wave parameters, and environmental conditions." Uses both `@dataclass` and `Enum` patterns. Likely defines vessel-property dataclasses adjacent to this module's needs.
+- **EXISTS** `src/digitalmodel/orcawave/vessel_database.py` — vessel database; likely has its own Vessel/Hull type adjacent to OrcaWave workflows.
+- **EXISTS** `src/digitalmodel/hydrodynamics/diffraction/input_schemas.py` — diffraction input schemas; likely includes vessel-geometry input shapes for OrcaWave/diffraction analyses.
+- **EXISTS** `src/digitalmodel/hydrodynamics/hull_library/{catalog,lookup,mesh_generator}.py` — hull-library helpers (catalog browse, lookup, mesh generation) that compose with `HullProfile`.
 
 **Decision (r1 M2 closure):** This plan adopts **Option A — reuse `HullProfile`** as the foundation, and introduces a thin sibling `VesselSilhouetteSpec` dataclass that *references* a `HullProfile` and adds only the silhouette-rendering-specific fields (`silhouette_kind`, optional `custom_path`). Rationale: `HullProfile` already carries LOA, beam, draft, and station data; reinventing them in a competing `VesselGeometry` repeats the duplicate-file anti-pattern workspace-hub#2768 is umbrella'd to fix. The two-class split (reuse `HullProfile` + new `VesselSilhouetteSpec`) keeps geometry separate from rendering-time concerns. Implementation must verify `HullProfile`'s exact field set during plan-review and amend this decision if it lacks a required field — see §Open Questions.
 

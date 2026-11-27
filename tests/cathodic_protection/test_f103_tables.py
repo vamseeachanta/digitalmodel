@@ -2,7 +2,7 @@
 
 Every table value is asserted against the fixture CSVs under
 ``tests/fixtures/test_vectors/cathodic_protection/datasets/dnv-rp-f103/``:
-the 2010 files are verbatim copies of the llm-wiki datasets (Annex 1 prints
+the 2010 files are verbatim copies of the knowledge-base datasets (Annex 1 prints
 ``a x100`` / ``b x100``, divided by 100 here exactly as the module does), the
 2019-09 files are hand transcriptions of the licensed print (``a`` and ``b``
 printed directly). See ``PROVENANCE.md`` there.

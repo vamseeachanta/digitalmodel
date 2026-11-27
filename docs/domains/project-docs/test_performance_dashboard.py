@@ -572,7 +572,7 @@ class TestPerformanceDashboard:
 
 def main():
     """Main execution function."""
-    data_dir = Path("/mnt/github/github/digitalmodel/docs")
+    data_dir = Path(__file__).resolve().parents[3] / "docs"
 
     dashboard_generator = TestPerformanceDashboard(data_dir)
     dashboard_file = dashboard_generator.generate_dashboard()

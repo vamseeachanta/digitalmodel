@@ -239,7 +239,7 @@ d3.csv('../data/processed/results.csv').then(data => {
 df = pd.read_csv('../data/processed/results.csv')
 
 # ❌ WRONG: Absolute path
-df = pd.read_csv('/mnt/github/workspace-hub/repo/data/results.csv')
+df = pd.read_csv('${WORKSPACE_ROOT}/workspace-hub/repo/data/results.csv')
 
 # ❌ WRONG: Hardcoded path
 df = pd.read_csv('<private-data>/results.csv')

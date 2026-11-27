@@ -38,7 +38,7 @@ Established build order: **Demo 3 -> Demo 5 -> Demo 1 -> Demo 4**
 - 1,043 mooring | 765 examples | 701 library | 532 installation
 - 119 risers | 106 pipeline | 88 templates | 83 jumper
 
-**/mnt/ace has the legacy project data:**
+**${ACE_DATA_ROOT} has the legacy project data:**
 - 3,697 domain Excel workbooks (238 jumper-specific)
 - 18 OrcaFlex-related Excel workbooks
 - 9 .sim binary models

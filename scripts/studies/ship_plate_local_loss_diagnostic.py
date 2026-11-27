@@ -3,6 +3,7 @@
 This uses existing algorithms only. It neither repairs nor endorses the wrapper's
 API579/conservatism claims. Original whole-field study artifacts remain untouched.
 """
+import os
 import argparse
 import hashlib
 import itertools
@@ -108,7 +109,7 @@ def main():
     files = [Path(__file__),ROOT/'src/digitalmodel/structural/structural_analysis/plate_metal_loss_ffs.py',
              ROOT/'src/digitalmodel/structural/structural_analysis/buckling.py',ROOT/'src/digitalmodel/structural/structural_analysis/models.py']
     digest = hashlib.sha256(result.read_bytes()).hexdigest()
-    manifest = dict(schema_version=1,run_id='ship-local-diagnostic-'+digest[:16],owner_repo='digitalmodel-data',
+    manifest = dict(schema_version=1,run_id='ship-local-diagnostic-'+digest[:16],owner_repo=os.environ.get('DIGITALMODEL_EVIDENCE_REPOSITORY') or 'private data repository',
         executed_utc=datetime.now(timezone.utc).isoformat(),actual_host=platform.node(),python=platform.python_version(),
         workflow_revision=subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT,text=True).strip(),
         workflow_dirty=bool(subprocess.check_output(['git','status','--porcelain'],cwd=ROOT,text=True).strip()),

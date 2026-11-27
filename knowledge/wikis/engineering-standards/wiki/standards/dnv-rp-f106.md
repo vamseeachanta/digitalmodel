@@ -6,11 +6,11 @@ domain: engineering-standards
 code_id: dnv-rp-f106
 publisher: DNV
 revision: "2003"
-revision_source: "/mnt/ace/O&G-Standards/DNV/DNV_RP_F106_(2003)_Factory_Applied_External_Pipeline_Coating_for_Corrosion_Control.pdf"
-visibility: private-llm-wiki
+revision_source: "${ACE_DATA_ROOT}/O&G-Standards/DNV/DNV_RP_F106_(2003)_Factory_Applied_External_Pipeline_Coating_for_Corrosion_Control.pdf"
+visibility: private-knowledge-base
 license_status: licensed-local-reference-derived-notes
 source_pdf:
-  - "/mnt/ace/O&G-Standards/DNV/DNV_RP_F106_(2003)_Factory_Applied_External_Pipeline_Coating_for_Corrosion_Control.pdf"
+  - "${ACE_DATA_ROOT}/O&G-Standards/DNV/DNV_RP_F106_(2003)_Factory_Applied_External_Pipeline_Coating_for_Corrosion_Control.pdf"
 ---
 
 # DNV-RP-F106 Factory Applied External Pipeline Coatings

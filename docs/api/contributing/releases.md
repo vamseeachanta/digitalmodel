@@ -1,7 +1,7 @@
 # Release prerequisites
 
 A PyPI publish cannot be undone: a released version number cannot be uploaded
-again. The team decides a release. Log the dispatch on fleet-ops #577 before
+again. The team decides a release. Log the dispatch on fleet operations issue 577 before
 running it, with the baseline acceptance criteria and the release version it
 publishes.
 

@@ -183,7 +183,7 @@ edition/clause criteria remain unverified. Geometry-based slack, re-tension/snap
 convergence, startup sensitivity, duration, multiple seeds and heading coverage require
 assessment. No historical hoist ratio or illustrative pamphlet threshold is applied here.</p>
 <p>Source matrix SHA-256: {escape(summary['matrix_sha256'])}. Reusable engineering results
-are owned by private digitalmodel-data. Working copies do not establish remote backup.</p></html>'''
+are owned by the private data repository. Working copies do not establish remote backup.</p></html>'''
 
 
 def generate_report(matrix_path, run_map, output):

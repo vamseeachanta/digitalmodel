@@ -391,7 +391,7 @@ For each listed capability:
 
 ### Content Sources
 
-- [ ] **rock-oil-field**
+- [ ] **field engineering repository**
   - [ ] Migration status accurate?
   - [ ] Progress tracked?
 
@@ -409,7 +409,7 @@ For each listed capability:
 
 ### Future Integration Candidates
 
-- [ ] **frontierdeepwater, client-c29b, contractor**
+- [ ] **exploration engineering repository, client-c29b, contractor**
   - [ ] Still candidates?
   - [ ] Priority adjusted?
   - [ ] New candidates to add?

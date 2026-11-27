@@ -1,5 +1,5 @@
 """#1280/#1453 in-context goldens: the API RP 16Q minimum-top-tension chain vs
-the calc contracts on the PRIVATE llm-wiki riser registry + source pages —
+the calc contracts on the private knowledge base riser registry + source pages —
 dm carries only key names; values resolve wiki-side at test time via
 ``digitalmodel.drilling_riser.calc_contracts``.
 
@@ -9,7 +9,7 @@ mask a wrong formula: omitting the fleet-angle factor alone produces ~1.48%
 error on RSU-0007 (10x the tolerance); a wrong N/(N-n) ratio on the wave-2
 contracts is >6%.
 
-Wave-2 contracts (llm-wiki#826): RSU-0010/RSU-0012 (959 m, 16x3600k DAT),
+Wave-2 contracts (knowledge base issue 826): RSU-0010/RSU-0012 (959 m, 16x3600k DAT),
 RSU-0014 (1783 m, semisub 6x833k DAT), RSU-0023 (1981 m, 2H standard calc
 incl. 21-row mud sweep). Their workbooks apply the bare N/(N-n) allowance
 (Rf = 1.0, no separate fleet-angle factor — unlike RSU-0007), so the engine
@@ -105,14 +105,14 @@ def _calc_contract_for(rsu_id: str, calc: str, required_keys: set[str]) -> dict:
     root = resolve_wiki_root()
     if root is None:
         pytest.skip(
-            "llm-wiki registry not available (standalone mode) — the 16Q "
+            "knowledge-base registry not available (standalone mode) — the 16Q "
             "goldens are part of the in-context merge gate"
         )
     contract = find_contract(rsu_id, calc, root)
     if contract is None:
         pytest.fail(
-            f"llm-wiki found but no {calc} contract for {rsu_id} — the "
-            "paired llm-wiki calc-contract change is not on this clone"
+            f"knowledge base found but no {calc} contract for {rsu_id} — the "
+            "paired knowledge base calc-contract change is not on this clone"
         )
     missing = required_keys - set(contract)
     assert not missing, f"{rsu_id} contract schema drift — missing: {missing}"

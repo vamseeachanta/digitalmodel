@@ -1,6 +1,6 @@
 """#1458 schedule-assembly goldens: string weight assembled FROM the wiki
 joint schedules + joint libraries, validated against the wave-3
-``16q-min-tension-endpoints`` contracts (llm-wiki#828).
+``16q-min-tension-endpoints`` contracts (knowledge base issue 828).
 
 dm carries only page/key names, parse shapes and the engine; the schedule
 counts, joint weights and documented tensions live wiki-side and resolve at
@@ -48,7 +48,7 @@ def _wiki_root():
     root = resolve_wiki_root()
     if root is None:
         pytest.skip(
-            "llm-wiki registry not available (standalone mode) — the "
+            "knowledge-base registry not available (standalone mode) — the "
             "schedule-assembly goldens are part of the in-context merge gate"
         )
     return root

@@ -365,7 +365,7 @@ class TestPerformanceAnalyzer:
 
 def main():
     """Main execution function."""
-    test_dir = Path("/mnt/github/github/digitalmodel/tests")
+    test_dir = Path(__file__).resolve().parents[3] / "tests"
 
     if not test_dir.exists():
         print(f"Test directory not found: {test_dir}")
@@ -418,7 +418,7 @@ def main():
             print(f"   Estimated improvement: {rec['estimated_improvement']}")
 
     # Save results
-    output_file = Path("/mnt/github/github/digitalmodel/docs/test_performance_analysis.json")
+    output_file = Path(__file__).resolve().parents[3] / "docs/test_performance_analysis.json"
     output_file.parent.mkdir(parents=True, exist_ok=True)
 
     with open(output_file, 'w') as f:

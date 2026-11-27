@@ -282,7 +282,7 @@
 ## Related Repositories
 
 - assetutilities - Common engineering utilities (dependency)
-- rock-oil-field - Client work archive (content migration source)
+- field engineering repository - Client work archive (content migration source)
 - worldenergydata - Energy industry data analysis (complementary)
 ```
 
@@ -303,7 +303,7 @@
   - Relationship: Required dependency for all calculations
 
 ### Content Sources
-- rock-oil-field - Client work archive (legacy codebase)
+- field engineering repository - Client work archive (legacy codebase)
   - Status: Migration in progress
   - Relationship: Source of proven calculation patterns being refactored into DigitalModel
 
@@ -318,7 +318,7 @@
   - Integration: Automated environment setup with UV
 
 ### Future Integration Candidates
-- frontierdeepwater - Deepwater riser and mooring analysis (potential module source)
+- exploration engineering repository - Deepwater riser and mooring analysis (potential module source)
 - client-c29b, contractor - Offshore installation workflows (integration potential)
 ```
 

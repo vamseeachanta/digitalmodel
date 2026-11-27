@@ -1,4 +1,4 @@
-"""C2 open-water riser on the W4 runner (digitalmodel-data #13, owner decision W415): the W5 channel set of an
+"""C2 open-water riser on the W4 runner (private data repository issue 13, owner decision W415): the W5 channel set of an
 open-water case (W403: everything W5 needs is extracted before the .sim is deleted), statics routes and the case
 settings the C2 matrix groups use (synthetic riser, no project data)."""
 

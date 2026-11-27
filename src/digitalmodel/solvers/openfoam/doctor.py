@@ -29,7 +29,7 @@ _CORE_UTILITIES = ("blockMesh", "foamToVTK")
 # Solvers the marine/aero setups select; at least one should be present.
 _SOLVERS = ("interFoam", "simpleFoam", "pimpleFoam")
 # Default shared output root (env spec §6); overridable.
-DEFAULT_OUTPUT_ROOT = Path("/mnt/ace/cfd-output")
+DEFAULT_OUTPUT_ROOT = Path(os.environ.get("ACE_DATA_ROOT", ".")) / "cfd-output"
 
 
 @dataclass

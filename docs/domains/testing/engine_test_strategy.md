@@ -6,7 +6,7 @@ This document outlines a comprehensive testing strategy for the 180-line `engine
 
 ## File Analysis Summary
 
-**Target File**: `/mnt/github/github/digitalmodel/src/digitalmodel/engine.py`
+**Target File**: `src/digitalmodel/engine.py`
 - **Total Lines**: 180 lines
 - **Main Function**: `engine(inputfile: str = None, cfg: dict = None, config_flag: bool = True) -> dict`
 - **Key Dependencies**: 35+ imports from digitalmodel modules and external libraries
@@ -170,7 +170,7 @@ INVALID_CONFIGS = {
 
 ### 5.2 Overall Targets
 
-- **Minimum Acceptable**: 80%
+- **Minimum coverage**: 80%
 - **Target Goal**: 90%
 - **Stretch Goal**: 95%
 
@@ -332,6 +332,6 @@ pytest --cov=src/digitalmodel/engine.py --cov-report=html tests/test_engine.py
 
 ## Conclusion
 
-This comprehensive test strategy provides a systematic approach to achieving high-quality test coverage for the engine.py file. By following London School TDD principles with emphasis on interaction testing and contract verification, we can ensure robust, maintainable tests that provide confidence in the engine's behavior while facilitating future refactoring and enhancement.
+This comprehensive test strategy provides a systematic approach to achieving high-quality test coverage for the engine.py file. Interaction tests and contract checks apply London School TDD principles to verify engine behavior during refactoring.
 
 The phased implementation approach allows for incremental progress while maintaining development velocity, with clear metrics for success and risk mitigation strategies for the most complex areas of the codebase.

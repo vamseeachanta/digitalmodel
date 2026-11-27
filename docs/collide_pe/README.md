@@ -48,24 +48,24 @@ If the right domain function is missing, **add it** (small pure function + a cas
 domain's test suite, e.g. `tests/production_engineering/test_ipr_models.py`) rather than
 inlining the math.
 
-## Concepts connect to llm-wiki (the knowledge-base dot)
+## Concepts connect to knowledge base (the knowledge-base dot)
 
 Conceptual/definition problems (viscosity, corrosion, LWD, …) have no calc — but the *concept*
-is knowledge, and knowledge lives in **llm-wiki** (`wikis/<discipline>/wiki/concepts/<x>.md`). Each conceptual
-problem YAML carries a `wiki_concept:` pointer to its llm-wiki page (existing or newly authored)
+is knowledge, and knowledge lives in **knowledge base** (`wikis/<discipline>/wiki/concepts/<x>.md`). Each conceptual
+problem YAML carries a `wiki_concept:` pointer to its knowledge-base page (existing or newly authored)
 — the same "connect the dot" move as `domain_function:`, but into the wiki instead of code.
 
 First wave: 6 mapped to existing pages (LWD→`mwd-lwd-overview`, drilling fluid→`drilling-fluid-types`,
 underbalanced→`underbalanced-drilling`, corrosion→`corrosion-management`, standing valve &
 horsehead→`sucker-rod-pumping-overview`); 3 were missing and were authored in
 `reservoir-engineering/wiki/concepts/` (`fluid-viscosity`, `reservoir-drive-mechanisms`,
-`thermal-recovery-eor`) on llm-wiki branch `feat/collide-pe-concepts`.
+`thermal-recovery-eor`) on knowledge base branch `feat/collide-pe-concepts`.
 
 ## Program and delivery
 
 - **Epic A — Solve the series.** This directory. One GitHub issue per problem,
   ordered by hotness; start at the top of `backlog.yml` and append as new problems post.
-- **Delivery.** Deckhand retired 2026-10-18 (deckhand issue 599).
+- **Delivery.** licensed execution repository retired 2026-10-18 (licensed execution repository issue 599).
   `solve.py:solve_problem()` remains the transport-free engine. Render the brief
   with `render_brief.py` and publish the HTML as described below.
 

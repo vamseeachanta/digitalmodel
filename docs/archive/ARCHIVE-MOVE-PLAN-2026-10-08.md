@@ -13,7 +13,7 @@ map and a model-YAML feature inventory. No file is deleted and nothing is
 copied to the archive by this change.
 
 Revision 2 (2026-10-08) applies the owner's round-4 decision on the first list
-(1,414 files, 1.94 GB): reduce the list, deduplicate, use `/mnt/ace` as the
+(1,414 files, 1.94 GB): reduce the list, deduplicate, use `${ACE_DATA_ROOT}` as the
 home of the required data with one copy per unique content, and keep every
 unique feature of the model YAML files reachable by the modules.
 
@@ -201,12 +201,12 @@ times under the AQWA examples, and draft office documents and result plots
 duplicated across the legacy API RP 2RD guide folders; the 20 largest groups
 are listed in the summary JSON (`dedup_top_groups`).
 
-## `/mnt/ace` as the home of the required data
+## `${ACE_DATA_ROOT}` as the home of the required data
 
 The archive store keeps **one copy per unique blob**, content-addressed:
 
 ```
-/mnt/ace/digitalmodel/blobs/sha256/<first two hex digits>/<sha256>.<ext>
+${ACE_DATA_ROOT}/digitalmodel/blobs/sha256/<first two hex digits>/<sha256>.<ext>
 ```
 
 `archive-blob-map-2026-10-08.csv` maps every original repository path to its
@@ -250,7 +250,7 @@ data; the inventory records which capabilities a file exercises.
 | Measure | Value |
 |---|---|
 | YAML files scanned | 4,459 |
-| Parse failures (not YAML-safe; listed in the JSON) | 51 |
+| Parse failures (could not be parsed as YAML; listed in the JSON) | 51 |
 | Model YAML files | 3,112 (OrcaFlex native 2,852; OrcaWave 144; spec 116) |
 | Distinct features | 4,045 (key 3,548; value 306; section 191) |
 | Features held by exactly one file | 665 (key 565; value 57; section 43) |
@@ -317,7 +317,7 @@ feature unique to one file).
    example a line with a uniform contents method) can look the feature up and load the
    file. When a later move takes model YAML out of the repository, the
    inventory shall be regenerated with blob paths so the same lookup resolves
-   to `/mnt/ace/digitalmodel/blobs/...`.
+   to `${ACE_DATA_ROOT}/digitalmodel/blobs/...`.
 4. The move step (below) shall re-run the inventory and refuse to move any file
    whose removal would leave a feature with zero in-repository holders unless
    the owner has approved that file with an archive loader in place.
@@ -329,7 +329,7 @@ feature unique to one file).
 | Candidates | 1,405 |
 | Kept for model features | 11 (42,036,638 blob bytes) |
 | Proposed to move | 1,394 (1,816,070,378 blob bytes) |
-| Unique blobs to store on `/mnt/ace` | 1,249 (1,715,309,069 bytes) |
+| Unique blobs to store on `${ACE_DATA_ROOT}` | 1,249 (1,715,309,069 bytes) |
 | Duplicate copies not stored again | 145 (100,761,309 bytes) |
 
 Comparison with earlier revisions:
@@ -365,20 +365,20 @@ revision 4 implements that decision as described under *Selection rule*.
    or that is now flagged `keep_for_feature`.
 3. **Copy, one blob per content.** For each unique `sha256_blob` among the
    approved rows, copy the git blob (`git cat-file blob <oid>`, not the
-   working-tree file) to `/mnt/ace/digitalmodel/<blob_path>`. A blob already
+   working-tree file) to `${ACE_DATA_ROOT}/digitalmodel/<blob_path>`. A blob already
    present with the right digest is not copied again.
 4. **Verify.** Recompute SHA-256 of every stored blob and compare it with its
    name. Any mismatch stops the move.
 5. **Record.** Write the blob map rows of the approved paths to
-   `/mnt/ace/digitalmodel/MANIFEST.blob-map.tsv` (tab-separated: repo-relative
+   `${ACE_DATA_ROOT}/digitalmodel/MANIFEST.blob-map.tsv` (tab-separated: repo-relative
    path, `sha256_blob`, bytes, `blob_path`) and one line per stored blob to
-   `/mnt/ace/digitalmodel/MANIFEST.sha256.tsv` (`sha256`, bytes, `blob_path`), and
+   `${ACE_DATA_ROOT}/digitalmodel/MANIFEST.sha256.tsv` (`sha256`, bytes, `blob_path`), and
    keep the same files in the repository, so every original path resolves to
    its blob from either side.
 6. **Registry in the repository** (PR #2146 mechanism; there are no
    per-file stub files):
    - `data/inputs.yaml` — machine-readable pointer: archive root
-     `/mnt/ace/digitalmodel`, store layout, base commit, per-class file count,
+     `${ACE_DATA_ROOT}/digitalmodel`, store layout, base commit, per-class file count,
      bytes and extensions.
    - `DOCUMENT-MAP.md` — human-readable map: what moved, what stayed and why,
      how to retrieve and verify a file from the blob map.

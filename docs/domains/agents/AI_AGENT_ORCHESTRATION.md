@@ -85,7 +85,7 @@ Add to crontab for automatic daily updates:
 crontab -e
 
 # Add this line (runs at midnight UTC daily)
-0 0 * * * /mnt/github/workspace-hub/modules/automation/update_ai_agents_daily.sh
+0 0 * * * ${WORKSPACE_ROOT}/workspace-hub/modules/automation/update_ai_agents_daily.sh
 ```
 
 ## Usage
@@ -306,7 +306,7 @@ droid exec "implement user authentication with JWT"
 
 ### 3. Refactoring Workflow
 
-Safe refactoring with automated testing:
+Refactoring with automated regression tests:
 
 ```bash
 # 1. Analysis

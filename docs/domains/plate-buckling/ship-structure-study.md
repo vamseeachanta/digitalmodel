@@ -112,7 +112,7 @@ PYTHONPATH=src uv run --no-project --with numpy --with jsonschema python \
 The bundle contains `reference.json`, a standalone `lookup.html`, and a manifest
 with input, result, view and algorithm digests, execution time, revision and dirty
 state. The manifest labels the bundle an execution replica; private
-`digitalmodel-data` remains the numerical evidence authority. No archival or
+The private data repository remains the numerical evidence authority. No archival or
 publication of numerical outputs is claimed by this extension. The input fixture
 is authored synthetic data, distinct from reusable solver results.
 
@@ -161,13 +161,13 @@ Extend study to precomputed minimum remaining-thickness views. Structure/profile
 
 Execution: isolated clone under task-9, branch study/ship-plate-profile-buckling. Owned: data/ship_structure_reference/, scripts/studies/ship_plate_buckling.py, tests/structural/test_ship_plate_study.py, docs/domains/plate-buckling/ship-structure-study.md. Readonly: source catalogs, AISC and existing algorithms. Forbidden: CP, asset_integrity shared helpers/registry row, client data, credentials/lockfiles. Shared catalog/discovery additions require owner coordination and separate claim.
 
-Compute: existing Linux2 sim-worker route inspected; strict host-key probe failed. Never change trust. Lightweight fallback on current Windows host; no licensed or heavy FE run. Qualification limitations and evidence must be exposed. Persist solver outputs in private digitalmodel-data through existing ownership rules; temporary outputs are replicas. Source-specific rights unresolved records cannot be published as reusable extracted datasets. Continue permissible authored research metadata and synthetic computational fixtures.
+Compute: existing Linux2 sim-worker route inspected; strict host-key probe failed. Never change trust. Lightweight fallback on current Windows host; no licensed or heavy FE run. Qualification limitations and evidence must be exposed. Persist solver outputs in the private data repository through existing ownership rules; temporary outputs are replicas. Source-specific rights unresolved records cannot be published as reusable extracted datasets. Continue permissible authored research metadata and synthetic computational fixtures.
 
 Validate schema/units/provenance/unsupported cases and independently check elastic square-plate formula and thickness-squared scaling. Run existing panel tests; review plan/code independently and record unavailable providers explicitly. Draft PR only, no merge.
 
 ## Inventory and research checkpoint, 2026-10-06 UTC
 
-Existing owner paths: source catalog and structural-ffs entry in llm-wiki;
+Existing owner paths: source catalog and structural-ffs entry in the private knowledge base;
 data/aisc_shapes.yaml (v15.0 header; inch units); models.MARINE_GRADES;
 structural_analysis/buckling.py, panel_buckling.py, grillage_buckling.py;
 plate_metal_loss_ffs.py; examples/workflows/plate-buckling; existing panel
@@ -233,7 +233,7 @@ owner manifest. ace-linux-2 registry identifies a
 sim-worker, but strict SSH probe failed for absent trusted host key. Trust remains
 unchanged. No GPU/licensed/heavy job ran. Lightweight Windows work was retained.
 
-Numerical output owner: private digitalmodel-data, main (merged from branch
+Numerical output owner: the private data repository, main (merged from branch
 study/ship-plate-synthetic-results through PR 44), docs/reviews/ship-plate-study/. Temporary
 ship-plate-results is an execution replica. manifest.json pins algorithm hashes,
 workflow revision/dirty status, result digest, execution time and content-based
@@ -248,14 +248,14 @@ Final Codex artifact review passes and independently reran 40 tests. Claude
 artifact review approved with limitations; its minor input/evidence corrections
 were applied and rereviewed by Codex. Source schema and source relationships pass;
 schema is a staging contract, not a complete engineering readiness validator.
-Result retention is verified in private digitalmodel-data merged PR 44, commit
+Result retention is verified in merged PR 44 in the private data repository, commit
 95ddcd3a4ce34378309339e2a191484b372f0a98, owner-relative
 docs/reviews/ship-plate-study/manifest.json. Run identity
 ship-plate-synthetic-43aa52bfd6b78cc4; precomputed.json SHA256
 43aa52bfd6b78cc42c01ce5550ddc1e4a16634d8a7a49ae0a7f59989c06b5c23.
 The 95ddcd3, 4754b1c and d3cdde0 revisions cited in this study are original PR 44
 commits, preserved through the merged PR and not ancestors of main. The same
-owner-relative paths are on digitalmodel-data main at
+owner-relative paths are on the main branch of the private data repository at
 1722e55a49feb235b5e40eddd60ecbfb05ac958d with unchanged SHA256.
 All nine remote evidence blobs match retained bytes; JSON and HTML digests match
 the manifest. Published workflow 095312dd source blobs match the executed code
@@ -337,7 +337,7 @@ The staging-schema checks reported above apply to separate source research,
 not validation or enforcement of this authored pointer restriction.
 The discrepancy values and publisher comparator remain in the private evidence;
 no numeric source data is copied into this document. The finding is recorded in private
-[digitalmodel-data PR 44](https://github.com/vamseeachanta/digitalmodel-data/pull/44),
+[evidence PR 44](https://api.github.com/repositories/1370823847/pulls/44),
 commit `d3cdde0ed247a4d112b5139f9e66d3ab15e92bd2`, owner-relative
 `docs/reviews/ship-plate-study/local-loss-diagnostic/source-database-verification.json`.
 This source-verification finding does not qualify other sections or alter the
@@ -367,7 +367,7 @@ is at least its breadth. Only the 300x600 mm patch in this grid uses the shorter
 branch, k=6.25. These artificial-support effects are not measured corrosion-length
 benefits. Patch position is absent from the wrapper.
 
-The diagnostic owner is private digitalmodel-data commit
+The private data repository retains the diagnostic at commit
 4754b1cea1590f06c00e8e6f7956a3fd0eb2646a, path
 docs/reviews/ship-plate-study/local-loss-diagnostic/manifest.json, run
 ship-local-diagnostic-a30c6daa794e7cf8. Result SHA256

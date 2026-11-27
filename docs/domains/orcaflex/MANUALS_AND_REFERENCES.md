@@ -192,7 +192,7 @@ model.SaveSimulation("output.sim")
 ## LLM Ingestion Notes
 
 ### Current State
-No dedicated "llm-wiki" skill exists in the ecosystem. The closest pipeline is the
+No dedicated "knowledge base" skill exists in the ecosystem. The closest pipeline is the
 document-index-pipeline at `.claude/skills/data/document-index-pipeline/` which handles
 the 1M+ document corpus (Phase A-G pipeline for O&G standards). That pipeline is designed
 for PDF extraction and classification, not for web-scraped HTML documentation.
@@ -203,19 +203,19 @@ for PDF extraction and classification, not for web-scraped HTML documentation.
 2. **Convert to markdown**: Use markitdown (already in the repo venv) to convert HTML help
    topics to markdown for LLM consumption
 3. **Store on ace drive**: Per project convention (#1540), generated/extracted data goes to
-   the ace drive, not git: `/mnt/ace/digitalmodel/docs/orcaflex-help/` and
-   `/mnt/ace/digitalmodel/docs/orcawave-help/`
+   the ace drive, not git: `${ACE_DATA_ROOT}/digitalmodel/docs/orcaflex-help/` and
+   `${ACE_DATA_ROOT}/digitalmodel/docs/orcawave-help/`
 4. **Index**: Add entries to the document-index pipeline (Phase A) pointing to the
    converted markdown files
 5. **Skill reference**: Update the orcaflex and orcawave agent SKILL.md files to point to
    the local help paths
 
-### What an llm-wiki Skill Would Need
+### What a knowledge-base Skill Would Need
 - Web scraper targeting `www.orcina.com/webhelp/` HTML structure
 - HTML-to-markdown converter (markitdown available)
 - Chunking strategy respecting topic boundaries (one .htm page = one chunk)
 - Metadata extraction (topic title, section hierarchy, cross-references)
-- Storage convention: `/mnt/ace/digitalmodel/llm-wiki/<product>/`
+- Storage convention: `${LLM_WIKI_PATH}/<product>/`
 - Search/retrieval index for agent queries
 
 ## Private help retrieval

@@ -1,4 +1,4 @@
-# Plan: digitalmodel #281 — WRK-121 Extract & catalog OrcaFlex models from rock-oil-field/s7
+# Plan: digitalmodel #281 — WRK-121 Extract & catalog OrcaFlex models from ${FIELD_PROJECT_ROOT}/s7
 
 **Issue:** https://github.com/vamseeachanta/digitalmodel/issues/281
 **Status:** plan-review
@@ -6,7 +6,7 @@
 
 ## Context
 
-Issue #281 (WRK-121) extracts ~235 OrcaFlex `.dat` model files from the `rock-oil-field/s7/` working tree, sanitizes client-identifying material, converts each to YAML, organizes into four library categories (jumper, installation, mooring, training), and validates round-trip fidelity through a 3-way benchmark against the format converter (#280). The format converter foundation is already in place: `src/digitalmodel/solvers/orcaflex/format_converter/{cli.py, single_to_modular.py, modular_to_single.py, ...}` exists and is unit-tested per the #280 issue body (102 tests passing).
+Issue #281 (WRK-121) extracts ~235 OrcaFlex `.dat` model files from the `${FIELD_PROJECT_ROOT}/s7/` working tree, sanitizes client-identifying material, converts each to YAML, organizes into four library categories (jumper, installation, mooring, training), and validates round-trip fidelity through a 3-way benchmark against the format converter (#280). The format converter foundation is already in place: `src/digitalmodel/solvers/orcaflex/format_converter/{cli.py, single_to_modular.py, modular_to_single.py, ...}` exists and is unit-tested per the #280 issue body (102 tests passing).
 
 The deliverables in the issue's acceptance list (all unchecked) require: `scripts/sanitize_s7_models.py`, `scripts/extract_s7_specs.py`, `digitalmodel/.legal-deny-list.yaml`, sanitized model YAMLs in `docs/modules/orcaflex/{jumper,installation,mooring,training}/`, per-group `spec.yml` files, two SKILL.md files (`orcaflex-jumper-analysis`, `legal-sanity-scan`), passing legal-scan exit code, and round-trip validation on jumper + mooring subsets.
 
@@ -45,4 +45,4 @@ Author `.claude/skills/orcaflex-jumper-analysis/SKILL.md` describing the sanitiz
 
 - The issue references the s7 tree by name but does not point at a path on the licensed machine. Confirm the absolute path and whether s7 is a git submodule, sibling repo, or shared drive before Task 3 begins.
 - Categorization heuristics (filename glob) will mis-bucket some files; is a manual triage pass acceptable, or should the script defer ambiguous files to `unclassified/` and require human routing?
-- Round-trip tolerance: ≥95% byte-equality is loose. If we want stricter (≥99%), we likely need to extend the format converter's CRLF/comment normalization first — flag if that becomes the long pole.
+- Round-trip tolerance: ≥95% byte-equality is loose. A stricter target (≥99%) will likely require extending the format converter's CRLF/comment normalization first — flag if that becomes the long pole.

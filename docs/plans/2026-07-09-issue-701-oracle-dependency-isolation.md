@@ -366,7 +366,7 @@ venv-creation, and coverage behavior is preserved.
 | Update | `../workspace-hub/docs/plans/README.md` | mandatory central index row for sibling digitalmodel plan |
 
 No `src/digitalmodel/` code, historical example environment, solver algorithm,
-or Deckhand repository file changes are in scope.
+or licensed execution repository file changes are in scope.
 
 ---
 
@@ -432,7 +432,7 @@ captured failing against the current checkout before metadata/workflow changes.
 
 - Claim key: `issue/digitalmodel/701`; session IDs use
   `<provider>-<host>-<4hex>`.
-- Before any write-capable pickup, use `../llm-wiki/scripts/coordination/claim.py`
+- Before any write-capable pickup, use `${LLM_WIKI_PATH}/scripts/coordination/claim.py`
   with authenticated `gh`, or reproduce its exact parser/post behavior through
   a connected GitHub app. The canonical tokens are
   `🔒 ASCP CLAIM key=issue/digitalmodel/701 session=<id> until=<ISO8601>` and
@@ -446,7 +446,7 @@ captured failing against the current checkout before metadata/workflow changes.
   are read-only unless the owner explicitly reassigns paths.
 - Before any stop, write/update
   `docs/session-handoffs/2026-07-09-digitalmodel-issue-701.md` from
-  `../llm-wiki/coordination/HANDOFF_TEMPLATE.md` (goal, state, next steps, key
+  `${LLM_WIKI_PATH}/coordination/HANDOFF_TEMPLATE.md` (goal, state, next steps, key
   files, gotchas, resume commands, open claim), post the same branch/commit/test
   checkpoint to #701, then post
   `🔓 ASCP RELEASE key=issue/digitalmodel/701 session=<id>`.
@@ -538,7 +538,7 @@ uv run --no-sync python -m digitalmodel --help
 uv run --no-sync python -c "import OrcFxAPI; print(OrcFxAPI.DLLVersion())"
 ```
 
-The Deckhand verifier/report remains owned by deckhand#529 and is not a closure
+The licensed execution repository verifier/report remains owned by licensed execution issue 529 and is not a closure
 gate for this packaging PR. Its task must remain Disabled and never run.
 
 ---

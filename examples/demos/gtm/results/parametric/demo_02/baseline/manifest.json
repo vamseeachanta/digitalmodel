@@ -1,7 +1,7 @@
 {
   "demo_id": "demo_02",
   "git_sha": "e78536dc09b4ab28180d795b7dd31430b5430a57",
-  "input_ref": "/mnt/local-analysis/.worktrees/dm-gtm-demo02/examples/demos/gtm/inputs/demo_02_wall_thickness.yml",
+  "input_ref": "examples/demos/gtm/inputs/demo_02_wall_thickness.yml",
   "n_safe": 48,
   "n_unsafe": 24,
   "resolved_config": {
@@ -41,7 +41,7 @@
     ],
     "smts_pa": 531000000.0,
     "smys_pa": 448000000.0,
-    "source_path": "/mnt/local-analysis/.worktrees/dm-gtm-demo02/examples/demos/gtm/inputs/demo_02_wall_thickness.yml",
+    "source_path": "examples/demos/gtm/inputs/demo_02_wall_thickness.yml",
     "water_depth_m": 500.0
   },
   "run_id": "baseline",

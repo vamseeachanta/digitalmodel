@@ -6,7 +6,7 @@
 
 ## Overview
 
-Pipe capacity calculations focused on wall thickness sizing, verification, and pressure integrity. This module consolidates formulas from calculation scripts and PDF reports across the /mnt/ace archive.
+Pipe capacity calculations focused on wall thickness sizing, verification, and pressure integrity. This module consolidates formulas from calculation scripts and PDF reports across the ${ACE_DATA_ROOT} archive.
 
 ## Available Content
 

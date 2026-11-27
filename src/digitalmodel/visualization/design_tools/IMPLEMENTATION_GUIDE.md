@@ -35,7 +35,7 @@ The FreeCAD + Blender engineering workflow has been successfully implemented and
 ### Quick Installation Verification
 Run this command to verify your installation:
 ```bash
-cd /mnt/github/github/digitalmodel/src/modules/design_tools
+cd src/modules/design_tools
 python3 workflow_test.py
 ```
 

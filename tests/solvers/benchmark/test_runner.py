@@ -151,7 +151,7 @@ def test_receipt_is_json_serialisable_and_has_no_hostname(tmp_path):
 def test_errors_are_sanitised(tmp_path):
     node = platform.node()
     case = _case("fake", [{"ok": False,
-                           "error": f"{node} cannot reach 1055@lic01 in C:\\Users\\bob\\x"}])
+                           "error": f"{node} cannot reach 1055@lic01 in C:\\Users\\bob\\x"}])  # identifier-gate: example
     entry = _run([case], tmp_path, repeats=1)["results"][0]
     error = entry["errors"][0]
     assert node not in error and "lic01" not in error
@@ -308,9 +308,9 @@ def test_missing_or_invalid_solve_time_fails_the_repeat(tmp_path, solve):
 
 
 @pytest.mark.parametrize("text", [
-    "open C:/Users/bob/model.dat failed",
-    "open D:\\projects\\client\\model.dat failed",
-    "open \\\\fileserver\\Jobs\\B1\\model.dat failed",
+    "open C:/Users/bob/model.dat failed",  # identifier-gate: example
+    "open D:\\projects\\client\\model.dat failed",  # identifier-gate: example
+    "open \\\\fileserver\\Jobs\\B1\\model.dat failed",  # identifier-gate: example
     "open /mnt/client/model.dat failed",
 ])
 def test_sanitise_strips_absolute_paths_to_basename(text):

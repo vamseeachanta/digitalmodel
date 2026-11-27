@@ -9,7 +9,7 @@ solution back into the problem YAML.
 Design:
   * This module is the *engine*. `solve_problem(problem) -> dict` does one Claude
     API call and returns a structured solution. It is intentionally transport-free.
-  * Deckhand retired 2026-10-18 (deckhand issue 599).
+  * Deckhand retired 2026-10-18 (execution-service issue 599).
     Render and publish the brief as documented in README.md, "Sharing the brief
     as a link". The API call stays independent of delivery.
 

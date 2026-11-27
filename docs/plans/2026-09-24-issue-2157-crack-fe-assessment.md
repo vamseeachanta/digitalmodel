@@ -13,16 +13,16 @@ r1 received **MAJOR** from Codex (10 findings) and from Claude (11 findings). Th
 | Card | Owner decision | Effect on this plan |
 |---|---|---|
 | S01 | Own FE model: ANSYS MAPDL batch with CINT SIF/J at discrete crack depths | New phase P0: FE model generator, K/J extraction, verification |
-| S04 | Originality and comparator guard | Every number is regenerated from our model and cited laws. Tests assert closed-form or conservation comparators only. No values from the published case appear in the repository or the report. |
+| S04 | Originality and comparator guard | Every number is regenerated from the project model and cited laws. Tests assert closed-form or conservation comparators only. No values from the published case appear in the repository or the report. |
 | B01 | Option 1 / API Level 2 curve now; FE-derived Option 3 later | P1 implements material-based curves. Option 3 is a follow-on issue. |
-| B02 | σ_ref = FE-linearised stress from our own model | σ_ref basis recorded; limit-load Lr is a sensitivity (card S02, decided at P0) |
+| B02 | σ_ref = FE-linearised stress from the project model | σ_ref basis recorded; limit-load Lr is a sensitivity (card S02, decided at P0) |
 | G07 | Five phases: P0 FE · P1 FAD + growth · P2 secondary stress · P3 coordinator/workflow/citations · P4 report | Phase structure below |
 | G08 → G11 | One consumer contract (G08); refined by G11 to a sibling `CrackAssessmentResult` behind a shared Protocol | `FFSAssessmentResult` stays unchanged; consumers type against the Protocol |
 | G05 | Standards-derived constants are user inputs with a basis; the repository ships no standard-derived tables | Growth-law constants, Φ/ρ, PSFs, residual profiles and E(T) enter as inputs |
-| G04 | Local review, then commit after approval | The report goes to `D:\ws\output\crack-fe-weldolet\` first |
+| G04 | Local review, then commit after approval | The report goes to `${OUTPUT_ROOT}/crack-fe-weldolet/` first |
 | Owner notes B02, B05–B08 | Self-contained analysis; design data stated as assumed; the source article is not referenced | The report carries an assumed design basis only |
 
-The cards gated at later phases (P0: S02, S03, S05, B12; P1: B05–B09, B14, B15, R01, R02; P2: B10, B11, B13, G01–G03; P3: E01–E04, R04, R05, G09; P4: R06) are open. Each phase starts only after its cards are decided. The board is at `D:\ws\output\crack-fe-weldolet\decisions\crack-fe-2157-decisions-local.html`.
+The cards gated at later phases (P0: S02, S03, S05, B12; P1: B05–B09, B14, B15, R01, R02; P2: B10, B11, B13, G01–G03; P3: E01–E04, R04, R05, G09; P4: R06) are open. Each phase starts only after its cards are decided. The board is at `${OUTPUT_ROOT}/crack-fe-weldolet/decisions/crack-fe-2157-decisions-local.html`.
 
 ## Resource Intelligence Summary
 
@@ -56,14 +56,14 @@ The cards gated at later phases (P0: S02, S03, S05, B12; P1: B05–B09, B14, B15
 
 ### Standards (rights-gated per G05)
 - API 579-1/ASME FFS-1 (2016) Part 9 is the procedure the report follows. Ledger rows `SECT-09` and `APPEND-C` are catalogued (`modules: []`). code-registry has no entry (card E04).
-- BS 7910 is the source family for the growth law and ρ. code-registry lists our edition as 2019 with `status: check`, and the wiki records no 2019 edition (card E02).
+- BS 7910 is the source family for the growth law and ρ. code-registry lists the available edition as 2019 with `status: check`, and the wiki records no 2019 edition (card E02).
 - No clause text, table or worked example enters the repository. Standard-derived numbers enter only as user inputs carrying a basis string.
 
 ### LLM Wiki pages consulted
-- `llm-wiki/wikis/engineering-standards/wiki/standards/api-std-579.md`: `api-std-579-asme-ffs-1`, 2016, private. This is the candidate citation target (card E01).
-- `llm-wiki/wikis/engineering-standards/wiki/standards/bs-7910.md`: `bs-7910`, multi-edition. Three conflicting pages exist (card E02).
-- `llm-wiki/wikis/engineering-standards/wiki/concepts/fatigue-crack-growth.md`: Paris law, threshold, R-ratio.
-- `llm-wiki/wikis/engineering/wiki/concepts/engineering-report-house-style.md`: the report skeleton and register.
+- `${LLM_WIKI_PATH}/wikis/engineering-standards/wiki/standards/api-std-579.md`: `api-std-579-asme-ffs-1`, 2016, private. This is the candidate citation target (card E01).
+- `${LLM_WIKI_PATH}/wikis/engineering-standards/wiki/standards/bs-7910.md`: `bs-7910`, multi-edition. Three conflicting pages exist (card E02).
+- `${LLM_WIKI_PATH}/wikis/engineering-standards/wiki/concepts/fatigue-crack-growth.md`: Paris law, threshold, R-ratio.
+- `${LLM_WIKI_PATH}/wikis/engineering/wiki/concepts/engineering-report-house-style.md`: the report skeleton and register.
 
 ### Documents consulted
 - `docs/domains/asset-integrity/ffs-architecture.md`: the canonical path is `assessment/`, extended additively.
@@ -85,7 +85,7 @@ The cards gated at later phases (P0: S02, S03, S05, B12; P1: B05–B09, B14, B15
 7. A self-contained house-style report.
 
 ### Evidence (embedded verification)
-The frozen closed-form values below were computed in the main session on 2026-09-24 with `D:\ws\digitalmodel\.venv\Scripts\python.exe`. The inputs are generic, not taken from the published case.
+The frozen closed-form values below were computed in the main session on 2026-09-24 with `.venv/Scripts/python.exe`. The inputs are generic, not taken from the published case.
 
 ## Artifact Map
 
@@ -106,7 +106,7 @@ The frozen closed-form values below were computed in the main session on 2026-09
 | P4 | Validation record | `docs/domains/asset-integrity/crack-fe-validation-record.md` |
 
 ## Deliverable
-A phased `crack_fe_ffs` capability. It will build and solve our own FE crack model, extract K and J along the crack front at several depths, and assess each state on the API 579 Part 9 FAD. It will also integrate fatigue growth to the limit state and report sensitivities, consistency findings and evidence completeness. The output is a self-contained house-style report on an assumed design basis.
+A phased `crack_fe_ffs` capability. It will build and solve a project-specific FE crack model, extract K and J along the crack front at several depths, and assess each state on the API 579 Part 9 FAD. It will also integrate fatigue growth to the limit state and report sensitivities, consistency findings and evidence completeness. The output is a self-contained house-style report on an assumed design basis.
 
 ## Phase plan
 
@@ -173,7 +173,7 @@ Gated by cards B05–B09, B14, B15, R01 and R02.
 - `crack_checks.py`:
   - the implied crack-opening stress against σ_ref, with the tolerance band fixed here at 0.5–2.0;
   - SSY r_p against the ligament;
-  - shakedown, as elastic range against 2σy, with the range taken from our own FE;
+  - shakedown, as elastic range against 2σy, with the range taken from the project FE;
   - **Lr > 1 at any state marks the growth result CONDITIONAL** (B15).
 - `crack_fad.py`: the docstring correction (R01) and the level3_escalation pointer are text-only changes.
 
@@ -217,7 +217,7 @@ Gated by card R06 (recommended: CalcReport).
 - **No reference to the published case.**
 - FAD and growth figures are inline SVG without clipPath, patterns or filters (per `svg-pdf-portability.md`). Captions go below each object.
 - Table values are emitted as `data-src` attributes that point into the result record. The trace test checks those cells only, which resolves Codex r1 #7.
-- The report shall pass the register lint and include no external resources. It is generated into `D:\ws\output\crack-fe-weldolet\` and committed only after owner approval (G04).
+- The report shall pass the register lint and include no external resources. It is generated into `${OUTPUT_ROOT}/crack-fe-weldolet/` and committed only after owner approval (G04).
 
 ## Rights matrix (Codex r2 #3)
 
@@ -233,7 +233,7 @@ Owner card G10 was decided on 2026-09-24 (commit_both): both owner rows are comm
 |---|---|---|
 | Paris–Erdogan integration, √a closed form, Simpson quadrature | PD | Textbook fracture mechanics |
 | Irwin plastic-zone size; energy-equivalent Keq | PD | Textbook LEFM |
-| Newman–Raju surface-flaw K (verification comparator) | RC + PD | `crack_fad.newman_raju_k`; NASA TM-83200 (US Government work) |
+| Newman–Raju surface-flaw K (verification comparator) | RC + PD | `crack_fad.newman_raju_k`; NASA TM-83200 (United States Government work) |
 | Centre-crack secant (Feddersen) K | PD | Textbook handbook solution |
 | BS 7910 Option 1 curve | RC | Already in `crack_fad.fad_curve_option1` |
 | API 579 Level 2 curve form (1−0.14Lr²)(0.3+0.7e^(−0.65Lr⁶)) | **committable (owner G10, 2026-09-24)** | Also published as the original R6 Option 1 curve in the open literature |
@@ -242,7 +242,7 @@ Owner card G10 was decided on 2026-09-24 (commit_both): both owner rows are comm
 | Threshold temperature rule (E-ratio) | UI + PD | The rule is a user choice; the E-ratio scaling is textbook |
 | Growth-law constants, PSFs, E(T), σy, σu, Kmat | UI | `input.yml` only, each with a basis string |
 | Citation metadata (code_id, publisher, revision) | **committable (owner G10, 2026-09-24)** | Bibliographic facts only; no clause text |
-| APDL decks for the weldolet and verification plate | PD | Our own model; assumed geometry |
+| APDL decks for the weldolet and verification plate | PD | Project model; assumed geometry |
 
 **Checklist criterion.** Each phase's code review ticks every committed function against this matrix. It also greps the diff for clause-numbered text blocks and for numeric tables of more than 3 rows that carry no `input.yml` provenance.
 

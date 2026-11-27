@@ -10,7 +10,7 @@ Deploy a comprehensive web resource contextualization system that **actually fet
 
 ### 1. Verify AssetUtilities Module Exists
 ```bash
-ls -la /mnt/github/github/assetutilities/src/modules/web-contextualization/
+ls -la ../assetutilities/src/modules/web-contextualization/
 ```
 
 If not present, create it first using the code provided below.
@@ -24,7 +24,7 @@ pip install requests PyPDF2 pdfplumber PyMuPDF sentence-transformers numpy pyyam
 
 ### STEP 1: Create Central Module in AssetUtilities
 
-Create these files in `/mnt/github/github/assetutilities/src/modules/web-contextualization/`:
+Create these files in `../assetutilities/src/modules/web-contextualization/`:
 
 #### A. `__init__.py`
 ```python
@@ -40,7 +40,7 @@ __all__ = ["WebContextualizer", "PDFProcessor", "ContentIndexer", "ResourceFetch
 ```
 
 #### B. Main Files (Get from this repository)
-Copy these files from `/mnt/github/github/digitalmodel/` to assetutilities:
+Copy these files from `` to assetutilities:
 - `web_contextualizer.py` - Main orchestrator (600+ lines)
 - `pdf_processor.py` - PDF processing (300+ lines)
 - `resource_fetcher.py` - URL fetching (400+ lines)
@@ -93,7 +93,7 @@ import sys
 from pathlib import Path
 
 # Import from AssetUtilities
-assetutilities_path = Path("/mnt/github/github/assetutilities")
+assetutilities_path = Path("../assetutilities")
 if assetutilities_path.exists():
     sys.path.insert(0, str(assetutilities_path / "src" / "modules"))
     
@@ -145,7 +145,7 @@ from pathlib import Path
 
 # Setup paths
 sys.path.insert(0, str(Path(__file__).parent.parent))
-sys.path.insert(0, "/mnt/github/github/assetutilities/src/modules")
+sys.path.insert(0, "../assetutilities/src/modules")
 
 from web_contextualization import WebContextualizer
 
@@ -201,7 +201,7 @@ def process_existing_agents(repo_path):
     if not agents_dir.exists():
         return
     
-    sys.path.insert(0, "/mnt/github/github/assetutilities/src/modules")
+    sys.path.insert(0, "../assetutilities/src/modules")
     from web_contextualization import WebContextualizer
     
     for agent_dir in agents_dir.iterdir():
@@ -242,7 +242,7 @@ Add to each repo's `create-module-agent.py`:
 def initialize_web_contextualization(agent_dir, agent_type):
     """Initialize with contextualized web resources."""
     
-    sys.path.insert(0, "/mnt/github/github/assetutilities/src/modules")
+    sys.path.insert(0, "../assetutilities/src/modules")
     from web_contextualization import WebContextualizer
     
     ctx = WebContextualizer(agent_dir)
@@ -334,7 +334,7 @@ Context available: ✅ 16,000 tokens
 **IMPORTANT**: When issues are encountered in ANY repository:
 
 1. **Fix in AssetUtilities FIRST**
-   - Navigate to `/mnt/github/github/assetutilities/src/modules/web-contextualization/`
+   - Navigate to `../assetutilities/src/modules/web-contextualization/`
    - Make improvements to the central module
    - Test the fix
 

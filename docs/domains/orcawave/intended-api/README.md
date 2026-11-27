@@ -4,7 +4,7 @@ Seven analysis capabilities documented in the AceEngineer marine-offshore
 skill corpus against an API that does not exist in `digitalmodel`.
 
 Discovered when a real engagement followed one of these skills and found the
-import missing (`aceengineer-strategy#262`, then `#267`). A sweep showed 134
+import missing (`commercial outreach issue 262`, then `#267`). A sweep showed 134
 documented paths across 28 skills did not resolve; most were stale after the
 `solvers/` and `hydrodynamics/` reorganisation and were repointed. These seven
 were not drift — the capability was never built.

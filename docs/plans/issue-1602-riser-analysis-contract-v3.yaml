@@ -4,10 +4,10 @@ status: planning-interface
 authority_issue: https://github.com/vamseeachanta/digitalmodel/issues/1602
 review_candidate_plan:
   path: 2026-07-18-issue-1602-riser-host-diffraction-plan.html
-  sha256: 2e5c98dbce7833fe79be527e6f3db4dc1a0d27f301a12c45b316500b66b738b5
+  sha256: 8e6ef2e551fde4c61e3373a06a32e701d54cca2541b10b24c46fd416ea9e38c9  # Before identifier cleanup: 2e5c98dbce7833fe79be527e6f3db4dc1a0d27f301a12c45b316500b66b738b5
 approved_architecture_design:
   path: ../superpowers/specs/2026-07-18-riser-host-diffraction-monitoring-design.html
-  sha256: 05bf52bf3453477e8bb8734c74a73d1b560869e80dd86890006ab3e0e1d3c5d0
+  sha256: 1b59e1fd3bf7baa46bdc2dc112b1e2ca3356b9dd4f080ec1e7aa5a0f20ad8e05  # Before identifier cleanup: 05bf52bf3453477e8bb8734c74a73d1b560869e80dd86890006ab3e0e1d3c5d0
   approval_scope: architecture_and_original_issue_decomposition_only
 resource_intelligence_evidence:
   path: evidence/issue-1602-drive-index-resource-intel-2026-07-18.json
@@ -17,7 +17,7 @@ composition:
   base:
     component_id: solver_neutral_base_v2
     path: issue-1602-riser-analysis-contract-v1.yaml
-    sha256: 7e86ae789ffbd329aa06d503fb0c419385132e8a533ce99a6de8a87b1696b1b0
+    sha256: 238d6cc87bf117128379d8c38c7864b20b087b23233571592839f707a5674d39  # Before identifier cleanup: 7e86ae789ffbd329aa06d503fb0c419385132e8a533ce99a6de8a87b1696b1b0
     retained_scope: solver_neutral_SSOT_execution_release_and_closeout_contract
     identity_mode: legacy_root_assigned
     expected_in_file_contract_id: digitalmodel-riser-analysis-parent-interface
@@ -26,11 +26,11 @@ composition:
   components:
     - path: issue-1602-riser-host-motion-contract-v3.yaml
       component_id: host_motion_component
-      sha256: 1395039047aa440de25a3f6c52433b23b5f8f1146c25f590efd8f2e449652a14
+      sha256: 71d4913a69893bcc8def25c9d076246899cf9c6a906d155697a9ec370ebdf5d5  # Before identifier cleanup: 1395039047aa440de25a3f6c52433b23b5f8f1146c25f590efd8f2e449652a14
       retained_scope: host_hydrodynamics_motion_and_tracer_extensions
     - path: issue-1602-riser-assurance-contract-v3.yaml
       component_id: assurance_component
-      sha256: 83b8bb2ebbdf9328e8ad40e94e1a3a50340845f73137ddf4b686294b28d13fce
+      sha256: 1f950d2de949ca12014e1e2e366fe52ad1cce5c1e4be4bbbcee8fdda3d64f85c  # Before identifier cleanup: 83b8bb2ebbdf9328e8ad40e94e1a3a50340845f73137ddf4b686294b28d13fce
       retained_scope: invariants_validation_fixtures_and_closeout_extensions
   load_order: [solver_neutral_base_v2, host_motion_component,
     assurance_component]

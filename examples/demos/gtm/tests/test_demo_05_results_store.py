@@ -179,11 +179,11 @@ class _Cfg:
     tiein_unsupported_span_m = None
     tiein_include_self_weight = False
     tiein_deflection_coeff = 76.8
-    vessels_path = Path("/mnt/local-analysis/digitalmodel/examples/demos/gtm/data/csv_hlv_vessels.json")
-    jumpers_path = Path("/mnt/local-analysis/digitalmodel/examples/demos/gtm/data/rigid_jumpers.json")
-    results_root = Path("/mnt/local-analysis/digitalmodel/examples/demos/gtm/results")
-    output_root = Path("/mnt/local-analysis/digitalmodel/examples/demos/gtm/output")
-    source_path = Path("/mnt/local-analysis/digitalmodel/examples/demos/gtm/inputs/demo_05_jumper.yml")
+    vessels_path = GTM_DIR / "data/csv_hlv_vessels.json"
+    jumpers_path = GTM_DIR / "data/rigid_jumpers.json"
+    results_root = GTM_DIR / "results"
+    output_root = GTM_DIR / "output"
+    source_path = GTM_DIR / "inputs/demo_05_jumper.yml"
 
 
 # ---------------------------------------------------------------------------

@@ -192,7 +192,12 @@ def generate(mirror):
         if "exists" in paths.values():
             refs = archive("for-each-ref", "--sort=refname", "--format=%(refname)",
                            "--contains", full).decode().splitlines()
-            archived_refs[full] = refs
+            # Workstation backup branch names identify the machine used to save them.
+            # Preserve resolvable archive refs for each existence claim.
+            retained = [ref for ref in refs if not ref.startswith("refs/heads/backup/")]
+            if not retained:
+                raise ValueError(f"No non-backup archive ref contains {full}")
+            archived_refs[full] = retained
         archived = tree_files(archive, full, paths)
         root = tree_files(local, RESET_ROOT, paths)
         for path, rule in paths.items():

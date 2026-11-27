@@ -9,7 +9,7 @@ standing-wave montage. Rendered directly from the ``alpha.water`` VOF field
 mocked. Water is a single sequential blue (light air -> navy water), matching the
 page's visual system.
 
-    uv run python scripts/cfd/render_sloshing_viz.py --work-dir /mnt/local-analysis/sloshing_cfd_work
+    uv run python scripts/cfd/render_sloshing_viz.py --work-dir $HOME/sloshing_cfd_work
 
 Outputs (small, optimised) under docs/api/cfd/viz/.
 """
@@ -206,7 +206,7 @@ def make_effect_sidebyside(left: Path, right: Path, out_gif: Path, out_png: Path
 
 def main(argv: List[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description="Render sloshing CFD field visualizations (#1437)")
-    ap.add_argument("--work-dir", type=Path, default=Path("/mnt/local-analysis/sloshing_cfd_work"))
+    ap.add_argument("--work-dir", type=Path, default=Path.home() / "sloshing_cfd_work")
     ap.add_argument("--only", choices=["all", "shallow"], default="all",
                     help="render only the named asset group")
     args = ap.parse_args(argv)

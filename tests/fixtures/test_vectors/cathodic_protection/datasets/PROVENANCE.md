@@ -1,14 +1,14 @@
 # Provenance: DNV-RP-B401 / DNV-RP-F103 table fixtures
 
 These CSVs are byte-for-byte copies of the dataset files held in the private
-`vamseeachanta/llm-wiki` repository. They are the test oracles for
+`knowledge base repository` repository. They are the test oracles for
 `src/digitalmodel/cathodic_protection/b401_tables.py` and `f103_tables.py`
 (issue #2207). Do not edit them here; fix the wiki dataset and re-copy.
 
 | Item | Value |
 |---|---|
 | Copy date | 2026-09-25 |
-| Copied from | `llm-wiki/wikis/engineering-standards/wiki/datasets/` (sibling checkout `C:\ws\llm-wiki`) |
+| Copied from | `${LLM_WIKI_PATH}/wikis/engineering-standards/wiki/datasets/` (sibling checkout `${LLM_WIKI_PATH}`) |
 | Copy check | `filecmp.cmp(..., shallow=False)` identical for all 11 files |
 
 ## DNV-RP-B401 (`dnv-rp-b401/2005-with-2008-amendments/`)
@@ -68,7 +68,7 @@ These CSVs are byte-for-byte copies of the dataset files held in the private
 Unlike the 2005/2010 fixtures above, these CSVs are **hand transcriptions**
 from the text layer of the licensed PDFs (`pdftotext`, hand-verified against
 the page images 2026-09-26). They hold table numbers, captions and numeric
-cells only; no clause prose. The canonical llm-wiki pages
+cells only; no clause prose. The canonical knowledge-base pages
 (`dnv-rp-b401-2017.md`, `dnv-rp-b401-2021.md`, `dnv-rp-f103-2019.md`) are
 created in parallel with the same frontmatter; when the wiki gains dataset
 CSVs for these editions, replace these files with byte-for-byte copies and

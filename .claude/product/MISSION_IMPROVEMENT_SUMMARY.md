@@ -21,7 +21,7 @@ Successfully upgraded the DigitalModel mission document from a basic product des
 
 ### 1. Updated mission.md (v2.0.0)
 
-**Location:** `/mnt/github/workspace-hub/digitalmodel/.agent-os/product/mission.md`
+**Location:** `.agent-os/product/mission.md`
 
 **Major Improvements:**
 - ✅ **Strengthened Pitch** - Leads with transformation and quantified impact (40hr → 2hr)
@@ -33,7 +33,7 @@ Successfully upgraded the DigitalModel mission document from a basic product des
 
 ### 2. Comparison Document
 
-**Location:** `/mnt/github/workspace-hub/digitalmodel/.agent-os/product/mission-comparison-v1-v2.md`
+**Location:** `.agent-os/product/mission-comparison-v1-v2.md`
 
 **Contents:**
 - Section-by-section before/after analysis
@@ -43,7 +43,7 @@ Successfully upgraded the DigitalModel mission document from a basic product des
 
 ### 3. Validation Checklist
 
-**Location:** `/mnt/github/workspace-hub/digitalmodel/.agent-os/product/mission-validation-checklist.md`
+**Location:** `.agent-os/product/mission-validation-checklist.md`
 
 **Contents:**
 - Quick validation (5 minutes)
@@ -125,10 +125,10 @@ Successfully upgraded the DigitalModel mission document from a basic product des
 
 **Enhanced from simple list to strategic categories:**
 - Core Dependencies (assetutilities)
-- Content Sources (rock-oil-field)
+- Content Sources (field engineering repository)
 - Complementary Tools (worldenergydata)
 - Development Infrastructure (workspace-hub)
-- Future Integration Candidates (frontierdeepwater, client-c29b, contractor)
+- Future Integration Candidates (exploration engineering repository, client-c29b, contractor)
 
 **Impact:** 🔥 Shows ecosystem thinking, cross-repository value
 

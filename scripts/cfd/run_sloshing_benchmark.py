@@ -28,7 +28,7 @@ Run inside an OpenFOAM environment, e.g.::
 
     source /usr/lib/openfoam/openfoam2312/etc/bashrc
     uv run python scripts/cfd/run_sloshing_benchmark.py all \
-        --work-dir /mnt/local-analysis/sloshing_cfd_work
+        --work-dir $HOME/sloshing_cfd_work
 """
 from __future__ import annotations
 
@@ -262,7 +262,7 @@ def main(argv: List[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description="2D CFD sloshing benchmark battery (#1429)")
     ap.add_argument("mode", choices=("free-decay", "forced-roll", "all"))
     ap.add_argument("--work-dir", type=Path,
-                    default=Path("/mnt/local-analysis/sloshing_cfd_work"),
+                    default=Path.home() / "sloshing_cfd_work",
                     help="parent dir for the heavy OpenFOAM case trees (outside the repo)")
     args = ap.parse_args(argv)
     args.work_dir.mkdir(parents=True, exist_ok=True)

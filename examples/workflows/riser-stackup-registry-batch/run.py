@@ -5,7 +5,7 @@ stack-up registry (#1453, epic #1279).
 Iterates every ``riser_stackup`` row with ``stackup_type =
 as-planned-stackup`` and ``operation = drilling`` (the public dm-side
 handles), resolves each row's wiki-side ``16q-min-top-tension`` calc
-contract (private llm-wiki registry + source pages, llm-wiki#826), and where
+contract (private knowledge base registry + source pages, knowledge base issue 826), and where
 the contract carries the chain inputs computes the 16Q minimum vertical top
 tension through ``digitalmodel.drilling_riser.assembly``. Rows whose source
 page carries a text-extractable joint schedule + joint library instead run
@@ -13,14 +13,14 @@ the #1458 schedule-assembly path (``drilling_riser.schedule_assembly``):
 string weight assembled from the wiki schedule, 16Q minimum computed at the
 heaviest documented mud weight, and the reason column reports the delta
 band against the wave-3 ``16q-min-tension-endpoints`` contract
-(llm-wiki#828) — status ``runnable-schedule``. Rows whose source workbook
+(knowledge base issue 828) — status ``runnable-schedule``. Rows whose source workbook
 carries a shallow-water tension-to-rotate top-tension result are emitted as
 ``runnable-source`` without recasting them as an API RP 16Q chain. Remaining
 rows are ``missing-inputs`` with a reason (``fields_unknown`` taxonomy).
 
 Run (in-context; the wiki clone is required for values)::
 
-    LLM_WIKI_PATH=/path/to/llm-wiki \
+    LLM_WIKI_PATH=/path/to/knowledge-base \
         uv run python examples/workflows/riser-stackup-registry-batch/run.py
 
 Writes ``results/registry_batch_16q.csv`` next to this script and prints the
@@ -61,7 +61,7 @@ OUTPUT_CSV = HERE / "results" / "registry_batch_16q.csv"
 CALC = "16q-min-top-tension"
 SOURCE_TENSION_CALC = "shallow-water-tension-to-rotate"
 #: fields_unknown taxonomy (issue #1453 scope 3).
-REASON_WIKI_UNAVAILABLE = "llm-wiki clone unavailable (values live wiki-side)"
+REASON_WIKI_UNAVAILABLE = "knowledge-base clone unavailable (values live wiki-side)"
 REASON_RESULT_DIALECT_ONLY = (
     "fields_unknown: wiki carries result-dialect contracts only "
     "(no golden 16Q chain yet)"

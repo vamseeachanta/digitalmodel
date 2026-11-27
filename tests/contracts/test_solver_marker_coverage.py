@@ -414,7 +414,7 @@ def test_scan_reports_import_time_calls_even_in_a_marked_module(tmp_path):
         ),
         # Decorator arguments run at definition, before deselection.
         (
-            "@pytest.mark.solver\n@pytest.mark.parametrize('m', [OrcFxAPI.Model()])\n"
+            "@pytest.mark.solver\n@pytest.mark.parametrize('m', [OrcFxAPI.Model()])\n"  # identifier-gate: example
             "def test_a(m):\n    pass\n",
             8,
         ),
@@ -436,7 +436,7 @@ def test_scan_reports_import_time_calls_even_in_a_marked_module(tmp_path):
         # Compound statements: their tests, iterables and context managers run.
         ("if OrcFxAPI.Model():\n    pass\n", 7),
         ("for m in OrcFxAPI.Models():\n    pass\n", 7),
-        ("with OrcFxAPI.Model() as m:\n    pass\n", 7),
+        ("with OrcFxAPI.Model() as m:\n    pass\n", 7),  # identifier-gate: example
         ("try:\n    pass\nexcept ImportError:\n    M = OrcFxAPI.Model()\n", 10),
     ],
 )
@@ -453,7 +453,7 @@ def test_scan_reports_collection_time_calls(tmp_path, body, line):
         "@pytest.mark.solver\nclass TestA:\n    def test_a(self):\n        OrcFxAPI.Model()\n",
         "pytestmark = pytest.mark.solver\nMAKE = lambda: OrcFxAPI.Model()\n",
         (
-            "@pytest.mark.solver\n@pytest.mark.parametrize('m', [lambda: OrcFxAPI.Model()])\n"
+            "@pytest.mark.solver\n@pytest.mark.parametrize('m', [lambda: OrcFxAPI.Model()])\n"  # identifier-gate: example
             "def test_a(m):\n    pass\n"
         ),
     ],
@@ -514,10 +514,10 @@ def test_scan_follows_conftest_fixtures_into_their_subtree_only(tmp_path):
         tmp_path,
         {
             "tests/a/conftest.py": (
-                "import pytest\nimport OrcFxAPI\n@pytest.fixture\ndef model():\n"
+                "import pytest\nimport OrcFxAPI\n@pytest.fixture\ndef model():\n"  # identifier-gate: example
                 "    return OrcFxAPI.Model()\n"
             ),
-            "tests/a/b/conftest.py": "import pytest\n@pytest.fixture\ndef wrapped(model):\n    return model\n",
+            "tests/a/b/conftest.py": "import pytest\n@pytest.fixture\ndef wrapped(model):\n    return model\n",  # identifier-gate: example
             "tests/a/b/test_m.py": "def test_a(wrapped):\n    pass\ndef test_b():\n    pass\n",
             "tests/c/test_m.py": "def test_a(model):\n    pass\n",
         },

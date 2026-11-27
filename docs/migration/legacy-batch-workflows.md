@@ -8,7 +8,7 @@
 > (which covers the high-level module consolidation). This doc covers the
 > **batch / parametric run engine** specifically.
 
-Source repo mapped: `/mnt/remote/ace-linux-1/ace/aceengineercode`
+Source repo mapped: `${ACE_DATA_ROOT}/aceengineercode`
 Target repo: `digitalmodel` (this repo)
 
 ---
@@ -26,7 +26,7 @@ after a light sanity cleanup.
 
 ---
 
-## 2. The legacy mechanism (what we're porting)
+## 2. The legacy mechanism (scope of the port)
 
 Confirmed by reading the source (not the README). The legacy engine is:
 

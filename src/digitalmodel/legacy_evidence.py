@@ -12,7 +12,7 @@ from pathlib import Path, PurePosixPath
 
 RESET_ROOT = "5d3f3c9f9380c369a9117f34d1a2ce7082976463"
 MANIFEST = Path("atlases/legacy-evidence/manifest.json")
-MANIFEST_SHA256 = "1da37044ee67f360cb69632e30b67421c9de8ed5f5bdfacfb177c247ec7ed18e"
+MANIFEST_SHA256 = "5d27313d69eb1c7c21558ba0dc1faadbe55816ec58851bb59c4220affe91f504"
 
 
 def git_output(repo_args: list[str], *args: str) -> bytes:

@@ -8,12 +8,12 @@
 
 Issue [284](https://github.com/vamseeachanta/digitalmodel/issues/284) (WRK-133) covers the draft OrcaFlex sublicensing agreement. The draft needs both parties’ street addresses, a clause-by-clause check against the governing PDF, and a definition of “third party” that specifies who is covered. The issue’s “Reference Documents” section identifies the governing PDF. The agreement repository holds the Word and Markdown drafts, update notes, and drafting prompt under `admin/orcaflex/`.
 
-**Stale-flag:** This issue is misfiled in `digitalmodel`. No deliverable in the acceptance criteria modifies code or docs in the digitalmodel tree — every output lands in `aceengineer-admin/admin/orcaflex/`. Recommend transferring the issue to `vamseeachanta/aceengineer-admin` (or whichever repo hosts the contracts surface) before execution. The plan below assumes the executor will work in `aceengineer-admin` regardless of where the issue is finally hosted.
+**Stale-flag:** This issue is misfiled in `digitalmodel`. No deliverable in the acceptance criteria modifies code or docs in the digitalmodel tree — every output lands in `${ADMIN_REPO_ROOT}/admin/orcaflex/`. Recommend transferring the issue to `business administration repository` (or whichever repo hosts the contracts surface) before execution. The plan below assumes the executor will work in `business administration repository` regardless of where the issue is finally hosted.
 
 ## Plan
 
 ### Task 1 — Locate and read both source docs
-In `aceengineer-admin/admin/orcaflex/`, open `client-4e09-aceengineer-orcaflex.md` (current draft, plain-text editable) and `client-4e09-OrcaFlex-agreement.pdf` (upstream binding terms). Read `agreement-update-notes.md` and `user_prompt.md` for prior change requests already captured.
+In `${ADMIN_REPO_ROOT}/admin/orcaflex/`, open `client-4e09-aceengineer-orcaflex.md` (current draft, plain-text editable) and `client-4e09-OrcaFlex-agreement.pdf` (upstream binding terms). Read `agreement-update-notes.md` and `user_prompt.md` for prior change requests already captured.
 
 ### Task 2 — Insert both party addresses
 Enter the street addresses of the sublicensor and sublicensee in the parties block at the top of the Markdown draft. Match both legal names to the governing PDF and preserve the formatting of unrelated paragraphs.
@@ -38,6 +38,6 @@ Re-export `client-4e09-aceengineer-orcaflex.md` to `client-4e09-aceengineer-orca
 
 ## Open questions
 
-- **Repo location:** confirm with the issue owner whether to transfer the issue to `aceengineer-admin` and close `digitalmodel#284` with a redirect, or keep the tracking issue here and work in the other repo.
+- **Repo location:** confirm with the issue owner whether to transfer the issue to `business administration repository` and close `digitalmodel#284` with a redirect, or keep the tracking issue here and work in the other repo.
 - **Legal review gate:** does this draft go to outside counsel before the human signature stage, or does the in-house workflow stop at this plan's deliverables?
 - **Scope of "3rd party":** the issue does not name candidate parties — flag for owner to enumerate (subcontractors / client engineers / auditors) before the executor commits to definition wording.

@@ -211,11 +211,11 @@ The enhanced workflow integrates with the AssetUtilities hub to share components
 
 #### Supported Repositories
 
-**Engineering:** aceengineer-website, aceengineercode, digitalmodel, energy, rock-oil-field, contractor
-**Project Management:** <project-archive>, client_projects, investments, teamresumes
+**Engineering:** aceengineer-website, aceengineercode, digitalmodel, energy, field engineering repository, contractor
+**Project Management:** <project-archive>, client project repository, investment tracking repository, team records repository
 **Infrastructure:** assethold, pyproject-starter, worldenergydata
 **Development:** ai-native-traditional-eng
-**Documentation:** frontierdeepwater, OGManufacturing
+**Documentation:** exploration engineering repository, equipment design repository
 
 #### Reference Patterns
 

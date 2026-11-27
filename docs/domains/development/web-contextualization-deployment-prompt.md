@@ -6,7 +6,7 @@
 Implement comprehensive web resource contextualization that actually fetches, caches, processes PDFs, and indexes content for all module agents. This replaces the current "URL-only" storage with real content processing.
 
 ### Core Implementation Location
-**Central Library**: `/mnt/github/github/assetutilities/src/modules/web-contextualization/`
+**Central Library**: `../assetutilities/src/modules/web-contextualization/`
 
 All 25 repositories should import and use this shared module rather than duplicating code.
 
@@ -23,7 +23,7 @@ import sys
 from pathlib import Path
 
 # Add assetutilities to path
-assetutilities_path = Path("/mnt/github/github/assetutilities")
+assetutilities_path = Path("../assetutilities")
 if assetutilities_path.exists():
     sys.path.insert(0, str(assetutilities_path / "src" / "modules"))
     
@@ -51,7 +51,7 @@ from pathlib import Path
 
 # Add paths
 sys.path.insert(0, str(Path(__file__).parent.parent))
-assetutilities_path = Path("/mnt/github/github/assetutilities")
+assetutilities_path = Path("../assetutilities")
 if assetutilities_path.exists():
     sys.path.insert(0, str(assetutilities_path / "src" / "modules"))
 
@@ -304,7 +304,7 @@ from pathlib import Path
 def deploy_to_all_repos():
     """Deploy contextualization to all repos with agent_os."""
     
-    base_path = Path("/mnt/github/github")
+    base_path = Path("..")
     repos = [d for d in base_path.iterdir() 
              if d.is_dir() and (d / "agent_os").exists()]
     
@@ -397,7 +397,7 @@ python tools/manage-agent-resources.py index-stats orcaflex
 
 When issues are encountered:
 
-1. **Fix in AssetUtilities First**: All improvements should be made to `/mnt/github/github/assetutilities/src/modules/web-contextualization/`
+1. **Fix in AssetUtilities First**: All improvements should be made to `../assetutilities/src/modules/web-contextualization/`
 
 2. **Common Issues to Handle**:
    - PDF parsing failures → Add fallback methods

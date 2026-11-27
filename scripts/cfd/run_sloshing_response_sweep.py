@@ -256,7 +256,7 @@ def _collect(
 def main(argv: List[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description="Forced-roll sloshing frequency-response sweep (#1433)")
     ap.add_argument("command", choices=("generate", "run-one", "collect", "all"))
-    ap.add_argument("--work-dir", type=Path, default=Path("/mnt/local-analysis/sloshing_cfd_work"))
+    ap.add_argument("--work-dir", type=Path, default=Path.home() / "sloshing_cfd_work")
     ap.add_argument("--case-dir", type=Path, help="case directory for run-one")
     ap.add_argument("--breadth", type=float, default=BREADTH)
     ap.add_argument("--tank-height", type=float, default=TANK_HEIGHT)

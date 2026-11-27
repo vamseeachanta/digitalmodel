@@ -11,7 +11,7 @@ Each problem is solved and then **connected as a dot**, not left as a one-off:
 - **Quantitative** problems → a reusable function in the matching `src/digitalmodel/<domain>/`
   module + a regression test pinning the Collide numbers. The problem YAML records
   `domain_function:`.
-- **Conceptual** problems → an llm-wiki concept page (`wikis/<discipline>/wiki/concepts/`,
+- **Conceptual** problems → a knowledge-base concept page (`wikis/<discipline>/wiki/concepts/`,
   the source Deckhand's `wells-subsurface` pack reads). The YAML records `wiki_concept:`.
 - Every problem also gets a **Deckhand-letterhead HTML brief** (`render_brief.py`).
 
@@ -30,7 +30,7 @@ and the wiki.
 - **2 digitalmodel domain functions** + regression tests: `production_engineering.ipr_models.LinearIpr`
   (6/19 PI, reused) and **new** `reservoir.volumetrics` (5/21 OOIP). Tests: `ipr_models` 24/24,
   `volumetrics` 7/7.
-- **12 new llm-wiki concept pages** (fluid-viscosity, reservoir-drive-mechanisms, thermal-recovery-eor,
+- **12 new knowledge base concept pages** (fluid-viscosity, reservoir-drive-mechanisms, thermal-recovery-eor,
   spontaneous-potential-log, depositional-environments, petroleum-system-elements, acid-fracturing,
   sidetracking, water-saturation-models, pressure-transient-analysis, streamline-simulation,
   wellbore-stability).
@@ -39,8 +39,8 @@ and the wiki.
 
 | | Branch | Worktree | PR |
 |---|---|---|---|
-| digitalmodel | `feat/collide-pe-solver` | `/mnt/local-analysis/wt-digitalmodel-collide` | **#871** |
-| llm-wiki | `feat/collide-pe-concepts` | `/mnt/local-analysis/wt-llmwiki-collide` | **#745** |
+| digitalmodel | `feat/collide-pe-solver` | `${WORKSPACE_ROOT}/wt-digitalmodel-collide` | **#871** |
+| knowledge base | `feat/collide-pe-concepts` | `${WORKSPACE_ROOT}/wt-llmwiki-collide` | **#745** |
 
 Both pushed (`--no-verify`; PR CI runs gates). Worktrees off `origin/main` (NOT the dirty main
 checkouts). Epics: **#836** (solve the series), **#837** (Deckhand/Telegram routing), **#851**
@@ -48,7 +48,7 @@ checkouts). Epics: **#836** (solve the series), **#837** (Deckhand/Telegram rout
 
 ## Pending — user actions / decisions
 
-1. **Review + merge PRs #871 and #745.** llm-wiki pages were authored at concept depth and should
+1. **Review + merge PRs #871 and #745.** knowledge-base pages were authored at concept depth and should
    pass the wiki's **verification-queue / index-rebuild** before merge (not run here). Source
    citations are canonical texts, not yet source-extracted into `wiki/sources/`.
 2. **#837 Deckhand/Telegram routing** — open design Qs: API-key custody on the gateway, read-vs-write
@@ -64,7 +64,7 @@ Next by hotness: 2/10 (32), 2/26 (31), 2/4 (31), then the tail below ~31 (engage
 Per problem:
 1. Scrape text from Collide (browser; auth-gated — drive the logged-in Chrome via the MCP tools;
    if the extension drops, reconnect with `tabs_context_mcp`).
-2. Solve → route (calc → digitalmodel domain+test, concept → llm-wiki page or existing).
+2. Solve → route (calc → digitalmodel domain+test, concept → knowledge-base page or existing).
 3. `uv run docs/collide_pe/render_brief.py --all`; create issue under #836; comment the answer.
 4. Update `backlog.yml` (`wave_N`) + Epic #836 checklist; commit both worktrees; `git push --no-verify`.
 
@@ -74,9 +74,9 @@ wiki concepts, the substrates have caught up with the community's core topics.
 
 ## Gotchas
 
-- digitalmodel & llm-wiki `main` checkouts were dirty / shared — always use the worktrees off
+- digitalmodel & knowledge base `main` checkouts were dirty / shared — always use the worktrees off
   `origin/main`; never touch `main`.
-- `/tmp` worktrees get auto-pruned on this host — worktrees live under `/mnt/local-analysis/`.
-- llm-wiki `sources:` frontmatter keys are free-form (no registry), so canonical-text citations
+- `/tmp` worktrees get auto-pruned on this host — worktrees live under `${WORKSPACE_ROOT}/`.
+- knowledge base `sources:` frontmatter keys are free-form (no registry), so canonical-text citations
   don't break a validator.
 - Not every concept has an upstream-wiki home (naphtha = downstream); keep those brief-only.

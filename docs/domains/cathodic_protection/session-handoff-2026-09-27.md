@@ -7,7 +7,7 @@
 | Issue | Pull request(s) | Delivered |
 |---|---|---|
 | #2207 | #2216 | Cited, edition-keyed DNV-RP-B401 / DNV-RP-F103 table modules with CSV-backed tests |
-| #2208 | #2228, llm-wiki #921 | Real editions: B401 2005/2010/2017/2021, F103 2010/2019 |
+| #2208 | #2228, knowledge base issue 921 | Real editions: B401 2005/2010/2017/2021, F103 2010/2019 |
 | #2209 | #2215 | Four arithmetic fixes; four models quarantined |
 | #2210 | #2220 | Engine adapter, PASS/FAIL status, demos retired to fixtures |
 | #2211 | #2217 | Single formula kernel, F103 bracelet module, full B401 Sec. 7 loop |

@@ -63,7 +63,7 @@ EXPECTED_CHILD_ISSUES = {
     "https://github.com/vamseeachanta/digitalmodel/issues/811",
     "https://github.com/vamseeachanta/digitalmodel/issues/138",
     "https://github.com/vamseeachanta/digitalmodel/issues/1609",
-    "https://github.com/vamseeachanta/deckhand/issues/568",
+    "https://api.github.com/repositories/1257558103/issues/568",
     "https://github.com/vamseeachanta/digitalmodel/issues/1611",
     "https://github.com/vamseeachanta/digitalmodel/issues/1604",
     "https://github.com/vamseeachanta/aceengineer-website/issues/75",

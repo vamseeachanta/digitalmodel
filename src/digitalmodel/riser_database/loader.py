@@ -7,7 +7,7 @@ Loads the three public reference tables under ``data/riser_database/``:
   ``config/pipe/*riser*.yml``). No ACE_SHARE rows in this slice (#1199d).
 * ``standards_crosswalk`` — clause IDENTIFIERS + ``wiki_path`` only. Licensed
   DNV/API table VALUES never live in this public repo; they resolve through
-  ``CitedValue`` getters against the private llm-wiki
+  ``CitedValue`` getters against the private knowledge base
   (see ``riser_database.getters``).
 * ``material_sn_scf_dff`` — references into ``fatigue/sn_curves`` curve ids
   (the real riser fatigue consumer) + getter names. References, not values.

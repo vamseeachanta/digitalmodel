@@ -76,8 +76,8 @@ plan artifact. The following live state anchors the plan:
 - [digitalmodel #138](https://github.com/vamseeachanta/digitalmodel/issues/138)
   owns OrcaFlex drilling/completion model semantics, result quantities,
   criteria, extraction, engineering oracles, and licensed post-run validation.
-- [Deckhand #568](https://github.com/vamseeachanta/deckhand/issues/568)
-  owns authenticated request/canary/execution receipts, safe artifact transport,
+- [licensed execution issue 568](https://api.github.com/repositories/1257558103/issues/568)
+  owns authenticated request/canary/execution receipts, artifact transport with access controls,
   host/license proof, and hashed result return.
 - [digitalmodel #1604](https://github.com/vamseeachanta/digitalmodel/issues/1604)
   owns exact public release schemas, decoded leak checks, atomic Hugging Face
@@ -114,7 +114,7 @@ by their child issues, not a parent runtime regression.
 | Normalized SSOT | DM #1603 | generic engineering schemas, IDs, lineage, clean-room records, global coordinates, target-adapter interface, OrcaFlex v1 bundle builder | solver-neutral SSOT; no solver names/defaults; no silent drops/back-write; public/private boundary |
 | Drilling workflow | DM #811 | drilling stackup/request matrix and normalized role mapping | approved drilling requests; no duplicate coordinate rotation |
 | Engineering analysis | DM #138 | pre-run model/result contracts, completion request matrix, request authorization, post-run results/oracles | acyclic pre-run readiness and post-run licensed validation |
-| Licensed execution | Deckhand #568 | request verification, canary/receipt schemas, signatures, transport, host policy | executor will not self-authorize; real solver receipt binds raw payload |
+| Licensed execution | licensed execution issue 568 | request verification, canary/receipt schemas, signatures, transport, host policy | executor will not self-authorize; real solver receipt binds raw payload |
 | Public release | DM #1604 | Parquet configs, joins, leak rules, manifest, HF transaction, closeout verifier implementation | public-safe rows only; exact immutable release; no mock or unsigned results |
 | Website | Website #75 | capability schema, renderer changes, tests, deployment proof | verified HF release first; withheld values never render |
 | Parent closeout | DM #1602 | invoke landed verifier after every #1602-scoped child milestone and website complete | only parent will decide program completion |
@@ -127,7 +127,7 @@ but will reject, not reinterpret, an unknown producer version.
 `docs/plans/issue-1602-riser-analysis-contract-v1.yaml` will be the sole
 normative parent interface. It will define twelve envelope boundaries:
 
-1. `normalized_case` will bind public/safe provenance, configuration and case
+1. `normalized_case` will bind provenance cleared for publication, configuration and case
    identities, units, confidentiality, redistribution, and eligibility.
 2. `analysis_contract` will bind #138's pre-run model, result, criteria, and
    oracle contracts before any licensed request.
@@ -230,7 +230,7 @@ The parent issue will deliver:
 - one reviewed parent interface contract;
 - one reconciled dependency/ownership tree;
 - independently approved and completed child implementations;
-- provenance-safe normalized drilling and synthetic completion/workover cases;
+- normalized drilling data with verified provenance and synthetic completion/workover cases;
 - real licensed OrcaFlex v1 strength and operability results for every eligible
   case requested by the approved child analysis matrix, with generic contracts
   and evidence boundaries reusable by future solver targets;
@@ -281,7 +281,7 @@ recompute parent closeout evidence from authoritative live state
 | DM #1603 | child plan will freeze normalized schema, registry, adapter, fixtures, and tests |
 | DM #811 | child plan will freeze drilling workflow code, inputs, outputs, and tests |
 | DM #138 | child plan will freeze model/result/criteria/oracle code and tests |
-| Deckhand #568 | child plan will freeze queue/transport/receipt/policy code and tests |
+| licensed execution issue 568 | child plan will freeze queue/transport/receipt/policy code and tests |
 | DM #1604 | child plan will freeze release schemas, publisher, verifier, and tests |
 | Website #75 | child plan will freeze capability/render/validation/deployment files and tests |
 
@@ -296,7 +296,7 @@ The parent will not guess paths or duplicate those plans.
 | normalized identity, schema rejection, lineage, privacy, no defaults | DM #1603 | deterministic SSOT and bundle |
 | drilling stackup and operability tolerances | DM #811 | approved workflow behavior |
 | quantity/criterion/location cardinality and independent oracles | DM #138 | traceable engineering results |
-| unauthorized requester plus tamper/replay/license/canary/semantic/transport failures | #138 and Deckhand #568 | requester and executor are independent; only verified real execution succeeds |
+| unauthorized requester plus tamper/replay/license/canary/semantic/transport failures | #138 and licensed execution issue 568 | requester and executor are independent; only verified real execution succeeds |
 | release joins, decoded leaks, concurrency, exact tree, remote semantics | DM #1604 | immutable public-safe HF release |
 | withheld rendering, online failure, build/deploy/route checks | Website #75 | truthful live capability |
 | missing approval/review/ancestry/test/legal/HF/website evidence | #1604 implementation; #1602 invocation | parent closeout fails closed |
@@ -358,7 +358,7 @@ start before its upstream interface and its own approval gate are complete.
   native model, verified licensed execution, result payload, criteria/citations,
   units, and completeness status through approved envelope versions.
 - [ ] Public provenance will use approved public source hashes or a reviewed
-  confidentiality-safe commitment; private or withheld source hashes will not
+  commitment that keeps the source confidential; private or withheld source hashes will not
   be published.
 - [ ] Every eligible riser family will include a baseline statics case, and any
   missing requested result will block promotion.
@@ -747,7 +747,7 @@ xmllint --html --noout \
 for f in scripts/review/results/issue-1602-round-16/*.md; do test -s "$f"; done
 gh issue view 811 -R vamseeachanta/digitalmodel --json body --jq .body |
   rg -F '#1603 exclusively owns the global coordinate transform.'
-gh issue view 568 -R vamseeachanta/deckhand --json body --jq .body |
+gh issue view 568 -R "${EXECUTION_REPO}" --json body --jq .body |
   rg -F 'emit only the execution-receipt bindings required by #1602.'
 gh issue view 1604 -R vamseeachanta/digitalmodel --json body --jq .body |
   rg -F 'digitalmodel #1602 owns the parent cross-layer interface.'
@@ -759,13 +759,13 @@ gh issue view 1603 -R vamseeachanta/digitalmodel --json body --jq .body |
   rg -F 'OrcaFlex/ProjectInputSpec is the first adapter target, not the SSOT.'
 gh issue view 138 -R vamseeachanta/digitalmodel --json body --jq .body |
   rg -F 'owns solver-neutral analysis intent'
-gh issue view 568 -R vamseeachanta/deckhand --json body --jq .body |
+gh issue view 568 -R "${EXECUTION_REPO}" --json body --jq .body |
   rg -F 'Deckhand verifies the selected target and projection but does not own or mutate the solver-neutral SSOT.'
 gh issue view 1603 -R vamseeachanta/digitalmodel --json body --jq .body |
   rg -F 'Unsupported or non-equivalent mappings emit a structured terminal adapter failure'
 gh issue view 1604 -R vamseeachanta/digitalmodel --json body --jq .body |
   rg -F 'reject every native solver model artifact independent of extension or target'
-gh issue view 568 -R vamseeachanta/deckhand --json body --jq .body |
+gh issue view 568 -R "${EXECUTION_REPO}" --json body --jq .body |
   rg -F 'rejects any execution request whose target mapping is unsupported'
 cd ../../workspace-hub
 bash scripts/legal/legal-sanity-scan.sh \

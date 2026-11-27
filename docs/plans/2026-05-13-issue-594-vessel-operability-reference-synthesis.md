@@ -147,7 +147,7 @@ gh issue edit 594 \
 **Verification command:**
 
 ```bash
-cd /mnt/local-analysis/workspace-hub/digitalmodel
+cd .
 uv run pytest examples/demos/gtm/tests/test_ctv_operability_reference.py -q
 ```
 
@@ -243,13 +243,13 @@ Guardrail requirements:
 **Commands:**
 
 ```bash
-cd /mnt/local-analysis/workspace-hub/digitalmodel
+cd .
 uv run pytest examples/demos/gtm/tests/test_ctv_operability_reference.py -q
 rg "ctv_operability_kincardine|gtm_storyline|demo_use_cases|prospect-facing|LIVE MODE" examples src tests docs references
 git diff -- references/vessel-suitability examples/demos/gtm/data/ctv_operability_kincardine.json examples/demos/gtm/README.md examples/demos/gtm/tests/test_ctv_operability_reference.py
 ```
 
-If `rg` shows additional consumers, update them or explicitly document why they are safe.
+If `rg` shows additional consumers, update them or explicitly document why the change preserves their existing behavior.
 
 ## Acceptance Criteria
 

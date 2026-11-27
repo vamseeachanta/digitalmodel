@@ -10,11 +10,11 @@ the single source of truth for collection; digitalmodel consumes it** (see
 | Source | Location | Count | Real? | Extracted from | Role now |
 |---|---|---|---|---|---|
 | **WED vessel_fleet (curated)** | `worldenergydata/data/modules/vessel_fleet/curated/` | **2,268 rigs + 17 constr.** | ✅ | BSEE pickle + web scrape + **PDF** + XLS | **SOURCE OF TRUTH** (consumed via `wed_adapter`) |
-| Frontier Deepwater fleet | ace share `/frontierdeepwater/.../vessel-fleet/` (+2010/2011 snapshots) | ~350 heavy-lift + pipelay | ✅ | brochure digitization | candidate to ingest into WED |
+| Frontier Deepwater fleet | ace share `${EXPLORATION_REPO_ROOT}/.../vessel-fleet/` (+2010/2011 snapshots) | ~350 heavy-lift + pipelay | ✅ | brochure digitization | candidate to ingest into WED |
 | project <job-code> MSIV | ace share `<project-root>/` | 30+ | ✅ | vessel brochures | candidate to ingest into WED |
 | client-4e09 `_hulls` RAOs | ace share `<project-root>/` | 4 vessels | ✅ | design XLS (**real RAOs**) | high-value for diffraction RAO layer |
 | OCIMF Coef.xlsx | ace share `<licensed-codes-root>/OCIMF/` | tanker/gas coeffs | ✅ | digitized standard | OCIMF coefficient layer |
-| llm-wiki OCIMF MEG4 annex | `llm-wiki/.../datasets/ocimf-meg4-annex-a/` | tanker coeff tables | ✅ | PDF table digitization | OCIMF coefficient layer |
+| knowledge base OCIMF MEG4 annex | `${LLM_WIKI_PATH}/.../datasets/ocimf-meg4-annex-a/` | tanker coeff tables | ✅ | PDF table digitization | OCIMF coefficient layer |
 | **dm vessel_db (this dir)** | `digitalmodel/data/vessels/` | 41 + RAO proxies + crane | ✅ | agent web research | engineering layers WED lacks |
 | GTM synthetic JSONs | `digitalmodel/examples/demos/gtm/data/` | 4 classes | ❌ synthetic | — | demo fixtures only |
 | orcaflex template CSVs | `digitalmodel/docs/.../components/vessels/` | 14 class rows | ❌ idealized | — | orcaflex templates |

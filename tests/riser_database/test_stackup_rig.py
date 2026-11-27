@@ -48,7 +48,7 @@ STACKUP_TYPE_VOCAB = {
     "joint-library",
     "component-library",
     "stack-up-drawing",
-    # llm-wiki#829 wave-5 (RSU-0071..0084): documented operating-envelope
+    # knowledge base issue 829 wave-5 (RSU-0071..0084): documented operating-envelope
     # results datasets (static window / dynamic envelope grids).
     "operability-dataset",
 }
@@ -229,8 +229,7 @@ def test_registry_generic_names_not_republished():
 # -- RSU registry reconciliation (in-context) ---------------------------------------
 
 _KNOWN_WIKI_CLONES = (
-    Path("/mnt/local-analysis/llm-wiki"),  # abs-path-allowed
-    Path.home() / "workspace-hub" / "llm-wiki",
+    Path.home() / ".local" / "share" / "digitalmodel" / "knowledge",
 )
 
 
@@ -245,7 +244,7 @@ def _registry_text() -> str:
         if page.is_file():
             return page.read_text()
     pytest.skip(
-        "llm-wiki stack-up registry not available (standalone mode) — this "
+        "knowledge base stack-up registry not available (standalone mode) — this "
         "reconciliation test is part of the in-context merge gate"
     )
 

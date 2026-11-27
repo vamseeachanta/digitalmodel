@@ -56,7 +56,7 @@ owners:
     outputs: [analysis_contract, completion_workover_request_matrix,
       execution_authorizer, engineering_validator, engineering_results]
   licensed_execution:
-    issue: https://github.com/vamseeachanta/deckhand/issues/568
+    issue: https://api.github.com/repositories/1257558103/issues/568
     outputs: [execution_request_schema_and_verifier, artifact_transport,
       host_execution_agent, signed_execution_receipt]
   public_release:

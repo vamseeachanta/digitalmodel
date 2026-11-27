@@ -48,7 +48,7 @@ domains:
         potential_test_vectors: 10
         priority: medium
         notes: >
-          2004 first edition PDF available at /mnt/ace/O&G-Standards/ISO/.
+          2004 first edition PDF available at ${ACE_DATA_ROOT}/O&G-Standards/ISO/.
           Implemented in iso_15589_2.py. Table 1 current densities, section
           5.2 protection criteria. Normative annexes A (GACP design), B
           (performance testing), C (monitoring). F103-2010 is explicitly

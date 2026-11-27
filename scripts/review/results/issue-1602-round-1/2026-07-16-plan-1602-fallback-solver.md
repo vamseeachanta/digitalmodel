@@ -8,7 +8,7 @@ MAJOR
   `106763a8da6eec7755095da048509c07950db77b`.
 - Verified cited digitalmodel code at
   `87d56cac637f971ca3ed57d8ca98c16a845ff0f7`.
-- Used the stale local Deckhand checkout only to identify integration risks; it
+- Used the stale local licensed execution repository checkout only to identify integration risks; it
   was not treated as verification of the cited remote SHA.
 
 ## Findings

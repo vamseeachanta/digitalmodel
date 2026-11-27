@@ -75,7 +75,7 @@ revision.
 6. Citation fixture pages `dnv-rp-b401-2017.md`, `dnv-rp-b401-2021.md`,
    `dnv-rp-f103-2019.md` under `tests/citations/fixtures/...`;
    `FIXTURE_PROVENANCE.md` updated. Real wiki pages created in parallel in
-   llm-wiki with the same frontmatter.
+   knowledge base with the same frontmatter.
 7. Tests: `test_b401_tables.py` / `test_f103_tables.py` parse every edition's
    CSVs; new `test_edition_crosswalk.py`; `test_edition_api_foundation.py`
    "2017 == 2021" assertions replaced by the true statement.

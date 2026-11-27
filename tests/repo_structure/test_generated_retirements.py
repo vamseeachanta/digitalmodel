@@ -39,7 +39,7 @@ def sample(tmp_path, monkeypatch):
     target.write_bytes(b"%PDF\x00\xff original evidence")
     run(tmp_path, "add", path)
     run(tmp_path, "-c", "user.name=maintainer", "-c",
-        "user.email=23155845+vamseeachanta@users.noreply.github.com", "commit", "-qm", "fixture")
+        "user.email=fixture@example.org", "commit", "-qm", "fixture")
     row = {"path": path, "sha256": hashlib.sha256(target.read_bytes()).hexdigest(),
            "date": "2026-10-17", "reason": "Retired generated print output; cards replace the summary.",
            "disposition": {"kind": "cold-store", "dataset_path": "digitalmodel/retired",
@@ -74,7 +74,7 @@ def test_tracked_and_reintroduced_retirements_are_refused(sample):
     target.unlink()
     run(repo, "add", "-u")
     run(repo, "-c", "user.name=maintainer", "-c",
-        "user.email=23155845+vamseeachanta@users.noreply.github.com", "commit", "-qm", "retire")
+        "user.email=fixture@example.org", "commit", "-qm", "retire")
     assert errors(sample, [row]) == []
     target.write_bytes(b"reintroduced")
     assert any("retirement-entry-for-tracked-path" in e for e in errors(sample, [row]))
@@ -138,7 +138,7 @@ def test_committed_deletions_use_merge_base_digest(sample, monkeypatch):
     target.unlink()
     run(repo, "add", "-u")
     run(repo, "-c", "user.name=maintainer", "-c",
-        "user.email=23155845+vamseeachanta@users.noreply.github.com",
+        "user.email=fixture@example.org",
         "commit", "-qm", "retire generated fixture")
     monkeypatch.setenv("GITHUB_BASE_REF", "retirement-base")
     assert errors(sample, [row]) == []
@@ -153,7 +153,7 @@ def test_base_ref_is_resolved_before_comparing_deletions(sample, monkeypatch):
     target.unlink()
     run(repo, "add", "-u")
     run(repo, "-c", "user.name=maintainer", "-c",
-        "user.email=23155845+vamseeachanta@users.noreply.github.com",
+        "user.email=fixture@example.org",
         "commit", "-qm", "retire")
     monkeypatch.setenv("GITHUB_BASE_REF", "missing-base")
     assert any("retirement-base-unavailable" in e for e in errors(sample, [row]))
@@ -165,14 +165,14 @@ def test_digest_uses_common_ancestor_when_base_has_advanced(sample, monkeypatch)
     target.write_bytes(b"different bytes on the comparison branch")
     run(repo, "add", row["path"])
     run(repo, "-c", "user.name=maintainer", "-c",
-        "user.email=23155845+vamseeachanta@users.noreply.github.com",
+        "user.email=fixture@example.org",
         "commit", "-qm", "advance comparison branch")
     run(repo, "branch", "retirement-base")
     run(repo, "switch", "-q", "retirement-work")
     target.unlink()
     run(repo, "add", "-u")
     run(repo, "-c", "user.name=maintainer", "-c",
-        "user.email=23155845+vamseeachanta@users.noreply.github.com",
+        "user.email=fixture@example.org",
         "commit", "-qm", "retire original bytes")
     monkeypatch.setenv("GITHUB_BASE_REF", "retirement-base")
     assert errors(sample, [row]) == []

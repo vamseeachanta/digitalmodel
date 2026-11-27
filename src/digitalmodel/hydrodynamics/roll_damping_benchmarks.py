@@ -10,7 +10,7 @@ Loads the public tables under ``data/roll_damping/``:
 * ``method_matrix.csv`` - the recommended estimation route and screening
   damping per scenario;
 * ``wiki_tables.csv`` - pointers (not values) to the copyrighted paper tables
-  held in the private llm-wiki.
+  held in the private knowledge base.
 
 Contracts follow ``digitalmodel.riser_database.loader``: known file names
 only, a size cap per file, a safe YAML loader that rejects duplicate

@@ -88,10 +88,10 @@ _FHS_ROOTS = (
 
 # A leading slash, an FHS root, and at least one further segment. The lookbehind
 # rejects a slash that is attached to a preceding word character, a colon or
-# another slash, which is what keeps URL path segments (``https://host/usr/x``)
+# another slash or a tilde, which keeps URL path segments (``https://host/usr/x``)
 # and protocol-relative URLs out.
 _POSIX_ABSOLUTE_PATH = re.compile(
-    r"(?<![\w:/.-])/(?:" + "|".join(_FHS_ROOTS) + r")/[A-Za-z0-9_.-]+"
+    r"(?<![\w:/~.-])/(?:" + "|".join(_FHS_ROOTS) + r")/[A-Za-z0-9_.-]+"
     r"(?:/[A-Za-z0-9_.-]+)*"
 )
 
@@ -186,6 +186,11 @@ def test_detector_ignores_urls_with_path_segments():
         '<a href="https://example.invalid/usr/share/doc/readme.txt">y</a>'
     )
     assert find_absolute_paths(markup) == []
+
+
+def test_tilde_url_segment_keeps_the_following_filesystem_path_visible():
+    markup = '<a href="https://example.invalid/~/media/doc.pdf">source</a> /tmp/example'
+    assert find_absolute_paths(markup) == ["/tmp/example"]
 
 
 def test_detector_ignores_relative_paths():

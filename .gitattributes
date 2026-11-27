@@ -1,5 +1,5 @@
 # Guard rails — prevent large binary re-introduction (WRK-1341)
-# These file types were relocated to /mnt/ace/<repo>/
+# These file types were relocated to ${ACE_DATA_ROOT}/<repo>/
 # Mark as binary so git does not attempt diff/merge
 *.pdf binary
 *.sim binary

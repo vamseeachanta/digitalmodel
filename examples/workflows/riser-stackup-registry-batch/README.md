@@ -3,7 +3,7 @@
 Batch sweep of the riser stack-up registry (#1453/#1458, epic #1279): every
 `riser_stackup` row with `stackup_type = as-planned-stackup` and
 `operation = drilling` is checked for a wiki-side `16q-min-top-tension` calc
-contract (llm-wiki#826 — registry page + per-dataset source pages) and, where
+contract (knowledge base issue 826 — registry page + per-dataset source pages) and, where
 the chain inputs exist, the API RP 16Q minimum vertical top tension is
 computed through `digitalmodel.drilling_riser.assembly.minimum_top_tension_16q`.
 Rows without a golden chain contract but WITH a text-extractable wiki joint
@@ -11,7 +11,7 @@ schedule + joint library run the #1458 schedule-assembly path instead
 (`digitalmodel.drilling_riser.schedule_assembly`): the string weight is
 assembled from the schedule, the 16Q minimum is computed at the heaviest
 documented mud weight, and the row reports the validation delta band against
-the wave-3 `16q-min-tension-endpoints` contract (llm-wiki#828).
+the wave-3 `16q-min-tension-endpoints` contract (knowledge base issue 828).
 Rows with a shallow-water source workbook carrying a top-tension-to-rotate
 result are emitted as `runnable-source`; the runner does not recast those
 values as an API RP 16Q chain.
@@ -19,7 +19,7 @@ values as an API RP 16Q chain.
 ## Run
 
 ```bash
-LLM_WIKI_PATH=/path/to/llm-wiki \
+LLM_WIKI_PATH=/path/to/knowledge-base \
     uv run python examples/workflows/riser-stackup-registry-batch/run.py
 ```
 
@@ -35,7 +35,7 @@ computed `Tmin_vert`, its unit, and `status` (`runnable` |
 `results/` is gitignored. Computed tensions/weights are wiki-side VALUES
 derived from private project workbooks: dm carries only key names, the
 assembly engine, and this runner (the #1280 calc-contract discipline). The
-private llm-wiki registry keeps the values until a dataset passes the dm
+private knowledge base registry keeps the values until a dataset passes the dm
 de-id/leak gate.
 
 ## Reading the reasons

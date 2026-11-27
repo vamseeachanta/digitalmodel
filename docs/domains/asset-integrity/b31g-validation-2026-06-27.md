@@ -24,7 +24,7 @@ intact pressure; `L²/(Dt) > 20` → original infinite-length regime.
 
 ## Validation 2 — ASME B31G-2012 allowable-defect-length table (page 26)
 Source table located at
-`/mnt/ace/aceengineercode/data_manager/data/codes/asmeb31g/asme31gfile_pg_26.csv`
+`${ACE_DATA_ROOT}/aceengineercode/data_manager/data/codes/asmeb31g/asme31gfile_pg_26.csv`
 (rows = depth d, columns = wall thickness t, values = max allowable longitudinal
 length, **OD = 20 in**, reverse-derived and confirmed). The table is reproduced
 by `b31g_original_allowable_length` via `L = 1.12·B·√(Dt)`,

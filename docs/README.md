@@ -81,8 +81,7 @@ review receipt.
 The universal placement rule is repo-vs-bulk-artifact-store. Keep source, tests,
 small curated docs, operator maps, and routing registries in the repo. Put large,
 generated, binary, cache, raw crawl, or fast-growing artifacts in a bulk artifact
-store instead. `/mnt/ace/data` is the current workspace-hub implementation example
-for that bulk store, not a path that should be hard-coded into portable repo logic.
+store instead. The shared workspace provides an implementation example at `${ACE_DATA_ROOT}/data`.
 
 ## Operational runbooks
 

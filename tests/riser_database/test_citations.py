@@ -36,12 +36,7 @@ def _amjig_repo_root() -> Path:
     env = os.environ.get("LLM_WIKI_PATH")
     if env:
         candidates.append(Path(env))
-    candidates.extend(
-        (
-            Path("/mnt/local-analysis/wt-llmwiki-rsu"),  # abs-path-allowed
-            Path("/mnt/local-analysis/llm-wiki"),  # abs-path-allowed
-        )
-    )
+    candidates.append(Path.home() / ".local" / "share" / "digitalmodel" / "knowledge")
     for root in candidates:
         page = (
             root

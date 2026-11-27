@@ -107,7 +107,7 @@
   "current_regression": {
     "passed": 887,
     "skipped": 2,
-    "log": "D:\\ws\\_coordination\\SOLVERS-preparation-live-stream-final-regression.log",
+    "log": "${COORDINATION_ROOT}/SOLVERS-preparation-live-stream-final-regression.log",
     "log_sha256": "2e0e0c79f4df61ba35d7e670ef705fc12dced14dc9e8bad0d82c98c9e03038b8"
   }
 }

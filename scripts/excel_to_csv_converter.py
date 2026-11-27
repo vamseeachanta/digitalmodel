@@ -80,7 +80,7 @@ def convert_excel_to_csv(excel_path: Path, output_dir: Path = None):
 def main():
     """Main conversion process."""
     # Find all Excel files in data/modules
-    data_dir = Path("/mnt/github/workspace-hub/digitalmodel/data/modules")
+    data_dir = Path(__file__).resolve().parents[1] / "data/modules"
     excel_files = []
 
     for ext in ['*.xlsx', '*.xls', '*.xlsm']:

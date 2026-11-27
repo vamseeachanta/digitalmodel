@@ -1,4 +1,4 @@
-"""Drift-off / drive-off vessel trajectory and the anti-recoil tension schedule of the event models (digitalmodel-data
+"""Drift-off / drive-off vessel trajectory and the anti-recoil tension schedule of the event models (the private data repository
 #13, W414): pure functions checked against closed forms (synthetic, class-level inputs only)."""
 
 from __future__ import annotations

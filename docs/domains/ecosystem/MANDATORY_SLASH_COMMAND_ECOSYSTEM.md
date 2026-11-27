@@ -57,7 +57,7 @@ When creating slash commands, ALWAYS:
 ```python
 # ❌ Bad: Hardcoded for specific repo
 def update_aceengineer_config():
-    path = "/mnt/github/github/aceengineer-admin/config.yml"
+    path = "${ADMIN_REPO_ROOT}/config.yml"
     
 # ✅ Good: Works in any repo
 def update_config():
@@ -261,11 +261,15 @@ AI: "Sure, I'll format all the JSON files for you.
 ## 🎓 Training Examples
 
 ### Scenario 1: Database Migration
-**User**: "I need to migrate data from SQLite to PostgreSQL"
+**User**:
+
+> "I need to migrate data from SQLite to PostgreSQL"
 **AI MUST**: Suggest `/db-migrate` command with source/target options
 
 ### Scenario 2: API Documentation
-**User**: "Generate OpenAPI docs from my code"
+**User**:
+
+> "Generate OpenAPI docs from my code"
 **AI MUST**: Suggest `/generate-api-docs` command
 
 ### Scenario 3: Security Audit

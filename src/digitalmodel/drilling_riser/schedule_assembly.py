@@ -1,13 +1,13 @@
 """Schedule-assembly path (#1458, epic #1279; follows #1453/#1454).
 
 Builds a rig-specific riser string FROM the wiki-side joint schedule + joint
-library on a private llm-wiki source page (never from a transcribed factored
+library on a private knowledge base source page (never from a transcribed factored
 chain), normalizes each component into the ``adapter`` SI vocabulary, and
 assembles it through :class:`~digitalmodel.drilling_riser.assembly.RiserStackupModel`.
 The result feeds the API RP 16Q minimum-top-tension chain
 (:func:`~digitalmodel.drilling_riser.stackup.minimum_slip_ring_tension` +
 the 2H methodology 1.25 top-tension factor) for validation against the
-wave-3 ``16q-min-tension-endpoints`` contracts (llm-wiki#828).
+wave-3 ``16q-min-tension-endpoints`` contracts (knowledge base issue 828).
 
 Discipline mirrors ``calc_contracts``: dm carries only PAGE NAMES, component
 class labels and parse shapes; schedule counts, joint weights and geometry

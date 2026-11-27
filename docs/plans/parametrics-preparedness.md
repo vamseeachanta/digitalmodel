@@ -15,7 +15,7 @@ Interpolated atlas answers are screening values; a full solver run remains the
 deliverable of record. Escalated queries will request a full run through the
 current licensed-run route, blocked until dispatch and result return are documented.
 
-Deckhand retired 2026-10-18 (deckhand issue 599).
+Deckhand retired 2026-10-18 (execution-service issue 599).
 
 ## 2. Reuse — do NOT add a 4th parametric engine
 

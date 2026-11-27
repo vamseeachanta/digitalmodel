@@ -13,7 +13,7 @@ map.
 
 Run::
 
-    cd /mnt/local-analysis/digitalmodel
+    cd "$(git rev-parse --show-toplevel)"
     timeout 300 .venv/bin/python examples/demos/structural/ship_panel_buckling_parametric.py
 """
 
@@ -28,7 +28,7 @@ import plotly.graph_objects as go
 # --- Repo / report-builder imports -----------------------------------------
 HERE = Path(__file__).resolve().parent
 OUTPUT_DIR = HERE / "output"
-sys.path.insert(0, "/mnt/local-analysis/digitalmodel/examples/demos/gtm")
+sys.path.insert(0, str(HERE.parent / "gtm"))
 from report_template import GTMReportBuilder  # noqa: E402
 
 from digitalmodel.structural.panel_buckling_parametric import (  # noqa: E402

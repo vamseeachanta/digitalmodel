@@ -87,7 +87,7 @@ def test_assetutilities_uses_public_dependency_default():
     source = config.get("tool", {}).get("uv", {}).get("sources", {}).get("assetutilities")
     # A public checkout must not need a sibling directory: no path source.
     # A pinned public GitHub release tag or full commit is allowed (PyPI 0.1.0
-    # lacks workflow_api); a branch is not (fleet-ops#577).
+    # lacks workflow_api); a branch is not (fleet operations issue 577).
     if source is not None:
         assert "path" not in source
         assert "branch" not in source

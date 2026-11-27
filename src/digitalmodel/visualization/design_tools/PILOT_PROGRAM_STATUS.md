@@ -46,7 +46,7 @@ Welcome as the **first pilot user** of the AI-powered FreeCAD + Blender engineer
 
 ```bash
 # 1. Test the system
-cd /mnt/github/github/digitalmodel/src/modules/design_tools
+cd src/modules/design_tools
 python3 workflow_test.py
 
 # 2. Try the AI CAD Agent
@@ -195,7 +195,7 @@ Please log your experience each day:
 
 ## 🎉 Your Pilot Advantages
 
-As our first pilot user, you receive:
+As the first pilot user, you receive:
 - **Priority support** for any issues
 - **Direct input** on feature development
 - **Early access** to AI enhancements

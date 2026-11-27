@@ -21,6 +21,13 @@ def test_manifest_is_frozen(tmp_path):
         evidence.legacy_files(tmp_path, "a" * 40)
 
 
+def test_archived_ref_evidence_uses_publication_refs():
+    manifest = json.loads((ROOT / evidence.MANIFEST).read_bytes())
+    for refs in manifest["archived_refs"].values():
+        assert refs
+        assert all(not ref.startswith("refs/heads/backup/") for ref in refs)
+
+
 def test_exists_claim_is_limited_to_the_cited_revision_and_path():
     revision = "3256bab95f84da3d9fadce8d5dcf8458d66d1eb4"
     path = "docs/registry/implementation-map.yaml"
