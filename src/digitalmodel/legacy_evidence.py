@@ -92,7 +92,11 @@ def read_legacy(root: Path, revision: str, path: str, *, require_main: bool = Fa
         raise ValueError(f"Only a redacted publication is available for {revision}:{path}")
     try:
         if entry["storage"] == "same-as-root":
-            data = _tree_blob(["-C", str(root)], "HEAD", path)
+            # The frozen revision/path record identifies the reset tree's blob.
+            # HEAD may now contain a different file or no longer have this path.
+            if entry["mode"] not in ("100644", "100755"):
+                raise ValueError(f"Missing regular file at {revision}:{path}")
+            data = git_output(["-C", str(root)], "cat-file", "blob", entry["blob"])
         else:
             blob = MANIFEST.parent / "blobs" / entry["sha256"]
             data = evidence_path(root, blob).read_bytes()

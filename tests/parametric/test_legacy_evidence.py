@@ -79,14 +79,18 @@ def test_corrupt_stored_bytes_are_rejected(tmp_path):
         evidence.read_legacy(tmp_path, revision, path)
 
 
-def test_root_storage_checks_head_bytes_and_exact_path(monkeypatch):
+def test_root_storage_checks_pinned_bytes_and_exact_path(monkeypatch):
     revision = "b4c10284fa7d28398e6fa02c262c219c0fec8fef"
     path = "src/digitalmodel/materials/grades.py"
-    assert evidence.legacy_files(ROOT, revision)[path]["storage"] == "same-as-root"
+    entry = evidence.legacy_files(ROOT, revision)[path]
+    assert entry["storage"] == "same-as-root"
     with pytest.raises(ValueError, match="No frozen evidence"):
         evidence.read_legacy(ROOT, revision, "README.md")
-    monkeypatch.setattr(evidence, "_tree_blob", lambda *args: b"changed in HEAD")
+    monkeypatch.setattr(evidence, "git_output", lambda *args: b"corrupt object")
     with pytest.raises(ValueError, match="digest mismatch"):
+        evidence.read_legacy(ROOT, revision, path)
+    monkeypatch.setitem(entry, "mode", "120000")
+    with pytest.raises(ValueError, match="Missing regular file"):
         evidence.read_legacy(ROOT, revision, path)
 
 
@@ -117,12 +121,15 @@ def test_new_sources_require_main_ancestry(tmp_path, monkeypatch, rule):
 
     # A side branch can retain a pre-reset object outside current main.
     listed = git("rev-parse", "HEAD")
-    entry = {"rule": rule, "storage": "same-as-root", "blob": git("rev-parse", "HEAD:source"),
+    entry = {"rule": rule, "storage": "same-as-root", "mode": "100644",
+             "blob": git("rev-parse", "HEAD:source"),
              "sha256": hashlib.sha256(b"published").hexdigest()}
     monkeypatch.setattr(evidence, "_manifest", lambda root: {
         "files": {listed: {"source": entry}},
     })
     git("checkout", "-q", "main")
+    (tmp_path / "source").write_bytes(b"revised after publication")
+    git("commit", "-qam", "revise source")
     assert evidence.read_evidence(tmp_path, listed, "source") == b"published"
     with pytest.raises(ValueError, match="main"):
         evidence.read_evidence(tmp_path, listed, "uncited")
