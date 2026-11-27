@@ -12,7 +12,7 @@
 
 A parameterized OrcaFlex model of a **free-standing, dry-tree riser** landed on
 a surface SSR / wellhead. It is the engineering follow-on to the client-381d screening
-campaign (client-381d project wiki, issues **#2–#7**), whose
+campaign (project-derived, issues **#2–#7**), whose
 hand-screens (unrestrained Euler #2/#3, survival-pushdown stress
 #4, tendon tension #7) all fail — and whose verdict pivots on inputs the screens
 cannot manufacture. The global-model scope is **client-381d issue #2**; this scaffold
@@ -25,7 +25,7 @@ mirrors that scope as reviewable YAML.
 - Set-down stops, surface wellhead landing.
 - Water depths **6,000 / 8,000 / 10,000 ft** (1828.8 / 2438.4 / 3048.0 m).
 
-### Top boundary (per client-381d #2, Jun-4 Chuck↔Roy exchange)
+### Top boundary (project contact’s correspondence on issue 2)
 Axially sliding on UHMW pads (μ < 0.1) but **restrained against rotation** (no
 articulation) — modeled as guided / rotation-fixed with stroke limits at the
 set-down stops. Baseline assumes the **7-in tubing is always installed and

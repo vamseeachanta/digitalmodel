@@ -30,14 +30,12 @@ class GitManager:
     def get_all_repos(self) -> List[str]:
         """Get list of all repository directories"""
         repos = [
-            "aceengineer-admin", "aceengineer-website",
-            "aceengineercode", "achantas-data", "achantas-media",
-            "<project-archive>", "ai-native-traditional-eng", "assethold",
-            "assetutilities", "client_projects", "digitalmodel",
-            "energy", "frontierdeepwater", "hobbies", "investments",
-            "OGManufacturing", "pyproject-starter", "rock-oil-field",
-            "sabithaandkrishnaestates", "contractor", "sd-work",
-            "seanation", "teamresumes", "worldenergydata"
+            "aceengineer-website",
+            "assethold",
+            "assetutilities",
+            "digitalmodel",
+            "hobbies",
+            "worldenergydata",
         ]
         # Private checkout names come from ACE_PRIVATE_REPOS (CSV), else one
         # per line in ACE_PRIVATE_CONFIG (default ~/.config/ace/private-repos.txt).
@@ -52,6 +50,9 @@ class GitManager:
             try:
                 private = config.read_text(encoding="utf-8").splitlines()
             except FileNotFoundError:
+                private = []
+            except (OSError, UnicodeError):
+                print("Warning: unable to read private repository configuration", file=sys.stderr)
                 private = []
         for entry in private:
             name = entry.strip()

@@ -357,6 +357,14 @@ def test_python_modules_meet_size_rules():
         assert max(map(len, lines)) <= 88, path.name
 
 
+def test_project_derived_riser_has_zero_public_cards():
+    library = Path("docs/domains/orcaflex/library")
+    group = (library / "model_library" / "frps_ssr_global_riser").as_posix()
+    page = (ROOT / library / "model_catalogue.html").read_text(encoding="utf-8")
+    assert page.count(f"<article><h3>{group}/") == 0
+    assert f"<li>{group}: excluded: project-derived</li>" in page
+
+
 def test_committed_page_is_fresh():
     """Two consecutive builds equal each other and the committed UTF-8 bytes."""
     module = load_module()

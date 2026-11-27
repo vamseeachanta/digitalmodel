@@ -147,7 +147,7 @@ Context: this query is for [mooring screening / detailed mooring design / academ
 2. **Citation footprint**: if the downstream code emits a `Citation` sidecar per the calc-citation contract, the AI's response should include the `citation` block verbatim — those fields map 1:1 to `digitalmodel.citations.schema.Citation`.
 3. **Reference areas are caller-supplied**: the corpus contains coefficients only, not vessel-specific projected areas. The prompt asks for vessel `LBP` and `T` but transverse `A_T` and lateral `A_L` projected areas must come from the caller's vessel database — they vary with above-water structure and can change between the same hull on different sites.
 4. **Verify visually**: open `ocimf_coefficient_explorer.html` in a browser to confirm the curve the AI quoted matches the published figure shape. The explorer's interactive hover lets you read off exact values for cross-checking.
-5. **Hermes routing** (workspace-hub-specific): if dispatching to Hermes for execution-heavy use, route via the brain/hands model per `.claude/rules/goal-invocation.md` — Hermes can read both `<licensed-codes-root>/` and `/mnt/local-analysis/` and emit Citation sidecars directly.
+5. **Hermes routing** (workspace-hub-specific): if dispatching to Hermes for execution-heavy use, route via the brain/hands model per `.claude/rules/goal-invocation.md` — Hermes can read the external share (`<licensed-codes-root>/`) and files relative to the workspace root, and emit Citation sidecars directly.
 
 ## Related
 - [`ocimf_coefficient_explorer.html`](ocimf_coefficient_explorer.html) — interactive visualization of the same corpus

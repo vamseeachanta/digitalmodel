@@ -12,7 +12,7 @@ the single source of truth for collection; digitalmodel consumes it** (see
 | **WED vessel_fleet (curated)** | `worldenergydata/data/modules/vessel_fleet/curated/` | **2,268 rigs + 17 constr.** | ✅ | BSEE pickle + web scrape + **PDF** + XLS | **SOURCE OF TRUTH** (consumed via `wed_adapter`) |
 | Frontier Deepwater fleet | ace share `/frontierdeepwater/.../vessel-fleet/` (+2010/2011 snapshots) | ~350 heavy-lift + pipelay | ✅ | brochure digitization | candidate to ingest into WED |
 | project <job-code> MSIV | ace share `<project-root>/` | 30+ | ✅ | vessel brochures | candidate to ingest into WED |
-| client-4e09 `_hulls` RAOs | ace share `<project-root>/` | Q4000, Uncle John, SDP3500, Aframax | ✅ | design XLS (**real RAOs**) | high-value for diffraction RAO layer |
+| client-4e09 `_hulls` RAOs | ace share `<project-root>/` | 4 vessels | ✅ | design XLS (**real RAOs**) | high-value for diffraction RAO layer |
 | OCIMF Coef.xlsx | ace share `<licensed-codes-root>/OCIMF/` | tanker/gas coeffs | ✅ | digitized standard | OCIMF coefficient layer |
 | llm-wiki OCIMF MEG4 annex | `llm-wiki/.../datasets/ocimf-meg4-annex-a/` | tanker coeff tables | ✅ | PDF table digitization | OCIMF coefficient layer |
 | **dm vessel_db (this dir)** | `digitalmodel/data/vessels/` | 41 + RAO proxies + crane | ✅ | agent web research | engineering layers WED lacks |
