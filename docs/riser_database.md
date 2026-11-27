@@ -1,7 +1,7 @@
 # Riser Database (#1245 / #1199a)
 
 First slice of the riser domain database (parent #1199, exemplar of the
-data-source flywheel epic knowledge base issue 799). This slice ships the tabular
+data-source flywheel epic wiki issue 799). This slice ships the tabular
 foundation: a fail-closed loader, three public reference tables, two
 citation-emitting getters, and the leak gate.
 
@@ -16,12 +16,12 @@ loader refuses a table whose fingerprint drifted.
 | Table | Route | Content |
 |---|---|---|
 | `config_catalog` | public | 42 configurations: 5 `examples/riser_input/*.yml` + 22 explicit `config/pipe` files + 1 lift reference + 14 public examples. Pipe filename depth uses ft → m × 0.3048; pipe OD/WT use inches → mm × 25.4. Missing evidence yields an empty cell. |
-| `standards_crosswalk` | public | Clause **identifiers** + `wiki_path` only: `api-std-2rd` (there is no `api-rp-2rd` — API reclassified RP 2RD as STD 2RD), `api-rp-16q`, `dnv-os-f201`, `dnv-rp-c203`. `registry_revision` mirrors knowledge base `data/standards-registry.json` verbatim. |
+| `standards_crosswalk` | public | Clause **identifiers** + `wiki_path` only: `api-std-2rd` (there is no `api-rp-2rd` — API reclassified RP 2RD as STD 2RD), `api-rp-16q`, `dnv-os-f201`, `dnv-rp-c203`. `registry_revision` mirrors wiki `data/standards-registry.json` verbatim. |
 | `material_sn_scf_dff` | public | References into `fatigue/sn_curves.py` vocabulary (plain detail-category letters + environment — the REAL riser fatigue consumer, used by `riser_fatigue/workflow.py` and `touchdown.py`; NOT the composite ids of `sn_library_api`). `scf_ref`/`dff_ref` name getters. |
 
 **Licensing rule:** no DNV/API clause text, table content, or S-N parameter
 values in this public repo. Values come through `CitedValue` getters resolving
-against the **private** knowledge base (`.claude/rules/codes-standards-data-routing.md`
+against the **private** wiki (`.claude/rules/codes-standards-data-routing.md`
 in workspace-hub). The schema tests enforce exact column allowlists plus
 content-shape tripwires (clause-locator regex for `section`; length and
 numeric-token-density caps on free text) so values cannot ride free-text
@@ -109,7 +109,7 @@ attach the output to the PR as evidence.
 ## Extension map
 
 * **#1246** — *done*: added the two API RP 16Q §3.3 tension-factor getters
-  (behind the knowledge base `api-rp-16q` revision-`1993` pin), corrected the
+  (behind the wiki `api-rp-16q` revision-`1993` pin), corrected the
   `stackup.py` attribution comments (1.25 has no 16Q provision), and wired
   `riser_fatigue/workflow.py` DFF through `resolve_dff()`.
 * **#1247** — orcaflex riser citation surface (net-new; no parity baseline).
@@ -128,7 +128,7 @@ attach the output to the PR as evidence.
 ## riser_stackup + rig_riser_interface (#1259)
 
 The stack-up layer publishes **handles + banded envelopes only**. Each row of
-`riser_stackup` carries an `rsu_id` (resolving into the private knowledge base
+`riser_stackup` carries an `rsu_id` (resolving into the private wiki
 stack-up registry via `wiki_path` — always the registry page itself, never
 per-source pages), a `topology_class` from a controlled vocabulary (so
 depth-collapsed queries are first-class), a coarse `water_depth_band`
@@ -147,7 +147,7 @@ latter auto-extracts tokens from the private registry's source pages, so it
 runs in-context and is part of the merge gate). Banding is decided wiki-side,
 on water depth only, one band per source dataset family.
 
-**Cross-repo coupling (by design):** registering a new RSU id in the knowledge base
+**Cross-repo coupling (by design):** registering a new RSU id in the wiki
 registry makes the in-context reconciliation test fail here until the table
 gains the row — a conscious update, never silent drift. Public issues, PRs
 and commit messages about this table family carry bands and handles only.
@@ -165,7 +165,7 @@ keyed by subsea-stack GA mass (`drillship-15k-stack-784kip`,
 `drillship-15k-stack-893kip`); `rig_ref` is wired only where a wave-2 source
 documented the rig class, and stays empty elsewhere.
 
-**Wave 5 (knowledge base issue 829 pairing):** RSU-0071..RSU-0084 (14 handle rows) land
+**Wave 5 (wiki issue 829 pairing):** RSU-0071..RSU-0084 (14 handle rows) land
 from the wave-5 registry ingest: rig-keyed BOP-stack and riser-equipment
 weight tables, a wireline-tensioner semisub 16Q stack-up + joint/foam
 library, a shallow-water tension workbook from a surface-stack operation

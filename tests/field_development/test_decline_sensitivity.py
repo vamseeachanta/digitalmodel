@@ -15,6 +15,7 @@ Other rates, costs and model parameters are synthetic boundary/test inputs.
 from copy import deepcopy
 from math import exp, log
 import sys
+from unittest.mock import patch
 
 import pytest
 
@@ -30,8 +31,7 @@ DEFAULT_RATES = [0.05, 0.10, 0.15, 0.20, 0.25, 0.30]
 @pytest.fixture
 def scenario(monkeypatch):
     """Exercise real evaluator fallback with optional adapters unavailable."""
-    for name in ("worldenergydata.fdas",
-                 "worldenergydata.eia_us.analysis.us_fiscal"):
+    for name in ("worldenergydata", "worldenergydata.eia_us.analysis.us_fiscal"):
         monkeypatch.setitem(sys.modules, name, None)
     return ec.EconomicsInput(
         field_name="Synthetic", water_depth_m=1000.0, host_type="TLP",
@@ -226,3 +226,32 @@ def test_decline_package_exports():
 
     assert field_development.decline_sensitivity is ec.decline_sensitivity
     assert field_development.DeclineSensitivityResult is ec.DeclineSensitivityResult
+
+
+@pytest.mark.parametrize("provider_count", [0, 1, 2])
+def test_financial_adapter_uses_a_unique_provider(tmp_path, monkeypatch, provider_count):
+    root = tmp_path / "worldenergydata"
+    root.mkdir()
+    (root / "__init__.py").touch()
+    unrelated = root / "unrelated"
+    unrelated.mkdir()
+    (unrelated / "__init__.py").write_text("raise AssertionError('unexpected import')")
+    for index in range(provider_count):
+        provider = root / f"financial_fixture_{index}"
+        core = provider / "core"
+        core.mkdir(parents=True)
+        (core / "financial.py").touch()
+        (provider / "__init__.py").write_text(
+            "def calculate_all_metrics(cashflows, discount_rate_annual, period):\n"
+            "    return dict(cashflows=list(cashflows), rate=discount_rate_annual, period=period)\n"
+        )
+
+    monkeypatch.syspath_prepend(str(tmp_path))
+    with patch.dict(sys.modules):
+        sys.modules.pop("worldenergydata", None)
+        cashflows = ec.np.array([-10.0, 16.5])
+        result = ec._resolve_financial_adapter()(cashflows, 0.1)
+    if provider_count == 1:
+        assert result == {"cashflows": [-10.0, 16.5], "rate": 0.1, "period": "annual"}
+    else:
+        assert result["npv"] == pytest.approx(5.0)

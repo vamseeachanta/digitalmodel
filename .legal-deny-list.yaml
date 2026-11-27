@@ -225,7 +225,8 @@ binary_media_extensions:
 # ---------------------------------------------------------------------------
 # An entry with line_sha256 applies to those exact decoded UTF-8 lines
 # (excluding line endings) in the named file. The default rule is denied-name.
-# Other rules, file names and adjacent or modified lines are still inspected.
+# A denied-name entry also requires token_sha256, the token under the current
+# salt. Other tokens, rules, file names and adjacent lines are still inspected.
 # A path and reason alone retain the historical whole-file exclusions.
 # ---------------------------------------------------------------------------
 exclusions:
@@ -278,25 +279,17 @@ exclusions:
   - path: 'src/digitalmodel/web/digitaltwinfeed/StockAnalysis/static/StockAnalysis/data/company_tickers.json'
     reason: >-
       Public SEC company-ticker registry; company names are listed securities, not engagements.
-  - path: atlases/legacy-evidence/blobs/f3212c10abde12e4da71d7e4344734aa46b67b7c6fe3777a70295f5dbbab86c8
-    reason: Verbatim content-addressed source extract retained for owner review.
-    line_sha256:
-      - e5d5fec3bda927a5d3e97fb43b4df353867a89001b2113f6f665dcb59455edca
-      - 0b9feb969c3b14da2a06e24c47e34057ec474518561f466cd89dda5c72ecc93e
-      - fe7bed5f7da678747d402d9c7c23456ef71a7e7dbe9b0ae2f87f74805203953a
-      - a534bef50f94c6c796a254165bb2e109d6a41a70eef8f44241935fa5c0a1ad3b
-      - 100f5baab842ee79eb6e82f6861a104c1c25863c2011511709099ac9249e3d22
-      - f84c398ac447c9675d92f21edb04fb10995565fa32476184f47c0435a6deb6f6
-      - b5687b1ffc2ad1506f5a9c0638146196ceb756559a6b31e5caa2dfdd6c4eb051
-      - f746e04cae6b0f8ca9508950c670fbb133090f96c634f81fbc1134c6ab4a8fea
-      - 8d195ca13ca2728d4de32f2c5c1b74a262c7491e5c4c05bd18a05adb6b8a1828
-      - 4ca002fd605303dcf1b1bf2087381d647453e473eadb236f8e5ef3f11f8d0be0
   # Public-source records, an external import and a generated figure.
   # Each digest matches only its complete decoded line.
   - path: assets/data/vessel_specs_README.md
     reason: The public vessel catalog and its source checks use published operator and vessel identifiers.
+    token_sha256: e94099d1f443a20ac48436d7db725f519900c96ef89993a57b7fc7fd38518eb1
     line_sha256:
       - 977fdae8cc2d9756cdb89b8975daf3c068d83458878aef69f547001fafb97ec9
+  - path: assets/data/vessel_specs_README.md
+    reason: The public vessel catalog and its source checks use published operator and vessel identifiers.
+    token_sha256: 48a09e6121776aebeee4bb931f37f0bb196b6c4aae59c9fd7b94c2a39ba1cf5c
+    line_sha256:
       - 5cc2da7daf789b00fdbe3e6ffc9a3c27b2f6e132fdfc0f3528535deb6f20286b
       - 54ff3f05fcbfb840ea69bd03c8df5437aab7b126575e81045e5532e0ade21cab
       - 43fe1242da9fc8546fcdcab91bf1f95d4c89b76ded3fb85019184a17a9b37537
@@ -304,6 +297,7 @@ exclusions:
       - 94b8fcbcbc122e71f219f9c01051d09445d6c78bd1fc5cd449a67d2b4965bd32
   - path: assets/data/vessel_specs_pipelay.json
     reason: The public vessel catalog and its source checks use published operator and vessel identifiers.
+    token_sha256: e94099d1f443a20ac48436d7db725f519900c96ef89993a57b7fc7fd38518eb1
     line_sha256:
       - b31c758265950e4c0bdd1ca036c27bc9610834de440e0bd4cdb749c5a1a504da
       - 3a430dd3d7ec884d6197dc39a21684cef9c52028741e3a0580bd7f7038e6ed8c
@@ -312,6 +306,7 @@ exclusions:
       - ab6edfc48bc4918449346cbddfa3d32fed6addc9b79b82e52c5ae851bc32ecec
   - path: assets/data/vessel_specs_provenance.json
     reason: The public vessel catalog and its source checks use published operator and vessel identifiers.
+    token_sha256: e94099d1f443a20ac48436d7db725f519900c96ef89993a57b7fc7fd38518eb1
     line_sha256:
       - 9ca182a60ccb451720bb4ff7485c3e2e8197c82ea88b840279dd33f95e412c04
       - 6452806a833937dc1ff07dc043a19e3e001b8a6355263dc08cfa637eb867a0ff
@@ -319,10 +314,12 @@ exclusions:
       - 21362e9e1575c85b5210db5bcf0a3c284580c237abdf32c045318de0fb35b452
   - path: data/drilling_rigs/README.md
     reason: The public rig fleet catalog cites the contractor specification sheets used for verification.
+    token_sha256: befb056d46346478e6bcd5d23039b6ca966b8fca708e8ff4cdf3155f6d907be5
     line_sha256:
       - d132b3a0d84d1d66d919936c37c90d405950bc6ec916dff567165d8bc8d5a169
   - path: data/drilling_rigs/udw_rig_fleet_external.yml
     reason: The public rig fleet catalog cites the contractor specification sheets used for verification.
+    token_sha256: befb056d46346478e6bcd5d23039b6ca966b8fca708e8ff4cdf3155f6d907be5
     line_sha256:
       - c4af3b5f39ef9df1088a2578f67b7022c9be905b5fc9d16af3b94a6250dc7168
       - 687d005cd44a5f96f9ab53e3199d43b7aa620a4043cc32da0a6d24a778732e14
@@ -330,23 +327,34 @@ exclusions:
       - 51207fbc83b787e37d4fdcd093780f06a1cdadd767e252de6e6669c7b0760738
   - path: docs/reports/2026-08-19-calc-AE-CFD-1173-kcs-hull-resistance.html
     reason: The encoded bytes of an embedded figure coincidentally match a name hash.
+    token_sha256: 1c1ada22d6f7cf2b2fc965ae97abcbeddf5c52e05f8932888e9692ca6f2115e1
     line_sha256:
       - 86ecffb57e9751ec5a199d4401350ddb0b9108a429908d72da8ce9d5281b69be
   - path: docs/research/field-development-source-evidence-1794.json
     reason: The public field evidence identifies its spar host and preserves source attribution and citation text.
+    token_sha256: 48a09e6121776aebeee4bb931f37f0bb196b6c4aae59c9fd7b94c2a39ba1cf5c
     line_sha256:
       - d520532150b2dff11e3576793765f42ef8a614bf001b5e23bb353fe3dde0d082
       - 5d605551a022991747e1f5c387e99f14eaed11bb40d1c2d2a2ce032284196bf9
       - 13da6dba630672fe21bc6eee85e4854100dfb8f6d47917bca618d148e77a6b43
       - 7a3617383e5acce589cbbfdc30e8bb9d23e9ffc7aa109aa1037c2a996dd9aa63
+  - path: docs/research/field-development-source-evidence-1794.json
+    reason: The public field evidence identifies its spar host and preserves source attribution and citation text.
+    token_sha256: 0108f22578e20ebafd8c4027091790ac776eefcaa773b8a7cd348ab2a8f9a499
+    line_sha256:
       - 0975e48da349cd1e90962d278118b442a6a8fb1a801174cf6c6fa45ac62c84fa
       - da255dfb05b4558d6dc843acd9333f7521defefac122d8a156d4581212206551
   - path: docs/research/field-development-source-evidence-1794.md
     reason: The public field evidence identifies its spar host and preserves source attribution and citation text.
+    token_sha256: 48a09e6121776aebeee4bb931f37f0bb196b6c4aae59c9fd7b94c2a39ba1cf5c
     line_sha256:
       - 5c602b291f11bf0750f4588748b902c80a91e64d48ed39d94799c0286173e0d2
-      - 5795a0e014c51af7e76c9372678f63bea088a87e5cba5dd6221394fd3c78aac6
       - 23273a3b1ef6e007e49ce3be5621a18a8a1fe9502c98aca576496af27ea18259
+  - path: docs/research/field-development-source-evidence-1794.md
+    reason: The public field evidence identifies its spar host and preserves source attribution and citation text.
+    token_sha256: 0108f22578e20ebafd8c4027091790ac776eefcaa773b8a7cd348ab2a8f9a499
+    line_sha256:
+      - 5795a0e014c51af7e76c9372678f63bea088a87e5cba5dd6221394fd3c78aac6
       - b340af11c98b56de2e2cce2bcafaf44b35b22e1a19b6eeb8f00b98e7970ede4b
       - bea677e0aaf6f8ae05c388d7f72c26e058a3bff1fbe5c92965fdc5b1c1a3da63
       - 433a7f776abeaf86777710287b29a44dd06b3a385e13e6048e1ef871cb1c1b89
@@ -355,16 +363,19 @@ exclusions:
       - 5b6eab903d7042f8977a683d59ace4e9d94126be9b9eefea3e1c49805945d597
   - path: docs/research/field-development-source-evidence-1794.records-1.json
     reason: The public field evidence identifies its spar host and preserves source attribution and citation text.
+    token_sha256: 48a09e6121776aebeee4bb931f37f0bb196b6c4aae59c9fd7b94c2a39ba1cf5c
     line_sha256:
       - 4d816e900b0ecf66192dd88e2df302b350b8a45ae4a1773af12b677d19000793
       - 03c9df7972065c8ff4dbad5d55c629d6078e39e64ad6d4b30a9b5623eba3f8ce
   - path: docs/research/field-development-source-evidence-1794.records-2.json
     reason: The public field evidence identifies its spar host and preserves source attribution and citation text.
+    token_sha256: 0108f22578e20ebafd8c4027091790ac776eefcaa773b8a7cd348ab2a8f9a499
     line_sha256:
       - 302843ef19b817445647b2f97b5cafb6f61de875c9bc3f476599e1ddfa5488a9
       - 35f18f846fbf1fdfe62c3586fab2a0c18628b8d88efbf851eea1683452eb0bef
   - path: docs/research/field-development-source-evidence-1794.review.json
     reason: The public field evidence identifies its spar host and preserves source attribution and citation text.
+    token_sha256: 0108f22578e20ebafd8c4027091790ac776eefcaa773b8a7cd348ab2a8f9a499
     line_sha256:
       - 302843ef19b817445647b2f97b5cafb6f61de875c9bc3f476599e1ddfa5488a9
       - 4e68bc239e2839690d663ef045754d1c3f0dd45113098b539e987a9b2afddae1
@@ -372,60 +383,82 @@ exclusions:
       - f1ede3834093c256f805a045f2fe7da25f622b6113c97684d478cbc7bd870733
   - path: docs/research/subsea-pipelines-industry-practice-second-pass.md
     reason: The public capability matrix identifies contractors and published vessel specifications by their source names.
+    token_sha256: 48a09e6121776aebeee4bb931f37f0bb196b6c4aae59c9fd7b94c2a39ba1cf5c
+    line_sha256:
+      - 565b25c10d526754f9d9801ccb6a452f73c54261199a0edd4ee51388eb1ee301
+  - path: docs/research/subsea-pipelines-industry-practice-second-pass.md
+    reason: The public capability matrix identifies contractors and published vessel specifications by their source names.
+    token_sha256: e94099d1f443a20ac48436d7db725f519900c96ef89993a57b7fc7fd38518eb1
     line_sha256:
       - 565b25c10d526754f9d9801ccb6a452f73c54261199a0edd4ee51388eb1ee301
   - path: docs/research/subsea-pipelines-industry-practice-second-pass.sources.yaml
     reason: The public capability matrix identifies contractors and published vessel specifications by their source names.
+    token_sha256: e94099d1f443a20ac48436d7db725f519900c96ef89993a57b7fc7fd38518eb1
     line_sha256:
       - e0b7873a0bf28b2c4de6eed360e25edf7db0eb1fffb577262afe7e5a3363bc0d
+  - path: docs/research/subsea-pipelines-industry-practice-second-pass.sources.yaml
+    reason: The public capability matrix identifies contractors and published vessel specifications by their source names.
+    token_sha256: 48a09e6121776aebeee4bb931f37f0bb196b6c4aae59c9fd7b94c2a39ba1cf5c
+    line_sha256:
       - 4a5f8d6f05b6630253dd856fe008570a03a090824c0ce3a327e79fe2c7624e45
   - path: docs/research/subsea-pipelines-industry-practice.md
     reason: The public capability matrix identifies contractors and published vessel specifications by their source names.
+    token_sha256: e94099d1f443a20ac48436d7db725f519900c96ef89993a57b7fc7fd38518eb1
     line_sha256:
       - 0c358261bc2a832714eb8043c81198730ea04dd51752a771c7cf98138c08592b
-      - 8df448ab2b21da4759fbbff6aabd8d5faadab41672bd7c9f01b8c8dbf15c01d9
       - b85dd5258bdf08aeece042ea3335f1ce0fb4b01f642b5acf2e77fc3dac554e1b
+      - 57bc757ba1e1610d015f66453e476b04107d8763310563e7f3147f5f7f8a246b
+  - path: docs/research/subsea-pipelines-industry-practice.md
+    reason: The public capability matrix identifies contractors and published vessel specifications by their source names.
+    token_sha256: 48a09e6121776aebeee4bb931f37f0bb196b6c4aae59c9fd7b94c2a39ba1cf5c
+    line_sha256:
+      - 8df448ab2b21da4759fbbff6aabd8d5faadab41672bd7c9f01b8c8dbf15c01d9
       - 513b53a3339d6b92db0a3a02ca3d1f3f9172fcb812cba0f1215ae80ec68ae470
       - 57bc757ba1e1610d015f66453e476b04107d8763310563e7f3147f5f7f8a246b
   - path: docs/research/subsea-pipelines-industry-practice.sources.yaml
     reason: The public capability matrix identifies contractors and published vessel specifications by their source names.
+    token_sha256: 48a09e6121776aebeee4bb931f37f0bb196b6c4aae59c9fd7b94c2a39ba1cf5c
     line_sha256:
       - 85e26a68bb81c3a912feac6492d71a100d8b045121bf8ff4f59717cab981bede
       - 16b52e0d3e468285af41f9dff4fc2e706a11cfc8333e44dab4d13a94fb869270
-      - 2561c75d59336679674943cf437acc018ad575700a84f20135c99ee3be961368
       - 94fc437ecffa984040b9306258904f5d79ffb77e0c796345e79d47bc96003a99
-  - path: src/digitalmodel/field_development/economics.py
-    reason: The public optional dependency requires its published module name for import and fallback testing.
+  - path: docs/research/subsea-pipelines-industry-practice.sources.yaml
+    reason: The public capability matrix identifies contractors and published vessel specifications by their source names.
+    token_sha256: e94099d1f443a20ac48436d7db725f519900c96ef89993a57b7fc7fd38518eb1
     line_sha256:
-      - 932c73b84003b032828dba3c70da03a734e13d82e1dfc31ad3ae970e28fa3b4d
+      - 2561c75d59336679674943cf437acc018ad575700a84f20135c99ee3be961368
   - path: tests/data_systems/test_vessel_specs.py
     reason: The public vessel catalog and its source checks use published operator and vessel identifiers.
+    token_sha256: 48a09e6121776aebeee4bb931f37f0bb196b6c4aae59c9fd7b94c2a39ba1cf5c
     line_sha256:
       - 49e6029982701d742203482512af6c174e6587317b52bdceba7bf7ae0b6d14a2
       - ae0c168768fbc0553e3a47eefb0ad2aada612f3db565a06c00c5ba3a9be0fbf1
+  - path: tests/data_systems/test_vessel_specs.py
+    reason: The public vessel catalog and its source checks use published operator and vessel identifiers.
+    token_sha256: e94099d1f443a20ac48436d7db725f519900c96ef89993a57b7fc7fd38518eb1
+    line_sha256:
       - 29bc61b249c5232f44f30299eaaefa17d52c9b5bd0013989270bacdd38017cb5
   - path: tests/docs/test_field_development_source_evidence_1794.py
     reason: The public field evidence identifies its spar host and preserves source attribution and citation text.
+    token_sha256: 0108f22578e20ebafd8c4027091790ac776eefcaa773b8a7cd348ab2a8f9a499
     line_sha256:
       - 78d22b1130958ac08a11f464de89b2dba9c07f93667797b645a4419f31a4ba31
       - d381d0500f920582dc14cedaf45565ed2ea62eade6ba1bef18f7ede734a0f913
       - 7a0a9258ec75a73cc11eec695fba79a90c38143d61a954fd39d60a0d866fbc03
   - path: tests/docs/test_subsea_pipelines_industry_practice_second_pass.py
     reason: The public capability matrix identifies contractors and published vessel specifications by their source names.
+    token_sha256: 48a09e6121776aebeee4bb931f37f0bb196b6c4aae59c9fd7b94c2a39ba1cf5c
     line_sha256:
       - b3eacb0ed344e18f10e24aa3c5468e31615dd63dd9a3a5625dd91210465202de
       - bd4ec9698f3b44161d2d9d720ef2b6407414ccb07af67a1afdbaaccfbb710a7f
-  - path: tests/field_development/test_decline_sensitivity.py
-    reason: The public optional dependency requires its published module name for import and fallback testing.
+  - path: tests/docs/test_subsea_pipelines_industry_practice_second_pass.py
+    reason: The public capability matrix identifies contractors and published vessel specifications by their source names.
+    token_sha256: e94099d1f443a20ac48436d7db725f519900c96ef89993a57b7fc7fd38518eb1
     line_sha256:
-      - 580628da4c8f546b88b491678b6a0e14ab5c2e9f82239bf2645b22cffeb1797e
+      - b3eacb0ed344e18f10e24aa3c5468e31615dd63dd9a3a5625dd91210465202de
+      - bd4ec9698f3b44161d2d9d720ef2b6407414ccb07af67a1afdbaaccfbb710a7f
 
   # Exact source lines. Each exception applies only to the named structural rule.
-  - path: atlases/legacy-evidence/blobs/f3212c10abde12e4da71d7e4344734aa46b67b7c6fe3777a70295f5dbbab86c8
-    reason: Verbatim content-addressed historical source retained under its original digest.
-    rule: job-code
-    line_sha256:
-      - f746e04cae6b0f8ca9508950c670fbb133090f96c634f81fbc1134c6ab4a8fea
   - path: docs/articles/fitness-for-service-corroded-pipelines/README.md
     reason: Published project contact printed for reader feedback in the article or its source.
     rule: foreign-domain-email

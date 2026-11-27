@@ -15,6 +15,7 @@ from .diagnostic_basis import canonical_intent, prescribed_basis, strict_json
 from .diagnostic_mesh import transform_mesh
 
 
+_AUTHORIZED_DESTINATION_SHA256 = 'fb1fe55350e1d4049fae86830cf00ca93ef938979e0f276532d2d59586e48b29'
 MAX_SOURCE_NODES = 10000  # Shared expansion-work bound, not engineering accuracy.
 FIELD_MAP = {
     'vessel.geometry.symmetry': 'symmetry',
@@ -145,6 +146,7 @@ def _rights(raw, reference, resolver):
         raise ValueError('Rights do not bind original source bytes')
     destination = os.environ.get('DIGITALMODEL_EVIDENCE_REPOSITORY', '')
     if (not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9_.-]*/[A-Za-z0-9][A-Za-z0-9_.-]*', destination)
+            or hashlib.sha256(destination.encode('utf-8')).hexdigest() != _AUTHORIZED_DESTINATION_SHA256
             or record.get('decision') != 'permitted' or record.get('destination') != destination
             or record.get('audience') != 'authorized-private'
             or record.get('operations') != ['transform', 'private-retention']

@@ -155,7 +155,7 @@ def test_cited_limit_is_untouched_by_correction():
     try:
         before = resolve_envelope_criteria()
     except CitationResolutionError:
-        pytest.skip("knowledge base not resolvable — getter-backed traceability test")
+        pytest.skip("wiki not resolvable — getter-backed traceability test")
     cf = correct_flexjoint_response(_response(top_offset_m=30.0), _models_from_fixture())
     _ = flexjoint_utilisation(cf.decision_static_angle_deg, before)
     after = resolve_envelope_criteria()

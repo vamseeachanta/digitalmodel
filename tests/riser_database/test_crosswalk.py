@@ -7,26 +7,18 @@ registry key is ``api-std-2rd`` and there is NO ``api-rp-2rd`` entry.
 from __future__ import annotations
 
 import json
-import os
-from pathlib import Path
 
 import pytest
 
-from digitalmodel.riser_database.loader import RiserDatabase
+from digitalmodel.citations.resolver import find_wiki_content_root
 
-_KNOWN_WIKI_CLONES = (
-    Path.home() / ".local" / "share" / "digitalmodel" / "knowledge",
-)
+from digitalmodel.riser_database.loader import RiserDatabase
 
 
 def _registry() -> dict:
-    candidates = []
-    env = os.environ.get("LLM_WIKI_PATH")
-    if env:
-        candidates.append(Path(env))
-    candidates.extend(_KNOWN_WIKI_CLONES)
-    for base in candidates:
-        path = base / "data" / "standards-registry.json"
+    root = find_wiki_content_root()
+    if root is not None:
+        path = root / "data" / "standards-registry.json"
         if path.is_file():
             return json.loads(path.read_text())
     pytest.skip(

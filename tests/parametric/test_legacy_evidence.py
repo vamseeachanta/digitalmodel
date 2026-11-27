@@ -21,6 +21,24 @@ def test_manifest_is_frozen(tmp_path):
         evidence.legacy_files(tmp_path, "a" * 40)
 
 
+def test_stored_atlas_contains_only_the_published_producer():
+    revision = "c12624942c025e3d68182fa157cb479616a95f5d"
+    path = "scripts/python/digitalmodel/ocimf/build_coefficient_explorer.py"
+    entry = evidence.legacy_files(ROOT, revision)[path]
+    assert entry["storage"] == "redacted-blob"
+    assert entry["archived_blob"] == "08e84f7083ca298b914dc5396d3f182f10a1f44e"
+    with pytest.raises(ValueError, match="redacted"):
+        evidence.read_evidence(ROOT, revision, path)
+    source = evidence.read_evidence(ROOT, revision, path, allow_redacted=True)
+    assert hashlib.sha256(source).hexdigest() == "c37be3500043b51731ca59680ad07def74b91288123875197e410ae970234849"
+
+    manifest = json.loads((ROOT / evidence.MANIFEST).read_bytes())
+    published = {entry["sha256"] for paths in manifest["files"].values() for entry in paths.values()
+                 if entry["storage"] != "same-as-root"}
+    store = (ROOT / evidence.MANIFEST).parent / "blobs"
+    assert {blob.name for blob in store.iterdir()} == published
+
+
 def test_archived_ref_evidence_uses_publication_refs():
     manifest = json.loads((ROOT / evidence.MANIFEST).read_bytes())
     for refs in manifest["archived_refs"].values():

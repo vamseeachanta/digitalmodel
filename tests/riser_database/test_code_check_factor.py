@@ -24,6 +24,7 @@ PAGE = Path("wikis/engineering-standards/wiki/standards/dnv-os-f201.md")
 def isolated_resolution(tmp_path, monkeypatch):
     """Keep resolution offline and independent of local wiki discovery."""
     resolver._RESOLUTION_CACHE.clear()
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / "no-config"))
     monkeypatch.delenv("LLM_WIKI_PATH", raising=False)
     monkeypatch.delenv("DIGITALMODEL_REPO_ROOT", raising=False)
     monkeypatch.setattr(resolver, "_KNOWN_LOCAL_CLONES", ())

@@ -13,13 +13,14 @@ consumer helper degrades.
 
 from __future__ import annotations
 
-import os
 import shutil
 import time
 import warnings
 from pathlib import Path, PureWindowsPath
 
 import pytest
+
+from digitalmodel.citations.resolver import find_wiki_content_root
 
 from digitalmodel.citations import CitationResolutionError
 from digitalmodel.riser_database import getters
@@ -32,20 +33,9 @@ def _fixture_repo_root() -> Path:
 
 
 def _amjig_repo_root() -> Path:
-    candidates = []
-    env = os.environ.get("LLM_WIKI_PATH")
-    if env:
-        candidates.append(Path(env))
-    candidates.append(Path.home() / ".local" / "share" / "digitalmodel" / "knowledge")
-    for root in candidates:
-        page = (
-            root
-            / "wikis"
-            / "engineering-standards"
-            / "wiki"
-            / "standards"
-            / "amjig-2000.md"
-        )
+    root = find_wiki_content_root()
+    if root is not None:
+        page = root / "wikis/engineering-standards/wiki/standards/amjig-2000.md"
         if page.is_file():
             return root
     pytest.skip("amjig-2000 wiki criteria page not available")
@@ -81,6 +71,7 @@ def _no_wiki_anywhere(tmp_path, monkeypatch):
     deep tree that contains no clone."""
     from digitalmodel.citations import resolver as _resolver
 
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / "no-config"))
     deep = tmp_path
     for i in range(20):
         deep = deep / f"d{i}"
@@ -383,6 +374,7 @@ def test_helper_rejects_invalid_configured_root(tmp_path, monkeypatch, route, ro
     Synthetic absent, empty and non-directory roots contain no source data;
     rejection follows the resolver and schema configuration contracts.
     """
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / "no-config"))
     root = tmp_path / "invalid-wiki"
     if root_kind == "empty":
         root.mkdir()

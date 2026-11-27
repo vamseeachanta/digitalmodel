@@ -12,7 +12,7 @@ from pathlib import Path, PurePosixPath
 
 RESET_ROOT = "5d3f3c9f9380c369a9117f34d1a2ce7082976463"
 MANIFEST = Path("atlases/legacy-evidence/manifest.json")
-MANIFEST_SHA256 = "5d27313d69eb1c7c21558ba0dc1faadbe55816ec58851bb59c4220affe91f504"
+MANIFEST_SHA256 = "3820fc159d4850939534c507aaebb896d6ddef92de1a882fa8c82d4fcd1488c7"
 
 
 def git_output(repo_args: list[str], *args: str) -> bytes:
@@ -82,11 +82,14 @@ def _tree_blob(repo_args: list[str], revision: str, path: str) -> bytes:
     return git_output(repo_args, "cat-file", "blob", meta.split()[2].decode())
 
 
-def read_legacy(root: Path, revision: str, path: str, *, require_main: bool = False) -> bytes:
+def read_legacy(root: Path, revision: str, path: str, *, require_main: bool = False,
+                allow_redacted: bool = False) -> bytes:
     """Verify both content identities before returning frozen evidence bytes."""
     entry = legacy_files(root, revision, require_main=require_main).get(path)
     if not entry:
         raise ValueError(f"No frozen evidence for {revision}:{path}")
+    if entry["storage"] == "redacted-blob" and not allow_redacted:
+        raise ValueError(f"Only a redacted publication is available for {revision}:{path}")
     try:
         if entry["storage"] == "same-as-root":
             data = _tree_blob(["-C", str(root)], "HEAD", path)
@@ -101,8 +104,8 @@ def read_legacy(root: Path, revision: str, path: str, *, require_main: bool = Fa
     return data
 
 
-def read_evidence(root: Path, revision: str, path: str) -> bytes:
-    """Read an exact frozen claim or require main ancestry for a new claim."""
+def read_evidence(root: Path, revision: str, path: str, *, allow_redacted: bool = False) -> bytes:
+    """Read a frozen claim or require main ancestry. Redacted publications require opt-in."""
     if (not re.fullmatch(r"[0-9a-f]{4,40}", revision) or not path
             or PurePosixPath(path).is_absolute() or "\\" in path
             or ".." in PurePosixPath(path).parts or PurePosixPath(path).as_posix() != path):
@@ -115,7 +118,7 @@ def read_evidence(root: Path, revision: str, path: str) -> bytes:
         # A fetched side branch can contain an archived commit even though
         # its ancestry proof belongs to pre-reset main.
         if not objects or path in legacy_files(root, revision):
-            return read_legacy(root, revision, path)
+            return read_legacy(root, revision, path, allow_redacted=allow_redacted)
         revision = objects[0].decode()
         if git_output(repo, "cat-file", "-t", revision).strip() != b"commit":
             raise ValueError(f"Non-commit evidence revision: {revision}")

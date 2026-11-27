@@ -57,8 +57,9 @@ def _make_workspace_hub_overlay(root: Path) -> Path:
 
 
 @pytest.fixture(autouse=True)
-def _clean_env(monkeypatch):
+def _clean_env(tmp_path, monkeypatch):
     """Each test starts with both env vars unset."""
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / "no-config"))
     monkeypatch.delenv("LLM_WIKI_PATH", raising=False)
     monkeypatch.delenv("DIGITALMODEL_REPO_ROOT", raising=False)
 

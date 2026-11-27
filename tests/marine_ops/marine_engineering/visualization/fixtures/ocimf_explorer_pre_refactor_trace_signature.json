@@ -4,6 +4,7 @@
   "build_script_path": "scripts/python/digitalmodel/ocimf/build_coefficient_explorer.py",
   "build_script_function": "make_polar_overlay",
   "build_script_blob_sha": "08e84f7083ca298b914dc5396d3f182f10a1f44e",
+  "published_build_script_blob_sha": "8517f75135e07687c3b6372b2168cc55668c803d",
   "polar_call_sites": [
     {
       "figure_key": "A10",

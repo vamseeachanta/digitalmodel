@@ -3,6 +3,8 @@
   "observed_utc": "2026-09-14T15:57:00.094827+00:00",
   "verdict": "MAJOR",
   "scope": "Supported bounded normal-exit settlement defect and product-selection preparation; no general solver qualification",
+  "source_revision": "e776031cf201989433b7c9678871c2b5bd1cd614",
+  "source_revision_scope": "The three repository-relative source digests describe the parent of the disposition commit. The two external JSON digests identify artifacts at the observation time.",
   "sources": [
     {
       "path": "src/digitalmodel/ansys/cylinder_runner.py",

@@ -40,6 +40,7 @@ from __future__ import annotations
 from copy import deepcopy
 from dataclasses import dataclass
 from enum import Enum
+from importlib import import_module, resources
 from math import isfinite
 from typing import Callable, Optional
 
@@ -428,14 +429,21 @@ def _resolve_financial_adapter() -> Callable:
     ) -> dict:
         """Compute financial metrics with the optional adapter or the NumPy fallback."""
         try:
-            from worldenergydata.fdas import calculate_all_metrics
-
-            return calculate_all_metrics(
-                cashflows, discount_rate_annual=discount_rate, period="annual"
-            )
+            # The upstream financial provider re-exports its core/financial.py API.
+            # Inspect package resources without loading other optional integrations.
+            providers = [
+                child.name for child in resources.files("worldenergydata").iterdir()
+                if child.is_dir() and child.name.isidentifier()
+                and child.joinpath("core").joinpath("financial.py").is_file()
+            ]
+            if len(providers) == 1:
+                provider = import_module(f"worldenergydata.{providers[0]}")
+                calculate = getattr(provider, "calculate_all_metrics", None)
+                if callable(calculate):
+                    return calculate(cashflows, discount_rate_annual=discount_rate, period="annual")
         except ImportError:
-            # Numpy-only fallback
-            return _numpy_financial_metrics(cashflows, discount_rate)
+            pass
+        return _numpy_financial_metrics(cashflows, discount_rate)
 
     return _compute_metrics
 

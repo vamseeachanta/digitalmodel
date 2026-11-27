@@ -9,11 +9,12 @@ module) enforces the names.
 """
 from __future__ import annotations
 
-import os
 import re
 from pathlib import Path
 
 import pytest
+
+from digitalmodel.drilling_riser.calc_contracts import resolve_wiki_root
 
 from digitalmodel.riser_database import loader as rdb_loader
 from digitalmodel.riser_database.loader import (
@@ -228,21 +229,11 @@ def test_registry_generic_names_not_republished():
 
 # -- RSU registry reconciliation (in-context) ---------------------------------------
 
-_KNOWN_WIKI_CLONES = (
-    Path.home() / ".local" / "share" / "digitalmodel" / "knowledge",
-)
-
 
 def _registry_text() -> str:
-    candidates = []
-    env = os.environ.get("LLM_WIKI_PATH")
-    if env:
-        candidates.append(Path(env))
-    candidates.extend(_KNOWN_WIKI_CLONES)
-    for base in candidates:
-        page = base / REGISTRY_WIKI_PATH
-        if page.is_file():
-            return page.read_text()
+    root = resolve_wiki_root()
+    if root is not None:
+        return (root / REGISTRY_WIKI_PATH).read_text()
     pytest.skip(
         "knowledge base stack-up registry not available (standalone mode) — this "
         "reconciliation test is part of the in-context merge gate"
