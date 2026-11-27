@@ -13,7 +13,7 @@
 A parameterized OrcaFlex model of a **free-standing, dry-tree riser** landed on
 a surface SSR / wellhead. It is the engineering follow-on to the client-381d screening
 campaign (client-381d project wiki, issues **#2–#7**), whose
-conservative hand-screens (unrestrained Euler #2/#3, survival-pushdown stress
+hand-screens (unrestrained Euler #2/#3, survival-pushdown stress
 #4, tendon tension #7) all fail — and whose verdict pivots on inputs the screens
 cannot manufacture. The global-model scope is **client-381d issue #2**; this scaffold
 mirrors that scope as reviewable YAML.

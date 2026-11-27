@@ -40,7 +40,7 @@ DeepSeek-OCR is ~3.3B params. At BF16/FP16 the **weights alone are ≈ 6.6–7 G
 - **RAM:** ≥ 32 GB system RAM recommended for PDF rasterization (`pymupdf`) of large multi-page docs + concurrency. `[to confirm on box]`
 - **CUDA:** repo tested on **CUDA 12.9**; DeepSeek-OCR card on 11.8. Driver must support the torch CUDA build chosen. `[to confirm on box]`
 
-### 1.4 Which of our machines could host it — GPU gap flag
+### 1.4 Which project machines could host it — GPU gap flag
 
 - **ace-linux-1 / ace-linux-2 (Linux dev boxes):** primary candidates for the *plan's* execution because they have native `/mnt/ace` access to the test files, **but they are CPU-class dev boxes and may lack a CUDA GPU** with adequate VRAM. `[to confirm: do either dev box have an NVIDIA GPU ≥ 16 GB? Run `nvidia-smi` on each]`
 - **Licensed Windows box (ace-win-2, OrcaFlex/OrcaWave host):** has GPU-class hardware but is kept deliberately thin and is Windows (CUDA 12.9 + the Linux-style `infer.py` path needs validation on Windows). Not the first choice. `[to confirm]`

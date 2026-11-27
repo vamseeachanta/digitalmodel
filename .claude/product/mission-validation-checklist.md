@@ -99,7 +99,7 @@ Use this for quarterly reviews or before major stakeholder presentations.
 - [ ] Are all major competitor types listed?
 - [ ] Is differentiation clear and specific?
 - [ ] Are claims defensible? (faster, more reproducible, etc.)
-- [ ] Should we add specific products? (e.g., "vs. MATLAB toolboxes")
+- [ ] Should the list include specific products? (e.g., "vs. MATLAB toolboxes")
 
 **Action Items:**
 - [ ] Update market numbers annually (cite sources)
@@ -165,7 +165,7 @@ For each problem statement:
 **Validation Questions:**
 - [ ] Are problems still relevant? (market hasn't changed)
 - [ ] Do solutions actually solve the stated problems?
-- [ ] Are there new problems we should add?
+- [ ] Are there new problems to add?
 - [ ] Should any problems be removed or merged?
 
 **Action Items:**
@@ -184,7 +184,7 @@ For each problem statement:
 4. Modular Domain Architecture
 
 **Validation Questions:**
-- [ ] Can we prove each differentiator? (demos, benchmarks, testimonials)
+- [ ] Can each differentiator be demonstrated? (demos, benchmarks, testimonials)
 - [ ] Do competitors have similar features now? (update if yes)
 - [ ] Are differentiators compelling to users? (test in sales calls)
 - [ ] Are there new differentiators to add? (e.g., AI-assisted analysis)
@@ -213,7 +213,7 @@ For each problem statement:
 
 **Validation Questions:**
 - [ ] Are all listed features actually implemented?
-- [ ] Should we move features to "Planned" section?
+- [ ] Should any features move to the "Planned" section?
 - [ ] Are there new features to add?
 - [ ] Should any features be removed (deprecated)?
 
@@ -273,9 +273,9 @@ For each listed capability:
 - 10x faster design iteration
 
 **Validation Questions:**
-- [ ] Are these metrics measurable? (how do we track?)
-- [ ] Do we have baseline data? (before DigitalModel)
-- [ ] Have we achieved any of these? (update with actuals)
+- [ ] Are these metrics measurable? (how are they tracked?)
+- [ ] Are baseline data available? (before DigitalModel)
+- [ ] Have any of these targets been met? (update with actuals)
 - [ ] Are targets still realistic? (adjust based on progress)
 
 ### Quality & Compliance Metrics
@@ -287,7 +287,7 @@ For each listed capability:
 - Full traceability to standards
 
 **Validation Questions:**
-- [ ] Can we prove these claims? (audit logs, test results)
+- [ ] Can these claims be substantiated? (audit logs, test results)
 - [ ] Are metrics still relevant? (or need refinement)
 
 ### Adoption & Scale Metrics

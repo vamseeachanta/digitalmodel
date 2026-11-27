@@ -227,7 +227,7 @@ Update when any of these occur:
 
 ### Best Practices for Future Mission Updates
 1. **Always quantify impact** - Use numbers, percentages, time savings
-2. **Lead with value, not technology** - Transform X → Y, not "We built Z"
+2. **Lead with value, not technology** - Transform X → Y, not "Z was built"
 3. **Multi-dimensional metrics** - Business + technical + adoption + quality
 4. **Show roadmap clarity** - Current vs future capabilities
 5. **Demonstrate risk awareness** - Shows maturity and planning

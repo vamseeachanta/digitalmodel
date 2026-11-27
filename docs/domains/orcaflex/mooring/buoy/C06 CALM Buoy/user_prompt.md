@@ -51,7 +51,7 @@ projects\TEST_OPERABILITY\orcaflex\analysis_model
 run 1 year operability analysis. Utilize below if an example relative path files are needed.
 tests\modules\orcaflex\analysis\moorings\pretension\source
 
-for the leassons learnt so far from the work. Let us save and commit files, Following this, let us enhance the agent with all the learnings. Make sure the orcaflex agent is used for future work.
+To capture the lessons learnt so far, save and commit the files. Following this, enhance the agent with all the learnings. Make sure the orcaflex agent is used for future work.
 
 
 ### Postprocess 
