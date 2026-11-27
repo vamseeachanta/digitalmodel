@@ -37,14 +37,19 @@ Usage
 
 from __future__ import annotations
 
+import logging
 from copy import deepcopy
 from dataclasses import dataclass
 from enum import Enum
 from importlib import import_module, resources
+from importlib.util import module_from_spec
 from math import isfinite
+from pkgutil import iter_modules
 from typing import Callable, Optional
 
 import numpy as np
+
+logger = logging.getLogger(__name__)
 
 
 # ---------------------------------------------------------------------------
@@ -422,28 +427,39 @@ def _resolve_abex_adapter() -> Callable[[EconomicsInput], tuple[float, str]]:
 
 def _resolve_financial_adapter() -> Callable:
     """Return a callable that computes NPV/IRR/MIRR from a cashflow array."""
+    providers = []
+    calculate = None
+    try:
+        package = import_module("worldenergydata")
+        for child in iter_modules(package.__path__):
+            if not child.ispkg or not child.name.isidentifier():
+                continue
+            spec = child.module_finder.find_spec(f"{package.__name__}.{child.name}")
+            if spec is None:
+                continue
+            # Read the marker without executing unrelated package initializers.
+            root = resources.files(module_from_spec(spec))
+            if root.joinpath("core").joinpath("financial.py").is_file():
+                providers.append(spec.name)
+        if len(providers) == 1:
+            provider = import_module(providers[0])
+            calculate = getattr(provider, "calculate_all_metrics", None)
+    except ImportError:
+        pass
+
+    if len(providers) != 1:
+        logger.debug("Using NumPy metrics after finding %d financial providers", len(providers))
+    if not callable(calculate):
+        return _numpy_financial_metrics
 
     def _compute_metrics(
         cashflows: np.ndarray,
         discount_rate: float,
     ) -> dict:
-        """Compute financial metrics with the optional adapter or the NumPy fallback."""
         try:
-            # The upstream financial provider re-exports its core/financial.py API.
-            # Inspect package resources without loading other optional integrations.
-            providers = [
-                child.name for child in resources.files("worldenergydata").iterdir()
-                if child.is_dir() and child.name.isidentifier()
-                and child.joinpath("core").joinpath("financial.py").is_file()
-            ]
-            if len(providers) == 1:
-                provider = import_module(f"worldenergydata.{providers[0]}")
-                calculate = getattr(provider, "calculate_all_metrics", None)
-                if callable(calculate):
-                    return calculate(cashflows, discount_rate_annual=discount_rate, period="annual")
+            return calculate(cashflows, discount_rate_annual=discount_rate, period="annual")
         except ImportError:
-            pass
-        return _numpy_financial_metrics(cashflows, discount_rate)
+            return _numpy_financial_metrics(cashflows, discount_rate)
 
     return _compute_metrics
 
