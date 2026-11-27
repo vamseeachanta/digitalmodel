@@ -30,9 +30,9 @@ BASE_CONFIG = (
 )
 
 DRILLSHIP_RUN = {
-    "run_id": "lr_acma_8de9c018adbd",
+    "run_id": "lr_client-4e09_8de9c018adbd",
     "workflow": "orcawave-diffraction",
-    "input": "acma/orcawave-diffraction-fpso/input.yml",
+    "input": "client-4e09/orcawave-diffraction-fpso/input.yml",
 }
 
 
@@ -111,14 +111,14 @@ def test_build_provenance_drillship_manifest():
     prov = calc.build_provenance([DRILLSHIP_RUN], "drillship")
     assert prov["rao_basis"] == "drillship"
     assert prov["rao_provenance"] == "ship_proxy"
-    assert prov["basis_run_id"] == "lr_acma_8de9c018adbd"
+    assert prov["basis_run_id"] == "lr_client-4e09_8de9c018adbd"
     assert prov["n_completed_runs"] == 1
     ids = [t["id"] for t in prov["tasks"]]
     assert ids == ["T1", "T2", "T3", "T4", "T5", "T6", "T7", "T8"]
     by_id = {t["id"]: t for t in prov["tasks"]}
     assert by_id["T1"]["status"] == "actual"
     assert by_id["T3"]["status"] == "ship_proxy"
-    assert by_id["T3"]["run_id"] == "lr_acma_8de9c018adbd"
+    assert by_id["T3"]["run_id"] == "lr_client-4e09_8de9c018adbd"
     assert by_id["T5"]["status"] == "pending"
     assert by_id["T8"]["status"] == "proxy"
 
@@ -280,7 +280,7 @@ def test_golden_drillship_transit_hs(vessel_info, lifts):
     # Together these give 2.23 m; retain the same absolute tolerance.
     assert hs6 == pytest.approx(2.23, abs=0.05)
     assert res["rao_provenance"] == "ship_proxy"
-    assert res["provenance"]["basis_run_id"] == "lr_acma_8de9c018adbd"
+    assert res["provenance"]["basis_run_id"] == "lr_client-4e09_8de9c018adbd"
 
 
 # ---------------------------------------------------------------- determinism
@@ -461,7 +461,7 @@ def test_router_is_deterministic_on_base_config(tmp_path):
 # Advances #1111: a vessel-specific OrcaWave RAO artifact drives the operation
 # envelopes for the "vessel" basis. Tested here with a SYNTHETIC fixture RAOSet
 # (clearly NOT real vessel data) — the real HLV-A mesh + licensed solve remain.
-HLV_A_RUN = {"run_id": "lr_bl", "input": "acma/HLV-A-mesh/input.yml"}
+HLV_A_RUN = {"run_id": "lr_bl", "input": "client-4e09/HLV-A-mesh/input.yml"}
 HS_LIMITS = [0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0]
 
 

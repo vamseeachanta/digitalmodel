@@ -181,7 +181,7 @@ sensitivity:
     description: >-
       Chuck's original concern: tree supported with NO tubing structural
       contribution (arguably outer riser only). Robustness/abnormal case, NOT
-      baseline (baseline = tubing always pre-tensioned, per FDAS #2).
+      baseline (baseline = tubing always pre-tensioned, per client-381d #2).
     tubing_structural: false
     classification: abnormal
 

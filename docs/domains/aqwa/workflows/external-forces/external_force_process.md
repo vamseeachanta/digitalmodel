@@ -13,7 +13,7 @@
 ```
 
 
-title       : Jira Adoption for ACMA
+title       : Jira Adoption for client-4e09
 author      : Vamsee Achanta
 description : Technology Enabled Engineering
 keywords    : Technology, Engineering, Manufacturing.
@@ -206,4 +206,4 @@ TBA
 
 - dl-correction term
   - For zero load, zero offset, perform sensitivity analysis to determine the effect of the term
-  - Do we need this term in future. Keep it in programming
+  - Will this term be needed in future? Keep it in the code.

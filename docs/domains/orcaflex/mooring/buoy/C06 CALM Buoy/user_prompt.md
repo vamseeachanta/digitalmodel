@@ -4,11 +4,11 @@ File refinements to be made for calm buoy files based on following:
 
 The base files should be referenced again  (avoids multiple copies and redundant changes/updates).
 
-Example file path: <project-root> the FST project Eng Completion\ACMA Work\<CTR> Hydrodynamic and Mooring Load Analysis\03_orcaflex\rev_a08\base_files
+Example file path: <project-root> the FST project Eng Completion\client-4e09 Work\<CTR> Hydrodynamic and Mooring Load Analysis\03_orcaflex\rev_a08\base_files
 
 
 The env files should be simple and standalone and in reuse state. See below example:
-<project-root> the FST project Eng Completion\ACMA Work\<CTR> Hydrodynamic and Mooring Load Analysis\03_orcaflex\rev_a08\base_files\env
+<project-root> the FST project Eng Completion\client-4e09 Work\<CTR> Hydrodynamic and Mooring Load Analysis\03_orcaflex\rev_a08\base_files\env
 
 
 Before proceeding further, where was the wave data in below file obtained from? Is there a simpler definition that is sufficiently accurate and will also help easily compare files.
@@ -26,7 +26,7 @@ projects\TEST_OPERABILITY\orcaflex\base_files\env\waves_000deg_1yr.yml
 
 The 1 year analysis file for a given return period and heading should reference base files and env files. 
 Naming of files can be such that it can be flat structure if needed. See below example:
-<project-root> the FST project Eng Completion\ACMA Work\<CTR> Hydrodynamic and Mooring Load Analysis\03_orcaflex\rev_a08\03c_100yr
+<project-root> the FST project Eng Completion\client-4e09 Work\<CTR> Hydrodynamic and Mooring Load Analysis\03_orcaflex\rev_a08\03c_100yr
 
 
 with the latest file strucure, review below folder to see if any of the files are no longer needed and can be archived or deleted:
@@ -51,7 +51,7 @@ projects\TEST_OPERABILITY\orcaflex\analysis_model
 run 1 year operability analysis. Utilize below if an example relative path files are needed.
 tests\modules\orcaflex\analysis\moorings\pretension\source
 
-for the leassons learnt so far from the work. Let us save and commit files, Following this, let us enhance the agent with all the learnings. Make sure the orcaflex agent is used for future work.
+To capture the lessons learnt so far, save and commit the files. Following this, enhance the agent with all the learnings. Make sure the orcaflex agent is used for future work.
 
 
 ### Postprocess 

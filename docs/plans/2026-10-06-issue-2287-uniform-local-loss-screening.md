@@ -8,10 +8,10 @@ Execution: single-lane implementation, independent read-only adversarial review.
 Owned paths: new diagnostic and tests, this specification, source-audit note,
 asset_integrity row in module-routing and its routing test, study handoff.
 Read-only: all production physics, private wiki and digitalmodel-data.
-Forbidden: CP lanes, Elliott, client originals, secrets, licensed originals,
+Forbidden: CP lanes, client-fcf6, client originals, secrets, licensed originals,
 other registry rows, host/network/security configuration.
 
-Create reusable screening curves with axial damaged length on X and minimum remaining wall on Y, with separate circumferential-width slices and separate Level 1/Level 2 results for four representative straight-pipe geometries. A Level 3 numerical comparison is a planned, gated follow-up. This study is independent of the Elliott plot revision and CP lanes.
+Create reusable screening curves with axial damaged length on X and minimum remaining wall on Y, with separate circumferential-width slices and separate Level 1/Level 2 results for four representative straight-pipe geometries. A Level 3 numerical comparison is a planned, gated follow-up. This study is independent of the client-fcf6 plot revision and CP lanes.
 
 ## Existing-method evidence
 
@@ -168,7 +168,7 @@ matrices query numerical results within their qualified methods.
 
 ## Acceptance and review
 
-- Comprehensive specification, four-size input basis and bounded runner committed on isolated study branch; no CP or Elliott writes.
+- Comprehensive specification, four-size input basis and bounded runner committed on isolated study branch; no CP or client-fcf6 writes.
 - L1/L2 diagnostic run and appropriate existing tests recorded with exact revision/digests and limitations.
 - Source qualification findings explicit; requested allowable curves stay blocked until exact edition audit and independent validation pass.
 - Report navigation links resolve; no new catalog/raw-report duplication.

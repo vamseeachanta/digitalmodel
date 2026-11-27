@@ -139,7 +139,7 @@ Removed by dedup: **8,735** archived duplicates + **1,115** dependency files = *
 | `WEC-Sim` | 258 | 88 MB | open-source tool (incl. the 10 NetCDF `.nc`) |
 | `seanation` | 225 | 269 MB | **active** subsea project |
 | `O&G-Standards` | 31 | 5.7 GB | |
-| `eng-partner` `acma-codes` `MoorDyn` `MoorPy` `openfast` `capytaine` `gmsh` … | <50 each | — | sim tools / minor |
+| `eng-partner` `<licensed-codes-root>` `MoorDyn` `MoorPy` `openfast` `capytaine` `gmsh` … | <50 each | — | sim tools / minor |
 
 ## Aggregate 4 — "signal" set, **excluding** the `ri/00_inbox` dump
 

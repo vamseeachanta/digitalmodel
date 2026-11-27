@@ -76,7 +76,7 @@ class OrcaflexUtilities:
     def require_orcaflex_or_raise(self, operation: str = "post-process") -> None:
         """Refuse at call time when there is no license and no opt-in.
 
-        #1631 D5a. This is the surface behind lr_acma_ff132001b7ad, the queued
+        #1631 D5a. This is the surface behind lr_client-4e09_ff132001b7ad, the queued
         orcaflex-strength-post run that produced no artifacts and still
         recorded returncode 0. It routes through none of the three modules the
         issue names, so fixing only those would have left it exactly as

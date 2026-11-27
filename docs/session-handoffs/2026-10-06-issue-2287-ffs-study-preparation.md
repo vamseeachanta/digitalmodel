@@ -66,7 +66,7 @@ not verified and no remote computation occurred.
 Discovery: common module routing amended only in asset_integrity row. Private
 wiki query_sources remains unchanged; hub report-artifact index is undeployed.
 Structural owner issue 2288 has disjoint structural lane; no shared helper or
-CP/Elliott edits. Elliott-thread coordination message was rejected by automatic
+CP/client-fcf6 edits. client-fcf6-thread coordination message was rejected by automatic
 approval review for missing recognized explicit recipient authorization; it
 was not sent and no indirect workaround used.
 

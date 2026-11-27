@@ -23,12 +23,35 @@ if [ -z "$REPO" ] || [ -z "$TASK" ]; then
     echo ""
 fi
 
-# Determine repository tier
-WORK_TIER1="workspace-hub|digitalmodel|energy|frontierdeepwater"
-WORK_TIER2="aceengineercode|assetutilities|worldenergydata|rock-oil-field|teamresumes"
-WORK_TIER3="doris|contractor|OGManufacturing|seanation"
-PERSONAL_ACTIVE="aceengineer-admin|aceengineer-website"
-PERSONAL_EXPERIMENTAL="hobbies|sd-work|<project-archive>|achantas-data"
+# Private checkout names come from ACE_PRIVATE_REPOS (CSV), else one per line
+# in ACE_PRIVATE_CONFIG (default ~/.config/ace/private-repos.txt).
+is_private_repo() {
+    local config="${ACE_PRIVATE_CONFIG:-$HOME/.config/ace/private-repos.txt}" names
+    case "$REPO" in ""|.|..|*/*|*\\*|*$'\n'*) return 1 ;; esac
+    if [[ -n ${ACE_PRIVATE_REPOS:-} ]]; then
+        names=${ACE_PRIVATE_REPOS//,/$'\n'}
+        sed 's/^[[:space:]]*//; s/[[:space:]]*$//' <<< "$names" | grep -Fxq -- "$REPO"
+        return
+    fi
+
+    python3 - "$config" "$REPO" <<'PY'
+import stat
+import sys
+from pathlib import Path
+
+path = Path(sys.argv[1])
+try:
+    if not stat.S_ISREG(path.stat().st_mode):
+        raise OSError("not a regular file")
+    names = path.read_text(encoding="utf-8").splitlines()
+except FileNotFoundError:
+    sys.exit(1)
+except (OSError, UnicodeError):
+    print("Warning: unable to read private repository configuration", file=sys.stderr)
+    sys.exit(1)
+sys.exit(sys.argv[2] not in (name.strip() for name in names))
+PY
+}
 
 # Complexity indicators
 OPUS_KEYWORDS="architecture|refactor|design|security|complex|multi-file|algorithm|optimization|strategy|planning|cross-repository|performance|migration"
@@ -55,25 +78,27 @@ word_count=$(echo "$TASK" | wc -w)
 if [ "$word_count" -gt 15 ]; then
     ((complexity+=1))
 elif [ "$word_count" -lt 5 ]; then
-    ((complexity-=1))
+    complexity=$((complexity - 1))
 fi
 
 # Repository tier adjustment
-if echo "$REPO" | grep -qE "$WORK_TIER1"; then
-    repo_tier="Work Tier 1 (Production)"
-    ((complexity+=1))  # Bias toward higher quality
-elif echo "$REPO" | grep -qE "$WORK_TIER2"; then
-    repo_tier="Work Tier 2 (Active)"
-elif echo "$REPO" | grep -qE "$WORK_TIER3"; then
+if is_private_repo; then
     repo_tier="Work Tier 3 (Maintenance)"
-    ((complexity-=1))  # Bias toward efficiency
-elif echo "$REPO" | grep -qE "$PERSONAL_ACTIVE"; then
-    repo_tier="Personal (Active)"
-elif echo "$REPO" | grep -qE "$PERSONAL_EXPERIMENTAL"; then
-    repo_tier="Personal (Experimental)"
-    ((complexity-=1))  # Bias toward efficiency
+    complexity=$((complexity - 1))
 else
-    repo_tier="Unknown"
+    case "$REPO" in
+        workspace-hub|digitalmodel)
+            repo_tier="Work Tier 1 (Production)"
+            complexity=$((complexity + 1))
+            ;;
+        assetutilities|worldenergydata) repo_tier="Work Tier 2 (Active)" ;;
+        aceengineer-website) repo_tier="Personal (Active)" ;;
+        hobbies)
+            repo_tier="Personal (Experimental)"
+            complexity=$((complexity - 1))
+            ;;
+        *) repo_tier="Unknown" ;;
+    esac
 fi
 
 # Determine model

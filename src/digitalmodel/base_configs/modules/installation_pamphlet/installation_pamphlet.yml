@@ -36,9 +36,9 @@ installation_pamphlet:
   # Provenance source: an explicit list of completed licensed runs, OR set
   # queue_results_dir to scan a licensed-run queue (finished + returncode 0).
   completed_runs:
-    - {run_id: lr_acma_8de9c018adbd, workflow: orcawave-diffraction, input: acma/orcawave-diffraction-fpso/input.yml}
-    - {run_id: lr_acma_mooring_001, workflow: mooring-fatigue, input: acma/mooring-fatigue/input.yml}
-    - {run_id: lr_acma_weather_001, workflow: weather-window, input: acma/weather-window/input.yml}
+    - {run_id: lr_client-4e09_8de9c018adbd, workflow: orcawave-diffraction, input: client-4e09/orcawave-diffraction-fpso/input.yml}
+    - {run_id: lr_client-4e09_mooring_001, workflow: mooring-fatigue, input: client-4e09/mooring-fatigue/input.yml}
+    - {run_id: lr_client-4e09_weather_001, workflow: weather-window, input: client-4e09/weather-window/input.yml}
   # queue_results_dir: <repo-relative or configured path>/queue/results
 
   # Deterministic label stamped into the artifact (never datetime.now).

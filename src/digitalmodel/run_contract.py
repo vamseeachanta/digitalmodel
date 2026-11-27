@@ -88,7 +88,7 @@ class RunVerdict:
         if self.verdict in REFUSING_VERDICTS:
             return True
         # A completed run that produced nothing does not pass. Reproduces
-        # lr_acma_ff132001b7ad, which recorded returncode 0 with no
+        # lr_client-4e09_ff132001b7ad, which recorded returncode 0 with no
         # returned_files key at all -- indistinguishable, at the result level,
         # from a run that produced everything.
         #

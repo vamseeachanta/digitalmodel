@@ -1,6 +1,6 @@
 # Repository structure
 
-This guide covers tracked folders through three levels below the repository root. The table is generated from [structure.yaml](structure.yaml). Paths link to their folders. One dated demo uses a wildcard to withhold its audience name.
+This guide covers tracked folders through three levels below the repository root. The table is generated from [structure.yaml](structure.yaml). Paths link to their folders.
 
 Consult [CODEOWNERS](../CODEOWNERS) for review ownership. A dash marks an optional field omitted from the inventory.
 
@@ -234,7 +234,7 @@ Consult [CODEOWNERS](../CODEOWNERS) for review ownership. A dash marks an option
 | [`docs/collide_pe/templates/`](../docs/collide_pe/templates/) | The letterhead template defines the layout of the generated petroleum engineering briefs. | — | — |
 | [`docs/data/`](../docs/data/) | The guides describe dataset coverage, catalog freshness and the mooring coefficient corpus. | — | — |
 | [`docs/demos/`](../docs/demos/) | Readiness assessments identify engineering examples available for demonstrations. | — | — |
-| `docs/demos/2026-06-05-*/` | The assessment records offshore and subsea example readiness for the June 2026 demonstration. | — | — |
+| [`docs/demos/2026-06-05-client-c29b/`](../docs/demos/2026-06-05-client-c29b/) | The assessment records offshore and subsea example readiness for the June 2026 demonstration. | — | — |
 | [`docs/development/`](../docs/development/) | The development guides cover example testing, dependency contracts and report qualification. | — | — |
 | [`docs/domains/`](../docs/domains/) | The domain index organises engineering references, software guides and analysis examples by subject. | — | — |
 | [`docs/domains/BEMRosetta/`](../docs/domains/BEMRosetta/) | The reference points readers to the BEMRosetta hydrodynamic data tool. | — | — |

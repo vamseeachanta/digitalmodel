@@ -460,7 +460,7 @@ entries:
     purpose: The guides describe dataset coverage, catalog freshness and the mooring coefficient corpus.
   - path: docs/demos/
     purpose: Readiness assessments identify engineering examples available for demonstrations.
-  - path: docs/demos/2026-06-05-*/
+  - path: docs/demos/2026-06-05-client-c29b/
     purpose: The assessment records offshore and subsea example readiness for the June 2026 demonstration.
   - path: docs/development/
     purpose: The development guides cover example testing, dependency contracts and report qualification.

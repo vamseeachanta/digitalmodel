@@ -6,7 +6,7 @@
 
 ## Pitch
 
-DigitalModel transforms offshore and marine engineering workflows from error-prone manual processes into reproducible, automated analysis pipelines. What takes experienced engineers 40 hours of post-processing now completes in 2 hours with 100% reproducibility and zero data-entry errors. Through configuration-driven YAML workflows and deep CAE tool integration (OrcaFlex, AQWA, ANSYS), we eliminate 60-80% of analysis time while ensuring full compliance with API, DNV, and ABS industry standards.
+DigitalModel transforms offshore and marine engineering workflows from error-prone manual processes into reproducible, automated analysis pipelines. What takes experienced engineers 40 hours of post-processing now completes in 2 hours with 100% reproducibility and zero data-entry errors. Through configuration-driven YAML workflows and deep CAE tool integration (OrcaFlex, AQWA, ANSYS), DigitalModel eliminates 60-80% of analysis time while ensuring full compliance with API, DNV, and ABS industry standards.
 
 ## Market Position
 
@@ -61,22 +61,22 @@ DigitalModel transforms offshore and marine engineering workflows from error-pro
 ### Manual Post-Processing Burden
 Engineers spend 60-80% of analysis time on data extraction, formatting, and report generation rather than engineering judgment. Post-processing OrcaFlex results manually is tedious, error-prone, and doesn't scale.
 
-**Our Solution:** Automated post-processing pipelines that extract, process, and format simulation results with YAML-driven configuration. What took hours now takes minutes.
+**Solution:** Automated post-processing pipelines that extract, process, and format simulation results with YAML-driven configuration. What took hours now takes minutes.
 
 ### Fragmented Engineering Tools
 Engineering calculations are scattered across Excel files, Python scripts, and proprietary tools. No single source of truth, difficult to maintain, impossible to audit.
 
-**Our Solution:** Modular Python library with domain-specific modules (OrcaFlex, AQWA, structural, marine) unified under a common configuration and execution framework.
+**Solution:** Modular Python library with domain-specific modules (OrcaFlex, AQWA, structural, marine) unified under a common configuration and execution framework.
 
 ### Lack of Reproducibility
 Engineering analyses are often difficult to reproduce. Assumptions buried in spreadsheets, manual steps not documented, results not traceable.
 
-**Our Solution:** Configuration-driven architecture where YAML files capture all inputs, parameters, and workflow steps. Every analysis is reproducible and auditable.
+**Solution:** Configuration-driven architecture where YAML files capture all inputs, parameters, and workflow steps. Every analysis is reproducible and auditable.
 
 ### CAE Tool Integration Complexity
 Interfacing with commercial CAE tools (OrcaFlex, AQWA, ANSYS) requires deep API knowledge and custom scripting for each project.
 
-**Our Solution:** Pre-built adapters and integration patterns for major CAE tools with graceful fallback mechanisms when licenses are unavailable.
+**Solution:** Pre-built adapters and integration patterns for major CAE tools with graceful fallback mechanisms when licenses are unavailable.
 
 ## Differentiators
 
@@ -224,7 +224,7 @@ Organized by engineering domain, not technical layers:
 
 ### Future Integration Candidates
 - **frontierdeepwater** - Deepwater riser and mooring analysis (potential module source)
-- **doris**, **contractor** - Offshore installation workflows (integration potential)
+- **client-c29b**, **contractor** - Offshore installation workflows (integration potential)
 
 ---
 

@@ -3,7 +3,7 @@
 Paste the block below into a new chat session (Claude / Codex / Gemini / Hermes) when you need OCIMF MEG3/MEG4 wind or current coefficient values for a specific hull and condition.
 
 Two variants are provided:
-- **Variant A — Same-machine** (the other project runs on the same workstation that has `/mnt/ace/acma-codes/`)
+- **Variant A — Same-machine** (the other project runs on the same workstation that has `<licensed-codes-root>/`)
 - **Variant B — Different-machine** (the other project doesn't have local access to the corpus)
 
 ---
@@ -26,20 +26,20 @@ INPUTS
 - Heading angles wanted:  [list of degrees, 0=bow-on, 180=stern-on]
 - % full-load condition:  [0-100, for K-factor correction]
 
-CORPUS LOCATIONS (read-only)
+CORPUS LOCATIONS (read-only; substitute the local mount for <licensed-codes-root>)
 - Digitized lookup tables (master):
-  /mnt/ace/acma-codes/OCIMF/OCIMF Coef.xlsx
+  <licensed-codes-root>/OCIMF/OCIMF Coef.xlsx
   (17 sheets, 3 data sheets: "Data 5a-9a", "Data 10a-14a", "Data 16a-19a")
 - Interactive coefficient explorer (open in browser to verify visually):
   /mnt/local-analysis/digitalmodel/docs/domains/charts/phase2/ocimf/ocimf_coefficient_explorer.html
 - Full MEG3 (2008) standard PDF:
-  /mnt/ace/acma-codes/OCIMF/OCIMF - 2008 - Mooring Equipment Guidelines.pdf
+  <licensed-codes-root>/OCIMF/OCIMF - 2008 - Mooring Equipment Guidelines.pdf
 - Full MEG4 (2018) standard PDF:
-  /mnt/ace/acma-codes/OCIMF (MEG 4)/Mooring Equipment Guidelines - MEG4.pdf
+  <licensed-codes-root>/OCIMF (MEG 4)/Mooring Equipment Guidelines - MEG4.pdf
 - Per-figure PDF extracts:
-  /mnt/ace/acma-codes/OCIMF/Figures/
+  <licensed-codes-root>/OCIMF/Figures/
 - Alternative WebPlotDigitizer extraction (A5-A9 only, for cross-validation):
-  /mnt/ace/acma-codes/OCIMF 3rd ed/Digitizer/
+  <licensed-codes-root>/OCIMF 3rd ed/Digitizer/
 
 CORPUS SCHEMA
 - Secondary axis is WD/T ratio (water-depth/draft), NOT displacement.
@@ -143,11 +143,11 @@ Context: this query is for [mooring screening / detailed mooring design / academ
 
 ## Notes on usage
 
-1. **Pre-flight check**: before pasting the prompt, run `ls /mnt/ace/acma-codes/OCIMF/` from the target machine to confirm the corpus is mounted.
+1. **Pre-flight check**: before pasting the prompt, run `ls "<licensed-codes-root>/OCIMF/"` from the target machine to confirm the corpus is mounted.
 2. **Citation footprint**: if the downstream code emits a `Citation` sidecar per the calc-citation contract, the AI's response should include the `citation` block verbatim — those fields map 1:1 to `digitalmodel.citations.schema.Citation`.
 3. **Reference areas are caller-supplied**: the corpus contains coefficients only, not vessel-specific projected areas. The prompt asks for vessel `LBP` and `T` but transverse `A_T` and lateral `A_L` projected areas must come from the caller's vessel database — they vary with above-water structure and can change between the same hull on different sites.
 4. **Verify visually**: open `ocimf_coefficient_explorer.html` in a browser to confirm the curve the AI quoted matches the published figure shape. The explorer's interactive hover lets you read off exact values for cross-checking.
-5. **Hermes routing** (workspace-hub-specific): if dispatching to Hermes for execution-heavy use, route via the brain/hands model per `.claude/rules/goal-invocation.md` — Hermes can read both `/mnt/ace/acma-codes/` and `/mnt/local-analysis/` and emit Citation sidecars directly.
+5. **Hermes routing** (workspace-hub-specific): if dispatching to Hermes for execution-heavy use, route via the brain/hands model per `.claude/rules/goal-invocation.md` — Hermes can read the external share (`<licensed-codes-root>/`) and files relative to the workspace root, and emit Citation sidecars directly.
 
 ## Related
 - [`ocimf_coefficient_explorer.html`](ocimf_coefficient_explorer.html) — interactive visualization of the same corpus
