@@ -135,6 +135,8 @@ def load_tables(data_dir):
             raise ValueError(f'provenance: malformed JSON: {exc.msg}') from exc
         if not isinstance(provenance, dict):
             raise ValueError('provenance: expected a JSON object')
+    elif sidecar.is_symlink():
+        raise ValueError(f'provenance: dangling symlink at {sidecar}')
     tables = {}
     for kind in TABLE_COLUMNS:
         path = data_dir / f'{kind}_properties.csv'

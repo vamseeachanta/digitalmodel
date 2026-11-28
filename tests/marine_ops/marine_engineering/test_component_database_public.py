@@ -6,6 +6,7 @@ import sys
 import shutil
 import socket
 from pathlib import Path
+from unittest.mock import patch
 
 import numpy as np
 import pandas as pd
@@ -226,8 +227,10 @@ def test_legacy_chain_query_interface(tmp_path):
 )
 def test_non_object_sidecar_is_rejected(copied_data, value):
     (copied_data / 'provenance.json').write_text(json.dumps(value))
-    with pytest.raises(ValueError, match='provenance.*expected a JSON object'):
-        ComponentDatabase(copied_data)
+    with patch.object(pd, 'read_csv', side_effect=AssertionError('unexpected CSV read')) as read_csv:
+        with pytest.raises(ValueError, match='provenance.*expected a JSON object'):
+            ComponentDatabase(copied_data)
+        read_csv.assert_not_called()
 
 
 @pytest.mark.parametrize('kind', ['chain', 'wire', 'line'])
@@ -272,4 +275,16 @@ def test_utf8_sidecar_preserves_source_name_in_c_locale(copied_data, monkeypatch
 def test_invalid_utf8_sidecar_fails_before_csv_loading(tmp_path):
     (tmp_path / 'provenance.json').write_bytes(b'{"name": "\xff"}')
     with pytest.raises(UnicodeDecodeError):
+        ComponentDatabase(tmp_path)
+
+
+def test_dangling_sidecar_symlink_is_rejected(tmp_path):
+    (tmp_path / 'provenance.json').symlink_to('missing.json')
+    with pytest.raises(ValueError, match='provenance: dangling symlink'):
+        ComponentDatabase(tmp_path)
+
+
+def test_utf8_bom_sidecar_is_malformed_json(tmp_path):
+    (tmp_path / 'provenance.json').write_text('{}', encoding='utf-8-sig')
+    with pytest.raises(ValueError, match='provenance: malformed JSON:'):
         ComponentDatabase(tmp_path)
