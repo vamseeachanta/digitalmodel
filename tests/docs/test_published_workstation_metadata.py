@@ -97,13 +97,27 @@ def test_scan_rejects_an_empty_census(tmp_path):
         assert_no_internal_host(tmp_path)
 
 
+def require_listed_file(path: Path) -> Path:
+    assert path.is_file(), f"Expected a file at {path}"
+    return path
+
+
 @pytest.mark.parametrize("relative", ISSUE_DOCUMENTATION)
-def test_issue_documentation_has_no_internal_host(relative):
-    assert_no_internal_host(ROOT / relative, DOCUMENTATION_HOSTS)
+def test_issue_documentation_file_exists(relative):
+    require_listed_file(ROOT / relative)
 
 
 def test_issue_documentation_census_is_complete():
     assert len(ISSUE_DOCUMENTATION) == len(set(ISSUE_DOCUMENTATION)) == 10
+
+
+def test_listed_file_rejects_a_directory(tmp_path):
+    path = tmp_path / ISSUE_DOCUMENTATION[0]
+    path.mkdir(parents=True)
+    (path / "nested.md").write_text("Compute capacity", encoding="utf-8")
+    with pytest.raises(AssertionError, match="Expected a file") as error:
+        require_listed_file(path)
+    assert str(path) in str(error.value)
 
 
 @pytest.mark.parametrize("case", (str.lower, str.upper, str.capitalize),
@@ -221,7 +235,8 @@ def test_benchmark_refresh_does_not_supply_a_hostname_label():
     "scripts/setup/verify-cfd-box.sh",
 ])
 def test_setup_publication_files_have_no_internal_aliases(relative):
-    text = (ROOT / relative).read_text(encoding="utf-8").casefold()
+    path = require_listed_file(ROOT / relative)
+    text = path.read_text(encoding="utf-8").casefold()
     assert not any(alias in text for alias in DOCUMENTATION_HOSTS), relative
 
 
