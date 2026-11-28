@@ -56,6 +56,7 @@ The proposed output is `lcoe` requested in `USD/(MW*h)` through OpenMDAO convers
 ## Analytical fit and verification
 
 Upstream lines 209-226 calculate `lcoe = C / E`, where `C = icc * fcr + c_opex` and `E` is annual plant energy divided by installed kW. This matches `compute_lcoe` only when escalation and decommissioning costs are zero and FCR is the capital recovery factor `d / (1 - (1 + d)**(-N))`.
+At zero discount, the capital recovery factor takes its limiting value of `1/N` as `d` approaches zero.
 
 Before implementation, the provisional tests failed on the absent adapter. Afterwards, 10 tests passed and two real-package cases skipped in the environment without WISDEM. These covered the annuity identity, exact mapping, rejected escalation/decommissioning, component calls and units, lazy imports and transitive import errors. They establish the proposed wiring only; the failed real-package gate prevents adoption.
 
