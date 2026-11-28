@@ -1,10 +1,11 @@
 # OrcaFlex modular generator: structure coverage and defect review
 
+This historical snapshot records findings at `78179a8c2` and the addendum at `e2e2d30e`. Current defect status is outside its scope.
+
 Scope: `src/digitalmodel/solvers/orcaflex/modular_generator` (schema, builders,
 routers, `riser_conversion.py`), its tests under
 `tests/solvers/orcaflex/modular_generator` and the examples under
 `docs/domains/orcaflex/examples/modular` and `docs/domains/orcaflex/library`.
-Revision reviewed: `origin/main` at `78179a8c2`.
 
 Method: the review reads the source end to end, runs the module test suite and
 runs offline probes of the generator. No OrcaFlex licence is used, so no
@@ -79,11 +80,10 @@ Cross-cutting gaps:
   writer. Typed builders are checked by assertions on selected keys. Related
   #498.
 - G14. `riser_conversion.extract_riser` rejects the native A01 catenary riser
-  (`model_library/a01_catenary_riser/spec.yml`). The probe raises a
+  (`model_library/a01_catenary_riser/spec.yml`). The probe (node IDs not recorded in this snapshot) raises a
   `ValidationError` because native `EI` (`[124.87, ~]`) and `Cd`
   (`[Generic Drag, ~, 0.008]`) are lists. The module docstring limits the
-  bridge to scalar properties; the consequence is that no public example
-  riser can be upgraded to the typed route.
+  bridge to scalar properties.
 
 ## 3. Defects
 
@@ -94,7 +94,7 @@ comparator.
 | --- | --- | --- | --- |
 | D1 (#3981) | `routers/mooring_router.py:78`, `:90` | Wire-rope and polyester mass coefficients give masses far above the library line types the comments cite. | 76 mm wire: router 0.196 te/m against `library/line_types/wire_rope_76mm.yml` 0.025 te/m (ratio 7.9). 120 mm polyester: router 0.115 te/m against `polyester_rope_120mm.yml` 0.008 te/m (ratio 14.4). Existing tests compare the output to the same coefficient, so they cannot detect it. |
 | D2 (#3982) | `routers/mooring_router.py:37`, `:175`, `:178`, `:193` | Chain defaults mix chain types and double the normal drag. | Mass uses the stud-link coefficient 0.0219 d² kg/m. EA (493,270 kN at 76 mm) lies between the DNV-OS-E302 studless R3 value (462,356 kN) and the stud-link value (557,077 kN). The hydrodynamic OD is 2d with Cd 2.4, so normal drag per metre is 2.0 times the DNV-OS-E301 studless value of Cd 2.4 referenced to the nominal diameter d. The axial Cd is 0.008 against 1.15. Source: SINTEF SIMA/RIFLEX documentation, "Chain cross-section", https://sima.sintef.no/docs/latest/riflex/sima/context/ChainCrossSection.html (retrieved 2026-11-12), quoting DNV-OS-E302 and DNV-OS-E301. Whether OrcaFlex applies the axial coefficient to the same reference diameter is not established offline. |
-| D3 (#3983) | `builders/riser_lines_builder.py:102`-`103`; `schema/riser.py:158`-`159` | `contents.pressure` and `contents.flow_rate` are validated and then silently dropped. | The emitted line carries `ContentsDensity` only; native A01 lazy wave (`examples/modular/A01/.../07_lines.yml:68`-`69`) carries `ContentsPressure` and `ContentsFlowRate`. A pressurised riser is generated at zero internal pressure. |
+| D3 (#3983) | `builders/riser_lines_builder.py:102`-`103`; `schema/riser.py:158`-`159` | `contents.pressure` and `contents.flow_rate` are validated and then silently dropped. | The emitted line carries `ContentsDensity` only; native A01 lazy wave (`examples/modular/A01/.../07_lines.yml:68`-`69`) carries `ContentsPressure` and `ContentsFlowRate`. The modelled internal pressure would be zero only if OrcaFlex applies its zero-pressure default when `ContentsPressure` is omitted. |
 | D4 (#3984) | `builders/linetype_builder.py:103`-`105` | An unsupported `pipeline.material` (for example `X80`) silently takes X65 properties. | `DNVSTF101Fy` becomes 450,000 kN/m² instead of failing; the supported set is X52, X60, X65, X70. |
 | D5 (#3985) | `riser_conversion.py:28`-`31` | Typed `axial_drag_coefficient` is rendered as data name `CdAxial`, and a scalar `drag_coefficient` overwrites the native `Cd` list. | `CdAxial` occurs in no native example under `docs/domains/orcaflex/examples` (0 matches). Native `Cd` is `[normal, ~, axial]`. Rejection by OrcaFlex is not established offline. |
 | D6 (#3986) | `builders/riser_vessel_builder.py:46` | `RiserVessel.orientation` pitch and roll are discarded; only the third component becomes `InitialHeading`. | A spec with `orientation: [0, 2, 0]` generates a level vessel without warning. |
@@ -151,7 +151,7 @@ does not state that any generated model loads or converges.
 - #4007. 24 of the 41 library line-type files counted by
   `docs/domains/orcaflex/library/line_types/*.yml` at `e2e2d30e` (all riser,
   pipe, flexible, hybrid and umbilical types) carry mass per unit length and
-  EA about 1000 times the OrcaFlex SI values (te/m, kN). The SI templates
+  EA under review for a possible unit-convention mismatch with OrcaFlex SI (te/m, kN). The SI templates
   include them, for example
   `templates/risers/scr_hybrid/base/scr_base.yml:53`. For the 10 in steel SCR,
   `library/line_types/scr_10inch_x65.yml:6`-`9` supplies OD = 0.2731 m,
@@ -162,9 +162,10 @@ does not state that any generated model loads or converges.
   this arithmetic comparison. Independently calculated,
   `EA = E*pi*(OD^2-ID^2)/4`, giving
   `207e6*pi*(0.2731^2-0.2461^2)/4` kN, or about 2.3 million kN.
-  The calculated EA divided by the converted library EA is 2.9 (rounded
-  from the unrounded calculation). A units correction alone therefore does
-  not establish the data; reproducing this arithmetic provides no
+  The unconverted library EA is about 340 times the calculated EA.
+  A factor of 1,000 from a unit-convention mismatch is an unconfirmed hypothesis.
+  After the proposed conversion, the calculated EA exceeds the library EA by
+  a factor of 2.9, which remains unexplained. Reproducing this arithmetic provides no
   engineering qualification of the component or its material properties.
 - Spring/damper links from `builders/riser_links_builder.py` carry
   `UnstretchedLength` and `Stiffness` without `LinearSpring` or
