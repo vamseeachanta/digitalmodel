@@ -75,7 +75,10 @@ CHAIN_DATABASE: dict[str, dict[str, float]] = {
 #   (equivalent to 0.78e8 * d^2 kN with d in m; matches wire_rope_64mm
 #    EA=320000, wire_rope_76mm EA=450000, wire_rope_84mm EA=550000)
 WIRE_ROPE_DEFAULTS: dict[str, float] = {
-    "mass_coeff": 0.0340e-3,  # mass/m = 0.034 * d^2 (kg/m, d in mm) -> te/m
+    # mass/m = 0.00437 * d^2 (kg/m, d in mm) -> te/m; reproduces wire_rope_64mm
+    # 0.018, wire_rope_76mm 0.025 and wire_rope_84mm 0.031 te/m within 1 %.
+    # The former 0.0340e-3 gave 0.196 te/m at 76 mm (7.9 times high, #3981).
+    "mass_coeff": 0.00437e-3,
     "ea_coeff": 0.78,  # EA = 0.78 * d^2 * 100 (kN, d in mm)
     "cd": 1.2,
     "ca": 1.0,
@@ -87,7 +90,10 @@ WIRE_ROPE_DEFAULTS: dict[str, float] = {
 #   (equivalent to 0.07e8 * d^2 kN with d in m; matches polyester_rope_120mm
 #    EA=100000, polyester_rope_140mm EA=140000, polyester_rope_160mm EA=180000)
 POLYESTER_DEFAULTS: dict[str, float] = {
-    "mass_coeff": 0.0080e-3,  # mass/m approx, d in mm -> te/m
+    # mass/m = 0.000555 * d^2 (kg/m, d in mm) -> te/m; reproduces
+    # polyester_rope_120mm 0.008, _140mm 0.011 and _160mm 0.014 te/m within 2 %.
+    # The former 0.0080e-3 gave 0.115 te/m at 120 mm (14.4 times high, #3981).
+    "mass_coeff": 0.000555e-3,
     "ea_coeff": 0.07,  # EA = 0.07 * d^2 * 100 (kN, d in mm)
     "cd": 1.2,
     "ca": 1.0,

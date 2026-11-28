@@ -5,8 +5,13 @@ All tests are pure dict assertions, no OrcFxAPI or solver required.
 
 from __future__ import annotations
 
-import pytest
+from pathlib import Path
 
+import pytest
+import yaml
+
+from digitalmodel.solvers.orcaflex.modular_generator import ModularModelGenerator
+from digitalmodel.solvers.orcaflex.modular_generator.schema import ProjectInputSpec
 from digitalmodel.solvers.orcaflex.modular_generator.schema.mooring import (
     ChainGrade,
     MooringEndpoint,
@@ -17,6 +22,8 @@ from digitalmodel.solvers.orcaflex.modular_generator.schema.mooring import (
 )
 from digitalmodel.solvers.orcaflex.modular_generator.routers.mooring_router import (
     CHAIN_DATABASE,
+    POLYESTER_DEFAULTS,
+    WIRE_ROPE_DEFAULTS,
     MooringRouter,
 )
 
@@ -355,3 +362,122 @@ class TestMooringRouter:
         gm = GenericModel(**gm_input)
         assert len(gm.line_types) == 2  # chain + wire
         assert len(gm.lines) == 1
+
+
+# ---------------------------------------------------------------------------
+# Rope mass per unit length against the curated library components (#3981)
+# ---------------------------------------------------------------------------
+
+_LIBRARY_LINE_TYPES = (
+    Path(__file__).resolve().parents[5] / "docs/domains/orcaflex/library/line_types"
+)
+
+
+@pytest.mark.parametrize(
+    ("seg_type", "library_file", "diameter", "library_mass", "relative_tolerance"),
+    [
+        (MooringSegmentType.WIRE_ROPE, "wire_rope_64mm.yml", 0.064, 0.018, 0.01),
+        (MooringSegmentType.WIRE_ROPE, "wire_rope_76mm.yml", 0.076, 0.025, 0.01),
+        (MooringSegmentType.WIRE_ROPE, "wire_rope_84mm.yml", 0.084, 0.031, 0.01),
+        (MooringSegmentType.POLYESTER, "polyester_rope_120mm.yml", 0.120, 0.008, 0.02),
+        (MooringSegmentType.POLYESTER, "polyester_rope_140mm.yml", 0.140, 0.011, 0.02),
+        (MooringSegmentType.POLYESTER, "polyester_rope_160mm.yml", 0.160, 0.014, 0.02),
+    ],
+)
+def test_rope_mass_matches_curated_library_component(
+    seg_type, library_file, diameter, library_mass, relative_tolerance
+):
+    """Library mass agreement within 1 % for wire rope and 2 % for polyester.
+
+    Regression: the wire and polyester coefficients gave 0.196 te/m for 76 mm
+    wire (library 0.025 te/m) and 0.115 te/m for 120 mm polyester (library
+    0.008 te/m). The pinned masses in te/m come from the library YAMLs
+    cited in the router diff of fa970678f.
+    """
+    library = yaml.safe_load((_LIBRARY_LINE_TYPES / library_file).read_text(encoding="utf-8"))
+    assert library["MassPerUnitLength"] == library_mass
+    seg = MooringSegment(type=seg_type, diameter=diameter, length=100)
+    lt = MooringRouter()._segment_to_linetype(seg)
+    assert lt["properties"]["MassPerUnitLength"] == pytest.approx(
+        library_mass, rel=relative_tolerance
+    )
+
+
+@pytest.fixture
+def mixed_mooring_spec():
+    line = MooringLine(
+        name="ML1",
+        segments=[_chain_segment(), _wire_segment(diameter=0.076), _polyester_segment()],
+        anchor=_anchor(),
+        fairlead=_fairlead(),
+    )
+    return ProjectInputSpec(
+        metadata={
+            "name": "mixed", "description": "Mixed mooring line",
+            "structure": "mooring", "operation": "inplace",
+        },
+        environment={"water": {"depth": 100}, "seabed": {"stiffness": {"normal": 100}}},
+        equipment={"vessel": {
+            "name": "FPSO",
+            "properties": {
+                "loa": 100, "beam": 20, "draft": 6, "gmt": 2,
+                "cog": [0, 0, 0], "gyration_radii": [8, 25, 25],
+            },
+        }},
+        mooring=MooringSystem(lines=[line]),
+    )
+
+
+def _generate_model(spec, directory):
+    ModularModelGenerator.from_spec(spec).generate(directory)
+    master = yaml.safe_load((directory / "master.yml").read_text(encoding="utf-8"))
+    model = {"master.yml": master}
+    for entry in master:
+        path = entry["includefile"]
+        model[path] = yaml.safe_load((directory / path).read_text(encoding="utf-8"))
+    return model
+
+
+def test_mixed_mooring_changes_only_rope_masses(mixed_mooring_spec, tmp_path, monkeypatch):
+    # Before fa970678f, mass in te/m = coefficient * nominal diameter in mm squared.
+    old_wire_coeff = 0.0340e-3
+    old_polyester_coeff = 0.0080e-3
+    with monkeypatch.context() as patch:
+        patch.setitem(WIRE_ROPE_DEFAULTS, "mass_coeff", old_wire_coeff)
+        patch.setitem(POLYESTER_DEFAULTS, "mass_coeff", old_polyester_coeff)
+        before = _generate_model(mixed_mooring_spec, tmp_path / "before")
+    after = _generate_model(mixed_mooring_spec, tmp_path / "after")
+
+    objects = before["includes/20_generic_objects.yml"]
+    line_types = {lt["Name"]: lt for lt in objects["LineTypes"]}
+    assert [row[0] for row in objects["Lines"][0]["LineType, Length, NumberOfSegments"]] == [
+        "chain_84mm_R3", "wire_76mm", "polyester_140mm",
+    ]
+    assert line_types["chain_84mm_R3"]["MassPerUnitLength"] == pytest.approx(0.0219e-3 * 84**2)
+    assert line_types["wire_76mm"]["MassPerUnitLength"] == pytest.approx(old_wire_coeff * 76**2)
+    assert line_types["polyester_140mm"]["MassPerUnitLength"] == pytest.approx(
+        old_polyester_coeff * 140**2
+    )
+
+    # Permit just these two changes in the master and its referenced includes.
+    line_types["wire_76mm"]["MassPerUnitLength"] = pytest.approx(0.025, rel=0.01)
+    line_types["polyester_140mm"]["MassPerUnitLength"] = pytest.approx(0.011, rel=0.02)
+    assert after == before
+
+
+def test_explicit_line_type_mass_overrides_computed_mass(mixed_mooring_spec, tmp_path):
+    # MooringSegment supplies the computed property. GenericLineType exposes
+    # the explicit mass_per_length input when a user customizes a routed model.
+    generic = MooringRouter().route(mixed_mooring_spec.mooring)
+    wire = next(lt for lt in generic["line_types"] if lt["name"] == "wire_76mm")
+    assert wire["properties"]["MassPerUnitLength"] == pytest.approx(0.025, rel=0.01)
+    wire["mass_per_length"] = 0.040
+    spec = ProjectInputSpec(
+        metadata=mixed_mooring_spec.metadata,
+        environment=mixed_mooring_spec.environment,
+        equipment=mixed_mooring_spec.equipment,
+        generic=generic,
+    )
+    model = _generate_model(spec, tmp_path / "override")
+    emitted = model["includes/20_generic_objects.yml"]["LineTypes"]
+    assert next(lt for lt in emitted if lt["Name"] == "wire_76mm")["MassPerUnitLength"] == 0.040
